@@ -5,7 +5,7 @@ go into the postgres and create your db
 -->
 
 <!-- MSSQL -->
-docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=ILOVEFYP123!"    -p 1433:1433 --name sa --hostname sa    -d    mcr.microsoft.com/mssql/server:2022-latest
+docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=ILOVEFYP123!"    -p 1435:1433 --name sa --hostname sa    -d    mcr.microsoft.com/mssql/server:2022-latest
 
 <!-- Run the patient service (FastAPI) -->
 uvicorn app.main:app --reload

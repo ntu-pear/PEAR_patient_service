@@ -11,8 +11,7 @@ from app.models.patient_list_model import PatientList  # Import the new model
 load_dotenv()
 
 # Get the database URL from environment variables
-DATABASE_URL = os.getenv("DB_URL")
-# DATABASE_URL = "mssql+pyodbc://sa:ILOVEFYP123!@localhost:1433/FYP?driver=ODBC+Driver+17+for+SQL+Server"
+DATABASE_URL = os.getenv("DB_URL_LOCAL")
 print(DATABASE_URL, "Trying...")
 # Create engine for MSSQL database
 engine = create_engine(DATABASE_URL)
