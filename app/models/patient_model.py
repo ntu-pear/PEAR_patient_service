@@ -31,10 +31,21 @@ class Patient(Base):
     patientStatusInActiveDate = Column(String(255))
     profilePicture = Column(String(255))
     createdDate = Column(DateTime, nullable=False)
-    modifiedDate = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    modifiedDate = Column(DateTime, nullable=False, default=datetime.datetime.now)
     createdById = Column(Integer, nullable=False)  # Changed to Integer
     modifiedById = Column(Integer, nullable=False)  # Changed to Integer
     
-    guardian = relationship("Patient", remote_side=[id])
+    guardian = relationship("PatientGuardian", back_populates="patients")
+    allocations = relationship("PatientAllocation", back_populates="patient")
+    allergies = relationship("PatientAllergy", back_populates="patient")
+    doctor_notes = relationship("PatientDoctorNote", back_populates="patient")
+    photos = relationship("PatientPhoto", back_populates="patient")
+    assigned_dementias = relationship("PatientAssignedDementia", back_populates="patient")
+    mobility_records = relationship("PatientMobility", back_populates="patient")
+    prescriptions = relationship("PatientPrescription", back_populates="patient")
+    social_histories = relationship("PatientSocialHistory", back_populates="patient")
+    vitals = relationship("PatientVital", back_populates="patient")
+    attendances = relationship("PatientAttendance", back_populates="patient")
+    highlights = relationship("PatientHighlight", back_populates="patient")
 
 # Ensure other models follow similar changes for consistency

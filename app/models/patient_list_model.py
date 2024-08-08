@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.orm import relationship
 from app.database import Base
 import datetime
 
@@ -12,6 +13,15 @@ class PatientList(Base):
     listOrder = Column(Integer)
 
     createdDate = Column(DateTime, nullable=False)
-    modifiedDate = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    modifiedDate = Column(DateTime, nullable=False, default=datetime.datetime.now)
     createdById = Column(Integer, nullable=False)
     modifiedById = Column(Integer, nullable=False)
+
+    guardians = relationship("PatientGuardian", back_populates="patient_list")
+    allergies = relationship("PatientAllergy", back_populates="allergy_list", foreign_keys="[PatientAllergy.allergyListId]")
+    allergy_reactions = relationship("PatientAllergy", back_populates="allergy_reaction_list", foreign_keys="[PatientAllergy.allergyReactionListId]")
+    photos = relationship("PatientPhoto", back_populates="album_category")
+    dementia_assignments = relationship("PatientAssignedDementia", back_populates="dementia_type")
+    mobility_records = relationship("PatientMobility", back_populates="mobility_list")
+    prescriptions = relationship("PatientPrescription", back_populates="prescription_list")
+    social_history_mappings = relationship("PatientSocialHistoryListMapping", back_populates="list_entry")
