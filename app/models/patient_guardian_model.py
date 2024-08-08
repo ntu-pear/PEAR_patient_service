@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship
 from app.database import Base
 import datetime
 
@@ -23,6 +24,10 @@ class PatientGuardian(Base):
     guardianApplicationUserId = Column(Integer)  # Changed to Integer
 
     createdDate = Column(DateTime, nullable=False)
-    modifiedDate = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    modifiedDate = Column(DateTime, nullable=False, default=datetime.datetime.now)
     createdById = Column(Integer, nullable=False)  # Changed to Integer
     modifiedById = Column(Integer, nullable=False)  # Changed to Integer
+
+    patient_list = relationship("PatientList", back_populates="guardians")
+    patients = relationship("Patient", back_populates="guardian")
+    allocations = relationship("PatientAllocation", back_populates="guardian")
