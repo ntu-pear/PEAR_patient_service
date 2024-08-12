@@ -35,8 +35,9 @@ class Patient(Base):
     createdById = Column(Integer, nullable=False)  # Changed to Integer
     modifiedById = Column(Integer, nullable=False)  # Changed to Integer
     
-    guardian = relationship("PatientGuardian", back_populates="patients")
+    guardian = relationship("PatientGuardian", back_populates="patient")
     allocations = relationship("PatientAllocation", back_populates="patient")
+    #allergies = relationship("PatientAllergy", back_populates="allergy_list", foreign_keys="[PatientAllergy.allergyListId]")
     allergies = relationship("PatientAllergy", back_populates="patient")
     doctor_notes = relationship("PatientDoctorNote", back_populates="patient")
     photos = relationship("PatientPhoto", back_populates="patient")
@@ -47,5 +48,4 @@ class Patient(Base):
     vitals = relationship("PatientVital", back_populates="patient")
     attendances = relationship("PatientAttendance", back_populates="patient")
     highlights = relationship("PatientHighlight", back_populates="patient")
-
 # Ensure other models follow similar changes for consistency

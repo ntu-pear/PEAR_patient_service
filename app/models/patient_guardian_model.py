@@ -1,8 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from sqlalchemy.orm import relationship
+from datetime import datetime
 from app.database import Base
-import datetime
 
 class PatientGuardian(Base):
     __tablename__ = "PATIENT_GUARDIAN"
@@ -19,15 +18,19 @@ class PatientGuardian(Base):
     dateOfBirth = Column(DateTime, nullable=False)
     address = Column(String(255), nullable=False)
     tempAddress = Column(String(255))
-    relationshipId = Column(Integer, ForeignKey('PATIENT_LIST.id'), nullable=False)  # Changed to Integer
+    relationshipId = Column(Integer, ForeignKey('PATIENT_LIST.id'), nullable=False)
     status = Column(String(255), nullable=False)
-    guardianApplicationUserId = Column(Integer)  # Changed to Integer
+    guardianApplicationUserId = Column(Integer)
+
+    patientId = Column(Integer, ForeignKey('PATIENT.id'))
 
     createdDate = Column(DateTime, nullable=False)
-    modifiedDate = Column(DateTime, nullable=False, default=DateTime)
-    createdById = Column(Integer, nullable=False)  # Changed to Integer
-    modifiedById = Column(Integer, nullable=False)  # Changed to Integer
+    modifiedDate = Column(DateTime, nullable=False, default=datetime.now)
+    createdById = Column(Integer, nullable=False)
+    modifiedById = Column(Integer, nullable=False)
 
     patient_list = relationship("PatientList", back_populates="guardians")
-    patients = relationship("Patient", back_populates="guardian")
-    allocations = relationship("PatientAllocation", back_populates="guardian")
+    patient = relationship("Patient", back_populates="guardian")
+
+    allocations = relationship("PatientAllocation", foreign_keys="[PatientAllocation.guardianId]", back_populates="guardian")
+    guardian2_allocations = relationship("PatientAllocation", foreign_keys="[PatientAllocation.guardian2Id]", back_populates="guardian2")

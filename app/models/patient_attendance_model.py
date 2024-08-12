@@ -13,8 +13,8 @@ class PatientAttendance(Base):
     arrivalTime = Column(BigInteger)  # BigInt is ok if storing timestamps
     departureTime = Column(BigInteger)  # BigInt is ok if storing timestamps
 
-    createdDate = Column(DateTime, nullable=False, default=datetime.datetime.now)
-    modifiedDate = Column(DateTime, nullable=False, default=datetime.datetime.now)
+    createdDate = Column(DateTime, nullable=False, default=DateTime)
+    modifiedDate = Column(DateTime, nullable=False, default=DateTime)
     createdById = Column(Integer, nullable=False)  # Changed to Integer
     modifiedById = Column(Integer, nullable=False)  # Changed to Integer
 
