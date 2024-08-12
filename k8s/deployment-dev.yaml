@@ -41,7 +41,8 @@ spec:
   selector:
     app: patient-service-dev
   ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 8000
-  type: ClusterIP  # Use ClusterIP if you don't need external access
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+      nodePort: 30000 # Specify the NodePort here
+  type: NodePort

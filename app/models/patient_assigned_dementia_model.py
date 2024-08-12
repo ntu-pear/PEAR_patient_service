@@ -11,8 +11,8 @@ class PatientAssignedDementia(Base):
     patientId = Column(Integer, ForeignKey('PATIENT.id'))  # Changed to Integer
     dementiaTypeListId = Column(Integer, ForeignKey('PATIENT_LIST.id'))  # Changed to Integer
 
-    createdDate = Column(DateTime, nullable=False, default=datetime.datetime.now)
-    modifiedDate = Column(DateTime, nullable=False, default=datetime.datetime.now)
+    createdDate = Column(DateTime, nullable=False, default=DateTime)
+    modifiedDate = Column(DateTime, nullable=False, default=DateTime)
     createdById = Column(Integer, nullable=False)  # Changed to Integer
     modifiedById = Column(Integer, nullable=False)  # Changed to Integer
 

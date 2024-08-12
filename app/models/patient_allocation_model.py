@@ -18,7 +18,7 @@ class PatientAllocation(Base):
     tempCaregiverId = Column(Integer)  # references user microservice, Changed to Integer
     guardian2Id = Column(Integer, ForeignKey('PATIENT_GUARDIAN.id'))  # Changed to Integer
     
-    createdDate = Column(DateTime, nullable=False, default=datetime.datetime.now)
+    createdDate = Column(DateTime, nullable=False, default=DateTime)
     modifiedDate = Column(DateTime, nullable=False, default=datetime.datetime.now)
     createdById = Column(Integer, nullable=False)  # Changed to Integer
     modifiedById = Column(Integer, nullable=False)  # Changed to Integer

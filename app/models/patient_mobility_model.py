@@ -12,8 +12,8 @@ class PatientMobility(Base):
     mobilityListId = Column(Integer, ForeignKey('PATIENT_LIST.id'))  # Changed to Integer
     status = Column(String(255))
 
-    createdDate = Column(DateTime, nullable=False, default=datetime.datetime.now)
-    modifiedDate = Column(DateTime, nullable=False, default=datetime.datetime.now)
+    createdDate = Column(DateTime, nullable=False, default=DateTime)
+    modifiedDate = Column(DateTime, nullable=False, default=DateTime)
     createdById = Column(Integer, nullable=False)  # Changed to Integer
     modifiedById = Column(Integer, nullable=False)  # Changed to Integer
 

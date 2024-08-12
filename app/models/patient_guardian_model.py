@@ -24,7 +24,7 @@ class PatientGuardian(Base):
     guardianApplicationUserId = Column(Integer)  # Changed to Integer
 
     createdDate = Column(DateTime, nullable=False)
-    modifiedDate = Column(DateTime, nullable=False, default=datetime.datetime.now)
+    modifiedDate = Column(DateTime, nullable=False, default=DateTime)
     createdById = Column(Integer, nullable=False)  # Changed to Integer
     modifiedById = Column(Integer, nullable=False)  # Changed to Integer
 
