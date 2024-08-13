@@ -8,7 +8,7 @@ class PatientMobility(Base):
 
     id = Column(Integer, primary_key=True, index=True)  # Changed to Integer
     active = Column(String(1), default='Y', nullable=False)  # used to check if record is active or not, substitute isDeleted column
-    patientId = Column(Integer, ForeignKey('PATIENT.id'))  # Changed to Integer
+    patient_id = Column(Integer, ForeignKey('PATIENT.id'), nullable=False)  # Ensure this field exists
     mobilityListId = Column(Integer, ForeignKey('PATIENT_LIST.id'))  # Changed to Integer
     status = Column(String(255))
 

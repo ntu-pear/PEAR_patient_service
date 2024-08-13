@@ -3,7 +3,7 @@ from ..models.patient_prescription_model import PatientPrescription
 from ..schemas.patient_prescription import PatientPrescriptionCreate, PatientPrescriptionUpdate
 
 def get_prescriptions(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(PatientPrescription).offset(skip).limit(limit).all()
+    return db.query(PatientPrescription).order_by(PatientPrescription.id).offset(skip).limit(limit).all()
 
 def get_patient_prescriptions(db: Session, patient_id: int, skip: int = 0, limit: int = 100):
     return db.query(PatientPrescription).filter(PatientPrescription.patientId == patient_id).offset(skip).limit(limit).all()

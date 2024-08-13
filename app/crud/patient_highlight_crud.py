@@ -3,7 +3,7 @@ from ..models.patient_highlight_model import PatientHighlight
 from ..schemas.patient_highlight import HighlightCreate, HighlightUpdate
 
 def get_highlights(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(PatientHighlight).offset(skip).limit(limit).all()
+    return db.query(PatientHighlight).order_by(PatientHighlight.id).offset(skip).limit(limit).all()
 
 def get_highlight(db: Session, highlight_id: int):
     return db.query(PatientHighlight).filter(PatientHighlight.id == highlight_id).first()
