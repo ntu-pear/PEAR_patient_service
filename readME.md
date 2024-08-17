@@ -22,7 +22,7 @@ cd PEAR_patient_service
 ### Setting Up Your Environment
 1. Create a Conda Virtual Environment:
 ```bash
-conda create -n pear_patient_service python=3.8
+conda create -n pear_patient_service python=3.9.19
 conda activate pear_patient_service
 ```
 
@@ -40,6 +40,17 @@ This will start the Local MSSQL and the microservice, which should be accessible
 
 ### Notes for Windows Users
 Ensure that Visual Studio Code uses LF (Line Feed) instead of CRLF (Carriage Return Line Feed) for line endings.
+
+### Notes for Mac Users
+There will be a lot of unresolved troubleshooting. If the docker/application does not work, run this command in the current directory
+```bash
+#install the necessary requirements in the conda environment
+pip install -r requirements.txt
+
+#After the installation is completed, run the application on your machine
+uvicorn app.main:app --reload
+```
+
 
 ### Troubleshooting
 If you encounter issues with Docker Compose, such as missing `.sh` files, you may need to adjust Git's line ending settings:
