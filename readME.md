@@ -9,6 +9,15 @@ PEAR Patient Service is a microservice for managing patient-related data. This r
 ### Prerequisites
 1. **Git**: Ensure Git is installed on your system.
 2. **Conda**: Install Conda for managing virtual environments.
+3. **NTU VPN**: Install the NTU VPN to access internal resources.
+
+
+### Connect to NTU VPN
+To connect to the NTU VPN, follow these steps:
+
+Network Connection: Ensure you are connected to the NTUSECURE Wi-Fi network or connect through the NTU VPN.
+
+VPN Setup: Follow the [installation guide](https://fyppear.atlassian.net/wiki/spaces/FP/pages/129794049/Setup+Instructions+Developers) for detailed instructions on setting up and connecting to the VPN.
 
 ### Cloning the Repository
 Clone the repository using the following command:
