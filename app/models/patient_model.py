@@ -20,13 +20,14 @@ class Patient(Base):
     guardianId = Column(Integer, ForeignKey('PATIENT.id'))  # Changed to Integer
     isApproved = Column(String(1))
     preferredName = Column(String(255))
-    preferredLanguageId = Column(Integer)  # Changed to Integer
-    updateBit = Column(Integer)
-    autoGame = Column(Integer)
+    preferredLanguageId = Column(Integer, nullable=False)  # Changed to Integer
+    updateBit = Column(String(1), default='1', nullable=False)
+    autoGame = Column(String(1), default='0', nullable=False)
     startDate = Column(DateTime, nullable=False)
     endDate = Column(DateTime)
-    isActive = Column(Integer, nullable=False)
-    isRespiteCare = Column(Integer, nullable=False)
+    isActive = Column(String(1), default='1', nullable=False)
+    isRespiteCare = Column(String(1), nullable=False)
+    privacyLevel = Column(Integer, default='0', nullable=False)
     terminationReason = Column(String(255))
     inActiveReason = Column(String(255))
     inActiveDate = Column(DateTime)
