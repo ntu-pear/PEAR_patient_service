@@ -19,8 +19,8 @@ class PatientVital(Base):
     height = Column(Float(5))
     weight = Column(Float(5))
 
-    createdDate = Column(DateTime, nullable=False, default=DateTime)
-    modifiedDate = Column(DateTime, nullable=False, default=DateTime)
+    createdDateTime = Column(DateTime, nullable=False, default=DateTime)
+    modifiedDateTime = Column(DateTime, nullable=False, default=DateTime)
     createdById = Column(Integer, nullable=False)  # Changed to Integer
     modifiedById = Column(Integer, nullable=False)  # Changed to Integer
 

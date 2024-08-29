@@ -1,13 +1,20 @@
 from sqlalchemy.orm import Session
 from ..models.patient_vital_model import PatientVital
-from ..schemas.patient_vital import PatientVitalCreate, PatientVitalUpdate
+from ..schemas.patient_vital import PatientVitalCreate, PatientVitalUpdate, PatientVitalDelete
 
 def get_latest_vital(db: Session, patient_id: int):
-    return db.query(PatientVital).filter(PatientVital.patientId == patient_id).order_by(PatientVital.createdDate.desc()).first()
+    return db.query(PatientVital).filter(PatientVital.patientId == patient_id).order_by(PatientVital.createdDateTime.desc()).first()
 
 def get_vital_list(db: Session, patient_id: int, skip: int = 0, limit: int = 100):
-    return db.query(PatientVital).filter(PatientVital.patientId == patient_id).offset(skip).limit(limit).all()
-
+    return (
+        db.query(PatientVital)
+        .filter(PatientVital.patientId == patient_id)
+        .order_by(PatientVital.createdDateTime.desc())  # Ensure ordering before OFFSET and LIMIT
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    
 def create_vital(db: Session, vital: PatientVitalCreate):
     db_vital = PatientVital(**vital.dict())
     db.add(db_vital)
@@ -24,11 +31,9 @@ def update_vital(db: Session, vital_id: int, vital: PatientVitalUpdate):
         db.refresh(db_vital)
     return db_vital
 
-def delete_vital(db: Session, vital_id: int, vital: PatientVitalUpdate):
+def delete_vital(db: Session, vital_id: int):
     db_vital = db.query(PatientVital).filter(PatientVital.id == vital_id).first()
     if db_vital:
-        for key, value in vital.dict().items():
-            setattr(db_vital, key, value)
+        db.delete(db_vital)
         db.commit()
-        db.refresh(db_vital)
     return db_vital

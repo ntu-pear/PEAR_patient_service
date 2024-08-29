@@ -16,19 +16,22 @@ class PatientVitalBase(BaseModel):
     weight: Optional[float] = None
 
 class PatientVitalCreate(PatientVitalBase):
-    createdDate: datetime
-    modifiedDate: datetime
+    createdDateTime: datetime
+    modifiedDateTime: datetime
     createdById: int
     modifiedById: int
 
 class PatientVitalUpdate(PatientVitalBase):
-    modifiedDate: datetime
+    modifiedDateTime: datetime
     modifiedById: int
+
+class PatientVitalDelete(BaseModel):
+    id: int
 
 class PatientVital(PatientVitalBase):
     id: int
-    createdDate: datetime
-    modifiedDate: datetime
+    createdDateTime: datetime
+    modifiedDateTime: datetime
     createdById: int
     modifiedById: int
 
