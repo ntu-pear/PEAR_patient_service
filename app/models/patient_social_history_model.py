@@ -23,4 +23,4 @@ class PatientSocialHistory(Base):
     modifiedById = Column(Integer, nullable=False)  # Changed to Integer
 
     patient = relationship("Patient", back_populates="social_histories")
-    list_mappings = relationship("PatientSocialHistoryListMapping", back_populates="social_history")
+    # list_mappings = relationship("PatientSocialHistoryListMapping", back_populates="social_history")
