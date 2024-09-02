@@ -6,7 +6,7 @@ def get_allergies(db: Session):
     return db.query(PatientAllergy).all()
 
 def get_patient_allergy(db: Session, patient_id: int):
-    return db.query(PatientAllergy).filter(PatientAllergy.patient_id == patient_id).all()
+    return db.query(PatientAllergy).filter(PatientAllergy.patientId == patient_id).all()
 
 def create_allergy(db: Session, allergy: PatientAllergyCreate):
     db_allergy = PatientAllergy(**allergy.dict())
@@ -15,11 +15,15 @@ def create_allergy(db: Session, allergy: PatientAllergyCreate):
     db.refresh(db_allergy)
     return db_allergy
 
-def delete_allergy(db: Session, allergy_id: int, allergy: PatientAllergyUpdate):
+def delete_allergy(db: Session, allergy_id: int):
+    # Find the allergy by its ID
     db_allergy = db.query(PatientAllergy).filter(PatientAllergy.id == allergy_id).first()
+    
     if db_allergy:
-        for key, value in allergy.dict().items():
-            setattr(db_allergy, key, value)
+        # Delete the found allergy
+        db.delete(db_allergy)
         db.commit()
-        db.refresh(db_allergy)
-    return db_allergy
+        return db_allergy
+    
+    # If no allergy is found with the given ID, return None
+    return None

@@ -18,8 +18,8 @@ class PatientList(Base):
     modifiedById = Column(Integer, nullable=False)
 
     guardians = relationship("PatientGuardian", back_populates="patient_list")
-    allergies = relationship("PatientAllergy", back_populates="allergy_list", foreign_keys="[PatientAllergy.allergyListId]")
-    allergy_reactions = relationship("PatientAllergy", back_populates="allergy_reaction_list", foreign_keys="[PatientAllergy.allergyReactionListId]")
+    # allergies = relationship("PatientAllergy", back_populates="allergy_list", foreign_keys="[PatientAllergy.allergyListId]")
+    # allergy_reactions = relationship("PatientAllergy", back_populates="allergy_reaction_list", foreign_keys="[PatientAllergy.allergyReactionListId]")
     photos = relationship("PatientPhoto", back_populates="album_category")
     dementia_assignments = relationship("PatientAssignedDementia", back_populates="dementia_type")
     mobility_records = relationship("PatientMobility", back_populates="mobility_list")
