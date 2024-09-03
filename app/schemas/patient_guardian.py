@@ -16,7 +16,9 @@ class PatientGuardianBase(BaseModel):
     tempAddress: Optional[str] = None
     relationshipId: int
     status: Optional[str] = None
-    guardianApplicationUserId: int
+    isDeleted: str
+    patientId: int
+    guardianApplicationUserId:  Optional[str] = None
 
 class PatientGuardianCreate(PatientGuardianBase):
     createdDate: datetime
