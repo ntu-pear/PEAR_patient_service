@@ -20,6 +20,7 @@ class PatientGuardian(Base):
     tempAddress = Column(String(255))
     relationshipId = Column(Integer, ForeignKey('PATIENT_LIST.id'), nullable=False)
     status = Column(String(255), nullable=False)
+    isDeleted = Column(String(1), nullable=False, default="0")
     guardianApplicationUserId = Column(Integer)
 
     patientId = Column(Integer, ForeignKey('PATIENT.id'))

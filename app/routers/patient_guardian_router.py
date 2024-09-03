@@ -10,36 +10,37 @@ from ..schemas.patient_guardian import (
 
 router = APIRouter()
 
-@router.get("/Guardian", response_model=PatientGuardian)
+@router.get("/guardian", response_model=PatientGuardian)
 def get_guardian(guardian_id: int, db: Session = Depends(get_db)):
     db_guardian = crud_guardian.get_guardian(db, guardian_id)
     if not db_guardian:
         raise HTTPException(status_code=404, detail="Guardian not found")
     return db_guardian
 
-@router.get("/Guardian/GetGuardianByNRIC", response_model=PatientGuardian)
+
+@router.get("/guardian/getGuardianByNRIC", response_model=PatientGuardian)
 def get_guardian_by_nric(nric: str, db: Session = Depends(get_db)):
     db_guardian = crud_guardian.get_guardian_by_nric(db, nric)
     if not db_guardian:
         raise HTTPException(status_code=404, detail="Guardian not found")
     return db_guardian
 
-@router.get("/Guardian/PatientGuardian", response_model=list[PatientGuardian])
+@router.get("/guardian/getPatientGuardian", response_model=list[PatientGuardian])
 def get_patient_guardian(patient_id: int, db: Session = Depends(get_db)):
     return crud_guardian.get_patient_guardian(db, patient_id)
 
-@router.post("/Guardian/add", response_model=PatientGuardian)
+@router.post("/guardian/add", response_model=PatientGuardian)
 def create_guardian(guardian: PatientGuardianCreate, db: Session = Depends(get_db)):
     return crud_guardian.create_guardian(db, guardian)
 
-@router.put("/Guardian/update", response_model=PatientGuardian)
+@router.put("/guardian/update", response_model=PatientGuardian)
 def update_guardian(guardian_id: int, guardian: PatientGuardianUpdate, db: Session = Depends(get_db)):
     db_guardian = crud_guardian.update_guardian(db, guardian_id, guardian)
     if not db_guardian:
         raise HTTPException(status_code=404, detail="Guardian not found")
     return db_guardian
 
-@router.delete("/Guardian/delete", response_model=PatientGuardian)
+@router.delete("/guardian/delete", response_model=PatientGuardian)
 def delete_guardian(guardian_id: int, db: Session = Depends(get_db)):
     db_guardian = crud_guardian.delete_guardian(db, guardian_id)
     if not db_guardian:
