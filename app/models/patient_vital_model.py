@@ -18,9 +18,10 @@ class PatientVital(Base):
     bloodSugarLevel = Column(Integer)
     height = Column(Float(5))
     weight = Column(Float(5))
+    vitalRemarks = Column(String(255))
 
-    createdDateTime = Column(DateTime, nullable=False, default=DateTime)
-    modifiedDateTime = Column(DateTime, nullable=False, default=DateTime)
+    createdDateTime = Column(DateTime, nullable=False, default=datetime.now)
+    modifiedDateTime = Column(DateTime, nullable=False, default=datetime.now)
     createdById = Column(Integer, nullable=False)  # Changed to Integer
     modifiedById = Column(Integer, nullable=False)  # Changed to Integer
 

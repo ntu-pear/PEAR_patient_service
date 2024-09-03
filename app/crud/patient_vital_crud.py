@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy.orm import Session
 from ..models.patient_vital_model import PatientVital
 from ..schemas.patient_vital import PatientVitalCreate, PatientVitalUpdate, PatientVitalDelete
@@ -26,7 +27,10 @@ def update_vital(db: Session, vital_id: int, vital: PatientVitalUpdate):
     db_vital = db.query(PatientVital).filter(PatientVital.id == vital_id).first()
     if db_vital:
         for key, value in vital.dict().items():
-            setattr(db_vital, key, value)
+            if key == "modifiedDateTime":
+                setattr(db_vital, key, datetime.now())
+            else:
+                setattr(db_vital, key, value)
         db.commit()
         db.refresh(db_vital)
     return db_vital
