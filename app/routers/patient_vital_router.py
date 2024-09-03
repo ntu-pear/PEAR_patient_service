@@ -21,7 +21,7 @@ def get_vital_list(patient_id: int, skip: int = 0, limit: int = 100, db: Session
 def create_vital(vital: schemas_vital.PatientVitalCreate, db: Session = Depends(get_db)):
     return crud_vital.create_vital(db, vital)
 
-@router.put("/Vital/update", response_model=schemas_vital.PatientVital)
+@router.put("/Vital/update/{vital_id}", response_model=schemas_vital.PatientVital)
 def update_vital(vital_id: int, vital: schemas_vital.PatientVitalUpdate, db: Session = Depends(get_db)):
     db_vital = crud_vital.update_vital(db, vital_id, vital)
     if not db_vital:
@@ -29,8 +29,8 @@ def update_vital(vital_id: int, vital: schemas_vital.PatientVitalUpdate, db: Ses
     return db_vital
 
 @router.put("/Vital/delete", response_model=schemas_vital.PatientVital)
-def delete_vital(vital_id: int, vital: schemas_vital.PatientVitalUpdate, db: Session = Depends(get_db)):
-    db_vital = crud_vital.delete_vital(db, vital_id, vital)
+def delete_vital(vital: schemas_vital.PatientVitalDelete, db: Session = Depends(get_db)):
+    db_vital = crud_vital.delete_vital(db, vital.id)
     if not db_vital:
         raise HTTPException(status_code=404, detail="Vital record not found")
     return db_vital
