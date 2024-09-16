@@ -1,18 +1,12 @@
-SET IDENTITY_INSERT patient_service_dev.dbo.PATIENT ON;
+SET IDENTITY_INSERT [fyp_dev_john].[dbo].[PATIENT_MOBILITY] ON;
 
-INSERT INTO PATIENT_MOBILITY (
-    id, 
-    active, 
-    mobilityListId, 
-    status, 
-    createdDate, 
-    modifiedDate, 
-    createdById, 
-    modifiedById
-) VALUES
-(1, 'Y', 1, 1, 'Not Recovered', '2021-01-01 00:00:00.000', '2021-01-01 00:00:00.000', 0, 0),
-(2, 'Y', 2, 2, 'Not Recovered', '2021-01-01 00:00:00.000', '2021-01-01 00:00:00.000', 0, 0),
-(3, 'Y', 3, 3, 'Not Recovered', '2021-01-01 00:00:00.000', '2021-01-01 00:00:00.000', 0, 0),
-(4, 'Y', 4, 4, 'Not Recovered', '2021-01-01 00:00:00.000', '2021-01-01 00:00:00.000', 0, 0),
-(5, 'Y', 5, 5, 'Not Recovered', '2021-01-01 00:00:00.000', '2021-01-01 00:00:00.000', 0, 0);
+INSERT INTO [fyp_dev_john].[dbo].[PATIENT_MOBILITY] 
+    (id, active, patient_id, mobilityListId, status, createdDate, modifiedDate, createdById, modifiedById) 
+VALUES 
+    (1, 'Y', 1, 1, 'Active', '2021-01-01 00:00:00.000', '2021-01-01 00:00:00.000', 1, 1),
+    (2, 'Y', 2, 2, 'Active', '2021-01-01 00:00:00.000', '2021-01-01 00:00:00.000', 2, 2),
+    (3, 'N', 3, 3, 'Inactive', '2021-01-01 00:00:00.000', '2021-01-01 00:00:00.000', 3, 3),
+    (4, 'Y', 4, 4, 'Active', '2021-01-01 00:00:00.000', '2021-01-01 00:00:00.000', 4, 4),
+    (5, 'N', 5, 5, 'Inactive', '2021-01-01 00:00:00.000', '2021-01-01 00:00:00.000', 5, 5);
 
+SET IDENTITY_INSERT [fyp_dev_john].[dbo].[PATIENT_MOBILITY] OFF;
