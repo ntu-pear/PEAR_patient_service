@@ -6,7 +6,13 @@ class ListLanguageBase(BaseModel):
     isDeleted: str                                      
     createdDateTime: datetime                               
     modifiedDateTime: datetime  
-    value: str                            
+    value: str                 
+
+class ListLanguageCreate(ListLanguageBase):
+    pass
+
+class ListLanguageUpdate(ListLanguageBase):
+    pass           
 
 class ListLanguage(ListLanguageBase):
     id: int # INT -> int (primary key)
