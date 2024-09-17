@@ -35,6 +35,10 @@ class PatientBase(BaseModel):
 class PatientCreate(PatientBase):
     pass
 
+class PatientLanguageCreate(PatientBase):
+    patient_id: int
+    language: str
+
 class PatientUpdate(PatientBase):
     pass
 
