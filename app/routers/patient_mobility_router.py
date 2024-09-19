@@ -14,16 +14,33 @@ def get_patient_mobility(patient_id: int, db: Session = Depends(get_db)):
 def create_patient_mobility(mobility: schemas_mobility.PatientMobilityCreate, db: Session = Depends(get_db)):
     return crud_mobility.create_patient_mobility(db, mobility)
 
+# @router.put("/Mobility/update", response_model=schemas_mobility.PatientMobility)
+# def update_patient_mobility(mobility_id: int, mobility: schemas_mobility.PatientMobilityUpdate, db: Session = Depends(get_db)):
+#     db_mobility = crud_mobility.update_patient_mobility(db, mobility_id, mobility)
+#     if not db_mobility:
+#         raise HTTPException(status_code=404, detail="Patient mobility not found")
+#     return db_mobility
+# Ask if another other updates are needed
 @router.put("/Mobility/update", response_model=schemas_mobility.PatientMobility)
-def update_patient_mobility(mobility_id: int, mobility: schemas_mobility.PatientMobilityUpdate, db: Session = Depends(get_db)):
-    db_mobility = crud_mobility.update_patient_mobility(db, mobility_id, mobility)
+def update_patient_mobility(patient_id: int, mobilityListId: int, db: Session = Depends(get_db)):
+    db_mobility = crud_mobility.update_patient_mobility_by_patient_id(db, patient_id, mobilityListId)
     if not db_mobility:
         raise HTTPException(status_code=404, detail="Patient mobility not found")
+    
     return db_mobility
 
+
+# @router.put("/Mobility/delete", response_model=schemas_mobility.PatientMobility)
+# def delete_patient_mobility(mobility_id: int, mobility: schemas_mobility.PatientMobilityUpdate, db: Session = Depends(get_db)):
+#     db_mobility = crud_mobility.delete_patient_mobility(db, mobility_id, mobility)
+#     if not db_mobility:
+#         raise HTTPException(status_code=404, detail="Patient mobility not found")
+#     return db_mobility
 @router.put("/Mobility/delete", response_model=schemas_mobility.PatientMobility)
-def delete_patient_mobility(mobility_id: int, mobility: schemas_mobility.PatientMobilityUpdate, db: Session = Depends(get_db)):
-    db_mobility = crud_mobility.delete_patient_mobility(db, mobility_id, mobility)
+def delete_patient_mobility(mobilityListId: int, db: Session = Depends(get_db)):
+    db_mobility = crud_mobility.delete_patient_mobility(db, mobilityListId)
+    
     if not db_mobility:
         raise HTTPException(status_code=404, detail="Patient mobility not found")
+    
     return db_mobility

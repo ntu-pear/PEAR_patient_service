@@ -1,4 +1,4 @@
-INSERT INTO [fyp_dev_john].[dbo].[PATIENT_MOBILITY_LIST] 
+INSERT INTO [fyp_dev_john].[dbo].[PATIENT_MOBILITY_LIST_MAPPING] 
     (mobilityListId, IsDeleted, createdDate, modifiedDate, value) 
 VALUES 
     (1, 0, '2021-01-01 00:00:00.000', '2021-01-01 00:00:00.000', 'Mobility List 1'),

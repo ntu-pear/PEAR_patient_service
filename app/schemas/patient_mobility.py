@@ -4,7 +4,7 @@ from typing import Optional
 
 class PatientMobilityBase(BaseModel):
     active: Optional[str] = 'Y'
-    patientId: int
+    patient_id: int
     mobilityListId: int
     status: Optional[str] = None
 

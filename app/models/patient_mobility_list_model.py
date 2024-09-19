@@ -4,10 +4,10 @@ from datetime import datetime, timezone
 from app.database import Base
 
 class PatientMobilityList(Base):
-    __tablename__ = "PATIENT_MOBILITY_LIST"
+    __tablename__ = "PATIENT_MOBILITY_LIST_MAPPING"
 
     id = Column(Integer, primary_key=True, index=True)
-    mobilityListId = Column(Integer, ForeignKey('PATIENT_MOBILITY_LIST.id'), nullable=False)
+    mobilityListId = Column(Integer, ForeignKey('PATIENT_MOBILITY_LIST_MAPPING.id'), nullable=False)
     IsDeleted = Column(Boolean, default=False, nullable=False)
     createdDate = Column(DateTime, nullable=False, default=DateTime)
     modifiedDate = Column(DateTime, nullable=False, default=DateTime)

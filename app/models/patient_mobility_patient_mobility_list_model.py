@@ -8,7 +8,7 @@ class PatientMobility_MobilityList(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     patient_id = Column(Integer, ForeignKey('PATIENT_MOBILITY.id'), nullable=False)
-    mobilityListId = Column(Integer, ForeignKey('PATIENT_MOBILITY_LIST.id'), nullable=False)
+    mobilityListId = Column(Integer, ForeignKey('PATIENT_MOBILITY_LIST_MAPPING.id'), nullable=False)
 
     createdDate = Column(DateTime, nullable=False, default=DateTime)
     modifiedDate = Column(DateTime, nullable=False, default=DateTime)
