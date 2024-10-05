@@ -46,7 +46,8 @@ def get_guardian_by_nric(nric: str, db: Session = Depends(get_db)):
 
 @router.get("/Guardian/GetPatientGuardian", response_model=list[PatientPatientGuardian])
 def get_patient_guardian(patient_id: int, db: Session = Depends(get_db)):
-    patient_patient_guardian = crud_patient_patient_guardian.get_all_patient_guardian_by_patient_id(db, patient_id)
+    #TODO : Fix this
+    patient_patient_guardian = crud_patient_patient_guardian.get_all_patient_guardian_by_patientId(db, patient_id)
     return patient_patient_guardian
 
 @router.post("/Guardian/add", response_model=PatientGuardianCreate)
