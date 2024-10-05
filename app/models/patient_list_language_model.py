@@ -13,5 +13,3 @@ class PatientListLanguage(Base):
     modifiedDateTime = Column(DateTime, nullable=False, default=datetime.now)
 
     value = Column(String(255))
-
-    language_records = relationship("Patient", secondary="PATIENT_PATIENT_LIST_LANGUAGE", back_populates="preferredLanguageId")
