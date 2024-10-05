@@ -1,6 +1,8 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
+from .patient import Patient
+import pytz
 
 class PatientGuardianBase(BaseModel):
     active: Optional[str] = 'Y'
@@ -14,17 +16,18 @@ class PatientGuardianBase(BaseModel):
     dateOfBirth: datetime
     address: str
     tempAddress: Optional[str] = None
-    relationshipId: int
     status: Optional[str] = None
     isDeleted: str
-    patientId: int
     guardianApplicationUserId:  Optional[str] = None
 
+
 class PatientGuardianCreate(PatientGuardianBase):
-    createdDate: datetime
-    modifiedDate: datetime
+    createdDate: datetime = Field(default_factory=lambda: datetime.now(pytz.timezone('Asia/Singapore')))
+    modifiedDate: datetime = Field(default_factory=lambda: datetime.now(pytz.timezone('Asia/Singapore')))
     createdById: int
     modifiedById: int
+    patientId: int
+    relationshipName: str
 
 class PatientGuardianUpdate(PatientGuardianBase):
     modifiedDate: datetime
@@ -36,6 +39,7 @@ class PatientGuardian(PatientGuardianBase):
     modifiedDate: datetime
     createdById: int
     modifiedById: int
+    patients: List[Patient]
 
     class Config:
         orm_mode: True
