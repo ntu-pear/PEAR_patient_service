@@ -38,6 +38,7 @@ def update_vital(db: Session, vital_id: int, vital: PatientVitalUpdate):
 def delete_vital(db: Session, vital_id: int):
     db_vital = db.query(PatientVital).filter(PatientVital.id == vital_id).first()
     if db_vital:
-        db.delete(db_vital)
+        setattr(db_vital, "active", "0")
         db.commit()
+        db.refresh(db_vital)
     return db_vital
