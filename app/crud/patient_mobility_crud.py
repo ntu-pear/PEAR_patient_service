@@ -47,7 +47,7 @@ def delete_patient_mobility(db: Session, mobilityListId: int):
     
     if db_mobility:
         # Set the 'active' status to 'N' to indicate it is no longer active
-        db_mobility.active = 'N'
+        db_mobility.active = 0
         
         # Update the modified date to the current time
         db_mobility.modifiedDate = datetime.now(timezone.utc)  # Fix the datetime.now usage
