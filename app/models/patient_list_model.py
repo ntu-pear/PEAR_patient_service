@@ -17,7 +17,7 @@ class PatientList(Base):
     createdById = Column(Integer, nullable=False)
     modifiedById = Column(Integer, nullable=False)
 
-    guardians = relationship("PatientGuardian", back_populates="patient_list")
+    #guardians = relationship("PatientGuardian", back_populates="patient_list")
     # allergies = relationship("PatientAllergy", back_populates="allergy_list", foreign_keys="[PatientAllergy.allergyListId]")
     # allergy_reactions = relationship("PatientAllergy", back_populates="allergy_reaction_list", foreign_keys="[PatientAllergy.allergyReactionListId]")
     photos = relationship("PatientPhoto", back_populates="album_category")

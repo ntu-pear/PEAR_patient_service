@@ -15,6 +15,8 @@ from app.models import (
     patient_social_history_model,
     patient_social_history_list_mapping_model,
     patient_vital_model,
+    patient_guardian_relationship_mapping_model,
+    patient_patient_guardian_model,
 )
 
 # Create all tables in the database using the engine
