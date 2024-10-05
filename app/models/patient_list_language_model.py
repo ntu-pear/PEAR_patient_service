@@ -14,4 +14,4 @@ class PatientListLanguage(Base):
 
     value = Column(String(255))
 
-    # language_records = relationship("Patient", secondary="PATIENT_PATIENT_LIST_LANGUAGE", back_populates="preferredLanguageId")
+    language_records = relationship("Patient", secondary="PATIENT_PATIENT_LIST_LANGUAGE", back_populates="preferredLanguageId")
