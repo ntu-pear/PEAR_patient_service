@@ -3,8 +3,8 @@ from datetime import datetime
 from typing import Optional
 
 class PatientMobilityBase(BaseModel):
-    active: Optional[str] = 'Y'
-    patientId: int
+    active: int
+    patient_id: int
     mobilityListId: int
     status: Optional[str] = None
 

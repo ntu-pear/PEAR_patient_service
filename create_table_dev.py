@@ -15,6 +15,8 @@ from app.models import (
     patient_social_history_model,
     patient_social_history_list_mapping_model,
     patient_vital_model,
+    patient_mobility_list_model,
+    patient_mobility_patient_mobility_list_model,
     patient_list_language_model,
 )
 
