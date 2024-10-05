@@ -1,6 +1,6 @@
-SET IDENTITY_INSERT [fyp_dev_john].[dbo].[PATIENT_MOBILITY] ON;
+SET IDENTITY_INSERT [patient_service_dev].[dbo].[PATIENT_MOBILITY] ON;
 
-INSERT INTO [fyp_dev_john].[dbo].[PATIENT_MOBILITY] 
+INSERT INTO [patient_service_dev].[dbo].[PATIENT_MOBILITY] 
     (id, active, patient_id, mobilityListId, status, createdDate, modifiedDate, createdById, modifiedById) 
 VALUES 
     (1, 1, 1, 1, 'Active', '2021-01-01 00:00:00.000', '2021-01-01 00:00:00.000', 1, 1),
@@ -9,4 +9,4 @@ VALUES
     (4, 1, 4, 4, 'Active', '2021-01-01 00:00:00.000', '2021-01-01 00:00:00.000', 4, 4),
     (5, 1, 5, 5, 'Inactive', '2021-01-01 00:00:00.000', '2021-01-01 00:00:00.000', 5, 5);
 
-SET IDENTITY_INSERT [fyp_dev_john].[dbo].[PATIENT_MOBILITY] OFF;
+SET IDENTITY_INSERT [patient_service_dev].[dbo].[PATIENT_MOBILITY] OFF;

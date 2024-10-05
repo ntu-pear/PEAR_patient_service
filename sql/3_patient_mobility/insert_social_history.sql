@@ -1,8 +1,8 @@
 -- Turn IDENTITY_INSERT ON for the PATIENT_SOCIAL_HISTORY table
-SET IDENTITY_INSERT fyp_dev_john.dbo.PATIENT_SOCIAL_HISTORY ON;
+SET IDENTITY_INSERT patient_service_dev.dbo.PATIENT_SOCIAL_HISTORY ON;
 
 -- Insert data into the PATIENT_SOCIAL_HISTORY table
-INSERT INTO fyp_dev_john.dbo.PATIENT_SOCIAL_HISTORY (
+INSERT INTO patient_service_dev.dbo.PATIENT_SOCIAL_HISTORY (
     id, 
     active, 
     patientId, 

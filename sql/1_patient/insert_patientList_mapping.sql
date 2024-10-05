@@ -1,4 +1,4 @@
-INSERT INTO [fyp_dev_john].[dbo].[PATIENT_LIST] 
+INSERT INTO [patient_service_dev].[dbo].[PATIENT_LIST] 
     (active, type, value, listOrder, createdDate, modifiedDate, createdById, modifiedById) 
 VALUES 
     ('Y', 'Type1', 'Value1', 1, '2021-01-01 00:00:00.000', '2021-01-01 00:00:00.000', 1, 1),
