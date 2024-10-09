@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional
 
@@ -40,7 +40,4 @@ class PatientUpdate(PatientBase):
 
 class Patient(PatientBase):
     id: int # INT -> int (primary key)
-
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

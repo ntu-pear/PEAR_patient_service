@@ -18,7 +18,6 @@ def create_guardian(db: Session, guardian: PatientGuardianCreate):
     db.add(db_guardian)
     db.commit()
     db.refresh(db_guardian)
-    print("Created Guardian entry")
     return db_guardian
 
 def update_guardian(db: Session, guardian_id: int, guardian: PatientGuardianUpdate):

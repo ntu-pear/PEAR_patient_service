@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from typing import List
 from .patient import Patient
@@ -31,4 +31,23 @@ class PatientPatientGuardian(PatientPatientGuardianBase):
     modifiedById: int
     patient_guardian: PatientGuardian
     relationship: PatientGuardianRelationshipMapping
-    
+
+class PatientWithRelationship(BaseModel):
+    patient: Patient
+    relationshipName: str
+    model_config = ConfigDict(from_attributes=True)
+
+class GuardianWithRelationship(BaseModel):
+    patient_guardian: PatientGuardian
+    relationshipName: str
+    model_config = ConfigDict(from_attributes=True)
+
+class PatientPatientGuardianByGuardian(BaseModel):
+    patient_guardian: PatientGuardian
+    patients: List[PatientWithRelationship]
+    model_config = ConfigDict(from_attributes=True)
+
+class PatientPatientGuardianByPatient(BaseModel):
+    patient: Patient
+    patient_guardians: List[GuardianWithRelationship]
+    model_config = ConfigDict(from_attributes=True)

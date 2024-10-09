@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from datetime import datetime
 from typing import Optional, List
 from .patient import Patient
@@ -39,7 +39,4 @@ class PatientGuardian(PatientGuardianBase):
     modifiedDate: datetime
     createdById: int
     modifiedById: int
-    patients: List[Patient]
-
-    class Config:
-        orm_mode: True
+    model_config = ConfigDict(from_attributes=True)
