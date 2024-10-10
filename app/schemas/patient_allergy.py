@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 class PatientAllergyBase(BaseModel):
-    active: Optional[str] = Field('Y', example='Y')
+    active: Optional[str] = Field('1', example='1')
     patientId: int = Field(example=1)
     allergyRemarks: Optional[str] = Field(None, example='Not well')
 

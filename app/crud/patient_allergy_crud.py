@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from ..models.patient_allergy_model import PatientAllergy
+from ..models.patient_allergy_mapping_model import PatientAllergy
 from ..schemas.patient_allergy import PatientAllergyCreate, PatientAllergyUpdate
 
 def get_allergies(db: Session):

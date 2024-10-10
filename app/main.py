@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from .database import engine, Base
 from app.routers import (
+    allergy_reaction_type_router,
+    allergy_type_router,
     patient_allergy_router,
     patient_assigned_dementia_router,
     patient_doctor_note_router,
@@ -44,7 +46,10 @@ Base.metadata.create_all(bind=engine)
 
 # Include the routers with prefixes and tags
 app.include_router(patient_router.router, prefix="/api/v1", tags=["patients"])
+app.include_router(allergy_type_router.router, prefix="/api/v1", tags=["Allergy Types"])
+app.include_router(allergy_reaction_type_router.router, prefix="/api/v1", tags=["Allergy Reaction Types"])
 app.include_router(patient_allergy_router.router, prefix="/api/v1", tags=["allergies"])
+
 app.include_router(
     patient_assigned_dementia_router.router, prefix="/api/v1", tags=["dementia"]
 )
@@ -65,7 +70,6 @@ app.include_router(
     patient_social_history_router.router, prefix="/api/v1", tags=["social history"]
 )
 app.include_router(patient_vital_router.router, prefix="/api/v1", tags=["vitals"])
-
 
 @app.get("/")
 def read_root():

@@ -5,7 +5,7 @@ from app.database import Base
 
 
 class PatientAllergy(Base):
-    __tablename__ = "PATIENT_ALLERGY"
+    __tablename__ = "PATIENT_ALLERGY_MAPPING"
 
     id = Column(Integer, primary_key=True, index=True)
     active = Column(String(1), default="Y", nullable=False)
