@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from .database import engine, Base
 from app.routers import (
     allergy_reaction_type_router,
@@ -41,6 +43,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Exception handler for Request Validations
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=400,
+        content={"detail": exc.errors(), "body": exc.body},
+    )
+
 
 Base.metadata.create_all(bind=engine)
 
