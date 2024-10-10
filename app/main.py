@@ -57,7 +57,7 @@ Base.metadata.create_all(bind=engine)
 
 # Include the routers with prefixes and tags
 app.include_router(patient_router.router, prefix="/api/v1", tags=["patients"])
-app.include_router(patient_allergy_mapping_router.router, prefix="/api/v1", tags=["Allergies"])
+app.include_router(patient_allergy_mapping_router.router, prefix="/api/v1", tags=["Patient Allergies"])
 app.include_router(allergy_type_router.router, prefix="/api/v1", tags=["Allergy Types"])
 app.include_router(allergy_reaction_type_router.router, prefix="/api/v1", tags=["Allergy Reaction Types"])
 

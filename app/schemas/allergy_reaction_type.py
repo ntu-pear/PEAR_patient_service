@@ -20,3 +20,4 @@ class AllergyReactionType(AllergyReactionTypeBase):
     modifiedById: int = Field(example=1)
     class Config:
         from_attributes = True
+

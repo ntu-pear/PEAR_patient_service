@@ -2,10 +2,10 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from ..models.patient_allergy_mapping_model import PatientAllergyMapping
-from ..schemas.patient_allergy_mapping import PatientAllergyCreate
+from ..schemas.patient_allergy_mapping import PatientAllergyCreate,PatientAllergyUpdateReq
 from ..models.allergy_type_model import AllergyType
 from ..models.allergy_reaction_type_model import AllergyReactionType
-
+from datetime import datetime
 
 def get_all_allergies(db: Session):
     results = (
@@ -113,10 +113,12 @@ def create_patient_allergy(db: Session, allergy_data: PatientAllergyCreate,creat
     # Create the patient allergy mapping
     db_allergy = PatientAllergyMapping(
         PatientID=allergy_data.PatientID,
-        AllergyListID=allergy_data.AllergyTypeID,
-        AllergyReactionListID=allergy_data.AllergyReactionTypeID,
+        AllergyTypeID=allergy_data.AllergyTypeID,
+        AllergyReactionTypeID=allergy_data.AllergyReactionTypeID,
         AllergyRemarks=allergy_data.AllergyRemarks,
         Active=allergy_data.Active,
+        CreatedDateTime=datetime.now(),
+        UpdatedDateTime=datetime.now(),
         createdById=created_by,  
         modifiedById=created_by  
     )
@@ -124,4 +126,59 @@ def create_patient_allergy(db: Session, allergy_data: PatientAllergyCreate,creat
     db.add(db_allergy)
     db.commit()
     db.refresh(db_allergy)
+
+    return db_allergy
+
+def update_patient_allergy(db: Session, patient_id:int,  allergy_data: PatientAllergyUpdateReq, modified_by: int):
+    # Check if the record exists
+    db_allergy = db.query(PatientAllergyMapping).filter(
+        PatientAllergyMapping.Patient_AllergyID == allergy_data.Patient_AllergyID,
+        PatientAllergyMapping.PatientID == patient_id
+    ).first()
+    
+    if not db_allergy:
+        raise HTTPException(status_code=404, detail="Patient allergy record not found")
+
+    # Check if the AllergyTypeID exists and is active
+    allergy_type = db.query(AllergyType).filter(AllergyType.AllergyTypeID == allergy_data.AllergyTypeID).first()
+    if not allergy_type or allergy_type.Active != "1":
+        raise HTTPException(status_code=400, detail="Invalid or inactive Allergy Type")
+
+    # Check if the AllergyReactionTypeID exists and is active
+    allergy_reaction_type = db.query(AllergyReactionType).filter(AllergyReactionType.AllergyReactionTypeID == allergy_data.AllergyReactionTypeID, AllergyReactionType.Active == "1").first()
+    if not allergy_reaction_type:
+        raise HTTPException(status_code=400, detail="Invalid or inactive Allergy Reaction Type")
+
+    # Update the allergy record
+    db_allergy.AllergyTypeID = allergy_data.AllergyTypeID
+    db_allergy.AllergyReactionTypeID = allergy_data.AllergyReactionTypeID
+    db_allergy.AllergyRemarks = allergy_data.AllergyRemarks
+    db_allergy.Active = allergy_data.Active
+    db_allergy.UpdatedDateTime = datetime.now()
+    db_allergy.modifiedById = modified_by  # Set the user who modified it
+
+    # Commit the changes to the database
+    db.commit()
+    db.refresh(db_allergy)
+    
+    return db_allergy
+
+def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: int):
+    # Check if the record exists
+    db_allergy = db.query(PatientAllergyMapping).filter(
+        PatientAllergyMapping.Patient_AllergyID == patient_allergy_id
+    ).first()
+    
+    if not db_allergy:
+        raise HTTPException(status_code=404, detail="Patient allergy record not found")
+
+    # Soft delete the allergy by setting Active to "0"
+    db_allergy.Active = "0"
+    db_allergy.UpdatedDateTime = datetime.now()
+    db_allergy.modifiedById = modified_by
+
+    # Commit the changes to the database
+    db.commit()
+    db.refresh(db_allergy)
+    
     return db_allergy

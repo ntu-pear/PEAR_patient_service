@@ -11,10 +11,29 @@ class PatientAllergyCreate(PatientAllergyBase):
     AllergyTypeID: int = Field(example=3)
     AllergyReactionTypeID: int = Field(example=1)
 
-class PatientAllergyUpdate(PatientAllergyBase):
+class PatientAllergyCreateResp(PatientAllergyBase):
     PatientID: int = Field(example=1)
     AllergyTypeID: int = Field(example=3)
     AllergyReactionTypeID: int = Field(example=1)
+    CreatedDateTime: datetime = Field(default_factory=datetime.now)
+    UpdatedDateTime: datetime = Field(default_factory=datetime.now)
+    createdById: int = Field(example=1)
+    modifiedById: int = Field(example=1)
+
+class PatientAllergyUpdateReq(PatientAllergyBase):
+    Patient_AllergyID :int = Field(example=1)
+    AllergyTypeID: int = Field(example=3)
+    AllergyReactionTypeID: int = Field(example=1)
+
+class PatientAllergyUpdateResp(PatientAllergyBase):
+    PatientID: int = Field(example=1)
+    Patient_AllergyID :int = Field(example=1)
+    AllergyTypeID: int = Field(example=3)
+    AllergyReactionTypeID: int = Field(example=1)
+    CreatedDateTime: datetime = Field(default_factory=datetime.now)
+    UpdatedDateTime: datetime = Field(default_factory=datetime.now)
+    createdById: int = Field(example=1)
+    modifiedById: int = Field(example=1)
 
 class PatientAllergy(PatientAllergyBase):
     Patient_AllergyID: int = Field(example=1)
