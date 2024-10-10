@@ -10,3 +10,5 @@ class AllergyReactionType(Base):
     Active = Column(String(1), default="1", nullable=False)
     CreatedDateTime = Column(DateTime, nullable=False, default=datetime.now)
     UpdatedDateTime = Column(DateTime, nullable=False, default=datetime.now)
+    createdById = Column(Integer, nullable=False, default=1)  
+    modifiedById = Column(Integer, nullable=False, default=1)  

@@ -16,6 +16,7 @@ class AllergyReactionType(AllergyReactionTypeBase):
     AllergyReactionTypeID: int = Field(example=1)
     CreatedDateTime: datetime = Field(default_factory=datetime.now)
     UpdatedDateTime: datetime = Field(default_factory=datetime.now)
-
+    createdById: int = Field(example=1)
+    modifiedById: int = Field(example=1)
     class Config:
         orm_mode = True
