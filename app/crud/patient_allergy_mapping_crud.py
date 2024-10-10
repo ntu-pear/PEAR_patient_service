@@ -19,9 +19,11 @@ def get_all_allergies(db: Session):
             AllergyReactionType.Active.label('AllergyReactionTypeActive'),
             PatientAllergyMapping.CreatedDateTime,
             PatientAllergyMapping.UpdatedDateTime,
+            PatientAllergyMapping.createdById,
+            PatientAllergyMapping.modifiedById
         )
-        .join(AllergyType, PatientAllergyMapping.AllergyListID == AllergyType.AllergyTypeID)
-        .join(AllergyReactionType, PatientAllergyMapping.AllergyReactionListID == AllergyReactionType.AllergyReactionTypeID)
+        .join(AllergyType, PatientAllergyMapping.AllergyTypeID == AllergyType.AllergyTypeID)
+        .join(AllergyReactionType, PatientAllergyMapping.AllergyReactionTypeID == AllergyReactionType.AllergyReactionTypeID)
         .all()
     )
 
@@ -39,6 +41,8 @@ def get_all_allergies(db: Session):
             "AllergyReactionTypeValue": allergy_reaction_value,
             "CreatedDateTime": result.CreatedDateTime,
             "UpdatedDateTime": result.UpdatedDateTime,
+            "createdById": result.createdById,
+            "modifiedById": result.modifiedById
         })
 
     return patient_allergies
@@ -56,9 +60,11 @@ def get_patient_allergies(db: Session, patient_id: int):
             AllergyReactionType.Active.label('AllergyReactionTypeActive'),  
             PatientAllergyMapping.CreatedDateTime,
             PatientAllergyMapping.UpdatedDateTime,
+            PatientAllergyMapping.createdById,
+            PatientAllergyMapping.modifiedById
         )
-        .join(AllergyType, PatientAllergyMapping.AllergyListID == AllergyType.AllergyTypeID)
-        .join(AllergyReactionType, PatientAllergyMapping.AllergyReactionListID == AllergyReactionType.AllergyReactionTypeID)
+        .join(AllergyType, PatientAllergyMapping.AllergyTypeID == AllergyType.AllergyTypeID)
+        .join(AllergyReactionType, PatientAllergyMapping.AllergyReactionTypeID == AllergyReactionType.AllergyReactionTypeID)
         .filter(PatientAllergyMapping.PatientID == patient_id)
         .all()
     )
@@ -77,11 +83,13 @@ def get_patient_allergies(db: Session, patient_id: int):
             "AllergyReactionTypeValue": allergy_reaction_value,
             "CreatedDateTime": result.CreatedDateTime,
             "UpdatedDateTime": result.UpdatedDateTime,
+            "createdById": result.createdById,
+            "modifiedById": result.modifiedById
         })
 
     return patient_allergies
 
-def create_patient_allergy(db: Session, allergy_data: PatientAllergyCreate):
+def create_patient_allergy(db: Session, allergy_data: PatientAllergyCreate,created_by:int):
     # Check if the AllergyTypeID exists in the AllergyType table
     allergy_type = db.query(AllergyType).filter(AllergyType.AllergyTypeID == allergy_data.AllergyTypeID).first()
     if not allergy_type or allergy_type.Active != "1":
@@ -95,8 +103,8 @@ def create_patient_allergy(db: Session, allergy_data: PatientAllergyCreate):
     # Check if the patient already has this combination of AllergyTypeID and AllergyReactionTypeID
     existing_allergy = db.query(PatientAllergyMapping).filter(
         PatientAllergyMapping.PatientID == allergy_data.PatientID,
-        PatientAllergyMapping.AllergyListID == allergy_data.AllergyTypeID,
-        PatientAllergyMapping.AllergyReactionListID == allergy_data.AllergyReactionTypeID,
+        PatientAllergyMapping.AllergyTypeID == allergy_data.AllergyTypeID,
+        PatientAllergyMapping.AllergyReactionTypeID == allergy_data.AllergyReactionTypeID,
     ).first()
 
     if existing_allergy:
@@ -108,8 +116,11 @@ def create_patient_allergy(db: Session, allergy_data: PatientAllergyCreate):
         AllergyListID=allergy_data.AllergyTypeID,
         AllergyReactionListID=allergy_data.AllergyReactionTypeID,
         AllergyRemarks=allergy_data.AllergyRemarks,
-        Active=allergy_data.Active
+        Active=allergy_data.Active,
+        createdById=created_by,  
+        modifiedById=created_by  
     )
+
     db.add(db_allergy)
     db.commit()
     db.refresh(db_allergy)

@@ -19,4 +19,4 @@ class AllergyReactionType(AllergyReactionTypeBase):
     createdById: int = Field(example=1)
     modifiedById: int = Field(example=1)
     class Config:
-        orm_mode = True
+        from_attributes = True

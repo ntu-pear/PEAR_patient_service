@@ -26,4 +26,4 @@ class PatientPhoto(PatientPhotoBase):
     modifiedById: int
 
     class Config:
-        orm_mode: True
+        from_attributes = True

@@ -19,4 +19,4 @@ class PatientMobility_MobilityList(PatientMobility_MobilityListBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True

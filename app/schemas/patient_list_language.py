@@ -12,4 +12,4 @@ class ListLanguage(ListLanguageBase):
     id: int # INT -> int (primary key)
 
     class Config:
-        orm_mode = True
+        from_attributes = True

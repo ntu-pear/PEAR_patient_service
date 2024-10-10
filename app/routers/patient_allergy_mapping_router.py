@@ -23,4 +23,8 @@ def get_patient_allergy(patient_id: int, db: Session = Depends(get_db)):
 
 @router.post("/create_patient_allergy", response_model=PatientAllergy, description="Create a new patient allergy record.")
 def create_patient_allergy(allergy_data: PatientAllergyCreate, db: Session = Depends(get_db)):
-    return patient_allergy_mapping_crud.create_patient_allergy(db, allergy_data)
+    
+    # TODO: CHANGE USER ID to the actual user ID
+    userId = 1
+    
+    return patient_allergy_mapping_crud.create_patient_allergy(db, allergy_data, userId)

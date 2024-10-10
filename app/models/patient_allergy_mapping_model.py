@@ -9,12 +9,14 @@ class PatientAllergyMapping(Base):
 
     Patient_AllergyID = Column(Integer, primary_key=True, index=True)
     PatientID = Column(Integer, ForeignKey("PATIENT.id"), nullable=False)
-    AllergyListID = Column(Integer, ForeignKey("ALLERGY_TYPE.AllergyTypeID"), nullable=False)
-    AllergyReactionListID = Column(Integer, ForeignKey("ALLERGY_REACTION_TYPE.AllergyReactionTypeID"), nullable=False)
+    AllergyTypeID = Column(Integer, ForeignKey("ALLERGY_TYPE.AllergyTypeID"), nullable=False)
+    AllergyReactionTypeID = Column(Integer, ForeignKey("ALLERGY_REACTION_TYPE.AllergyReactionTypeID"), nullable=False)
     AllergyRemarks = Column(String(255))
     Active = Column(String(1), default="1", nullable=False)
     CreatedDateTime = Column(DateTime, nullable=False, default=datetime.now)
     UpdatedDateTime = Column(DateTime, nullable=False, default=datetime.now)
+    createdById = Column(Integer, nullable=False, default=1)  
+    modifiedById = Column(Integer, nullable=False, default=1)  
 
     # Relationships
     allergy_type = relationship("AllergyType")
