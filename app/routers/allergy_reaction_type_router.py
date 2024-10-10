@@ -22,18 +22,27 @@ def get_allergy_reaction_type(allergy_reaction_type_id: int, db: Session = Depen
     return db_reaction_type
 
 @router.post("/create_allergy_reaction_types", response_model=AllergyReactionType)
-def create_allergy_reaction_type(reaction_type: AllergyReactionTypeCreate, db: Session = Depends(get_db), user_id: int = 1): #TODO: change user_id to current user
+def create_allergy_reaction_type(reaction_type: AllergyReactionTypeCreate, db: Session = Depends(get_db)): 
+    #TODO: change user_id to current user
+    user_id = 1
+    
     return crud_reaction_type.create_reaction_type(db, reaction_type, user_id)
 
 @router.put("/update_allergy_reaction_type/{reaction_type_id}", response_model=AllergyReactionType)
-def update_allergy_reaction_type(reaction_type_id: int, reaction_type: AllergyReactionTypeUpdate, db: Session = Depends(get_db), user_id: int = 1):  #TODO: change user_id to current user
+def update_allergy_reaction_type(reaction_type_id: int, reaction_type: AllergyReactionTypeUpdate, db: Session = Depends(get_db)): 
+    #TODO: change user_id to current user
+    user_id = 1
+
     db_reaction_type = crud_reaction_type.update_reaction_type(db, reaction_type_id, reaction_type, user_id)
     if not db_reaction_type:
         raise HTTPException(status_code=404, detail="Allergy reaction type not found")
     return db_reaction_type
 
 @router.delete("/delete_allergy_reaction_type/{reaction_type_id}", response_model=AllergyReactionType)
-def delete_allergy_reaction_type(reaction_type_id: int, db: Session = Depends(get_db), user_id: int = 1):  #TODO: change user_id to current user
+def delete_allergy_reaction_type(reaction_type_id: int, db: Session = Depends(get_db)):  
+    #TODO: change user_id to current user
+    user_id = 1
+
     db_reaction_type = crud_reaction_type.delete_reaction_type(db, reaction_type_id,user_id)
     if not db_reaction_type:
         raise HTTPException(status_code=404, detail="Allergy reaction type not found")
