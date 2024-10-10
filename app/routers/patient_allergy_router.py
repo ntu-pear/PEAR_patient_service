@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..crud import patient_allergy_crud as crud_allergy
-from ..schemas.patient_allergy import (
+from ..crud import patient_allergy_mapping_crud as crud_allergy
+from ..schemas.patient_allergy_mapping import (
     PatientAllergy,
     PatientAllergyCreate,
     PatientAllergyUpdate

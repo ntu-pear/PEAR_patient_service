@@ -4,16 +4,21 @@ from datetime import datetime
 from app.database import Base
 
 
-class PatientAllergy(Base):
+class PatientAllergyMapping(Base):
     __tablename__ = "PATIENT_ALLERGY_MAPPING"
 
-    id = Column(Integer, primary_key=True, index=True)
-    active = Column(String(1), default="Y", nullable=False)
-    patientId = Column(Integer, ForeignKey("PATIENT.id"))
-    allergyRemarks = Column(String(255))
-    createdDate = Column(DateTime, nullable=False, default=datetime.now)
-    modifiedDate = Column(DateTime, nullable=False, default=datetime.now)
-    createdById = Column(Integer, nullable=False)
-    modifiedById = Column(Integer, nullable=False)
+    Patient_AllergyID = Column(Integer, primary_key=True, index=True)
+    PatientID = Column(Integer, ForeignKey("PATIENT.id"), nullable=False)
+    AllergyListID = Column(Integer, ForeignKey("ALLERGY_TYPE.AllergyTypeID"), nullable=False)
+    AllergyReactionListID = Column(Integer, ForeignKey("ALLERGY_REACTION_TYPE.AllergyReactionTypeID"), nullable=False)
+    AllergyRemarks = Column(String(255))
+    Active = Column(String(1), default="1", nullable=False)
+    CreatedDateTime = Column(DateTime, nullable=False, default=datetime.now)
+    UpdatedDateTime = Column(DateTime, nullable=False, default=datetime.now)
 
+    # Relationships
+    allergy_type = relationship("AllergyType")
+    allergy_reaction_type = relationship("AllergyReactionType")
+
+    # Relationship to Patient
     patient = relationship("Patient", back_populates="allergies")

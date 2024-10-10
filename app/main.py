@@ -3,7 +3,7 @@ from .database import engine, Base
 from app.routers import (
     allergy_reaction_type_router,
     allergy_type_router,
-    patient_allergy_router,
+    patient_allergy_mapping_router,
     patient_assigned_dementia_router,
     patient_doctor_note_router,
     patient_guardian_router,
@@ -46,9 +46,9 @@ Base.metadata.create_all(bind=engine)
 
 # Include the routers with prefixes and tags
 app.include_router(patient_router.router, prefix="/api/v1", tags=["patients"])
+app.include_router(patient_allergy_mapping_router.router, prefix="/api/v1", tags=["Allergies"])
 app.include_router(allergy_type_router.router, prefix="/api/v1", tags=["Allergy Types"])
 app.include_router(allergy_reaction_type_router.router, prefix="/api/v1", tags=["Allergy Reaction Types"])
-app.include_router(patient_allergy_router.router, prefix="/api/v1", tags=["allergies"])
 
 app.include_router(
     patient_assigned_dementia_router.router, prefix="/api/v1", tags=["dementia"]
