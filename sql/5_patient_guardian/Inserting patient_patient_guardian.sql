@@ -58,3 +58,6 @@ VALUES
 	1	
 );
 
+SET IDENTITY_INSERT patient_service_dev.dbo.PATIENT_PATIENT_GUARDIAN OFF;
+
+

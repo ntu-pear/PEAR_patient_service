@@ -20,7 +20,6 @@ class PatientPatientGuardianCreate(PatientPatientGuardianBase):
 
 class PatientPatientGuardianUpdate(PatientPatientGuardianBase):
     relationshipId: int
-    createdDate: datetime = Field(default_factory=lambda: datetime.now(pytz.timezone('Asia/Singapore')))
     modifiedDate: datetime = Field(default_factory=lambda: datetime.now(pytz.timezone('Asia/Singapore')))
 
 class PatientPatientGuardian(PatientPatientGuardianBase):

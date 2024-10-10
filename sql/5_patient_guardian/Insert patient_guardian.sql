@@ -1,8 +1,8 @@
 ALTER TABLE patient_service_dev.dbo.PATIENT_GUARDIAN
-DROP CONSTRAINT FK__PATIENT_G__relat__403A8C7D;
+DROP CONSTRAINT FK__PATIENT_G__relat__3B40CD36;
 
 ALTER TABLE patient_service_dev.dbo.PATIENT_GUARDIAN
-DROP CONSTRAINT FK__PATIENT_G__patie__412EB0B6;
+DROP CONSTRAINT FK__PATIENT_G__patie__3C34F16F;
 
 ALTER TABLE patient_service_dev.dbo.PATIENT_GUARDIAN
 DROP COLUMN patientId;
@@ -10,6 +10,14 @@ DROP COLUMN patientId;
 ALTER TABLE patient_service_dev.dbo.PATIENT_GUARDIAN
 DROP COLUMN relationshipId;
 
+ALTER TABLE patient_service_dev.dbo.PATIENT_GUARDIAN
+DROP COLUMN status
+
+ALTER TABLE patient_service_dev.dbo.PATIENT_GUARDIAN
+ADD status varchar(255);
+
+ALTER TABLE patient_service_dev.dbo.PATIENT_GUARDIAN
+ADD isDeleted varchar(1) not null default '0'
 
 SET IDENTITY_INSERT patient_service_dev.dbo.PATIENT_GUARDIAN ON;
 INSERT INTO patient_service_dev.dbo.PATIENT_GUARDIAN
@@ -120,3 +128,5 @@ VALUES
 	'1', -- createdById
 	'1' --modifiedById
 );
+
+SET IDENTITY_INSERT patient_service_dev.dbo.PATIENT_GUARDIAN OFF;

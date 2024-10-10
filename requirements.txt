@@ -7,3 +7,4 @@ sqlalchemy==2.0.31
 pyodbc==5.1.0
 uvicorn==0.30.3
 python-dotenv==1.0.1
+pytz==2024.1
