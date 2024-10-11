@@ -19,6 +19,10 @@ from app.routers import (
     patient_vital_router,
 )
 from fastapi.middleware.cors import CORSMiddleware
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI(
     title="NTU FYP PEAR PATIENT SERVICE",
@@ -26,11 +30,14 @@ app = FastAPI(
     version="1.0.0",
     servers=[],  # This removes the servers dropdown in Swagger UI
 )
+
+
 origins = [
     "http://localhost",
     "http://localhost:8000",
     "http://localhost:3000",
-    "http://localhost:5173"
+    "http://localhost:5173",
+    os.getenv("WEB_FE_ORIGIN"),
     # Add other origins if needed
 ]
 
