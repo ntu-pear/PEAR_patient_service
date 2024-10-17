@@ -1,6 +1,7 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from typing import Optional
+import re
 
 class PatientBase(BaseModel):
     firstName: str                                      # VARCHAR (255) -> str
@@ -10,18 +11,18 @@ class PatientBase(BaseModel):
     tempAddress: Optional[str] = None                   # VARCHAR (255) -> Optional[str]
     homeNo: Optional[str] = None                        # VARCHAR (32) -> Optional[str]
     handphoneNo: Optional[str] = None                   # VARCHAR (32) -> Optional[str]
-    gender: str                                         # VARCHAR (1) -> str
+    gender: str = Field(..., pattern="^[MF]$", example="M")  # Gender restricted to 'M' or 'F'
     dateOfBirth: datetime                               # DATETIME -> datetime
     guardianId: Optional[int] = None                    # INT -> Optional[int]
-    isApproved: Optional[str] = None                    # VARCHAR (1) -> Optional[str]              
+    isApproved: str = Field(..., pattern="^[01]$", example="1")  # VARCHAR (1) -> Optional[str]              
     preferredName: Optional[str] = None                 # VARCHAR (255) -> Optional[str]             
     preferredLanguageId: Optional[int] = None           # INT -> Optional[int] 
-    updateBit: str                                      # VARCHAR (1) -> str
-    autoGame: str                                       # VARCHAR (1) -> str    
+    updateBit: str = Field(..., pattern="^[01]$", example="1") # VARCHAR (1) -> str
+    autoGame: str = Field(..., pattern="^[01]$", example="1")  # VARCHAR (1) -> str    
     startDate: datetime                                 # DATETIME -> datetime                   
     endDate: Optional[datetime] = None                  # DATETIME -> Optional[datetime]
-    isActive: str                                       # VARCHAR (1) -> str
-    isRespiteCare: str                                  # VARCHAR (1) -> str
+    isActive: str = Field(..., pattern="^[01]$", example="1")                                       # VARCHAR (1) -> str
+    isRespiteCare: str = Field(..., pattern="^[01]$", example="1")                                # VARCHAR (1) -> str
     privacyLevel: int                                   # INT -> int
     terminationReason: Optional[str] = None
     inActiveReason: Optional[str] = None                # VARCHAR (255) -> Optional[str]
