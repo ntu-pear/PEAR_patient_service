@@ -20,6 +20,7 @@ from app.models import (
     patient_list_language_model,
     patient_guardian_relationship_mapping_model,
     patient_patient_guardian_model,
+    patient_prescription_list_model,
 )
 
 # Create all tables in the database using the engine
