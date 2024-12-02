@@ -19,6 +19,7 @@ class PatientVital(Base):
     height = Column(Float(5))
     weight = Column(Float(5))
     vitalRemarks = Column(String(255))
+    isDeleted = Column(String(1), default='0', nullable=False)  # used to check if record is active or not, substitute isDeleted column
 
     createdDateTime = Column(DateTime, nullable=False, default=datetime.now)
     modifiedDateTime = Column(DateTime, nullable=False, default=datetime.now)
