@@ -11,6 +11,7 @@ from app.models import (
     patient_mobility_model,
     patient_model,
     patient_photo_model,
+    patient_prescription_list_model,
     patient_prescription_model,
     patient_social_history_model,
     patient_social_history_list_mapping_model,
@@ -20,7 +21,6 @@ from app.models import (
     patient_list_language_model,
     patient_guardian_relationship_mapping_model,
     patient_patient_guardian_model,
-    patient_prescription_list_model,
 )
 
 # Create all tables in the database using the engine

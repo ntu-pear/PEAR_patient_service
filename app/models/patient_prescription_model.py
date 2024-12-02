@@ -9,7 +9,7 @@ class PatientPrescription(Base):
     id = Column(Integer, primary_key=True, index=True)  # Changed to Integer
     active = Column(String(1), default='1', nullable=False)  # used to check if record is active or not, substitute isDeleted column
     patientId = Column(Integer, ForeignKey('PATIENT.id'))  # Changed to Integer
-    # prescriptionListId = Column(Integer, ForeignKey('PATIENT_LIST.id'))  # Changed to Integer
+    prescriptionListId = Column(Integer, ForeignKey('PATIENT_PRESCRIPTION_LIST.id'))  # Changed to Integer
     dosage = Column(String(255))
     frequencyPerDay = Column(BigInteger)
     instruction = Column(String(255))
@@ -25,4 +25,4 @@ class PatientPrescription(Base):
     modifiedById = Column(Integer, nullable=False)  # Changed to Integer
 
     patient = relationship("Patient", back_populates="prescriptions")
-    # prescription_list = relationship("PatientList", back_populates="prescriptions")
+    prescription_list = relationship("PatientPrescriptionList", back_populates="prescriptions")
