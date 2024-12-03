@@ -11,14 +11,14 @@ class PatientPrescription(Base):
     active = Column(String(1), default='1', nullable=False)  # used to check if record is active or not, substitute isDeleted column
     patientId = Column(Integer, ForeignKey('PATIENT.id'))  # Changed to Integer
     prescriptionListId = Column(Integer, ForeignKey('PATIENT_PRESCRIPTION_LIST.id'))  # Changed to Integer
-    dosage = Column(String(255))
-    frequencyPerDay = Column(BigInteger)
-    instruction = Column(String(255))
-    startDate = Column(DateTime)
+    dosage = Column(String(255), nullable=False)
+    frequencyPerDay = Column(BigInteger, nullable=False)
+    instruction = Column(String(255), nullable=False)
+    startDate = Column(DateTime, nullable=False)
     endDate = Column(DateTime)
     afterMeal = Column(String(1))
-    prescriptionRemarks = Column(String(255))
-    status = Column(String(255))  # used in place of ischronic
+    prescriptionRemarks = Column(String(255), nullable=False)
+    status = Column(String(255), nullable=False)  # used in place of ischronic
 
     createdDateTime = Column(DateTime, nullable=False, default=DateTime)
     modifiedDateTime = Column(DateTime, nullable=False, default=DateTime)
