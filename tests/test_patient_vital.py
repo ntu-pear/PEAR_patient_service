@@ -21,6 +21,7 @@ def db_session_mock():
 @mock.patch("app.models.patient_photo_model.PatientPhoto")
 @mock.patch("app.models.patient_assigned_dementia_model.PatientAssignedDementia")
 @mock.patch("app.models.patient_mobility_model.PatientMobility")
+@mock.patch("app.models.patient_prescription_list_model.PatientPrescriptionList")
 @mock.patch("app.models.patient_prescription_model.PatientPrescription")
 @mock.patch("app.models.patient_social_history_model.PatientSocialHistory")
 @mock.patch("app.models.patient_vital_model.PatientVital")
@@ -36,6 +37,7 @@ def test_create_patient_vital(
     mock_patient_photo,  
     mock_patient_assigned_dementia,  
     mock_patient_mobility,  
+    mock_patient_prescription_list,
     mock_patient_prescription,  
     mock_patient_vital,
     mock_patient_highlight,
@@ -109,6 +111,7 @@ def test_delete_patient_vital(
     assert result.active == "0"
 
 # Mocking the relevant models
+# TODO: this test fails
 @mock.patch("app.models.patient_model.Patient")
 @mock.patch("app.models.patient_patient_guardian_model.PatientPatientGuardian")
 @mock.patch("app.models.patient_allergy_mapping_model.PatientAllergyMapping")
@@ -118,6 +121,7 @@ def test_delete_patient_vital(
 @mock.patch("app.models.patient_photo_model.PatientPhoto")  # Mock PatientPhoto
 @mock.patch("app.models.patient_assigned_dementia_model.PatientAssignedDementia")  # Mock PatientAssignedDementia
 @mock.patch("app.models.patient_mobility_model.PatientMobility")  # Mock PatientMobility
+@mock.patch("app.models.patient_prescription_list_model.PatientPrescriptionList")
 @mock.patch("app.models.patient_prescription_model.PatientPrescription")  # Mock PatientPrescription
 @mock.patch("app.models.patient_vital_model.PatientVital")  
 @mock.patch("app.models.patient_highlight_model.PatientHighlight")  
@@ -131,6 +135,7 @@ def test_get_vital_list(
     mock_patient_photo,  
     mock_patient_assigned_dementia,  
     mock_patient_mobility,  
+    mock_patient_prescription_list,
     mock_patient_prescription,  
     mock_patient_vital,
     mock_patient_highlight,

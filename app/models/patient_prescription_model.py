@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, BigInteger, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from app.database import Base
+from app.models.patient_prescription_list_model import PatientPrescriptionList
 
 class PatientPrescription(Base):
     __tablename__ = "PATIENT_PRESCRIPTION"

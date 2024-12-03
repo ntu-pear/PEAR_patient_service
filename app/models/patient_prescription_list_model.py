@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from app.database import Base
 
@@ -10,3 +11,8 @@ class PatientPrescriptionList(Base):
     createdDateTime = Column(DateTime, nullable=False, default=datetime.now)
     modifiedDateTime = Column(DateTime, nullable=False, default=datetime.now)
     value = Column(String(255))
+
+    prescriptions = relationship(
+        "PatientPrescription",
+        back_populates="prescription_list",
+    )
