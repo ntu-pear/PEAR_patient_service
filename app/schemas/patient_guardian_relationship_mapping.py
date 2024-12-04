@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 class PatientGuardianRelationshipMappingBase(BaseModel):
@@ -7,15 +7,11 @@ class PatientGuardianRelationshipMappingBase(BaseModel):
 
 
 class PatientGuardianRelationshipMappingCreate(PatientGuardianRelationshipMappingBase):
-    def __init__(self, **data):
-        super().__init__(**data)
-        self.createdDate = datetime.now(tz='Asia/Singapore')
+    createdDate: datetime = Field(default_factory=datetime.now)
 
 
 class PatientGuardianRelationshipMappingUpdate(PatientGuardianRelationshipMappingBase):
-    def __init__(self, **data):
-        super().__init__(**data)
-        self.modifiedDate = datetime.now(tz='Asia/Singapore')
+    modifiedDate: datetime = Field(default_factory=datetime.now)
 
 class PatientGuardianRelationshipMapping(PatientGuardianRelationshipMappingBase):
     id: int
