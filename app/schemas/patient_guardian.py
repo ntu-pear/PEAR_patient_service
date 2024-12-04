@@ -32,6 +32,8 @@ class PatientGuardianCreate(PatientGuardianBase):
 class PatientGuardianUpdate(PatientGuardianBase):
     modifiedDate: datetime = Field(default_factory=datetime.now)
     modifiedById: int
+    patientId: int
+    relationshipName: str
 
 class PatientGuardian(PatientGuardianBase):
     id: int
