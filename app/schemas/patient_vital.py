@@ -5,15 +5,15 @@ from typing import Optional
 class PatientVitalBase(BaseModel):
     active: Optional[str] = '1'
     patientId: int
-    afterMeal: Optional[str] = None
-    temperature: Optional[float] = None
-    systolicBP: Optional[int] = None
-    diastolicBP: Optional[int] = None
-    heartRate: Optional[int] = None
-    spO2: Optional[int] = None
-    bloodSugarLevel: Optional[int] = None
-    height: Optional[float] = None
-    weight: Optional[float] = None
+    afterMeal: str
+    temperature: float
+    systolicBP: int
+    diastolicBP: int
+    heartRate: int
+    spO2: int
+    bloodSugarLevel: int
+    height: float
+    weight: float
     vitalRemarks: Optional[str] = None
 
 class PatientVitalCreate(PatientVitalBase):

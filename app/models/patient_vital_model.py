@@ -9,15 +9,15 @@ class PatientVital(Base):
     id = Column(Integer, primary_key=True, index=True)  # Changed to Integer
     active = Column(String(1), default='1', nullable=False)  # used to check if record is active or not, substitute isDeleted column
     patientId = Column(Integer, ForeignKey('PATIENT.id'))  # Changed to Integer
-    afterMeal = Column(String(1))
-    temperature = Column(Float(5))
-    systolicBP = Column(Integer)
-    diastolicBP = Column(Integer)
-    heartRate = Column(Integer)
-    spO2 = Column(Integer)
-    bloodSugarLevel = Column(Integer)
-    height = Column(Float(5))
-    weight = Column(Float(5))
+    afterMeal = Column(String(1), nullable=False)
+    temperature = Column(Float(5), nullable=False)
+    systolicBP = Column(Integer, nullable=False)
+    diastolicBP = Column(Integer, nullable=False)
+    heartRate = Column(Integer, nullable=False)
+    spO2 = Column(Integer, nullable=False)
+    bloodSugarLevel = Column(Integer, nullable=False)
+    height = Column(Float(5), nullable=False)
+    weight = Column(Float(5), nullable=False)
     vitalRemarks = Column(String(255))
 
     createdDateTime = Column(DateTime, nullable=False, default=datetime.now)
