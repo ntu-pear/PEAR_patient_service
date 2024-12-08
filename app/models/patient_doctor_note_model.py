@@ -6,15 +6,16 @@ from app.database import Base
 class PatientDoctorNote(Base):
     __tablename__ = "PATIENT_DOCTORNOTE"
 
-    id = Column(Integer, primary_key=True, index=True)  # Changed to Integer
-    active = Column(String(1), default='Y', nullable=False)  # used to check if record is active or not, substitute isDeleted column
-    patientId = Column(Integer, ForeignKey('PATIENT.id'))  # Changed to Integer
-    doctorId = Column(Integer)  # Changed to Integer
+    id = Column(Integer, primary_key=True, index=True) 
+    active = Column(String(1), default='Y', nullable=False) 
+    patientId = Column(Integer, ForeignKey('PATIENT.id')) 
+    doctorId = Column(Integer)  
     doctorRemarks = Column(String(255))
+    isDeleted = Column(String(1), default="0", nullable=False)
 
     createdDate = Column(DateTime, nullable=False, default=DateTime)
     modifiedDate = Column(DateTime, nullable=False, default=DateTime)
-    createdById = Column(Integer, nullable=False)  # Changed to Integer
-    modifiedById = Column(Integer, nullable=False)  # Changed to Integer
+    createdById = Column(Integer, nullable=False)  
+    modifiedById = Column(Integer, nullable=False)  
 
     patient = relationship("Patient", back_populates="doctor_notes")
