@@ -5,12 +5,52 @@ from ..models.patient_assigned_dementia_mapping_model import PatientAssignedDeme
 from ..models.patient_assigned_dementia_list_model import PatientAssignedDementiaList
 from ..schemas.patient_assigned_dementia_mapping import PatientAssignedDementiaCreate, PatientAssignedDementiaUpdate
 
+# Get all dementia assignments across all patients
+def get_all_assigned_dementias(db: Session):
+    results = (
+        db.query(
+            PatientAssignedDementiaMapping.id,
+            PatientAssignedDementiaMapping.patientId,
+            PatientAssignedDementiaMapping.dementiaTypeListId,  # Include this field
+            PatientAssignedDementiaMapping.active,
+            PatientAssignedDementiaMapping.createdDate,
+            PatientAssignedDementiaMapping.modifiedDate,
+            PatientAssignedDementiaMapping.createdById,
+            PatientAssignedDementiaMapping.modifiedById,
+            PatientAssignedDementiaList.value.label("DementiaTypeValue"),
+        )
+        .join(
+            PatientAssignedDementiaList,
+            PatientAssignedDementiaMapping.dementiaTypeListId == PatientAssignedDementiaList.dementiaTypeListId,
+        )
+        .filter(PatientAssignedDementiaMapping.active == "Y")  # Filter only active assignments
+        .all()
+    )
+
+    dementia_assignments = []
+    for result in results:
+        dementia_assignments.append({
+            "id": result.id,
+            "patientId": result.patientId,
+            "dementiaTypeListId": result.dementiaTypeListId,  # Add this field
+            "active": result.active,
+            "createdDate": result.createdDate,
+            "modifiedDate": result.modifiedDate,
+            "createdById": result.createdById,
+            "modifiedById": result.modifiedById,
+            "DementiaTypeValue": result.DementiaTypeValue,
+        })
+
+    return dementia_assignments
+
+
 # Get all dementia assignments for a patient
 def get_assigned_dementias(db: Session, patient_id: int):
     results = (
         db.query(
             PatientAssignedDementiaMapping.id,
             PatientAssignedDementiaMapping.patientId,
+            PatientAssignedDementiaMapping.dementiaTypeListId,  # Include this field
             PatientAssignedDementiaMapping.active,
             PatientAssignedDementiaMapping.createdDate,
             PatientAssignedDementiaMapping.modifiedDate,
@@ -28,6 +68,7 @@ def get_assigned_dementias(db: Session, patient_id: int):
         dementia_assignments.append({
             "id": result.id,
             "patientId": result.patientId,
+            "dementiaTypeListId": result.dementiaTypeListId,  # Add this field
             "active": result.active,
             "createdDate": result.createdDate,
             "modifiedDate": result.modifiedDate,

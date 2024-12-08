@@ -9,7 +9,6 @@ from datetime import datetime
 
 # Get all dementia list entries
 def get_all_dementia_list_entries(db: Session):
-    # Ensure there's an ORDER BY clause for MSSQL compliance
     return (
         db.query(PatientAssignedDementiaList)
         .all()
@@ -26,6 +25,7 @@ def get_dementia_list_entry_by_id(db: Session, dementia_list_id: int):
 def create_dementia_list_entry(db: Session, dementia_list_data: PatientAssignedDementiaListCreate, created_by: int):
     new_entry = PatientAssignedDementiaList(
         **dementia_list_data.dict(),
+        
         createdDate=datetime.utcnow(),
         modifiedDate=datetime.utcnow(),
         createdById=created_by,
@@ -36,6 +36,35 @@ def create_dementia_list_entry(db: Session, dementia_list_data: PatientAssignedD
     db.commit()
     db.refresh(new_entry)
     return new_entry
+from sqlalchemy.orm import Session
+from datetime import datetime
+from ..models.patient_assigned_dementia_list_model import PatientAssignedDementiaList
+from ..schemas.patient_assigned_dementia_list import PatientAssignedDementiaListCreate
+
+def create_dementia_list_entry(
+    db: Session, dementia_list_data: PatientAssignedDementiaListCreate, created_by: int
+):
+    try:
+        # Prepare the data dictionary for the new entry
+        new_entry_data = dementia_list_data.dict()
+        new_entry_data.update({
+            "createdDate": datetime.utcnow(),
+            "modifiedDate": datetime.utcnow(),
+            "isDeleted": "0",  # Ensure the entry is active upon creation
+        })
+
+        # Create the database model instance
+        new_entry = PatientAssignedDementiaList(**new_entry_data)
+
+        # Add and commit the new entry to the database
+        db.add(new_entry)
+        db.commit()
+        db.refresh(new_entry)
+
+        return new_entry
+    except Exception as e:
+        db.rollback()  # Rollback in case of any errors
+        raise HTTPException(status_code=500, detail=f"Error creating dementia list entry: {str(e)}")
 
 
 # Update a dementia list entry
