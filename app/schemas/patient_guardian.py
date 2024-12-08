@@ -22,16 +22,18 @@ class PatientGuardianBase(BaseModel):
 
 
 class PatientGuardianCreate(PatientGuardianBase):
-    createdDate: datetime = Field(default_factory=lambda: datetime.now(pytz.timezone('Asia/Singapore')))
-    modifiedDate: datetime = Field(default_factory=lambda: datetime.now(pytz.timezone('Asia/Singapore')))
+    createdDate: datetime = Field(default_factory=datetime.now)
+    modifiedDate: datetime = Field(default_factory=datetime.now)
     createdById: int
     modifiedById: int
     patientId: int
     relationshipName: str
 
 class PatientGuardianUpdate(PatientGuardianBase):
-    modifiedDate: datetime = Field(default_factory=lambda: datetime.now(pytz.timezone('Asia/Singapore')))
+    modifiedDate: datetime = Field(default_factory=datetime.now)
     modifiedById: int
+    patientId: int
+    relationshipName: str
 
 class PatientGuardian(PatientGuardianBase):
     id: int
@@ -40,3 +42,4 @@ class PatientGuardian(PatientGuardianBase):
     createdById: int
     modifiedById: int
     model_config = ConfigDict(from_attributes=True)
+    

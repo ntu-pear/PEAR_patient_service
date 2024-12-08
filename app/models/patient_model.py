@@ -39,7 +39,8 @@ class Patient(Base):
     
     allocations = relationship("PatientAllocation", back_populates="patient")
     #guardian = relationship("PatientGuardian", back_populates="patient")
-    patient_guardian = relationship("PatientPatientGuardian", back_populates="patient")
+    patient_patient_guardian = relationship("PatientPatientGuardian", back_populates="patient")
+
     #allergies = relationship("PatientAllergy", back_populates="allergy_list", foreign_keys="[PatientAllergy.allergyListId]")
     allergies = relationship("PatientAllergyMapping", back_populates="patient")
     doctor_notes = relationship("PatientDoctorNote", back_populates="patient")

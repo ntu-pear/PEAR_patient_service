@@ -22,11 +22,11 @@ class PatientGuardian(Base):
     isDeleted = Column(String(1), nullable=False, default="0")
     guardianApplicationUserId = Column(Integer)
 
-    createdDate = Column(DateTime, nullable=False, default=datetime.now())
-    modifiedDate = Column(DateTime, nullable=False, default=datetime.now())
+    createdDate = Column(DateTime, nullable=False,  default=datetime.now)
+    modifiedDate = Column(DateTime, nullable=False,  default=datetime.now)
     createdById = Column(Integer, nullable=False)
     modifiedById = Column(Integer, nullable=False)
 
-    patient_patient_guardian = relationship ("PatientPatientGuardian", back_populates="patient_guardian")
+    patient_patient_guardian = relationship ("PatientPatientGuardian", foreign_keys="[PatientPatientGuardian.guardianId]", back_populates="patient_guardian")
     allocations = relationship("PatientAllocation", foreign_keys="[PatientAllocation.guardianId]", back_populates="guardian")
     guardian2_allocations = relationship("PatientAllocation", foreign_keys="[PatientAllocation.guardian2Id]", back_populates="guardian2")
