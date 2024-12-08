@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..crud import patient_assigned_dementia_crud as crud_assigned_dementia
-from ..schemas import patient_assigned_dementia as schemas_assigned_dementia
+from ..crud import patient_assigned_dementia_mapping_crud as crud_assigned_dementia
+from ..schemas import patient_assigned_dementia_mapping as schemas_assigned_dementia
 
 router = APIRouter()
 

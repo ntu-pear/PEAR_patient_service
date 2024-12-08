@@ -44,7 +44,7 @@ class Patient(Base):
     allergies = relationship("PatientAllergyMapping", back_populates="patient")
     doctor_notes = relationship("PatientDoctorNote", back_populates="patient")
     photos = relationship("PatientPhoto", back_populates="patient")
-    assigned_dementias = relationship("PatientAssignedDementia", back_populates="patient")
+    assigned_dementias = relationship("PatientAssignedDementiaMapping", back_populates="patient")
     mobility_records = relationship("PatientMobility", back_populates="patient")
     prescriptions = relationship("PatientPrescription", back_populates="patient")
     social_histories = relationship("PatientSocialHistory", back_populates="patient")

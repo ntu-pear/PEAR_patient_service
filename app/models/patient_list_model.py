@@ -21,7 +21,7 @@ class PatientList(Base):
     # allergies = relationship("PatientAllergy", back_populates="allergy_list", foreign_keys="[PatientAllergy.allergyListId]")
     # allergy_reactions = relationship("PatientAllergy", back_populates="allergy_reaction_list", foreign_keys="[PatientAllergy.allergyReactionListId]")
     photos = relationship("PatientPhoto", back_populates="album_category")
-    dementia_assignments = relationship("PatientAssignedDementia", back_populates="dementia_type")
+    # dementia_assignments = relationship("PatientAssignedDementia", back_populates="dementia_type")
     mobility_records = relationship("PatientMobility", back_populates="mobility_list")
     prescriptions = relationship("PatientPrescription", back_populates="prescription_list")
     # social_history_mappings = relationship("PatientSocialHistoryListMapping", back_populates="list_entry")
