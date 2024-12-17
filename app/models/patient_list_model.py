@@ -23,5 +23,5 @@ class PatientList(Base):
     photos = relationship("PatientPhoto", back_populates="album_category")
     dementia_assignments = relationship("PatientAssignedDementia", back_populates="dementia_type")
     mobility_records = relationship("PatientMobility", back_populates="mobility_list")
-    prescriptions = relationship("PatientPrescription", back_populates="prescription_list")
+    # prescriptions = relationship("PatientPrescription", back_populates="prescription_list")
     # social_history_mappings = relationship("PatientSocialHistoryListMapping", back_populates="list_entry")

@@ -3,32 +3,32 @@ from datetime import datetime
 from typing import Optional
 
 class PatientPrescriptionBase(BaseModel):
-    active: Optional[str] = 'Y'
+    active: Optional[str] = '1'
     patientId: int
-    prescriptionListId: int
-    dosage: Optional[str] = None
-    frequencyPerDay: Optional[int] = None
-    instruction: Optional[str] = None
-    startDate: Optional[datetime] = None
+    # prescriptionListId: int
+    dosage: str
+    frequencyPerDay: int
+    instruction: str
+    startDate: datetime
     endDate: Optional[datetime] = None
     afterMeal: Optional[str] = None
-    prescriptionRemarks: Optional[str] = None
-    status: Optional[str] = None
+    prescriptionRemarks: str
+    status: str = None
 
 class PatientPrescriptionCreate(PatientPrescriptionBase):
-    createdDate: datetime
-    modifiedDate: datetime
+    createdDateTime: datetime
+    modifiedDateTime: datetime
     createdById: int
     modifiedById: int
 
 class PatientPrescriptionUpdate(PatientPrescriptionBase):
-    modifiedDate: datetime
+    modifiedDateTime: datetime
     modifiedById: int
 
 class PatientPrescription(PatientPrescriptionBase):
     id: int
-    createdDate: datetime
-    modifiedDate: datetime
+    createdDateTime: datetime
+    modifiedDateTime: datetime
     createdById: int
     modifiedById: int
 
