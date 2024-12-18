@@ -24,10 +24,10 @@ def create_vital(db: Session, vital: PatientVitalCreate):
     return db_vital
 
 def update_vital(db: Session, vital_id: int, vital: PatientVitalUpdate):
-    db_vital = db.query(PatientVital).filter(PatientVital.id == vital_id).first()
+    db_vital = db.query(PatientVital).filter(PatientVital.Id == vital_id).first()
     if db_vital:
         for key, value in vital.dict().items():
-            if key == "modifiedDateTime":
+            if key == "ModifiedDateTime":
                 setattr(db_vital, key, datetime.now())
             else:
                 setattr(db_vital, key, value)
@@ -36,9 +36,9 @@ def update_vital(db: Session, vital_id: int, vital: PatientVitalUpdate):
     return db_vital
 
 def delete_vital(db: Session, vital_id: int):
-    db_vital = db.query(PatientVital).filter(PatientVital.id == vital_id).first()
+    db_vital = db.query(PatientVital).filter(PatientVital.Id == vital_id).first()
     if db_vital:
-        setattr(db_vital, "active", "0")
+        setattr(db_vital, "IsDeleted", "0")
         db.commit()
         db.refresh(db_vital)
     return db_vital

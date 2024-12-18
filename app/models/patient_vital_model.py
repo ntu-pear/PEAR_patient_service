@@ -6,23 +6,23 @@ from app.database import Base
 class PatientVital(Base):
     __tablename__ = "PATIENT_VITAL"
 
-    id = Column(Integer, primary_key=True, index=True)  # Changed to Integer
-    active = Column(String(1), default='1', nullable=False)  # used to check if record is active or not, substitute isDeleted column
-    patientId = Column(Integer, ForeignKey('PATIENT.id'))  # Changed to Integer
-    afterMeal = Column(String(1), nullable=False)
-    temperature = Column(Float(5), nullable=False)
-    systolicBP = Column(Integer, nullable=False)
-    diastolicBP = Column(Integer, nullable=False)
-    heartRate = Column(Integer, nullable=False)
-    spO2 = Column(Integer, nullable=False)
-    bloodSugarLevel = Column(Integer, nullable=False)
-    height = Column(Float(5), nullable=False)
-    weight = Column(Float(5), nullable=False)
-    vitalRemarks = Column(String(255))
+    Id = Column(Integer, primary_key=True, index=True)  # Changed to Integer
+    IsDeleted = Column(String(1), default='0', nullable=False)
+    PatientId = Column(Integer, ForeignKey('PATIENT.id'))  # Changed to Integer
+    IsAfterMeal = Column(String(1), nullable=False)
+    Temperature = Column(Float(5), nullable=False)
+    SystolicBP = Column(Integer, nullable=False)
+    DiastolicBP = Column(Integer, nullable=False)
+    HeartRate = Column(Integer, nullable=False)
+    SpO2 = Column(Integer, nullable=False)
+    BloodSugarLevel = Column(Integer, nullable=False)
+    Height = Column(Float(5), nullable=False)
+    Weight = Column(Float(5), nullable=False)
+    VitalRemarks = Column(String(255))
 
-    createdDateTime = Column(DateTime, nullable=False, default=datetime.now)
-    modifiedDateTime = Column(DateTime, nullable=False, default=datetime.now)
-    createdById = Column(Integer, nullable=False)  # Changed to Integer
-    modifiedById = Column(Integer, nullable=False)  # Changed to Integer
+    CreatedDateTime = Column(DateTime, nullable=False, default=datetime.now)
+    ModifiedDateTime = Column(DateTime, nullable=False, default=datetime.now)
+    CreatedById = Column(Integer, nullable=False)  # Changed to Integer
+    ModifiedById = Column(Integer, nullable=False)  # Changed to Integer
 
     patient = relationship("Patient", back_populates="vitals")
