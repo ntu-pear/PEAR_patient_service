@@ -18,11 +18,11 @@ class PatientVitalBase(BaseModel):
 
 class PatientVitalCreate(PatientVitalBase):
     CreatedById: int
-    ModifiedById: int
+    UpdatedById: int
 
 class PatientVitalUpdate(PatientVitalBase):
-    ModifiedById: int
-    ModifiedDateTime: Optional[datetime] = None
+    UpdatedById: int
+    UpdatedDateTime: Optional[datetime] = None
 
 class PatientVitalDelete(BaseModel):
     Id: int
@@ -30,9 +30,9 @@ class PatientVitalDelete(BaseModel):
 class PatientVital(PatientVitalBase):
     Id: int
     CreatedDateTime: datetime
-    ModifiedDateTime: datetime
+    UpdatedDateTime: datetime
     CreatedById: int
-    ModifiedById: int
+    UpdatedById: int
 
     class Config:
         from_attributes = True

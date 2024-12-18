@@ -21,8 +21,8 @@ class PatientVital(Base):
     VitalRemarks = Column(String(255))
 
     CreatedDateTime = Column(DateTime, nullable=False, default=datetime.now)
-    ModifiedDateTime = Column(DateTime, nullable=False, default=datetime.now)
+    UpdatedDateTime = Column(DateTime, nullable=False, default=datetime.now)
     CreatedById = Column(Integer, nullable=False)  # Changed to Integer
-    ModifiedById = Column(Integer, nullable=False)  # Changed to Integer
+    UpdatedById = Column(Integer, nullable=False)  # Changed to Integer
 
     patient = relationship("Patient", back_populates="vitals")

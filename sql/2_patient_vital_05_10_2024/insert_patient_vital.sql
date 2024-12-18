@@ -12,9 +12,9 @@ INSERT INTO patient_service_dev.dbo.PATIENT_VITAL (
     Weight,
     VitalRemarks,
     CreatedById,
-    ModifiedById,
+    UpdatedById,
     CreatedDateTime,
-    ModifiedDateTime
+    UpdatedDateTime
 )
 VALUES
     (1, '1', '1', 22.0, 22, 20, 23, 29, 60, 1.65, 60.5, 'well', 1, 1,GETDATE(), GETDATE()),

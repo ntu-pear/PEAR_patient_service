@@ -49,7 +49,7 @@ def test_create_patient_vital(
     """Test case for creating a patient vital."""
     
     # Arrange
-    mock_patient_vital.return_value = PatientVital(**vital_create.dict(), Id=1, CreatedDateTime=datetime.now(), ModifiedDateTime=datetime.now())
+    mock_patient_vital.return_value = PatientVital(**vital_create.dict(), Id=1, CreatedDateTime=datetime.now(), UpdatedDateTime=datetime.now())
 
     # Act
     result = create_vital(db_session_mock, vital_create)
@@ -181,14 +181,14 @@ def get_mock_patient_vitals():
         PatientVital(
         Id=1, PatientId=1, IsAfterMeal="0", Temperature=36.6, SystolicBP=120, DiastolicBP=80,
         HeartRate=70, SpO2=98, BloodSugarLevel=90, Height=170.0, Weight=70.0,
-        VitalRemarks="Normal", CreatedDateTime=datetime.now(), ModifiedDateTime=datetime.now(),
-        CreatedById=1, ModifiedById=1
+        VitalRemarks="Normal", CreatedDateTime=datetime.now(), UpdatedDateTime=datetime.now(),
+        CreatedById=1, UpdatedById=1
     ),
     PatientVital(
         Id=2, PatientId=1, IsAfterMeal="1", Temperature=37.0, SystolicBP=130, DiastolicBP=85,
         HeartRate=75, SpO2=97, BloodSugarLevel=110, Height=170.0, Weight=70.0,
-        VitalRemarks="Slightly high BP", CreatedDateTime=datetime.now(), ModifiedDateTime=datetime.now(),
-        CreatedById=1, ModifiedById=1
+        VitalRemarks="Slightly high BP", CreatedDateTime=datetime.now(), UpdatedDateTime=datetime.now(),
+        CreatedById=1, UpdatedById=1
     )]
 
 @pytest.fixture
@@ -206,9 +206,9 @@ def vital_create():
         Weight=70.0,
         VitalRemarks="Normal",
         CreatedDateTime=datetime.now(),
-        ModifiedDateTime=datetime.now(),
+        UpdatedDateTime=datetime.now(),
         CreatedById=1,
-        ModifiedById=1
+        UpdatedById=1
     )
 
 
@@ -226,8 +226,8 @@ def vital_update():
         Height=170.0,
         Weight=70.0,
         VitalRemarks="Slightly high BP",
-        ModifiedById=1,
-        ModifiedDateTime=datetime.now()
+        UpdatedById=1,
+        UpdatedDateTime=datetime.now()
     )
 
 
