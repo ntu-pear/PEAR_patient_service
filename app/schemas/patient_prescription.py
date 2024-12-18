@@ -5,7 +5,7 @@ from typing import Optional
 class PatientPrescriptionBase(BaseModel):
     IsDeleted: Optional[str] = '0'
     PatientId: int
-    # prescriptionListId: int
+    PrescriptionListId: int
     Dosage: str
     FrequencyPerDay: int
     Instruction: str

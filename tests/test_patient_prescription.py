@@ -17,7 +17,7 @@ def test_get_prescriptions(db_session_mock):
     mock_prescriptions = [
         {
             "Id": 1,
-            "Active": "1",
+            "IsDeleted": "1",
             "PatientId": 1,
             "Dosage": "500mg",
             "FrequencyPerDay": 3,
@@ -34,7 +34,7 @@ def test_get_prescriptions(db_session_mock):
         },
         {
             "Id": 2,
-            "Active": "1",
+            "IsDeleted": "1",
             "PatientId": 2,
             "Dosage": "250mg",
             "FrequencyPerDay": 2,
@@ -112,6 +112,7 @@ def test_create_prescription(
         "IsDeleted": "1", 
         "PatientId": 1,
         "Dosage": "500mg",
+        "PrescriptionListId": 1,
         "FrequencyPerDay": 3,
         "Instruction": "Take after meal",
         "StartDate": datetime(2023, 1, 1),
@@ -144,6 +145,7 @@ def test_update_prescription(db_session_mock):
         "Active": "1",
         "PatientId": 1,
         "Dosage": "500mg",
+        "PrescriptionListId": 1,
         "FrequencyPerDay": 3,
         "Instruction": "Take after meal",
         "StartDate": datetime(2023, 1, 1),
@@ -172,6 +174,7 @@ def test_delete_prescription(db_session_mock):
     data = {
         "IsDeleted": "1",
         "PatientId": 1,
+        "PrescriptionListId": 1,
         "Dosage": "500mg",
         "FrequencyPerDay": 3,
         "Instruction": "Take after meal",
