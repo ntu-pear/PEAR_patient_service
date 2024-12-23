@@ -7,7 +7,6 @@ class PatientDoctorNote(Base):
     __tablename__ = "PATIENT_DOCTORNOTE"
 
     id = Column(Integer, primary_key=True, index=True) 
-    active = Column(String(1), default='Y', nullable=False) 
     patientId = Column(Integer, ForeignKey('PATIENT.id')) 
     doctorId = Column(Integer)  
     doctorRemarks = Column(String(255))

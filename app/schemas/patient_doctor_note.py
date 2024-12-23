@@ -3,19 +3,16 @@ from datetime import datetime
 from typing import Optional
 
 class PatientDoctorNoteBase(BaseModel):
-    active: Optional[str] = 'Y'
+    isDeleted: str = '0'
     patientId: int
     doctorId: int
     doctorRemarks: Optional[str] = None
 
 class PatientDoctorNoteCreate(PatientDoctorNoteBase):
-    createdDate: datetime
-    modifiedDate: datetime
     createdById: int
     modifiedById: int
 
 class PatientDoctorNoteUpdate(PatientDoctorNoteBase):
-    modifiedDate: datetime
     modifiedById: int
 
 class PatientDoctorNote(PatientDoctorNoteBase):
