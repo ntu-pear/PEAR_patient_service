@@ -8,9 +8,11 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 # Get the database URL from environment variables
+print("in database.py")
 DB_URL_LOCAL = os.getenv("DB_URL_LOCAL")
 DB_DRIVER_DEV = os.getenv("DB_DRIVER_DEV")
 DB_SERVER_DEV = os.getenv("DB_SERVER_DEV")
+print("DB_SERVER_DEV", DB_DRIVER_DEV)
 DB_DATABASE_DEV = os.getenv("DB_DATABASE_DEV")
 DB_DATABASE_PORT = os.getenv("DB_DATABASE_PORT")
 DB_USERNAME_DEV = os.getenv("DB_USERNAME_DEV")
