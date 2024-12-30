@@ -68,7 +68,7 @@ jobs:
 
     - name: Run the app with uvicorn
       run: |
-        nohup uvicorn app.main:app &
+        nohup uvicorn app.main:app --host 127.0.0.1 --port 8000 &
 
     - name: Assert app is running
       run: |
