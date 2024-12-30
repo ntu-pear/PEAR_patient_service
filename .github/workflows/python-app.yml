@@ -30,7 +30,7 @@ jobs:
   #     run: |
   #       flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
   #       flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-  
+
   build:
     runs-on: ubuntu-24.04
 
@@ -69,3 +69,26 @@ jobs:
     - name: Run the app with uvicorn
       run: |
         uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+    - name: Assert app is running
+      run: |
+        sleep 5  # Wait for a few seconds to ensure the app has started
+        response=$(curl --silent --fail http://127.0.0.1:8000)
+        echo "Response: $response"
+        # Assert the response matches the expected output
+        echo "$response" | grep -q '{"message":"Welcome to the Patient API Testing"}'
+        if [ $? -ne 0 ]; then
+          echo "App did not respond with the expected message."
+          exit 1  # Fail the job if the message doesn't match
+        fi
+
+    - name: Stop the uvicorn server
+      run: |
+        # Find the process ID of uvicorn and kill it
+        pid=$(ps aux | grep 'uvicorn app.main:app' | grep -v grep | awk '{print $2}')
+        if [ ! -z "$pid" ]; then
+          kill $pid  # Stop the uvicorn process
+          echo "Stopped uvicorn process with PID: $pid"
+        else
+          echo "No uvicorn process found"
+        fi
