@@ -72,7 +72,7 @@ jobs:
 
     - name: Assert app is running
       run: |
-        sleep 5  # Wait for a few seconds to ensure the app has started
+        sleep 10  # Wait for a few seconds to ensure the app has started
         response=$(curl --silent --fail http://127.0.0.1:8000)
         echo "Response: $response"
         # Assert the response matches the expected output
