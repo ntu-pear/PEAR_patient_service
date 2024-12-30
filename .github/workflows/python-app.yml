@@ -35,6 +35,12 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Print environment variables (excluding sensitive ones)
+      run: |
+        echo "DB_SERVER_DEV=${{ secrets.DB_SERVER_DEV }}"
+        echo "DB_DATABASE_DEV=${{ secrets.DB_DATABASE_DEV }}"
+        echo "DB_DATABASE_PORT=${{ secrets.DB_DATABASE_PORT }}"
     
     # pip install pytest  
     # - name: Lint with flake8
