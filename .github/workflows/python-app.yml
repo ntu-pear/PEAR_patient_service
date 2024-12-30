@@ -41,6 +41,9 @@ jobs:
         echo "DB_SERVER_DEV=${{ secrets.DB_SERVER_DEV }}"
         echo "DB_DATABASE_DEV=${{ secrets.DB_DATABASE_DEV }}"
         echo "DB_DATABASE_PORT=${{ secrets.DB_DATABASE_PORT }}"
+        # Construct the URL here (this is for logging purposes)
+        DB_URL="postgresql://${{ secrets.DB_USERNAME_DEV }}:@${{ secrets.DB_SERVER_DEV }}:${{ secrets.DB_DATABASE_PORT }}/${{ secrets.DB_DATABASE_DEV }}"
+        echo "Database URL (without password): $DB_URL"
     
     # pip install pytest  
     # - name: Lint with flake8
