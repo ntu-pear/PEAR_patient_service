@@ -18,11 +18,14 @@ jobs:
     runs-on: ubuntu-24.04
 
     env:
-      DB_SERVER_DEV: ${{ secrets.DB_SERVER_DEV }}
-      DB_DATABASE_DEV: ${{ secrets.DB_DATABASE_DEV }}
-      DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
-      DB_USERNAME_DEV: ${{ secrets.DB_USERNAME_DEV }}
-      DB_PASSWORD_DEV: ${{ secrets.DB_PASSWORD_DEV }}
+      # DB_SERVER_DEV: ${{ secrets.DB_SERVER_DEV }}
+      # DB_DATABASE_DEV: ${{ secrets.DB_DATABASE_DEV }}
+      # DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
+      DB_SERVER_DEV: 10.96.188.172
+      DB_DATABASE_DEV: "fyp_dev_tim"
+      DB_DATABASE_PORT: 1433
+      # DB_USERNAME_DEV: ${{ secrets.DB_USERNAME_DEV }}
+      # DB_PASSWORD_DEV: ${{ secrets.DB_PASSWORD_DEV }}
 
 
     steps:
