@@ -17,5 +17,4 @@ class PatientPrescriptionListUpdate(PatientPrescriptionListBase):
 class PatientPrescriptionList(PatientPrescriptionListBase):
     Id: int
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}

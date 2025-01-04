@@ -20,5 +20,4 @@ class PatientMobilityListUpdate(PatientMobilityListBase):
 class PatientMobilityList(PatientMobilityListBase):
     pass
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
