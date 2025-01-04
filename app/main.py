@@ -1,12 +1,12 @@
 from fastapi import FastAPI,Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+
 from .database import engine, Base
 from app.routers import (
     allergy_reaction_type_router,
     allergy_type_router,
     patient_allergy_mapping_router,
-    patient_assigned_dementia_router,
     patient_doctor_note_router,
     patient_guardian_router,
     patient_highlight_router,
@@ -17,6 +17,8 @@ from app.routers import (
     patient_router,
     patient_social_history_router,
     patient_vital_router,
+    patient_assigned_dementia_list_router,
+    patient_assigned_dementia_mapping_router,
 )
 from fastapi.middleware.cors import CORSMiddleware
 import os
@@ -67,9 +69,13 @@ app.include_router(patient_router.router, prefix="/api/v1", tags=["patients"])
 app.include_router(patient_allergy_mapping_router.router, prefix="/api/v1", tags=["Patient Allergies"])
 app.include_router(allergy_type_router.router, prefix="/api/v1", tags=["Allergy Types"])
 app.include_router(allergy_reaction_type_router.router, prefix="/api/v1", tags=["Allergy Reaction Types"])
-
 app.include_router(
-    patient_assigned_dementia_router.router, prefix="/api/v1", tags=["dementia"]
+    patient_assigned_dementia_list_router.router,
+    prefix="/api/v1",
+    tags=["Dementia List"]
+)
+app.include_router(
+    patient_assigned_dementia_mapping_router.router, prefix="/api/v1", tags=["Patient Assigned Dementia"]
 )
 app.include_router(
     patient_doctor_note_router.router, prefix="/api/v1", tags=["doctor notes"]

@@ -2,7 +2,6 @@ from app.database import engine, Base
 from app.models import (
     patient_allergy_mapping_model,  # Import all models to ensure they are registered
     patient_allocation_model,
-    patient_assigned_dementia_model,
     patient_attendance_model,
     patient_doctor_note_model,
     patient_guardian_model,
@@ -21,6 +20,7 @@ from app.models import (
     patient_list_language_model,
     patient_guardian_relationship_mapping_model,
     patient_patient_guardian_model,
+    patient_assigned_dementia_list_model,
 )
 
 # Create all tables in the database using the engine
