@@ -2,23 +2,22 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
-class PatientPhotoBase(BaseModel):
+class PatientAssignedDementiaBase(BaseModel):
     active: Optional[str] = 'Y'
     patientId: int
-    photoPath: Optional[str] = None
-    albumCategoryListId: int
+    dementiaTypeListId: int
 
-class PatientPhotoCreate(PatientPhotoBase):
+class PatientAssignedDementiaCreate(PatientAssignedDementiaBase):
     createdDate: datetime
     modifiedDate: datetime
     createdById: int
     modifiedById: int
 
-class PatientPhotoUpdate(PatientPhotoBase):
+class PatientAssignedDementiaUpdate(PatientAssignedDementiaBase):
     modifiedDate: datetime
     modifiedById: int
 
-class PatientPhoto(PatientPhotoBase):
+class PatientAssignedDementia(PatientAssignedDementiaBase):
     id: int
     createdDate: datetime
     modifiedDate: datetime

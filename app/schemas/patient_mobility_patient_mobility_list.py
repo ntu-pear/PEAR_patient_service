@@ -18,5 +18,4 @@ class PatientMobility_MobilityListUpdate(PatientMobility_MobilityListBase):
 class PatientMobility_MobilityList(PatientMobility_MobilityListBase):
     id: int
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}

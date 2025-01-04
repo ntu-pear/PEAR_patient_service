@@ -1,7 +1,7 @@
 import pyodbc
 
 # Connection details to the DEV environment
-server = '172.21.148.179,1433'  # Adjust the port if needed
+server = '10.96.188.172,1433'  # Adjust the port if needed
 database = 'patient_service_dev'  # Use 'master' to test the connection
 username = 'fypcom_fypcom'
 password = 'Fyppear@1'

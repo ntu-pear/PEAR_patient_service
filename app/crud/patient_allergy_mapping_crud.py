@@ -14,13 +14,13 @@ def get_all_allergies(db: Session):
             PatientAllergyMapping.PatientID,
             PatientAllergyMapping.AllergyRemarks,
             AllergyType.Value.label('AllergyTypeValue'),
-            AllergyType.Active.label('AllergyTypeActive'),
+            AllergyType.IsDeleted.label('AllergyTypeIsDeleted'),
             AllergyReactionType.Value.label('AllergyReactionTypeValue'),
-            AllergyReactionType.Active.label('AllergyReactionTypeActive'),
+            AllergyReactionType.IsDeleted.label('AllergyReactionTypeIsDeleted'),
             PatientAllergyMapping.CreatedDateTime,
             PatientAllergyMapping.UpdatedDateTime,
-            PatientAllergyMapping.createdById,
-            PatientAllergyMapping.modifiedById
+            PatientAllergyMapping.CreatedById,
+            PatientAllergyMapping.ModifiedById
         )
         .join(AllergyType, PatientAllergyMapping.AllergyTypeID == AllergyType.AllergyTypeID)
         .join(AllergyReactionType, PatientAllergyMapping.AllergyReactionTypeID == AllergyReactionType.AllergyReactionTypeID)
@@ -30,8 +30,8 @@ def get_all_allergies(db: Session):
     # Handle "Active" logic
     patient_allergies = []
     for result in results:
-        allergy_type_value = result.AllergyTypeValue if result.AllergyTypeActive == "1" else "No allergy type"
-        allergy_reaction_value = result.AllergyReactionTypeValue if result.AllergyReactionTypeActive == "1" else "No allergy reaction"
+        allergy_type_value = result.AllergyTypeValue if result.AllergyTypeIsDeleted == "0" else "No allergy type"
+        allergy_reaction_value = result.AllergyReactionTypeValue if result.AllergyReactionTypeIsDeleted == "0" else "No allergy reaction"
         
         patient_allergies.append({
             "Patient_AllergyID": result.Patient_AllergyID,
@@ -41,8 +41,8 @@ def get_all_allergies(db: Session):
             "AllergyReactionTypeValue": allergy_reaction_value,
             "CreatedDateTime": result.CreatedDateTime,
             "UpdatedDateTime": result.UpdatedDateTime,
-            "createdById": result.createdById,
-            "modifiedById": result.modifiedById
+            "CreatedById": result.CreatedById,
+            "ModifiedById": result.ModifiedById
         })
 
     return patient_allergies
@@ -55,13 +55,13 @@ def get_patient_allergies(db: Session, patient_id: int):
             PatientAllergyMapping.PatientID,
             PatientAllergyMapping.AllergyRemarks,
             AllergyType.Value.label('AllergyTypeValue'),
-            AllergyType.Active.label('AllergyTypeActive'),
+            AllergyType.IsDeleted.label('AllergyTypeIsDeleted'),
             AllergyReactionType.Value.label('AllergyReactionTypeValue'),
-            AllergyReactionType.Active.label('AllergyReactionTypeActive'),  
+            AllergyReactionType.IsDeleted.label('AllergyReactionTypeIsDeleted'),
             PatientAllergyMapping.CreatedDateTime,
             PatientAllergyMapping.UpdatedDateTime,
-            PatientAllergyMapping.createdById,
-            PatientAllergyMapping.modifiedById
+            PatientAllergyMapping.CreatedById,
+            PatientAllergyMapping.ModifiedById
         )
         .join(AllergyType, PatientAllergyMapping.AllergyTypeID == AllergyType.AllergyTypeID)
         .join(AllergyReactionType, PatientAllergyMapping.AllergyReactionTypeID == AllergyReactionType.AllergyReactionTypeID)
@@ -72,8 +72,8 @@ def get_patient_allergies(db: Session, patient_id: int):
     # Handle "Active" logic
     patient_allergies = []
     for result in results:
-        allergy_type_value = result.AllergyTypeValue if result.AllergyTypeActive == "1" else "No allergy type"
-        allergy_reaction_value = result.AllergyReactionTypeValue if result.AllergyReactionTypeActive == "1" else "No allergy reaction"
+        allergy_type_value = result.AllergyTypeValue if result.AllergyTypeIsDeleted == "0" else "No allergy type"
+        allergy_reaction_value = result.AllergyReactionTypeValue if result.AllergyReactionTypeIsDeleted == "0" else "No allergy reaction"
         
         patient_allergies.append({
             "Patient_AllergyID": result.Patient_AllergyID,
@@ -83,8 +83,8 @@ def get_patient_allergies(db: Session, patient_id: int):
             "AllergyReactionTypeValue": allergy_reaction_value,
             "CreatedDateTime": result.CreatedDateTime,
             "UpdatedDateTime": result.UpdatedDateTime,
-            "createdById": result.createdById,
-            "modifiedById": result.modifiedById
+            "CreatedById": result.CreatedById,
+            "ModifiedById": result.ModifiedById
         })
 
     return patient_allergies
@@ -92,11 +92,11 @@ def get_patient_allergies(db: Session, patient_id: int):
 def create_patient_allergy(db: Session, allergy_data: PatientAllergyCreate,created_by:int):
     # Check if the AllergyTypeID exists in the AllergyType table
     allergy_type = db.query(AllergyType).filter(AllergyType.AllergyTypeID == allergy_data.AllergyTypeID).first()
-    if not allergy_type or allergy_type.Active != "1":
+    if not allergy_type or allergy_type.IsDeleted != "0":
         raise HTTPException(status_code=400, detail="Invalid or inactive Allergy Type")
     
     # Check if the AllergyReactionTypeID exists in the AllergyReactionType table
-    allergy_reaction_type = db.query(AllergyReactionType).filter(AllergyReactionType.AllergyReactionTypeID == allergy_data.AllergyReactionTypeID, AllergyReactionType.Active == "1").first()
+    allergy_reaction_type = db.query(AllergyReactionType).filter(AllergyReactionType.AllergyReactionTypeID == allergy_data.AllergyReactionTypeID, AllergyReactionType.IsDeleted == "0").first()
     if not allergy_reaction_type:
         raise HTTPException(status_code=400, detail="Invalid or inactive Allergy Reaction Type")
 
@@ -116,11 +116,11 @@ def create_patient_allergy(db: Session, allergy_data: PatientAllergyCreate,creat
         AllergyTypeID=allergy_data.AllergyTypeID,
         AllergyReactionTypeID=allergy_data.AllergyReactionTypeID,
         AllergyRemarks=allergy_data.AllergyRemarks,
-        Active=allergy_data.Active,
+        IsDeleted=allergy_data.IsDeleted,
         CreatedDateTime=datetime.now(),
         UpdatedDateTime=datetime.now(),
-        createdById=created_by,  
-        modifiedById=created_by  
+        CreatedById=created_by,  
+        ModifiedById=created_by  
     )
 
     db.add(db_allergy)
@@ -141,11 +141,11 @@ def update_patient_allergy(db: Session, patient_id:int,  allergy_data: PatientAl
 
     # Check if the AllergyTypeID exists and is active
     allergy_type = db.query(AllergyType).filter(AllergyType.AllergyTypeID == allergy_data.AllergyTypeID).first()
-    if not allergy_type or allergy_type.Active != "1":
+    if not allergy_type or allergy_type.IsDeleted != "0":
         raise HTTPException(status_code=400, detail="Invalid or inactive Allergy Type")
 
     # Check if the AllergyReactionTypeID exists and is active
-    allergy_reaction_type = db.query(AllergyReactionType).filter(AllergyReactionType.AllergyReactionTypeID == allergy_data.AllergyReactionTypeID, AllergyReactionType.Active == "1").first()
+    allergy_reaction_type = db.query(AllergyReactionType).filter(AllergyReactionType.AllergyReactionTypeID == allergy_data.AllergyReactionTypeID, AllergyReactionType.IsDeleted == "0").first()
     if not allergy_reaction_type:
         raise HTTPException(status_code=400, detail="Invalid or inactive Allergy Reaction Type")
 
@@ -153,9 +153,9 @@ def update_patient_allergy(db: Session, patient_id:int,  allergy_data: PatientAl
     db_allergy.AllergyTypeID = allergy_data.AllergyTypeID
     db_allergy.AllergyReactionTypeID = allergy_data.AllergyReactionTypeID
     db_allergy.AllergyRemarks = allergy_data.AllergyRemarks
-    db_allergy.Active = allergy_data.Active
+    db_allergy.IsDeleted = allergy_data.IsDeleted
     db_allergy.UpdatedDateTime = datetime.now()
-    db_allergy.modifiedById = modified_by  # Set the user who modified it
+    db_allergy.ModifiedById = modified_by  # Set the user who modified it
 
     # Commit the changes to the database
     db.commit()
@@ -173,9 +173,9 @@ def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: in
         raise HTTPException(status_code=404, detail="Patient allergy record not found")
 
     # Soft delete the allergy by setting Active to "0"
-    db_allergy.Active = "0"
+    db_allergy.IsDeleted = "1"
     db_allergy.UpdatedDateTime = datetime.now()
-    db_allergy.modifiedById = modified_by
+    db_allergy.ModifiedById = modified_by
 
     # Commit the changes to the database
     db.commit()

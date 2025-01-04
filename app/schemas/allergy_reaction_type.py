@@ -3,8 +3,8 @@ from datetime import datetime
 from typing import Optional
 
 class AllergyReactionTypeBase(BaseModel):
-    Value: str = Field(example="Rashes")
-    Active: Optional[str] = Field(default="1", example="1")
+    Value: str = Field(json_schema_extra={"example": "Rashes"})
+    IsDeleted: Optional[str] = Field(default="0", json_schema_extra={"example": "0"})
 
 class AllergyReactionTypeCreate(AllergyReactionTypeBase):
     pass
@@ -13,11 +13,10 @@ class AllergyReactionTypeUpdate(AllergyReactionTypeBase):
     pass
 
 class AllergyReactionType(AllergyReactionTypeBase):
-    AllergyReactionTypeID: int = Field(example=1)
+    AllergyReactionTypeID: int = Field(json_schema_extra={"example": 1})
     CreatedDateTime: datetime = Field(default_factory=datetime.now)
     UpdatedDateTime: datetime = Field(default_factory=datetime.now)
-    createdById: int = Field(example=1)
-    modifiedById: int = Field(example=1)
-    class Config:
-        from_attributes = True
+    CreatedById: int = Field(json_schema_extra={"example": 1})
+    ModifiedById: int = Field(json_schema_extra={"example": 1})
+    model_config = {"from_attributes": True}
 
