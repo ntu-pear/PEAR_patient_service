@@ -28,7 +28,7 @@ def get_dementia_list_entry(dementia_list_id: int, db: Session = Depends(get_db)
     return db_entry
 
 # Create a new dementia list entry
-@router.post("/PatientAssignedDementiaList/add", response_model=PatientAssignedDementiaListRead)
+@router.post("/PatientAssignedDementiaList", response_model=PatientAssignedDementiaListRead)
 def create_dementia_list_entry(
     dementia_list_data: PatientAssignedDementiaListCreate, db: Session = Depends(get_db)
 ):
@@ -37,10 +37,12 @@ def create_dementia_list_entry(
     try:
         return crud_dementia_list.create_dementia_list_entry(db, dementia_list_data, created_by)
     except Exception as e:
+        print(dementia_list_data)
+
         raise HTTPException(status_code=400, detail=f"Error creating dementia list entry: {e}")
 
 # Update a dementia list entry
-@router.put("/PatientAssignedDementiaList/update/{dementia_list_id}", response_model=PatientAssignedDementiaListRead)
+@router.put("/PatientAssignedDementiaList/{dementia_list_id}", response_model=PatientAssignedDementiaListRead)
 def update_dementia_list_entry(
     dementia_list_id: int,
     dementia_list_data: PatientAssignedDementiaListUpdate,
@@ -54,7 +56,7 @@ def update_dementia_list_entry(
     return db_entry
 
 # Soft delete a dementia list entry (set isDeleted to '1')
-@router.put("/PatientAssignedDementiaList/delete/{dementia_list_id}", response_model=PatientAssignedDementiaListRead)
+@router.delete("/PatientAssignedDementiaList/{dementia_list_id}", response_model=PatientAssignedDementiaListRead)
 def delete_dementia_list_entry(dementia_list_id: int, db: Session = Depends(get_db)):
     # Replace `modified_by` with the current user ID in a real-world scenario
     modified_by = 1

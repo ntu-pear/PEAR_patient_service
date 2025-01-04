@@ -11,7 +11,13 @@ from ..schemas.patient_assigned_dementia_mapping import (
 
 router = APIRouter()
 
-@router.get("/get_all_assigned_dementias", response_model=list[PatientAssignedDementia], description="Get all assigned dementias for all patients.")
+@router.get("/get_all_assigned_dementias", response_model=list[PatientAssignedDementia], 
+    description=(
+        "Retrieve all assigned dementia entries for all patients. \n\n" 
+        "This endpoint returns a list of dementia assignments, each containing details such as `isDeleted`, "
+        "`patientId`, `dementiaTypeListId`, `id`, `createdDate`, `modifiedDate`, `createdById`, and `modifiedById`."
+    ),
+    )
 def get_all_assigned_dementias(db: Session = Depends(get_db)):
     result = crud_assigned_dementia.get_all_assigned_dementias(db)
     if not result:
@@ -40,7 +46,7 @@ def update_assigned_dementia(assigned_dementia_id: int, assigned_dementia_data: 
         raise HTTPException(status_code=404, detail=f"Assigned dementia with ID {assigned_dementia_id} not found")
     return result
 
-@router.delete("/delete_assigned_dementia/{assigned_dementia_id}", response_model=PatientAssignedDementiaCreateResp, description="Soft delete an assigned dementia record by marking it as inactive.")
+@router.delete("/delete_assigned_dementia/{assigned_dementia_id}", response_model=PatientAssignedDementiaCreateResp, description="Soft delete an assigned dementia record by marking it as isDeleted.")
 def delete_assigned_dementia(assigned_dementia_id: int, db: Session = Depends(get_db)):
     # TODO: Replace with the actual user ID
     userId = 1

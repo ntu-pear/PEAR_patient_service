@@ -10,20 +10,20 @@ def get_all_assigned_dementias(db: Session):
     results = (
         db.query(
             PatientAssignedDementiaMapping.id,
-            PatientAssignedDementiaMapping.patientId,
-            PatientAssignedDementiaMapping.dementiaTypeListId,  # Include this field
-            PatientAssignedDementiaMapping.active,
-            PatientAssignedDementiaMapping.createdDate,
-            PatientAssignedDementiaMapping.modifiedDate,
-            PatientAssignedDementiaMapping.createdById,
-            PatientAssignedDementiaMapping.modifiedById,
-            PatientAssignedDementiaList.value.label("DementiaTypeValue"),
+            PatientAssignedDementiaMapping.PatientId,
+            PatientAssignedDementiaMapping.DementiaTypeListId,  # Include this field
+            PatientAssignedDementiaMapping.IsDeleted,
+            PatientAssignedDementiaMapping.CreatedDate,
+            PatientAssignedDementiaMapping.ModifiedDate,
+            PatientAssignedDementiaMapping.CreatedById,
+            PatientAssignedDementiaMapping.ModifiedById,
+            PatientAssignedDementiaList.Value.label("DementiaTypeValue"),
         )
         .join(
             PatientAssignedDementiaList,
-            PatientAssignedDementiaMapping.dementiaTypeListId == PatientAssignedDementiaList.dementiaTypeListId,
+            PatientAssignedDementiaMapping.DementiaTypeListId == PatientAssignedDementiaList.DementiaTypeListId,
         )
-        .filter(PatientAssignedDementiaMapping.active == "Y")  # Filter only active assignments
+        .filter(PatientAssignedDementiaMapping.IsDeleted == "0")  # Filter only not deleted 
         .all()
     )
 
@@ -31,13 +31,13 @@ def get_all_assigned_dementias(db: Session):
     for result in results:
         dementia_assignments.append({
             "id": result.id,
-            "patientId": result.patientId,
-            "dementiaTypeListId": result.dementiaTypeListId,  # Add this field
-            "active": result.active,
-            "createdDate": result.createdDate,
-            "modifiedDate": result.modifiedDate,
-            "createdById": result.createdById,
-            "modifiedById": result.modifiedById,
+            "PatientId": result.PatientId,
+            "DementiaTypeListId": result.DementiaTypeListId,  # Add this field
+            "IsDeleted": result.IsDeleted,
+            "CreatedDate": result.CreatedDate,
+            "ModifiedDate": result.ModifiedDate,
+            "CreatedById": result.CreatedById,
+            "ModifiedById": result.ModifiedById,
             "DementiaTypeValue": result.DementiaTypeValue,
         })
 
@@ -49,17 +49,17 @@ def get_assigned_dementias(db: Session, patient_id: int):
     results = (
         db.query(
             PatientAssignedDementiaMapping.id,
-            PatientAssignedDementiaMapping.patientId,
-            PatientAssignedDementiaMapping.dementiaTypeListId,  # Include this field
-            PatientAssignedDementiaMapping.active,
-            PatientAssignedDementiaMapping.createdDate,
-            PatientAssignedDementiaMapping.modifiedDate,
-            PatientAssignedDementiaMapping.createdById,
-            PatientAssignedDementiaMapping.modifiedById,
-            PatientAssignedDementiaList.value.label("DementiaTypeValue"),
+            PatientAssignedDementiaMapping.PatientId,
+            PatientAssignedDementiaMapping.DementiaTypeListId,  # Include this field
+            PatientAssignedDementiaMapping.IsDeleted,
+            PatientAssignedDementiaMapping.CreatedDate,
+            PatientAssignedDementiaMapping.ModifiedDate,
+            PatientAssignedDementiaMapping.CreatedById,
+            PatientAssignedDementiaMapping.ModifiedById,
+            PatientAssignedDementiaList.Value.label("DementiaTypeValue"),
         )
-        .join(PatientAssignedDementiaList, PatientAssignedDementiaMapping.dementiaTypeListId == PatientAssignedDementiaList.dementiaTypeListId)
-        .filter(PatientAssignedDementiaMapping.patientId == patient_id, PatientAssignedDementiaMapping.active == "Y")
+        .join(PatientAssignedDementiaList, PatientAssignedDementiaMapping.DementiaTypeListId == PatientAssignedDementiaList.DementiaTypeListId)
+        .filter(PatientAssignedDementiaMapping.PatientId == patient_id, PatientAssignedDementiaMapping.IsDeleted == "0")
         .all()
     )
 
@@ -67,13 +67,13 @@ def get_assigned_dementias(db: Session, patient_id: int):
     for result in results:
         dementia_assignments.append({
             "id": result.id,
-            "patientId": result.patientId,
-            "dementiaTypeListId": result.dementiaTypeListId,  # Add this field
-            "active": result.active,
-            "createdDate": result.createdDate,
-            "modifiedDate": result.modifiedDate,
-            "createdById": result.createdById,
-            "modifiedById": result.modifiedById,
+            "PatientId": result.PatientId,
+            "DementiaTypeListId": result.DementiaTypeListId,  # Add this field
+            "IsDeleted": result.IsDeleted,
+            "CreatedDate": result.CreatedDate,
+            "ModifiedDate": result.ModifiedDate,
+            "CreatedById": result.CreatedById,
+            "ModifiedById": result.ModifiedById,
             "DementiaTypeValue": result.DementiaTypeValue,
         })
 
@@ -84,17 +84,17 @@ def get_assigned_dementias(db: Session, patient_id: int):
 def create_assigned_dementia(db: Session, dementia_data: PatientAssignedDementiaCreate, created_by: int):
     # Check if the dementia type exists and is not deleted
     dementia_type = db.query(PatientAssignedDementiaList).filter(
-        PatientAssignedDementiaList.dementiaTypeListId == dementia_data.dementiaTypeListId,
-        PatientAssignedDementiaList.isDeleted == "0",
+        PatientAssignedDementiaList.DementiaTypeListId == dementia_data.DementiaTypeListId,
+        PatientAssignedDementiaList.IsDeleted == "0",
     ).first()
     if not dementia_type:
         raise HTTPException(status_code=400, detail="Invalid or deleted dementia type")
 
     # Check if the patient already has this dementia type assigned
     existing_assignment = db.query(PatientAssignedDementiaMapping).filter(
-        PatientAssignedDementiaMapping.patientId == dementia_data.patientId,
-        PatientAssignedDementiaMapping.dementiaTypeListId == dementia_data.dementiaTypeListId,
-        PatientAssignedDementiaMapping.active == "Y",
+        PatientAssignedDementiaMapping.PatientId == dementia_data.PatientId,
+        PatientAssignedDementiaMapping.DementiaTypeListId == dementia_data.DementiaTypeListId,
+        PatientAssignedDementiaMapping.IsDeleted == "0",
     ).first()
 
     if existing_assignment:
@@ -102,13 +102,13 @@ def create_assigned_dementia(db: Session, dementia_data: PatientAssignedDementia
 
     # Create the new assignment
     new_assignment = PatientAssignedDementiaMapping(
-        patientId=dementia_data.patientId,
-        dementiaTypeListId=dementia_data.dementiaTypeListId,
-        active="Y",
-        createdDate=datetime.utcnow(),
-        modifiedDate=datetime.utcnow(),
-        createdById=created_by,
-        modifiedById=created_by,
+        PatientId=dementia_data.PatientId,
+        DementiaTypeListId=dementia_data.DementiaTypeListId,
+        IsDeleted="0",
+        CreatedDate=datetime.utcnow(),
+        ModifiedDate=datetime.utcnow(),
+        CreatedById=created_by,
+        ModifiedById=created_by,
     )
 
     db.add(new_assignment)
@@ -121,7 +121,7 @@ def create_assigned_dementia(db: Session, dementia_data: PatientAssignedDementia
 def update_assigned_dementia(db: Session, dementia_id: int, dementia_data: PatientAssignedDementiaUpdate, modified_by: int):
     db_assignment = db.query(PatientAssignedDementiaMapping).filter(
         PatientAssignedDementiaMapping.id == dementia_id,
-        PatientAssignedDementiaMapping.active == "Y",
+        PatientAssignedDementiaMapping.IsDeleted == "0",
     ).first()
 
     if not db_assignment:
@@ -132,28 +132,28 @@ def update_assigned_dementia(db: Session, dementia_id: int, dementia_data: Patie
         setattr(db_assignment, key, value)
 
     # Update metadata
-    db_assignment.modifiedDate = datetime.utcnow()
-    db_assignment.modifiedById = modified_by
+    db_assignment.ModifiedDate = datetime.utcnow()
+    db_assignment.ModifiedById = modified_by
 
     db.commit()
     db.refresh(db_assignment)
     return db_assignment
 
 
-# Soft delete a dementia assignment (set active to "N")
+# Soft delete a dementia assignment (set IsDeleted to 0)
 def delete_assigned_dementia(db: Session, dementia_id: int, modified_by: int):
     db_assignment = db.query(PatientAssignedDementiaMapping).filter(
         PatientAssignedDementiaMapping.id == dementia_id,
-        PatientAssignedDementiaMapping.active == "Y",
+        PatientAssignedDementiaMapping.IsDeleted == "0",
     ).first()
 
     if not db_assignment:
         raise HTTPException(status_code=404, detail="Dementia assignment not found")
 
     # Soft delete the assignment
-    db_assignment.active = "N"
-    db_assignment.modifiedDate = datetime.utcnow()
-    db_assignment.modifiedById = modified_by
+    db_assignment.IsDeleted = "1"
+    db_assignment.ModifiedDate = datetime.utcnow()
+    db_assignment.ModifiedById = modified_by
 
     db.commit()
     db.refresh(db_assignment)
