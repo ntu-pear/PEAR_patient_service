@@ -3,36 +3,36 @@ from datetime import datetime
 from typing import Optional
 
 class PatientVitalBase(BaseModel):
-    active: Optional[str] = '1'
-    patientId: int
-    afterMeal: str
-    temperature: float
-    systolicBP: int
-    diastolicBP: int
-    heartRate: int
-    spO2: int
-    bloodSugarLevel: int
-    height: float
-    weight: float
-    vitalRemarks: Optional[str] = None
+    IsDeleted: Optional[str] = '0'
+    PatientId: int
+    IsAfterMeal: str
+    Temperature: float
+    SystolicBP: int
+    DiastolicBP: int
+    HeartRate: int
+    SpO2: int
+    BloodSugarLevel: int
+    Height: float
+    Weight: float
+    VitalRemarks: Optional[str] = None
 
 class PatientVitalCreate(PatientVitalBase):
-    createdById: int
-    modifiedById: int
+    CreatedById: int
+    UpdatedById: int
 
 class PatientVitalUpdate(PatientVitalBase):
-    modifiedById: int
-    modifiedDateTime: Optional[datetime] = None
+    UpdatedById: int
+    UpdatedDateTime: Optional[datetime] = None
 
 class PatientVitalDelete(BaseModel):
-    id: int
+    Id: int
 
 class PatientVital(PatientVitalBase):
-    id: int
-    createdDateTime: datetime
-    modifiedDateTime: datetime
-    createdById: int
-    modifiedById: int
+    Id: int
+    CreatedDateTime: datetime
+    UpdatedDateTime: datetime
+    CreatedById: int
+    UpdatedById: int
 
     class Config:
         from_attributes = True

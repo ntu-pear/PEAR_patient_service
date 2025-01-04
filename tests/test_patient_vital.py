@@ -49,7 +49,7 @@ def test_create_patient_vital(
     """Test case for creating a patient vital."""
     
     # Arrange
-    mock_patient_vital.return_value = PatientVital(**vital_create.dict(), id=1, createdDateTime=datetime.now(), modifiedDateTime=datetime.now())
+    mock_patient_vital.return_value = PatientVital(**vital_create.dict(), Id=1, CreatedDateTime=datetime.now(), UpdatedDateTime=datetime.now())
 
     # Act
     result = create_vital(db_session_mock, vital_create)
@@ -58,11 +58,11 @@ def test_create_patient_vital(
     db_session_mock.add.assert_called_once()
     db_session_mock.commit.assert_called_once()
     db_session_mock.refresh.assert_called_once_with(result)
-    assert result.patientId == vital_create.patientId
-    assert result.systolicBP == vital_create.systolicBP
-    assert result.diastolicBP == vital_create.diastolicBP
-    assert result.temperature == vital_create.temperature
-    assert result.vitalRemarks == vital_create.vitalRemarks
+    assert result.PatientId == vital_create.PatientId
+    assert result.SystolicBP == vital_create.SystolicBP
+    assert result.DiastolicBP == vital_create.DiastolicBP
+    assert result.Temperature == vital_create.Temperature
+    assert result.VitalRemarks == vital_create.VitalRemarks
 
 @mock.patch("app.models.patient_vital_model.PatientVital")
 def test_update_patient_vital(
@@ -81,16 +81,17 @@ def test_update_patient_vital(
 
     # Assert
     db_session_mock.commit.assert_called_once()
-    assert result.patientId == vital_update.patientId
-    assert result.systolicBP == vital_update.systolicBP
-    assert result.diastolicBP == vital_update.diastolicBP
-    assert result.temperature == vital_update.temperature
-    assert result.vitalRemarks == vital_update.vitalRemarks
-    assert result.heartRate == vital_update.heartRate
-    assert result.spO2 == vital_update.spO2
-    assert result.bloodSugarLevel == vital_update.bloodSugarLevel
-    assert result.height == vital_update.height
-    assert result.weight == vital_update.weight
+    assert result.PatientId == vital_update.PatientId
+    assert result.SystolicBP == vital_update.SystolicBP
+    assert result.DiastolicBP == vital_update.DiastolicBP
+    assert result.Temperature == vital_update.Temperature
+    assert result.VitalRemarks == vital_update.VitalRemarks
+    assert result.HeartRate == vital_update.HeartRate
+    assert result.SpO2 == vital_update.SpO2
+    assert result.BloodSugarLevel == vital_update.BloodSugarLevel
+    assert result.Height == vital_update.Height
+    assert result.Weight == vital_update.Weight
+
 
 @mock.patch("app.models.patient_vital_model.PatientVital")
 def test_delete_patient_vital( 
@@ -108,7 +109,7 @@ def test_delete_patient_vital(
 
     # Assert
     db_session_mock.commit.assert_called_once()
-    assert result.active == "0"
+    assert result.IsDeleted == "0"
 
 # Mocking the relevant models
 # TODO: this test fails
@@ -178,59 +179,61 @@ def get_mock_patient_vitals():
     """Return a list of mock PatientVital objects."""
     return [
         PatientVital(
-            id=1, patientId=1, afterMeal="N", temperature=36.6, systolicBP=120, diastolicBP=80,
-            heartRate=70, spO2=98, bloodSugarLevel=90, height=170.0, weight=70.0,
-            vitalRemarks="Normal", createdDateTime=datetime.now(), modifiedDateTime=datetime.now(),
-            createdById=1, modifiedById=1
-        ),
-        PatientVital(
-            id=2, patientId=1, afterMeal="Y", temperature=37.0, systolicBP=130, diastolicBP=85,
-            heartRate=75, spO2=97, bloodSugarLevel=110, height=170.0, weight=70.0,
-            vitalRemarks="Slightly high BP", createdDateTime=datetime.now(), modifiedDateTime=datetime.now(),
-            createdById=1, modifiedById=1
-        )]
+        Id=1, PatientId=1, IsAfterMeal="0", Temperature=36.6, SystolicBP=120, DiastolicBP=80,
+        HeartRate=70, SpO2=98, BloodSugarLevel=90, Height=170.0, Weight=70.0,
+        VitalRemarks="Normal", CreatedDateTime=datetime.now(), UpdatedDateTime=datetime.now(),
+        CreatedById=1, UpdatedById=1
+    ),
+    PatientVital(
+        Id=2, PatientId=1, IsAfterMeal="1", Temperature=37.0, SystolicBP=130, DiastolicBP=85,
+        HeartRate=75, SpO2=97, BloodSugarLevel=110, Height=170.0, Weight=70.0,
+        VitalRemarks="Slightly high BP", CreatedDateTime=datetime.now(), UpdatedDateTime=datetime.now(),
+        CreatedById=1, UpdatedById=1
+    )]
 
 @pytest.fixture
 def vital_create():
     return PatientVitalCreate(
-        patientId=1,
-        afterMeal="N",
-        temperature=36.6,
-        systolicBP=120,
-        diastolicBP=80,
-        heartRate=70,
-        spO2=98,
-        bloodSugarLevel=90,
-        height=170.0,
-        weight=70.0,
-        vitalRemarks="Normal",
-        createdDateTime=datetime.now(),
-        modifiedDateTime=datetime.now(),
-        createdById=1,
-        modifiedById=1
+        PatientId=1,
+        IsAfterMeal="0",
+        Temperature=36.6,
+        SystolicBP=120,
+        DiastolicBP=80,
+        HeartRate=70,
+        SpO2=98,
+        BloodSugarLevel=90,
+        Height=170.0,
+        Weight=70.0,
+        VitalRemarks="Normal",
+        CreatedDateTime=datetime.now(),
+        UpdatedDateTime=datetime.now(),
+        CreatedById=1,
+        UpdatedById=1
     )
+
 
 @pytest.fixture
 def vital_update():
     return PatientVitalUpdate(
-        patientId=1,
-        afterMeal="Y",
-        temperature=37.0,
-        systolicBP=130,
-        diastolicBP=85,
-        heartRate=75,
-        spO2=97,
-        bloodSugarLevel=110,
-        height=170.0,
-        weight=70.0,
-        vitalRemarks="Slightly high BP",
-        modifiedById=1,
-        modifiedDateTime=datetime.now()
+        PatientId=1,
+        IsAfterMeal="1",
+        Temperature=37.0,
+        SystolicBP=130,
+        DiastolicBP=85,
+        HeartRate=75,
+        SpO2=97,
+        BloodSugarLevel=110,
+        Height=170.0,
+        Weight=70.0,
+        VitalRemarks="Slightly high BP",
+        UpdatedById=1,
+        UpdatedDateTime=datetime.now()
     )
+
 
 @pytest.fixture
 def vital_delete():
     return PatientVitalDelete(
-        active="0"
+        IsDeleted="0"
     )
 

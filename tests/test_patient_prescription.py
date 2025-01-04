@@ -16,38 +16,38 @@ def db_session_mock():
 #     # Mock data
 #     mock_prescriptions = [
 #         {
-#             "id": 1,
-#             "active": "1",
-#             "patientId": 1,
-#             "dosage": "500mg",
-#             "frequencyPerDay": 3,
-#             "instruction": "Take after meal",
-#             "startDate": datetime(2023, 1, 1),
-#             "endDate": datetime(2023, 1, 10),
-#             "afterMeal": "Yes",
-#             "prescriptionRemarks": "No remarks",
-#             "status": "Active",
-#             "createdDateTime": datetime(2023, 1, 1, 10, 0),
-#             "modifiedDateTime": datetime(2023, 1, 1, 10, 0),
-#             "createdById": 1,
-#             "modifiedById": 1
+#             "Id": 1,
+#             "IsDeleted": "1",
+#             "PatientId": 1,
+#             "Dosage": "500mg",
+#             "FrequencyPerDay": 3,
+#             "Instruction": "Take after meal",
+#             "StartDate": datetime(2023, 1, 1),
+#             "EndDate": datetime(2023, 1, 10),
+#             "IsAfterMeal": "Yes",
+#             "PrescriptionRemarks": "No remarks",
+#             "Status": "Active",
+#             "CreatedDateTime": datetime(2023, 1, 1, 10, 0),
+#             "UpdatedDateTime": datetime(2023, 1, 1, 10, 0),
+#             "CreatedById": 1,
+#             "UpdatedById": 1
 #         },
 #         {
-#             "id": 2,
-#             "active": "1",
-#             "patientId": 2,
-#             "dosage": "250mg",
-#             "frequencyPerDay": 2,
-#             "instruction": "Take before meal",
-#             "startDate": datetime(2023, 2, 1),
-#             "endDate": datetime(2023, 2, 10),
-#             "afterMeal": "No",
-#             "prescriptionRemarks": "No remarks",
-#             "status": "Active",
-#             "createdDateTime": datetime(2023, 2, 1, 10, 0),
-#             "modifiedDateTime": datetime(2023, 2, 1, 10, 0),
-#             "createdById": 2,
-#             "modifiedById": 2
+#             "Id": 2,
+#             "IsDeleted": "1",
+#             "PatientId": 2,
+#             "Dosage": "250mg",
+#             "FrequencyPerDay": 2,
+#             "Instruction": "Take before meal",
+#             "StartDate": datetime(2023, 2, 1),
+#             "EndDate": datetime(2023, 2, 10),
+#             "IsAfterMeal": "No",
+#             "PrescriptionRemarks": "No remarks",
+#             "Status": "Active",
+#             "CreatedDateTime": datetime(2023, 2, 1, 10, 0),
+#             "UpdatedDateTime": datetime(2023, 2, 1, 10, 0),
+#             "CreatedById": 2,
+#             "UpdatedById": 2
 #         }
 #     ]
 
@@ -60,20 +60,20 @@ def db_session_mock():
 
 #     for prescription in prescriptions:
 #         assert isinstance(prescription, dict)
-#         assert "id" in prescription
-#         assert "patientId" in prescription
-#         assert "dosage" in prescription
-#         assert "frequencyPerDay" in prescription
-#         assert "instruction" in prescription
-#         assert "startDate" in prescription
-#         assert "endDate" in prescription
-#         assert "afterMeal" in prescription
-#         assert "prescriptionRemarks" in prescription
-#         assert "status" in prescription
-#         assert "createdDateTime" in prescription
-#         assert "modifiedDateTime" in prescription
-#         assert "createdById" in prescription
-#         assert "modifiedById" in prescription
+#         assert "Id" in prescription
+#         assert "PatientId" in prescription
+#         assert "Dosage" in prescription
+#         assert "FrequencyPerDay" in prescription
+#         assert "Instruction" in prescription
+#         assert "StartDate" in prescription
+#         assert "EndDate" in prescription
+#         assert "IsAfterMeal" in prescription
+#         assert "PrescriptionRemarks" in prescription
+#         assert "Status" in prescription
+#         assert "CreatedDateTime" in prescription
+#         assert "UpdatedDateTime" in prescription
+#         assert "CreatedById" in prescription
+#         assert "UpdatedById" in prescription
 
 # Mocking the relevant models
 @mock.patch("app.models.patient_model.Patient")
@@ -109,81 +109,85 @@ def test_create_prescription(
     db_session_mock, 
 ):
     data = {
-        "active": "1", 
-        "patientId": 1,
-        "dosage": "500mg",
-        "frequencyPerDay": 3,
-        "instruction": "Take after meal",
-        "startDate": datetime(2023, 1, 1),
-        "endDate": datetime(2023, 1, 10),
-        "afterMeal": "Yes",
-        "prescriptionRemarks": "No remarks",
-        "status": "Active",
-        "createdDateTime": datetime(2023, 1, 1, 10, 0),
-        "modifiedDateTime": datetime(2023, 1, 1, 10, 0),
-        "createdById": 1,
-        "modifiedById": 1
+        "IsDeleted": "1", 
+        "PatientId": 1,
+        "Dosage": "500mg",
+        "PrescriptionListId": 1,
+        "FrequencyPerDay": 3,
+        "Instruction": "Take after meal",
+        "StartDate": datetime(2023, 1, 1),
+        "EndDate": datetime(2023, 1, 10),
+        "IsAfterMeal": "Yes",
+        "PrescriptionRemarks": "No remarks",
+        "Status": "Active",
+        "CreatedDateTime": datetime(2023, 1, 1, 10, 0),
+        "UpdatedDateTime": datetime(2023, 1, 1, 10, 0),
+        "CreatedById": 1,
+        "UpdatedById": 1
     }
     prescription = create_prescription(db_session_mock, PatientPrescriptionCreate(**data))
-    assert prescription.patientId == 1
-    assert prescription.dosage == "500mg"
-    assert prescription.frequencyPerDay == 3
-    assert prescription.instruction == "Take after meal"
-    assert prescription.startDate == datetime(2023, 1, 1)
-    assert prescription.endDate == datetime(2023, 1, 10)
-    assert prescription.afterMeal == "Yes"
-    assert prescription.prescriptionRemarks == "No remarks"
-    assert prescription.status == "Active"
-    assert prescription.createdDateTime == datetime(2023, 1, 1, 10, 0)
-    assert prescription.modifiedDateTime == datetime(2023, 1, 1, 10, 0)
-    assert prescription.createdById == 1
-    assert prescription.modifiedById == 1
+    assert prescription.PatientId == 1
+    assert prescription.Dosage == "500mg"
+    assert prescription.FrequencyPerDay == 3
+    assert prescription.Instruction == "Take after meal"
+    assert prescription.StartDate == datetime(2023, 1, 1)
+    assert prescription.EndDate == datetime(2023, 1, 10)
+    assert prescription.IsAfterMeal == "Yes"
+    assert prescription.PrescriptionRemarks == "No remarks"
+    assert prescription.Status == "Active"
+    assert prescription.CreatedDateTime == datetime(2023, 1, 1, 10, 0)
+    assert prescription.UpdatedDateTime == datetime(2023, 1, 1, 10, 0)
+    assert prescription.CreatedById == 1
+    assert prescription.UpdatedById == 1
 
 def test_update_prescription(db_session_mock):
     data = {
-        "active": "1",
-        "patientId": 1,
-        "dosage": "500mg",
-        "frequencyPerDay": 3,
-        "instruction": "Take after meal",
-        "startDate": datetime(2023, 1, 1),
-        "endDate": datetime(2023, 1, 10),
-        "afterMeal": "Yes",
-        "prescriptionRemarks": "No remarks",
-        "status": "Active",
-        "modifiedDateTime": datetime(2023, 1, 1, 10, 0),
-        "modifiedById": 1
+        "Active": "1",
+        "PatientId": 1,
+        "Dosage": "500mg",
+        "PrescriptionListId": 1,
+        "FrequencyPerDay": 3,
+        "Instruction": "Take after meal",
+        "StartDate": datetime(2023, 1, 1),
+        "EndDate": datetime(2023, 1, 10),
+        "IsAfterMeal": "1",
+        "PrescriptionRemarks": "No remarks",
+        "Status": "Active",
+        "UpdatedDateTime": datetime(2023, 1, 1, 10, 0),
+        "UpdatedById": 1
     }
     prescription = update_prescription(db_session_mock, 1, PatientPrescriptionUpdate(**data))
     db_session_mock.commit.assert_called_once()
-    assert prescription.patientId == 1
-    assert prescription.dosage == "500mg"
-    assert prescription.frequencyPerDay == 3
-    assert prescription.instruction == "Take after meal"
-    assert prescription.startDate == datetime(2023, 1, 1)
-    assert prescription.endDate == datetime(2023, 1, 10)
-    assert prescription.afterMeal == "Yes"
-    assert prescription.prescriptionRemarks == "No remarks"
-    assert prescription.status == "Active"
-    assert prescription.modifiedDateTime == datetime(2023, 1, 1, 10, 0)
-    assert prescription.modifiedById == 1
+    assert prescription.PatientId == 1
+    assert prescription.Dosage == "500mg"
+    assert prescription.FrequencyPerDay == 3
+    assert prescription.Instruction == "Take after meal"
+    assert prescription.StartDate == datetime(2023, 1, 1)
+    assert prescription.EndDate == datetime(2023, 1, 10)
+    assert prescription.IsAfterMeal == "1"
+    assert prescription.PrescriptionRemarks == "No remarks"
+    assert prescription.Status == "Active"
+    assert prescription.UpdatedDateTime == datetime(2023, 1, 1, 10, 0)
+    assert prescription.UpdatedById == 1
 
 def test_delete_prescription(db_session_mock):
     data = {
-        "active": "1",
-        "patientId": 1,
-        "dosage": "500mg",
-        "frequencyPerDay": 3,
-        "instruction": "Take after meal",
-        "startDate": datetime(2023, 1, 1),
-        "endDate": datetime(2023, 1, 10),
-        "afterMeal": "Yes",
-        "prescriptionRemarks": "No remarks",
-        "status": "Active",
-        "modifiedDateTime": datetime(2023, 1, 1, 10, 0),
-        "modifiedById": 1
+        "IsDeleted": "1",
+        "PatientId": 1,
+        "PrescriptionListId": 1,
+        "Dosage": "500mg",
+        "FrequencyPerDay": 3,
+        "Instruction": "Take after meal",
+        "StartDate": datetime(2023, 1, 1),
+        "EndDate": datetime(2023, 1, 10),
+        "AfterMeal": "Yes",
+        "PrescriptionRemarks": "No remarks",
+        "Status": "Active",
+        "UpdatedDateTime": datetime(2023, 1, 1, 10, 0),
+        "UpdatedById": 1
     }
+
     prescription_id = 1
     result = delete_prescription(db_session_mock, prescription_id, PatientPrescriptionUpdate(**data))
     db_session_mock.commit.assert_called_once()
-    assert result.active == "0"
+    assert result.IsDeleted == "0"

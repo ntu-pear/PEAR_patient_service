@@ -1,7 +1,7 @@
 INSERT INTO patient_service_dev.dbo.PATIENT_PRESCRIPTION (
-    active, patientId, dosage, frequencyPerDay,
-    instruction, startDate, endDate, afterMeal, prescriptionRemarks,
-    status, createdDateTime, modifiedDateTime, createdById, modifiedById, prescriptionListId
+    IsDeleted, PatientId, Dosage, FrequencyPerDay,
+    Instruction, StartDate, EndDate, IsAfterMeal, PrescriptionRemarks,
+    Status, CreatedDateTime, UpdatedDateTime, CreatedById, UpdatedById, PrescriptionListId
 ) VALUES
 ('1', 1, '500mg', 2, 'Take with water', '2024-12-01 08:00:00', '2024-12-15 08:00:00', '1', 'No remarks', 'Active', '2024-12-01 07:00:00', '2024-12-01 07:00:00', 1, 1, 1),
 ('1', 2, '250mg', 3, 'Before bed', '2024-12-02 09:00:00', '2024-12-16 09:00:00', '0', 'Take with care', 'Chronic', '2024-12-02 08:00:00', '2024-12-02 08:00:00', 1, 1, 2),

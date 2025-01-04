@@ -30,7 +30,7 @@ def update_vital(vital_id: int, vital: schemas_vital.PatientVitalUpdate, db: Ses
 
 @router.put("/Vital/delete", response_model=schemas_vital.PatientVital)
 def delete_vital(vital: schemas_vital.PatientVitalDelete, db: Session = Depends(get_db)):
-    db_vital = crud_vital.delete_vital(db, vital.id)
+    db_vital = crud_vital.delete_vital(db, vital.Id)
     if not db_vital:
         raise HTTPException(status_code=404, detail="Vital record not found")
     return db_vital
