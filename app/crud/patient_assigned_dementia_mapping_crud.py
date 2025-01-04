@@ -128,7 +128,7 @@ def update_assigned_dementia(db: Session, dementia_id: int, dementia_data: Patie
         raise HTTPException(status_code=404, detail="Dementia assignment not found")
 
     # Update the assignment
-    for key, value in dementia_data.dict(exclude_unset=True).items():
+    for key, value in dementia_data.model_dump(exclude_unset=True).items():
         setattr(db_assignment, key, value)
 
     # Update metadata

@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
+
 from datetime import datetime
 from typing import Optional
 
@@ -40,8 +41,4 @@ class PatientAssignedDementiaCreateResp(BaseModel):
     CreatedById: int
     ModifiedById: int
 
-    class Config:
-        from_attributes = True
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(orm_mode=True)
