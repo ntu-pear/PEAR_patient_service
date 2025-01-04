@@ -1,0 +1,78 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python application
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    env:
+      DB_SERVER_DEV: ${{ secrets.DB_SERVER_DEV }}
+      DB_DATABASE_DEV: ${{ secrets.DB_DATABASE_DEV }}
+      DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
+      DB_USERNAME_DEV: ${{ secrets.DB_USERNAME_DEV }}
+      DB_PASSWORD_DEV: ${{ secrets.DB_PASSWORD_DEV }}
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.9.19
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.9.19"
+
+    - name: Create .env file from GitHub Secrets
+      run: |
+        echo "DB_SERVER_DEV=${{ secrets.DB_SERVER_DEV }}" >> .env
+        echo "DB_DATABASE_DEV=${{ secrets.DB_DATABASE_DEV }}" >> .env
+        echo "DB_DATABASE_PORT=${{ secrets.DB_DATABASE_PORT }}" >> .env
+        echo "DB_USERNAME_DEV=${{ secrets.DB_USERNAME_DEV }}" >> .env
+        echo "DB_PASSWORD_DEV=${{ secrets.DB_PASSWORD_DEV }}" >> .env
+        echo "DB_DRIVER_DEV=${{ secrets.DB_DRIVER_DEV }}" >> .env
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Test with pytest
+      run: |
+        pytest
+
+    # - name: Run the app with uvicorn
+    #   run: |
+    #     uvicorn app.main:app
+
+    # - name: Assert app is running
+    #   run: |
+    #     sleep 10  # Wait for a few seconds to ensure the app has started
+    #     response=$(curl --silent --fail http://127.0.0.1:8000)
+    #     echo "Response: $response"
+    #     # Assert the response matches the expected output
+    #     echo "$response" | grep -q '{"message":"Welcome to the Patient API Testing"}'
+    #     if [ $? -ne 0 ]; then
+    #         echo "App did not respond with the expected message."
+    #         exit 1  # Fail the script if the message doesn't match
+    #     else
+    #         echo "App responded with the expected message."
+    #     fi
+
+    # - name: Stop the uvicorn server
+    #   run: |
+    #     # Find the process ID of uvicorn and kill it
+    #     pid=$(ps aux | grep 'uvicorn app.main:app' | grep -v grep | awk '{print $2}')
+    #     if [ ! -z "$pid" ]; then
+    #       kill $pid  # Stop the uvicorn process
+    #       echo "Stopped uvicorn process with PID: $pid"
+    #     else
+    #       echo "No uvicorn process found"
+    #     fi
