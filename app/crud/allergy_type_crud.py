@@ -36,7 +36,7 @@ def update_allergy_type(
     )
 
     if db_allergy_type:
-        for key, value in allergy_type.dict(exclude_unset=True).items():
+        for key, value in allergy_type.model_dump(exclude_unset=True).items():
             setattr(db_allergy_type, key, value)
 
         # Set UpdatedDateTime to the current datetime

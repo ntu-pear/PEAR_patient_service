@@ -9,7 +9,7 @@ def get_patients(db: Session, skip: int = 0, limit: int = 10):
     return db.query(Patient).order_by(Patient.id).offset(skip).limit(limit).all()
 
 def create_patient(db: Session, patient: PatientCreate):
-    db_patient = Patient(**patient.dict())
+    db_patient = Patient(**patient.model_dump())
     db.add(db_patient)
     db.commit()
     db.refresh(db_patient)
