@@ -12,8 +12,6 @@ def test_get_doctor_note_by_id(db_session_mock, mock_doctor_note):
 
     assert result == mock_doctor_note
 
-
-
 def test_create_doctor_note(db_session_mock, doctor_note_create):
     result = create_doctor_note(db_session_mock, doctor_note_create)
     db_session_mock.add.assert_called_once_with(result)
