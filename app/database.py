@@ -11,8 +11,7 @@ load_dotenv()
 DB_URL_LOCAL = os.getenv("DB_URL_LOCAL")
 DB_DRIVER_DEV = os.getenv("DB_DRIVER_DEV")
 
-## TODO: CHANGE THIS BACK
-DB_SERVER_DEV = "10.96.188.172"  # os.getenv("DB_SERVER_DEV")
+DB_SERVER_DEV =  os.getenv("DB_SERVER_DEV")
 
 DB_DATABASE_DEV = os.getenv("DB_DATABASE_DEV")
 DB_DATABASE_PORT = os.getenv("DB_DATABASE_PORT")
