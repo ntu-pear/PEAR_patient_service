@@ -8,13 +8,13 @@ from datetime import datetime
 
 
 def get_all_reaction_types(db: Session):
-    return db.query(AllergyReactionType).all()
+    return db.query(AllergyReactionType).filter(AllergyReactionType.IsDeleted == "0").all()
 
 
 def get_reaction_type_by_id(db: Session, allergy_reaction_type_id: int):
     return (
         db.query(AllergyReactionType)
-        .filter(AllergyReactionType.AllergyReactionTypeID == allergy_reaction_type_id)
+        .filter(AllergyReactionType.AllergyReactionTypeID == allergy_reaction_type_id, AllergyReactionType.IsDeleted == "0")
         .first()
     )
 

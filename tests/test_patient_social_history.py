@@ -18,6 +18,7 @@ from tests.utils.mock_db import get_db_session_mock
 @mock.patch("app.models.patient_doctor_note_model.PatientDoctorNote")
 @mock.patch("app.models.patient_photo_model.PatientPhoto")
 @mock.patch("app.models.patient_assigned_dementia_list_model.PatientAssignedDementiaList")
+@mock.patch("app.models.patient_assigned_dementia_mapping_model.PatientAssignedDementiaMapping")
 @mock.patch("app.models.patient_mobility_model.PatientMobility")
 @mock.patch("app.models.patient_prescription_model.PatientPrescription")
 @mock.patch("app.models.patient_social_history_model.PatientSocialHistory")
@@ -25,6 +26,7 @@ from tests.utils.mock_db import get_db_session_mock
 @mock.patch("app.models.patient_highlight_model.PatientHighlight")
 @mock.patch("app.models.allergy_type_model.AllergyType")
 @mock.patch("app.models.patient_guardian_relationship_mapping_model.PatientGuardianRelationshipMapping")
+
 def test_create_social_history(
     mock_patient,  
     mock_patient_guardian, 
@@ -32,7 +34,8 @@ def test_create_social_history(
     mock_allergy_reaction_type,  # Added mock for AllergyReactionType
     mock_patient_doctor_note, 
     mock_patient_photo,  
-    mock_patient_assigned_dementia_list,  
+    mock_patient_assigned_dementia_list,
+    mock_patient_assigned_dementia_mapping,  
     mock_patient_mobility,  
     mock_patient_prescription,  
     mock_patient_vital,
@@ -66,6 +69,7 @@ def test_create_social_history(
 @mock.patch("app.models.patient_doctor_note_model.PatientDoctorNote")  # Mock PatientDoctorNote
 @mock.patch("app.models.patient_photo_model.PatientPhoto")  # Mock PatientPhoto
 @mock.patch("app.models.patient_assigned_dementia_list_model.PatientAssignedDementiaList")
+@mock.patch("app.models.patient_assigned_dementia_mapping_model.PatientAssignedDementiaMapping")
 @mock.patch("app.models.patient_mobility_model.PatientMobility")  # Mock PatientMobility
 @mock.patch("app.models.patient_prescription_model.PatientPrescription")  # Mock PatientPrescription
 @mock.patch("app.models.patient_vital_model.PatientVital")  
@@ -78,7 +82,8 @@ def test_get_social_history(
     mock_patient_allergy_mapping, 
     mock_patient_doctor_note, 
     mock_patient_photo,  
-    mock_patient_assigned_dementia_list,  
+    mock_patient_assigned_dementia_list,
+    mock_patient_assigned_dementia_mapping,  
     mock_patient_mobility,  
     mock_patient_prescription,  
     mock_patient_vital,

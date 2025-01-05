@@ -51,7 +51,7 @@ def test_get_all_reaction_types(db_session_mock):
     """Test case for getting all allergy reaction types."""
     
     # Arrange
-    db_session_mock.query.return_value.all.return_value = get_mock_allergy_reaction_types()
+    db_session_mock.query.return_value.filter.return_value.all.return_value = get_mock_allergy_reaction_types() 
 
     # Act
     result = get_all_reaction_types(db_session_mock)

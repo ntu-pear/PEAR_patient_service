@@ -31,7 +31,6 @@ from tests.utils.mock_db import get_db_session_mock
 
 # Mocking the relevant models
 
-
 def test_create_allergy_type(
     db_session_mock,
     allergy_type_create,
@@ -55,7 +54,7 @@ def test_create_allergy_type(
 def test_get_all_allergy_types(db_session_mock):
     """Test case for retrieving all allergy types."""
     # Arrange
-    db_session_mock.query.return_value.all.return_value = get_mock_allergy_types()
+    db_session_mock.query.return_value.filter.return_value.all.return_value = get_mock_allergy_types()
 
     # Act
     result = get_all_allergy_types(db_session_mock)

@@ -25,3 +25,4 @@ class PatientAssignedDementiaListRead(PatientAssignedDementiaListBase):
     ModifiedDate: datetime
 
     model_config = {"from_attributes": True}
+

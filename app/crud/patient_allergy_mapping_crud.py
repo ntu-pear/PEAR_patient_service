@@ -37,7 +37,7 @@ def get_all_allergies(db: Session):
         .all()
     )
 
-    # Handle "Active" logic
+    # Filter soft deleted entries
     patient_allergies = []
     for result in results:
         allergy_type_value = (
@@ -96,7 +96,7 @@ def get_patient_allergies(db: Session, patient_id: int):
         .all()
     )
 
-    # Handle "Active" logic
+    # Filter soft deleted entries
     patient_allergies = []
     for result in results:
         allergy_type_value = (

@@ -5,16 +5,15 @@ from datetime import datetime
 
 
 def get_all_allergy_types(db: Session):
-    return db.query(AllergyType).all()
+    return db.query(AllergyType).filter(AllergyType.IsDeleted == "0").all()
 
 
 def get_allergy_type_by_id(db: Session, allergy_type_id: int):
     return (
         db.query(AllergyType)
-        .filter(AllergyType.AllergyTypeID == allergy_type_id)
+        .filter(AllergyType.AllergyTypeID == allergy_type_id,AllergyType.IsDeleted == "0")
         .first()
     )
-
 
 def create_allergy_type(db: Session, allergy_type: AllergyTypeCreate, created_by: int):
     db_allergy_type = AllergyType(
