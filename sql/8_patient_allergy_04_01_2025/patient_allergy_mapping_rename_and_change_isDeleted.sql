@@ -1,0 +1,13 @@
+EXEC sp_rename '[dbo].[PATIENT_ALLERGY_MAPPING].createdById', 'CreatedById', 'COLUMN';
+EXEC sp_rename '[dbo].[PATIENT_ALLERGY_MAPPING].modifiedById', 'ModifiedById', 'COLUMN';
+EXEC sp_rename '[dbo].[PATIENT_ALLERGY_MAPPING].Active', 'IsDeleted', 'COLUMN';
+
+ALTER TABLE dbo.PATIENT_ALLERGY_MAPPING
+DROP CONSTRAINT DF__PATIENT_A__Activ__797309D9;
+
+ALTER TABLE dbo.PATIENT_ALLERGY_MAPPING
+ADD CONSTRAINT DF_IsDeleted_Default DEFAULT (0) FOR IsDeleted;
+
+UPDATE [dbo].[PATIENT_ALLERGY_MAPPING]
+SET [IsDeleted] = 0
+WHERE [IsDeleted] = 1;
