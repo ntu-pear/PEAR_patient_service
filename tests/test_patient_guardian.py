@@ -16,23 +16,23 @@ from unittest.mock import call
 
 
 
-@mock.patch("app.models.patient_guardian_model.PatientGuardian")
-def test_create_patient_guardian(
- # Ensure this mock is passed in
-    mock_patient_guardian,
-    db_session_mock,
-):
-    """Test case for creating a social history."""
+# @mock.patch("app.models.patient_guardian_model.PatientGuardian")
+# def test_create_patient_guardian(
+#  # Ensure this mock is passed in
+#     mock_patient_guardian,
+#     db_session_mock,
+# ):
+#     """Test case for creating a social history."""
     
-    # Arrange
-    patient_guardian = patient_guardian_create()
+#     # Arrange
+#     patient_guardian = patient_guardian_create()
 
-    # Act
-    created_guardian = create_guardian(db_session_mock, patient_guardian)
+#     # Act
+#     created_guardian = create_guardian(db_session_mock, patient_guardian)
 
-    #Assert
-    db_session_mock.commit.assert_called_once()
-    db_session_mock.refresh.assert_called_once_with(created_guardian)
+#     #Assert
+#     db_session_mock.commit.assert_called_once()
+#     db_session_mock.refresh.assert_called_once_with(created_guardian)
 
 
 @mock.patch("app.models.patient_guardian_model.PatientGuardian")

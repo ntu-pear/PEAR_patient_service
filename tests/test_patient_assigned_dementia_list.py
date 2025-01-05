@@ -35,7 +35,7 @@ def get_mock_dementia_list_entry():
 
 # Test: Get all dementia list entries
 # Test: Get all dementia list entries
-@mock.patch("app.crud.patient_assigned_dementia_list_crud.PatientAssignedDementiaList")
+@mock.patch("app.models.patient_assigned_dementia_list_model.PatientAssignedDementiaList")
 @mock.patch("app.models.patient_guardian_relationship_mapping_model.PatientGuardianRelationshipMapping")
 @mock.patch("app.models.patient_patient_guardian_model.PatientPatientGuardian")
 @mock.patch("app.models.allergy_reaction_type_model.AllergyReactionType")
