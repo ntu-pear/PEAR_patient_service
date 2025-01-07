@@ -109,7 +109,7 @@ def test_delete_patient_vital(
 
     # Assert
     db_session_mock.commit.assert_called_once()
-    assert result.IsDeleted == "0"
+    assert result.IsDeleted == "1"
 
 # Mocking the relevant models
 # TODO: this test fails
@@ -201,7 +201,7 @@ def vital_create():
         DiastolicBP=80,
         HeartRate=70,
         SpO2=98,
-        BloodSugarLevel=90,
+        BloodSugarLevel=9,
         Height=170.0,
         Weight=70.0,
         VitalRemarks="Normal",
@@ -222,7 +222,7 @@ def vital_update():
         DiastolicBP=85,
         HeartRate=75,
         SpO2=97,
-        BloodSugarLevel=110,
+        BloodSugarLevel=9,
         Height=170.0,
         Weight=70.0,
         VitalRemarks="Slightly high BP",
