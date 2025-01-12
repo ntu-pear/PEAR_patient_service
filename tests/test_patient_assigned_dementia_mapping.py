@@ -72,7 +72,8 @@ def get_mock_assigned_dementias():
 @mock.patch("app.models.patient_highlight_model.PatientHighlight")
 @mock.patch("app.models.patient_vital_model.PatientVital")
 @mock.patch("app.models.patient_prescription_model.PatientPrescription")
-@mock.patch("app.models.patient_mobility_model.PatientMobility")
+@mock.patch("app.models.patient_mobility_list_model.PatientMobilityList")  # Mock PatientMobilityList
+@mock.patch("app.models.patient_mobility_mapping_model.PatientMobility")  # Mock PatientMobility
 @mock.patch("app.models.patient_photo_model.PatientPhoto")
 @mock.patch("app.models.patient_doctor_note_model.PatientDoctorNote")
 @mock.patch("app.models.patient_allergy_mapping_model.PatientAllergyMapping")
@@ -89,6 +90,7 @@ def test_create_assigned_dementia(
     mock_patient_vital,
     mock_patient_prescription,
     mock_patient_mobility,
+    mock_patient_mobility_list,
     mock_patient_photo,
     mock_patient_doctor_note,
     mock_patient_allergy_mapping,
