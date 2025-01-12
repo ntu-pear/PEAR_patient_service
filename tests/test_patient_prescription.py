@@ -83,7 +83,8 @@ def db_session_mock():
 @mock.patch("app.models.patient_doctor_note_model.PatientDoctorNote")
 @mock.patch("app.models.patient_photo_model.PatientPhoto")
 @mock.patch("app.models.patient_assigned_dementia_list_model.PatientAssignedDementiaList")
-@mock.patch("app.models.patient_mobility_model.PatientMobility")
+@mock.patch("app.models.patient_mobility_list_model.PatientMobilityList")  # Mock PatientMobility
+@mock.patch("app.models.patient_mobility_mapping_model.PatientMobility")  # Mock PatientMobility
 @mock.patch("app.models.patient_prescription_list_model.PatientPrescriptionList")
 @mock.patch("app.models.patient_prescription_model.PatientPrescription")
 @mock.patch("app.models.patient_social_history_model.PatientSocialHistory")
@@ -100,6 +101,7 @@ def test_create_prescription(
     mock_patient_photo,  
     mock_patient_assigned_dementia_list,  
     mock_patient_mobility,  
+    mock_patient_mobility_list,  
     mock_patient_prescription_list,
     mock_patient_prescription,  
     mock_patient_vital,

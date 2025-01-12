@@ -16,7 +16,8 @@ from tests.utils.mock_db import get_db_session_mock
 @mock.patch("app.models.patient_doctor_note_model.PatientDoctorNote")  # Mock PatientDoctorNote
 @mock.patch("app.models.patient_photo_model.PatientPhoto")  # Mock PatientPhoto
 @mock.patch("app.crud.patient_assigned_dementia_list_crud.PatientAssignedDementiaList")
-@mock.patch("app.models.patient_mobility_model.PatientMobility")  # Mock PatientMobility
+@mock.patch("app.models.patient_mobility_list_model.PatientMobilityList")  # Mock PatientMobilitylist
+@mock.patch("app.models.patient_mobility_mapping_model.PatientMobility")  # Mock PatientMobility
 @mock.patch("app.models.patient_prescription_model.PatientPrescription")  # Add this line to mock PatientPrescription
 @mock.patch("app.models.patient_social_history_model.PatientSocialHistory")  
 @mock.patch("app.models.patient_vital_model.PatientVital")  
@@ -31,6 +32,7 @@ def test_create_reaction_type(
     mock_patient_photo,  # Add new mocks here
     mock_patient_assigned_dementia_list,  # Add new mocks here
     mock_patient_mobility,  # Add new mocks here
+    mock_patient_mobility_list,  # Add new mocks here
     mock_patient_prescription,  # Add this mock
     mock_patient_social_history,
     mock_patient_vital,

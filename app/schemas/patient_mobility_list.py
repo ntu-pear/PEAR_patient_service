@@ -3,11 +3,13 @@ from datetime import datetime
 from typing import Optional
 
 class PatientMobilityListBase(BaseModel):
-    mobilityListId: int
-    IsDeleted: bool
-    createdDate: datetime
-    modifiedDate: datetime
-    value: str
+    MobilityListId: int
+    IsDeleted: int
+    CreatedDateTime: datetime
+    ModifiedDateTime: datetime
+    CreatedById: int
+    ModifiedById: int
+    Value: str
 
 class PatientMobilityListCreate(PatientMobilityListBase):
     pass
@@ -16,7 +18,7 @@ class PatientMobilityListUpdate(PatientMobilityListBase):
     pass
 
 class PatientMobilityList(PatientMobilityListBase):
-    id: int
+    pass
 
     class Config:
         from_attributes = True
