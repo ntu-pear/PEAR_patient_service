@@ -1,7 +1,7 @@
 from fastapi import FastAPI,Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-
+from sqlalchemy.orm import clear_mappers  # Import clear_mappers
 from .database import engine, Base
 from app.routers import (
     allergy_reaction_type_router,
@@ -25,6 +25,8 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+# clear_mappers()
+
 
 app = FastAPI(
     title="NTU FYP PEAR PATIENT SERVICE",
@@ -60,8 +62,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=400,
         content={"detail": exc.errors(), "body": exc.body},
     )
-
-
+# Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
 # Include the routers with prefixes and tags
