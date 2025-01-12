@@ -3,27 +3,25 @@ from datetime import datetime
 from typing import Optional
 
 class PatientMobilityBase(BaseModel):
-    IsDeleted: int
-    patient_id: int
-    mobilityListId: int
-    status: Optional[str] = None
+    PatientID: int
+    MobilityListId: int
+    MobilityRemarks: Optional[str]
+    IsRecovered: Optional[bool] = False
 
 class PatientMobilityCreate(PatientMobilityBase):
-    createdDate: datetime
-    modifiedDate: datetime
-    createdById: int
-    modifiedById: int
+    pass
 
-class PatientMobilityUpdate(PatientMobilityBase):
-    modifiedDate: datetime
-    modifiedById: int
+class PatientMobilityUpdate(BaseModel):
+    MobilityRemarks: Optional[str]
+    IsRecovered: Optional[bool]
 
-class PatientMobility(PatientMobilityBase):
-    id: int
-    createdDate: datetime
-    modifiedDate: datetime
-    createdById: int
-    modifiedById: int
+class PatientMobilityResponse(PatientMobilityBase):
+    MobilityID: int
+    IsDeleted: int
+    CreatedDateTime: datetime
+    ModifiedDateTime: datetime
+    CreatedById: int
+    ModifiedById: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
