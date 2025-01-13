@@ -42,7 +42,8 @@ def get_mock_dementia_list_entry():
 @mock.patch("app.models.patient_allergy_mapping_model.PatientAllergyMapping")
 @mock.patch("app.models.patient_doctor_note_model.PatientDoctorNote")  # Mock PatientDoctorNote
 @mock.patch("app.models.patient_photo_model.PatientPhoto")  # Mock PatientPhoto
-@mock.patch("app.models.patient_mobility_model.PatientMobility")
+@mock.patch("app.models.patient_mobility_list_model.PatientMobilityList")  # Mock PatientMobilityList
+@mock.patch("app.models.patient_mobility_mapping_model.PatientMobility")  # Mock PatientMobility
 @mock.patch("app.models.patient_prescription_model.PatientPrescription")
 @mock.patch("app.models.patient_social_history_model.PatientSocialHistory")
 @mock.patch("app.models.patient_vital_model.PatientVital")
@@ -57,6 +58,7 @@ def test_get_all_dementia_list_entries(
     mock_doctor_note_model,
     mock_photo_model,
     mock_mobility_model,
+    mock_mobility_model_list,
     mock_prescription_model,
     mock_social_history_model,
     mock_vital_model,

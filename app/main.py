@@ -1,7 +1,7 @@
 from fastapi import FastAPI,Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-
+from sqlalchemy.orm import clear_mappers  # Import clear_mappers
 from .database import engine, Base
 from app.routers import (
     allergy_reaction_type_router,
@@ -19,12 +19,15 @@ from app.routers import (
     patient_vital_router,
     patient_assigned_dementia_list_router,
     patient_assigned_dementia_mapping_router,
+    patient_mobility_mapping_router,
 )
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
+# clear_mappers()
+
 
 app = FastAPI(
     title="NTU FYP PEAR PATIENT SERVICE",
@@ -60,8 +63,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=400,
         content={"detail": exc.errors(), "body": exc.body},
     )
-
-
+# Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
 # Include the routers with prefixes and tags
@@ -86,6 +88,8 @@ app.include_router(
 )
 app.include_router(patient_list_router.router, prefix="/api/v1", tags=["patient lists"])
 app.include_router(patient_mobility_router.router, prefix="/api/v1", tags=["mobility"])
+app.include_router(patient_mobility_mapping_router.router, prefix="/api/v1", tags=["Patient Mobility Mapping"],
+)
 app.include_router(patient_photo_router.router, prefix="/api/v1", tags=["photos"])
 app.include_router(
     patient_prescription_router.router, prefix="/api/v1", tags=["prescriptions"]

@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 class PatientSocialHistoryBase(BaseModel):
-    active: Optional[str] = 'Y'
+    IsDeleted: Optional[str] = '0'
     patientId: int
     sexuallyActive: Optional[str] = None
     secondHandSmoker: Optional[str] = None
