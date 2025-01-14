@@ -23,13 +23,16 @@ jobs:
       #     curl -L -o globalprotect-installer.zip https://globalprotect.example.com/download # Adjust URL accordingly
       #     unzip globalprotect-installer.zip
       #     sudo dpkg -i globalprotect-installer.deb
-
       # gpclient connect vpngate.ntu.edu.sg
-
       - name: Connect to GlobalProtect VPN
         run: |
-            gpclient help
-            sudo -E gpclient connect --browser default vpngate.ntu.edu.sg
+          #!/usr/bin/expect
+          spawn gpclient connect vpngate.ntu.edu.sg
+          expect "Username:"
+          send "tlew004@student.main.ntu.edu.sg\r"
+          expect "Password:"
+          send "${{ secrets.VPN_PASSWORD }}\r"
+          interact
 
         # run: |
         #   echo "${{ secrets.VPN_PASSWORD }}" | sudo globalprotect connect --portal=your.school.vpn.portal --username="${{ secrets.VPN_USERNAME }}" --password="${{ secrets.VPN_PASSWORD }}" &
