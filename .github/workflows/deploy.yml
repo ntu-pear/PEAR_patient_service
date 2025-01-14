@@ -18,6 +18,11 @@ jobs:
           sudo add-apt-repository ppa:yuezk/globalprotect-openconnect
           sudo apt-get install globalprotect-openconnect
 
+      - name: Install expect
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y expect
+
       # - name: Download GlobalProtect client
       #   run: |
       #     curl -L -o globalprotect-installer.zip https://globalprotect.example.com/download # Adjust URL accordingly
