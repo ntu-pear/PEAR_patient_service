@@ -43,6 +43,7 @@ jobs:
         run: |
           echo '#!/usr/bin/expect' > connect_vpn.expect
           echo 'spawn gpclient connect vpngate.ntu.edu.sg' >> connect_vpn.expect
+          echo 'sleep 20' >> connect_vpn.expect  # Sleep for 20 seconds
           echo 'expect "Username:"' >> connect_vpn.expect
           echo 'send "tlew004@student.main.ntu.edu.sg\r"' >> connect_vpn.expect
           echo 'expect "Password:"' >> connect_vpn.expect
