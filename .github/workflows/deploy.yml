@@ -29,15 +29,30 @@ jobs:
       #     unzip globalprotect-installer.zip
       #     sudo dpkg -i globalprotect-installer.deb
       # gpclient connect vpngate.ntu.edu.sg
-      - name: Connect to GlobalProtect VPN
+      # - name: Connect to GlobalProtect VPN
+      #   run: |
+      #     #!/usr/bin/expect
+      #     spawn gpclient connect vpngate.ntu.edu.sg
+      #     expect "Username:"
+      #     send "tlew004@student.main.ntu.edu.sg\r"
+      #     expect "Password:"
+      #     send "${{ secrets.VPN_PASSWORD }}\r"
+      #     interact
+
+      - name: Create expect script to connect to GlobalProtect VPN
         run: |
-          #!/usr/bin/expect
-          spawn gpclient connect vpngate.ntu.edu.sg
-          expect "Username:"
-          send "tlew004@student.main.ntu.edu.sg\r"
-          expect "Password:"
-          send "${{ secrets.VPN_PASSWORD }}\r"
-          interact
+          echo '#!/usr/bin/expect' > connect_vpn.expect
+          echo 'spawn gpclient connect vpngate.ntu.edu.sg' >> connect_vpn.expect
+          echo 'expect "Username:"' >> connect_vpn.expect
+          echo 'send "tlew004@student.main.ntu.edu.sg\r"' >> connect_vpn.expect
+          echo 'expect "Password:"' >> connect_vpn.expect
+          echo 'send "${{ secrets.VPN_PASSWORD }}\r"' >> connect_vpn.expect
+          echo 'interact' >> connect_vpn.expect
+          chmod +x connect_vpn.expect
+
+      - name: Connect to GlobalProtect VPN using expect
+        run: |
+          ./connect_vpn.expect
 
         # run: |
         #   echo "${{ secrets.VPN_PASSWORD }}" | sudo globalprotect connect --portal=your.school.vpn.portal --username="${{ secrets.VPN_USERNAME }}" --password="${{ secrets.VPN_PASSWORD }}" &
