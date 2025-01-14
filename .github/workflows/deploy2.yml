@@ -1,0 +1,19 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches:
+      - feat/cd
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install GlobalProtect dependencies
+        run: |
+          sudo dpkg -i GlobalProtect_focal_deb-6.2.1.1-276.deb
+          globalprotect connect -p vpngate.ntu.edu.sg
