@@ -15,5 +15,5 @@ jobs:
 
       - name: Install GlobalProtect dependencies
         run: |
-          sudo dpkg -i GlobalProtect_focal_deb-6.2.1.1-276.deb
+          sudo dpkg -i ./.github/workflows/GlobalProtect_focal_deb-6.2.1.1-276.deb
           globalprotect connect -p vpngate.ntu.edu.sg
