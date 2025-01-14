@@ -27,7 +27,7 @@ jobs:
       - name: Connect to GlobalProtect VPN
         run: |
             gpclient help
-            gpclient connect --portal vpngate.ntu.edu.sg
+            gpclient connect -- --portal vpngate.ntu.edu.sg
 
         # run: |
         #   echo "${{ secrets.VPN_PASSWORD }}" | sudo globalprotect connect --portal=your.school.vpn.portal --username="${{ secrets.VPN_USERNAME }}" --password="${{ secrets.VPN_PASSWORD }}" &
