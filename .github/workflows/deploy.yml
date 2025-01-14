@@ -1,0 +1,40 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches:
+      - feat/cd
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install GlobalProtect dependencies
+        run: |
+          sudo add-apt-repository ppa:yuezk/globalprotect-openconnect
+          sudo apt-get install globalprotect-openconnect
+
+      # - name: Download GlobalProtect client
+      #   run: |
+      #     curl -L -o globalprotect-installer.zip https://globalprotect.example.com/download # Adjust URL accordingly
+      #     unzip globalprotect-installer.zip
+      #     sudo dpkg -i globalprotect-installer.deb
+
+      - name: Connect to GlobalProtect VPN
+        run: |
+            gpclient connect vpngate.ntu.edu.sg
+
+        # run: |
+        #   echo "${{ secrets.VPN_PASSWORD }}" | sudo globalprotect connect --portal=your.school.vpn.portal --username="${{ secrets.VPN_USERNAME }}" --password="${{ secrets.VPN_PASSWORD }}" &
+
+      # - name: Wait for VPN connection to establish
+      #   run: |
+      #     sleep 30  # Wait for the VPN to fully establish the connection
+
+      # - name: Deploy
+      #   run: |
+      #     # Your deployment commands go here
