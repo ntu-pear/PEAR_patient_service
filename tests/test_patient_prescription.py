@@ -174,7 +174,7 @@ def test_update_prescription(db_session_mock):
 
 def test_delete_prescription(db_session_mock):
     data = {
-        "IsDeleted": "1",
+        "IsDeleted": "0",
         "PatientId": 1,
         "PrescriptionListId": 1,
         "Dosage": "500mg",
@@ -192,4 +192,4 @@ def test_delete_prescription(db_session_mock):
     prescription_id = 1
     result = delete_prescription(db_session_mock, prescription_id, PatientPrescriptionUpdate(**data))
     db_session_mock.commit.assert_called_once()
-    assert result.IsDeleted == "0"
+    assert result.IsDeleted == "1"

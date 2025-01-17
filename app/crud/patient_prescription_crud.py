@@ -30,7 +30,7 @@ def update_prescription(db: Session, prescription_id: int, prescription: Patient
 def delete_prescription(db: Session, prescription_id: int, prescription: PatientPrescriptionUpdate):
     db_prescription = db.query(PatientPrescription).filter(PatientPrescription.Id == prescription_id).first()
     if db_prescription:
-        setattr(db_prescription, "IsDeleted", "0")
+        setattr(db_prescription, "IsDeleted", "1")
         db.commit()
         db.refresh(db_prescription)
     return db_prescription
