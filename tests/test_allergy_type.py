@@ -13,7 +13,8 @@ from app.models.patient_allergy_mapping_model import PatientAllergyMapping
 from app.models.patient_doctor_note_model import PatientDoctorNote
 from app.models.patient_photo_model import PatientPhoto
 from app.models.patient_model import Patient
-from app.models.patient_assigned_dementia_model import PatientAssignedDementia
+from app.models.patient_assigned_dementia_list_model import PatientAssignedDementiaList
+from app.models.patient_assigned_dementia_mapping_model import PatientAssignedDementiaMapping
 from app.models.patient_mobility_model import PatientMobility
 from app.models.patient_prescription_model import PatientPrescription
 from app.models.patient_social_history_model import PatientSocialHistory
@@ -29,7 +30,6 @@ from tests.utils.mock_db import get_db_session_mock
 
 
 # Mocking the relevant models
-
 
 def test_create_allergy_type(
     db_session_mock,
@@ -54,7 +54,7 @@ def test_create_allergy_type(
 def test_get_all_allergy_types(db_session_mock):
     """Test case for retrieving all allergy types."""
     # Arrange
-    db_session_mock.query.return_value.all.return_value = get_mock_allergy_types()
+    db_session_mock.query.return_value.filter.return_value.all.return_value = get_mock_allergy_types()
 
     # Act
     result = get_all_allergy_types(db_session_mock)

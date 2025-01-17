@@ -66,7 +66,6 @@ def get_mock_assigned_dementias():
 @mock.patch("app.models.patient_guardian_relationship_mapping_model.PatientGuardianRelationshipMapping")
 @mock.patch("app.models.patient_patient_guardian_model.PatientPatientGuardian")
 @mock.patch("app.models.allergy_reaction_type_model.AllergyReactionType")
-@mock.patch("app.models.patient_assigned_dementia_list_model.PatientAssignedDementiaList")
 @mock.patch("app.models.allergy_type_model.AllergyType")
 @mock.patch("app.models.patient_social_history_model.PatientSocialHistory")
 @mock.patch("app.models.patient_highlight_model.PatientHighlight")
@@ -77,6 +76,7 @@ def get_mock_assigned_dementias():
 @mock.patch("app.models.patient_photo_model.PatientPhoto")
 @mock.patch("app.models.patient_doctor_note_model.PatientDoctorNote")
 @mock.patch("app.models.patient_allergy_mapping_model.PatientAllergyMapping")
+@mock.patch("app.models.patient_assigned_dementia_list_model.PatientAssignedDementiaList")
 @mock.patch("app.models.patient_assigned_dementia_mapping_model.PatientAssignedDementiaMapping")
 def test_create_assigned_dementia(
     mock_patient_assigned_dementia_mapping,

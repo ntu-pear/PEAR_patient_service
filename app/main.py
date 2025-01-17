@@ -10,6 +10,7 @@ from app.routers import (
     patient_doctor_note_router,
     patient_guardian_router,
     patient_highlight_router,
+    patient_highlight_type_router,
     patient_list_router,
     patient_mobility_router,
     patient_photo_router,
@@ -66,38 +67,50 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
-# Include the routers with prefixes and tags
-app.include_router(patient_router.router, prefix="/api/v1", tags=["patients"])
-app.include_router(patient_allergy_mapping_router.router, prefix="/api/v1", tags=["Patient Allergies"])
-app.include_router(allergy_type_router.router, prefix="/api/v1", tags=["Allergy Types"])
-app.include_router(allergy_reaction_type_router.router, prefix="/api/v1", tags=["Allergy Reaction Types"])
+API_VERSION_PREFIX = "/api/v1"  
+
+app.include_router(patient_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patients"])
+
 app.include_router(
-    patient_assigned_dementia_list_router.router,
-    prefix="/api/v1",
-    tags=["Dementia List"]
+    allergy_type_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Allergy Types"]
 )
 app.include_router(
-    patient_assigned_dementia_mapping_router.router, prefix="/api/v1", tags=["Patient Assigned Dementia"]
+    allergy_reaction_type_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Allergy Reaction Types"]
 )
 app.include_router(
-    patient_doctor_note_router.router, prefix="/api/v1", tags=["doctor notes"]
-)
-app.include_router(patient_guardian_router.router, prefix="/api/v1", tags=["guardians"])
-app.include_router(
-    patient_highlight_router.router, prefix="/api/v1", tags=["highlights"]
-)
-app.include_router(patient_list_router.router, prefix="/api/v1", tags=["patient lists"])
-app.include_router(patient_mobility_router.router, prefix="/api/v1", tags=["mobility"])
-app.include_router(patient_mobility_mapping_router.router, prefix="/api/v1", tags=["Patient Mobility Mapping"],
-)
-app.include_router(patient_photo_router.router, prefix="/api/v1", tags=["photos"])
-app.include_router(
-    patient_prescription_router.router, prefix="/api/v1", tags=["prescriptions"]
+    patient_assigned_dementia_list_router.router, prefix=f"{API_VERSION_PREFIX}",tags=["Dementia List"]
 )
 app.include_router(
-    patient_social_history_router.router, prefix="/api/v1", tags=["social history"]
+    patient_assigned_dementia_mapping_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patient Assigned Dementia"]
 )
-app.include_router(patient_vital_router.router, prefix="/api/v1", tags=["vitals"])
+app.include_router(
+    patient_allergy_mapping_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patient Allergies"]
+)
+app.include_router(
+    patient_doctor_note_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Doctor Notes"]
+)
+app.include_router(patient_guardian_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Guardians"])
+
+# highlights
+app.include_router(
+    patient_highlight_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Highlights"]
+)
+app.include_router(
+    patient_highlight_type_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Highlights Type"]
+)
+
+app.include_router(
+    patient_list_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patient Lists"]
+)
+app.include_router(patient_mobility_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Mobility"])
+app.include_router(patient_photo_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Photos"])
+app.include_router(
+    patient_prescription_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Prescriptions"]
+)
+app.include_router(
+    patient_social_history_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Social History"]
+)
+app.include_router(patient_vital_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Vitals"])
 
 @app.get("/")
 def read_root():

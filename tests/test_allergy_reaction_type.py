@@ -10,7 +10,8 @@ from app.models.patient_allergy_mapping_model import PatientAllergyMapping
 from app.models.patient_doctor_note_model import PatientDoctorNote
 from app.models.patient_photo_model import PatientPhoto
 from app.models.patient_model import Patient
-from app.models.patient_assigned_dementia_model import PatientAssignedDementia
+from app.models.patient_assigned_dementia_list_model import PatientAssignedDementiaList
+from app.models.patient_assigned_dementia_mapping_model import PatientAssignedDementiaMapping
 from app.models.patient_mobility_model import PatientMobility
 from app.models.patient_prescription_model import PatientPrescription
 from app.models.patient_social_history_model import PatientSocialHistory
@@ -25,34 +26,8 @@ from datetime import datetime
 from tests.utils.mock_db import get_db_session_mock
 
 # Mocking the relevant models
-@mock.patch("app.models.patient_model.Patient")
-@mock.patch("app.models.patient_patient_guardian_model.PatientPatientGuardian")
-@mock.patch("app.models.patient_allergy_mapping_model.PatientAllergyMapping")
-@mock.patch("app.models.patient_doctor_note_model.PatientDoctorNote")  # Mock PatientDoctorNote
-@mock.patch("app.models.patient_photo_model.PatientPhoto")  # Mock PatientPhoto
-@mock.patch("app.crud.patient_assigned_dementia_list_crud.PatientAssignedDementiaList")
-@mock.patch("app.models.patient_mobility_list_model.PatientMobilityList")  # Mock PatientMobilitylist
-@mock.patch("app.models.patient_mobility_mapping_model.PatientMobility")  # Mock PatientMobility
-@mock.patch("app.models.patient_prescription_model.PatientPrescription")  # Add this line to mock PatientPrescription
-@mock.patch("app.models.patient_social_history_model.PatientSocialHistory")  
-@mock.patch("app.models.patient_vital_model.PatientVital")  
-@mock.patch("app.models.patient_highlight_model.PatientHighlight")  
-@mock.patch("app.models.allergy_type_model.AllergyType")  
-@mock.patch("app.models.patient_guardian_relationship_mapping_model.PatientGuardianRelationshipMapping")  
+
 def test_create_reaction_type(
-    mock_patient, 
-    mock_patient_guardian, 
-    mock_patient_allergy_mapping, 
-    mock_patient_doctor_note, 
-    mock_patient_photo,  # Add new mocks here
-    mock_patient_assigned_dementia_list,  # Add new mocks here
-    mock_patient_mobility,  # Add new mocks here
-    mock_patient_mobility_list,  # Add new mocks here
-    mock_patient_prescription,  # Add this mock
-    mock_patient_social_history,
-    mock_patient_vital,
-    mock_patient_highlight,
-    mock_allery_type,
     db_session_mock, 
     allergy_reaction_type_create
 ):
@@ -76,7 +51,7 @@ def test_get_all_reaction_types(db_session_mock):
     """Test case for getting all allergy reaction types."""
     
     # Arrange
-    db_session_mock.query.return_value.all.return_value = get_mock_allergy_reaction_types()
+    db_session_mock.query.return_value.filter.return_value.all.return_value = get_mock_allergy_reaction_types() 
 
     # Act
     result = get_all_reaction_types(db_session_mock)

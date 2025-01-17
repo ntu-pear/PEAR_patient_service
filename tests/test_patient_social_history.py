@@ -10,42 +10,52 @@
 # # Import your mock_db from tests/utils
 # from tests.utils.mock_db import get_db_session_mock
 
-# # Mocking the relevant models
-# @mock.patch("app.models.patient_model.Patient")
-# @mock.patch("app.models.patient_patient_guardian_model.PatientPatientGuardian")
-# @mock.patch("app.models.patient_allergy_mapping_model.PatientAllergyMapping")
-# @mock.patch("app.models.allergy_reaction_type_model.AllergyReactionType")  # Ensure AllergyReactionType is mocked
-# @mock.patch("app.models.patient_doctor_note_model.PatientDoctorNote")
-# @mock.patch("app.models.patient_photo_model.PatientPhoto")
-# @mock.patch("app.models.patient_assigned_dementia_list_model.PatientAssignedDementiaList")
-# @mock.patch("app.models.patient_mobility_list_model.PatientMobilityList")  # Mock PatientMobilityList
-# @mock.patch("app.models.patient_mobility_mapping_model.PatientMobility")  # Mock PatientMobility
-# @mock.patch("app.models.patient_prescription_model.PatientPrescription")
-# @mock.patch("app.models.patient_social_history_model.PatientSocialHistory")
-# @mock.patch("app.models.patient_vital_model.PatientVital")
-# @mock.patch("app.models.patient_highlight_model.PatientHighlight")
-# @mock.patch("app.models.allergy_type_model.AllergyType")
-# @mock.patch("app.models.patient_guardian_relationship_mapping_model.PatientGuardianRelationshipMapping")
-# def test_create_social_history(
-#     mock_patient,  
-#     mock_patient_guardian, 
-#     mock_patient_allergy_mapping, 
-#     mock_allergy_reaction_type,  # Added mock for AllergyReactionType
-#     mock_patient_doctor_note, 
-#     mock_patient_photo,  
-#     mock_patient_assigned_dementia_list,  
-#     mock_patient_mobility,  
-#     mock_patient_mobility_list,  
-#     mock_patient_prescription,  
-#     mock_patient_vital,
-#     mock_patient_highlight,
-#     mock_allergy_type,
-#     mock_patient_guardian_relationship_mapping,  # Ensure this mock is passed in
-#     db_session_mock, 
-#     social_history_create
-# ):
-#     """Test case for creating a social history."""
-    
+
+# Mocking the relevant models
+@mock.patch("app.models.patient_model.Patient")
+@mock.patch("app.models.patient_patient_guardian_model.PatientPatientGuardian")
+@mock.patch("app.models.patient_allergy_mapping_model.PatientAllergyMapping")
+@mock.patch(
+    "app.models.allergy_reaction_type_model.AllergyReactionType"
+)  # Ensure AllergyReactionType is mocked
+@mock.patch("app.models.patient_doctor_note_model.PatientDoctorNote")
+@mock.patch("app.models.patient_photo_model.PatientPhoto")
+@mock.patch(
+    "app.models.patient_assigned_dementia_list_model.PatientAssignedDementiaList"
+)
+@mock.patch(
+    "app.models.patient_assigned_dementia_mapping_model.PatientAssignedDementiaMapping"
+)
+@mock.patch("app.models.patient_mobility_model.PatientMobility")
+@mock.patch("app.models.patient_prescription_model.PatientPrescription")
+@mock.patch("app.models.patient_social_history_model.PatientSocialHistory")
+@mock.patch("app.models.patient_vital_model.PatientVital")
+@mock.patch("app.models.patient_highlight_model.PatientHighlight")
+@mock.patch("app.models.allergy_type_model.AllergyType")
+@mock.patch(
+    "app.models.patient_guardian_relationship_mapping_model.PatientGuardianRelationshipMapping"
+)
+def test_create_social_history(
+    mock_patient,
+    mock_patient_guardian,
+    mock_patient_allergy_mapping,
+    mock_allergy_reaction_type,  # Added mock for AllergyReactionType
+    mock_patient_doctor_note,
+    mock_patient_photo,
+    mock_patient_assigned_dementia_list,
+    mock_patient_assigned_dementia_mapping,
+    mock_patient_mobility,
+    mock_patient_prescription,
+    mock_patient_vital,
+    mock_patient_highlight,
+    mock_allergy_type,
+    mock_patient_guardian_relationship_mapping,  # Ensure this mock is passed in
+    db_session_mock,
+    social_history_create,
+):
+    """Test case for creating a social history."""
+
+
 #     # Arrange
 #     mock_patient.query.filter.return_value.first.return_value = mock_patient  # Mocking patient existence
 
@@ -59,41 +69,55 @@
 #     assert result.patientId == 1
 #     assert result.active == "Y"  # Ensure proper attributes are checked
 
-# # Mocking the relevant models
-# @mock.patch("app.models.patient_model.Patient")
-# @mock.patch("app.models.patient_patient_guardian_model.PatientPatientGuardian")
-# @mock.patch("app.models.patient_allergy_mapping_model.PatientAllergyMapping")
-# @mock.patch("app.models.patient_social_history_model.PatientSocialHistory")
-# @mock.patch("app.models.allergy_reaction_type_model.AllergyReactionType")  # Mock AllergyReactionType
-# @mock.patch("app.models.patient_doctor_note_model.PatientDoctorNote")  # Mock PatientDoctorNote
-# @mock.patch("app.models.patient_photo_model.PatientPhoto")  # Mock PatientPhoto
-# @mock.patch("app.models.patient_assigned_dementia_list_model.PatientAssignedDementiaList")
-# @mock.patch("app.models.patient_mobility_list_model.PatientMobilityList")  # Mock PatientMobilityList
-# @mock.patch("app.models.patient_mobility_mapping_model.PatientMobility")  # Mock PatientMobility
-# @mock.patch("app.models.patient_prescription_model.PatientPrescription")  # Mock PatientPrescription
-# @mock.patch("app.models.patient_vital_model.PatientVital")  
-# @mock.patch("app.models.patient_highlight_model.PatientHighlight")  
-# @mock.patch("app.models.allergy_type_model.AllergyType")  
-# @mock.patch("app.models.patient_guardian_relationship_mapping_model.PatientGuardianRelationshipMapping")  
-# def test_get_social_history(
-#     mock_patient, 
-#     mock_patient_guardian, 
-#     mock_patient_allergy_mapping, 
-#     mock_patient_doctor_note, 
-#     mock_patient_photo,  
-#     mock_patient_assigned_dementia_list,  
-#     mock_patient_mobility,  
-#     mock_patient_mobility_list,  
-#     mock_patient_prescription,  
-#     mock_patient_vital,
-#     mock_patient_highlight,
-#     mock_allergy_type,
-#     mock_patient_guardian_relationship_mapping,  # Ensure this mock is passed in
-#     get_social_history,
-#     db_session_mock
-# ):
-#     """Test case for getting social history by patient ID."""
-    
+
+# Mocking the relevant models
+@mock.patch("app.models.patient_model.Patient")
+@mock.patch("app.models.patient_patient_guardian_model.PatientPatientGuardian")
+@mock.patch("app.models.patient_allergy_mapping_model.PatientAllergyMapping")
+@mock.patch("app.models.patient_social_history_model.PatientSocialHistory")
+@mock.patch(
+    "app.models.allergy_reaction_type_model.AllergyReactionType"
+)  # Mock AllergyReactionType
+@mock.patch(
+    "app.models.patient_doctor_note_model.PatientDoctorNote"
+)  # Mock PatientDoctorNote
+@mock.patch("app.models.patient_photo_model.PatientPhoto")  # Mock PatientPhoto
+@mock.patch(
+    "app.models.patient_assigned_dementia_list_model.PatientAssignedDementiaList"
+)
+@mock.patch(
+    "app.models.patient_assigned_dementia_mapping_model.PatientAssignedDementiaMapping"
+)
+@mock.patch("app.models.patient_mobility_model.PatientMobility")  # Mock PatientMobility
+@mock.patch(
+    "app.models.patient_prescription_model.PatientPrescription"
+)  # Mock PatientPrescription
+@mock.patch("app.models.patient_vital_model.PatientVital")
+@mock.patch("app.models.patient_highlight_model.PatientHighlight")
+@mock.patch("app.models.allergy_type_model.AllergyType")
+@mock.patch(
+    "app.models.patient_guardian_relationship_mapping_model.PatientGuardianRelationshipMapping"
+)
+def test_get_social_history(
+    mock_patient,
+    mock_patient_guardian,
+    mock_patient_allergy_mapping,
+    mock_patient_doctor_note,
+    mock_patient_photo,
+    mock_patient_assigned_dementia_list,
+    mock_patient_assigned_dementia_mapping,
+    mock_patient_mobility,
+    mock_patient_prescription,
+    mock_patient_vital,
+    mock_patient_highlight,
+    mock_allergy_type,
+    mock_patient_guardian_relationship_mapping,  # Ensure this mock is passed in
+    get_social_history,
+    db_session_mock,
+):
+    """Test case for getting social history by patient ID."""
+
+
 #     # Arrange
 #     mock_social_history = get_mock_social_history()
 
@@ -111,7 +135,7 @@
 # @mock.patch("app.models.patient_social_history_model.PatientSocialHistory")
 # def test_update_social_history(mock_patient_social_history, db_session_mock, social_history_update):
 #     """Test case for updating social history by patient ID."""
-    
+
 #     # Arrange
 #     db_session_mock.query.return_value.filter.return_value.first.return_value = get_mock_social_history()
 
@@ -127,7 +151,7 @@
 # @mock.patch("app.models.patient_social_history_model.PatientSocialHistory")
 # def test_delete_social_history(mock_patient_social_history, db_session_mock):
 #     """Test case for deleting social history by patient ID."""
-    
+
 #     # Arrange
 #     db_session_mock.query.return_value.filter.return_value.first.return_value = get_mock_social_history()
 
@@ -149,30 +173,30 @@
 # # def social_history_create():
 # #     """Fixture to provide a mock PatientSocialHistoryCreate object."""
 # #     return PatientSocialHistoryCreate(
-# #         patientId=1, 
-# #         active="Y", 
-# #         sexuallyActive="string", 
-# #         secondHandSmoker="string", 
-# #         alcoholUse="string", 
-# #         caffeineUse="string", 
-# #         tobaccoUse="string", 
-# #         drugUse="string", 
+# #         patientId=1,
+# #         active="Y",
+# #         sexuallyActive="string",
+# #         secondHandSmoker="string",
+# #         alcoholUse="string",
+# #         caffeineUse="string",
+# #         tobaccoUse="string",
+# #         drugUse="string",
 # #         exercise="string"
 # #     )
 # @pytest.fixture
 # def social_history_create():
 #     """Fixture to provide a mock PatientSocialHistoryCreate object."""
 #     return PatientSocialHistoryCreate(
-#         patientId=1, 
-#         sexuallyActive="Y",  
-#         secondHandSmoker="N", 
-#         alcoholUse="Occasionally", 
-#         caffeineUse="Often", 
-#         tobaccoUse="Never", 
-#         drugUse="Never", 
+#         patientId=1,
+#         sexuallyActive="Y",
+#         secondHandSmoker="N",
+#         alcoholUse="Occasionally",
+#         caffeineUse="Often",
+#         tobaccoUse="Never",
+#         drugUse="Never",
 #         exercise="Regularly",
 #         id=2,  # Set id to a value greater than 1
-#         active="Y",  
+#         active="Y",
 #         createdById=1,  # This should be an integer
 #         modifiedById=1,  # This should be an integer
 #         createdDate=datetime.now(),  # Correctly provide the current date and time for createdDate
@@ -183,13 +207,13 @@
 # # def social_history_update():
 # #     """Fixture to provide a mock PatientSocialHistoryUpdate object."""
 # #     return PatientSocialHistoryUpdate(
-# #         active="Y", 
-# #         sexuallyActive="string", 
-# #         secondHandSmoker="string", 
-# #         alcoholUse="string", 
-# #         caffeineUse="string", 
-# #         tobaccoUse="string", 
-# #         drugUse="string", 
+# #         active="Y",
+# #         sexuallyActive="string",
+# #         secondHandSmoker="string",
+# #         alcoholUse="string",
+# #         caffeineUse="string",
+# #         tobaccoUse="string",
+# #         drugUse="string",
 # #         exercise="string"
 # #     )
 # @pytest.fixture
@@ -197,14 +221,14 @@
 #     """Fixture to provide a mock PatientSocialHistoryUpdate object."""
 #     return PatientSocialHistoryUpdate(
 #         patientId=1,  # Include this field as it's required
-#         sexuallyActive="Y",  
-#         secondHandSmoker="N", 
-#         alcoholUse="Occasionally", 
-#         caffeineUse="Often", 
-#         tobaccoUse="Never", 
-#         drugUse="Never", 
+#         sexuallyActive="Y",
+#         secondHandSmoker="N",
+#         alcoholUse="Occasionally",
+#         caffeineUse="Often",
+#         tobaccoUse="Never",
+#         drugUse="Never",
 #         exercise="Regularly",
-#         active="Y",  
+#         active="Y",
 #         modifiedById=2,  # Ensure this is an integer
 #         modifiedDate=datetime.now()  # Provide the current date and time for modifiedDate
 #     )
@@ -215,11 +239,11 @@
 #     return PatientSocialHistory(
 #         patientId=1,
 #         active="Y",
-#         sexuallyActive="Y",  
-#         secondHandSmoker="N", 
-#         alcoholUse="Occasionally", 
-#         caffeineUse="Often", 
-#         tobaccoUse="Never", 
-#         drugUse="Never", 
+#         sexuallyActive="Y",
+#         secondHandSmoker="N",
+#         alcoholUse="Occasionally",
+#         caffeineUse="Often",
+#         tobaccoUse="Never",
+#         drugUse="Never",
 #         exercise="Regularly"
 #     )
