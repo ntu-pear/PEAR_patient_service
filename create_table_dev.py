@@ -24,6 +24,7 @@ from app.models import (
     patient_guardian_relationship_mapping_model,
     patient_patient_guardian_model,
     patient_assigned_dementia_list_model,
+    patient_assigned_dementia_mapping_model,
 )
 
 # Create all tables in the database using the engine

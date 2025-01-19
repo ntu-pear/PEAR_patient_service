@@ -1,0 +1,33 @@
+2025-01-19 10:42:43,123 - app.main - INFO - Incoming request: GET http://127.0.0.1:8080/
+2025-01-19 10:42:43,124 - app.main - INFO - Root endpoint accessed
+2025-01-19 10:42:43,124 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8080/
+2025-01-19 10:42:43,144 - app.main - INFO - Incoming request: GET http://127.0.0.1:8080/favicon.ico
+2025-01-19 10:42:43,144 - app.main - INFO - Response status: 404 for GET http://127.0.0.1:8080/favicon.ico
+2025-01-19 10:42:48,483 - app.main - INFO - Incoming request: GET http://127.0.0.1:8080/docs
+2025-01-19 10:42:48,484 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8080/docs
+2025-01-19 10:42:48,599 - app.main - INFO - Incoming request: GET http://127.0.0.1:8080/openapi.json
+2025-01-19 10:42:48,666 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8080/openapi.json
+2025-01-19 10:42:58,472 - app.main - INFO - Incoming request: POST http://127.0.0.1:8080/api/v1/patients/
+2025-01-19 10:43:23,000 - app.main - INFO - Incoming request: GET http://127.0.0.1:8080/api/v1/patients/?skip=0&limit=10
+2025-01-19 10:43:23,037 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8080/api/v1/patients/?skip=0&limit=10
+2025-01-19 10:45:02,751 - app.main - INFO - Database tables created successfully.
+2025-01-19 10:45:07,374 - app.main - INFO - Database tables created successfully.
+2025-01-19 10:45:10,952 - app.main - INFO - Database tables created successfully.
+2025-01-19 10:45:14,928 - app.main - INFO - Incoming request: GET http://127.0.0.1:8080/docs
+2025-01-19 10:45:14,928 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8080/docs
+2025-01-19 10:45:15,025 - app.main - INFO - Incoming request: GET http://127.0.0.1:8080/openapi.json
+2025-01-19 10:45:15,085 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8080/openapi.json
+2025-01-19 10:45:26,085 - app.main - INFO - Incoming request: GET http://127.0.0.1:8080/api/v1/patients/?skip=0&limit=10
+2025-01-19 10:45:26,145 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8080/api/v1/patients/?skip=0&limit=10
+2025-01-19 10:45:35,853 - app.main - INFO - Incoming request: POST http://127.0.0.1:8080/api/v1/patients/
+2025-01-19 10:45:35,888 - app.main - ERROR - Database error at http://127.0.0.1:8080/api/v1/patients/: (pyodbc.IntegrityError) ('23000', '[23000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The INSERT statement conflicted with the FOREIGN KEY SAME TABLE constraint "FK__PATIENT__guardia__2EDAF651". The conflict occurred in database "patient_service_dev", table "dbo.PATIENT", column \'id\'. (547) (SQLExecDirectW); [23000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The statement has been terminated. (3621)')
+[SQL: INSERT INTO [PATIENT] (active, [firstName], [lastName], nric, address, [tempAddress], [homeNo], [handphoneNo], gender, [dateOfBirth], [guardianId], [isApproved], [preferredName], [preferredLanguageId], [updateBit], [autoGame], [startDate], [endDate], [isActive], [isRespiteCare], [privacyLevel], [terminationReason], [inActiveReason], [inActiveDate], [profilePicture], [createdDate], [modifiedDate], [createdById], [modifiedById]) OUTPUT inserted.id VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('Y', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'M', datetime.datetime(2025, 1, 19, 2, 45, 34, 47000, tzinfo=TzInfo(UTC)), 0, '1', 'string', 0, '1', '1', datetime.datetime(2025, 1, 19, 2, 45, 34, 47000, tzinfo=TzInfo(UTC)), datetime.datetime(2025, 1, 19, 2, 45, 34, 47000, tzinfo=TzInfo(UTC)), '1', '1', 0, 'string', 'string', datetime.datetime(2025, 1, 19, 2, 45, 34, 47000, tzinfo=TzInfo(UTC)), 'string', datetime.datetime(2025, 1, 19, 2, 45, 34, 47000, tzinfo=TzInfo(UTC)), datetime.datetime(2025, 1, 19, 2, 45, 34, 47000, tzinfo=TzInfo(UTC)), 0, 0)]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-01-19 10:45:35,888 - app.main - INFO - Response status: 500 for POST http://127.0.0.1:8080/api/v1/patients/
+2025-01-19 10:45:53,187 - app.main - INFO - Incoming request: GET http://127.0.0.1:8080/api/v1/MobilityMapping/List
+2025-01-19 10:45:53,200 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8080/api/v1/MobilityMapping/List
+2025-01-19 10:45:54,212 - app.main - INFO - Incoming request: GET http://127.0.0.1:8080/api/v1/MobilityMapping/List
+2025-01-19 10:45:54,232 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8080/api/v1/MobilityMapping/List
+2025-01-19 10:45:55,378 - app.main - INFO - Incoming request: GET http://127.0.0.1:8080/api/v1/MobilityMapping/List
+2025-01-19 10:45:55,391 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8080/api/v1/MobilityMapping/List
