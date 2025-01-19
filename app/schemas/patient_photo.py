@@ -25,5 +25,4 @@ class PatientPhoto(PatientPhotoBase):
     createdById: int
     modifiedById: int
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}

@@ -34,5 +34,4 @@ class PatientVital(PatientVitalBase):
     CreatedById: int
     UpdatedById: int
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
