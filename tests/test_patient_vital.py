@@ -38,7 +38,8 @@ def db_session_mock():
 @mock.patch(
     "app.models.patient_assigned_dementia_mapping_model.PatientAssignedDementiaMapping"
 )
-@mock.patch("app.models.patient_mobility_model.PatientMobility")
+@mock.patch("app.models.patient_mobility_list_model.PatientMobilityList")  # Mock PatientMobilityList
+@mock.patch("app.models.patient_mobility_mapping_model.PatientMobility") 
 @mock.patch("app.models.patient_prescription_list_model.PatientPrescriptionList")
 @mock.patch("app.models.patient_prescription_model.PatientPrescription")
 @mock.patch("app.models.patient_social_history_model.PatientSocialHistory")
@@ -72,7 +73,7 @@ def test_create_patient_vital(
 
     # Arrange
     mock_patient_vital.return_value = PatientVital(
-        **vital_create.dict(),
+        **vital_create.model_dump(),
         Id=1,
         CreatedDateTime=datetime.now(),
         UpdatedDateTime=datetime.now()

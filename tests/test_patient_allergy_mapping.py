@@ -20,7 +20,8 @@ from app.models.patient_photo_model import PatientPhoto
 from app.models.patient_model import Patient
 from app.models.patient_assigned_dementia_list_model import PatientAssignedDementiaList
 from app.models.patient_assigned_dementia_mapping_model import PatientAssignedDementiaMapping
-from app.models.patient_mobility_model import PatientMobility
+from app.models.patient_mobility_list_model import PatientMobilityList
+from app.models.patient_mobility_mapping_model import PatientMobility
 from app.models.patient_prescription_model import PatientPrescription
 from app.models.patient_social_history_model import PatientSocialHistory
 from app.models.patient_vital_model import PatientVital

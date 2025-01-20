@@ -24,7 +24,7 @@ def create_vital(db: Session, vital: PatientVitalCreate):
     try:
         validate_vital_threshold(vital)
         
-        db_vital = PatientVital(**vital.dict())
+        db_vital = PatientVital(**vital.model_dump())
         db.add(db_vital)
         db.commit()
         db.refresh(db_vital)
@@ -39,7 +39,7 @@ def update_vital(db: Session, vital_id: int, vital: PatientVitalUpdate):
         
         db_vital = db.query(PatientVital).filter(PatientVital.Id == vital_id).first()
         if db_vital:
-            for key, value in vital.dict().items():
+            for key, value in vital.model_dump().items():
                 if key == "UpdatedDateTime":
                     setattr(db_vital, key, datetime.now())
                 else:

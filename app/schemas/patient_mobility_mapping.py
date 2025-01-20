@@ -24,4 +24,6 @@ class PatientMobilityResponse(PatientMobilityBase):
     ModifiedById: int
 
     class Config:
-        orm_mode = True
+        # Don't use orm_mode = True anymore. Deprecated.
+        # orm_mode = True 
+        model_config = {"from_attributes": True}

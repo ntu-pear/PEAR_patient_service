@@ -13,7 +13,7 @@ def get_guardian_by_nric(db: Session, nric: str):
     return db.query(PatientGuardian).filter(PatientGuardian.nric == nric).first()
 
 def create_guardian(db: Session, guardian: PatientGuardianCreate):
-    guardian_data = guardian.dict(exclude={'patientId', 'relationshipName'})
+    guardian_data = guardian.model_dump(exclude={'patientId', 'relationshipName'})
     db_guardian = PatientGuardian(**guardian_data)
     db.add(db_guardian)
     db.commit()
@@ -23,7 +23,7 @@ def create_guardian(db: Session, guardian: PatientGuardianCreate):
 def update_guardian(db: Session, guardian_id: int, guardian: PatientGuardianUpdate):
     db_guardian = db.query(PatientGuardian).filter(PatientGuardian.id == guardian_id).first()
     if db_guardian:
-        for key, value in guardian.dict().items():
+        for key, value in guardian.model_dump().items():
             setattr(db_guardian, key, value)
         db.commit()
         db.refresh(db_guardian)

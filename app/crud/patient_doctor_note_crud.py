@@ -10,7 +10,7 @@ def get_doctor_note_by_id(db: Session, note_id: int):
     return db.query(PatientDoctorNote).filter(PatientDoctorNote.id == note_id).first()
 
 def create_doctor_note(db: Session, doctor_note: PatientDoctorNoteCreate):
-    db_doctor_note = PatientDoctorNote(**doctor_note.dict())
+    db_doctor_note = PatientDoctorNote(**doctor_note.model_dump())
     if db_doctor_note:
         db_doctor_note.createdDate = datetime.now()
         db_doctor_note.modifiedDate = datetime.now()
@@ -22,7 +22,7 @@ def create_doctor_note(db: Session, doctor_note: PatientDoctorNoteCreate):
 def update_doctor_note(db: Session, note_id: int, doctor_note: PatientDoctorNoteUpdate):
     db_doctor_note = db.query(PatientDoctorNote).filter(PatientDoctorNote.id == note_id).first()
     if db_doctor_note:
-        for key, value in doctor_note.dict().items():
+        for key, value in doctor_note.model_dump().items():
             setattr(db_doctor_note, key, value)
         db_doctor_note.modifiedDate = datetime.now()
         db.commit()

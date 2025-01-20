@@ -1,7 +1,7 @@
 # # test_patient_social_history.py
 
 # import pytest
-# from unittest import mock
+from unittest import mock
 # from app.crud.patient_social_history_crud import get_social_history, create_social_history, update_social_history, delete_social_history
 # from app.schemas.patient_social_history import PatientSocialHistoryCreate, PatientSocialHistoryUpdate
 # from app.models.patient_social_history_model import PatientSocialHistory
@@ -26,7 +26,8 @@
 @mock.patch(
     "app.models.patient_assigned_dementia_mapping_model.PatientAssignedDementiaMapping"
 )
-@mock.patch("app.models.patient_mobility_model.PatientMobility")
+@mock.patch("app.models.patient_mobility_list_model.PatientMobilityList")  # Mock PatientMobilityList
+@mock.patch("app.models.patient_mobility_mapping_model.PatientMobility") 
 @mock.patch("app.models.patient_prescription_model.PatientPrescription")
 @mock.patch("app.models.patient_social_history_model.PatientSocialHistory")
 @mock.patch("app.models.patient_vital_model.PatientVital")
@@ -88,7 +89,8 @@ def test_create_social_history(
 @mock.patch(
     "app.models.patient_assigned_dementia_mapping_model.PatientAssignedDementiaMapping"
 )
-@mock.patch("app.models.patient_mobility_model.PatientMobility")  # Mock PatientMobility
+@mock.patch("app.models.patient_mobility_list_model.PatientMobilityList")  # Mock PatientMobilityList
+@mock.patch("app.models.patient_mobility_mapping_model.PatientMobility") 
 @mock.patch(
     "app.models.patient_prescription_model.PatientPrescription"
 )  # Mock PatientPrescription
@@ -107,6 +109,7 @@ def test_get_social_history(
     mock_patient_assigned_dementia_list,
     mock_patient_assigned_dementia_mapping,
     mock_patient_mobility,
+    mock_patient_mobility_list,
     mock_patient_prescription,
     mock_patient_vital,
     mock_patient_highlight,
