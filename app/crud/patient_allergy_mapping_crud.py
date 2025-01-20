@@ -37,6 +37,8 @@ def get_all_allergies(db: Session):
         .all()
     )
 
+    print(results)
+    
     # Filter soft deleted entries
     patient_allergies = []
     for result in results:

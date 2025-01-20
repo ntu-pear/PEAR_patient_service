@@ -1,4 +1,5 @@
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import os
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -27,19 +28,33 @@ from app.routers import (
 )
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
-# Logger Configuration
+# Logger Configuration with Date-Suffix Log Rotation
 LOG_DIR = "logs"
-os.makedirs(LOG_DIR, exist_ok=True)  # Create logs directory if it doesn't exist
+os.makedirs(LOG_DIR, exist_ok=True)  # Ensure logs directory exists
+
+# Add suffix to log file name 
+today = datetime.now().strftime("%Y-%m-%d")
+log_file = f"{LOG_DIR}/app_{today}.log"
+
+# TimedRotatingFileHandler rotates logs daily and appends the date to the filename
+# Stores max 30 days worth of logs before deleting.
+file_handler = TimedRotatingFileHandler(
+    log_file, when="midnight", interval=1, backupCount=30
+)
+file_handler.setFormatter(logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+))
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler(f"{LOG_DIR}/app.log"),
-        logging.StreamHandler()
+        file_handler,  # File handler for daily rotation
+        logging.StreamHandler()  # Log to console
     ]
 )
 
@@ -72,6 +87,12 @@ app.add_middleware(
 # Middleware to log requests and responses
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    # TODO: Extract user information from headers
+    # user = request.headers.get("Authorization", "xxxxx")  # Replace "Authorization" with our actual header key
+    
+    # Get the user information from JWT Token 
+    # logger.info(f"Incoming request: {request.method} {request.url} by user: {user}")
+
     logger.info(f"Incoming request: {request.method} {request.url}")
     try:
         response = await call_next(request)
@@ -79,6 +100,8 @@ async def log_requests(request: Request, call_next):
         logger.error(f"Unhandled error occurred: {str(e)}", exc_info=True)
         raise
     logger.info(f"Response status: {response.status_code} for {request.method} {request.url}")
+    
+    # logger.info(f"Response status: {response.status_code} for {request.method} {request.url} by user: {user}")
     return response
 
 # Exception handler for request validation errors
@@ -102,7 +125,7 @@ async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
 # Database setup
 try:
     Base.metadata.create_all(bind=engine)
-    logger.info("Database tables created successfully.")
+    logger.info("Database initialized successfully.")
 except Exception as db_init_error:
     logger.error(f"Failed to initialize database: {str(db_init_error)}", exc_info=True)
 

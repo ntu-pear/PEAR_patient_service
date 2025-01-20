@@ -4,13 +4,7 @@ from ..schemas.allergy_reaction_type import (
     AllergyReactionTypeCreate,
     AllergyReactionTypeUpdate,
 )
-from ..schemas.allergy_reaction_type import (
-    AllergyReactionTypeCreate,
-    AllergyReactionTypeUpdate,
-)
 from datetime import datetime
-
-
 
 def get_all_reaction_types(db: Session):
     return db.query(AllergyReactionType).filter(AllergyReactionType.IsDeleted == "0").all()
@@ -23,40 +17,17 @@ def get_reaction_type_by_id(db: Session, allergy_reaction_type_id: int):
         .first()
     )
 
-    return (
-        db.query(AllergyReactionType)
-        .filter(AllergyReactionType.AllergyReactionTypeID == allergy_reaction_type_id)
-        .first()
-    )
 
-
-def create_reaction_type(
-    db: Session, reaction_type: AllergyReactionTypeCreate, created_by: int
-):
 def create_reaction_type(
     db: Session, reaction_type: AllergyReactionTypeCreate, created_by: int
 ):
     db_reaction_type = AllergyReactionType(
-        **reaction_type.model_dump(), CreatedById=created_by, ModifiedById=created_by
         **reaction_type.model_dump(), CreatedById=created_by, ModifiedById=created_by
     )
     db.add(db_reaction_type)
     db.commit()
     db.refresh(db_reaction_type)
     return db_reaction_type
-
-
-def update_reaction_type(
-    db: Session,
-    allergy_reaction_type_id: int,
-    reaction_type: AllergyReactionTypeUpdate,
-    modified_by: int,
-):
-    db_reaction_type = (
-        db.query(AllergyReactionType)
-        .filter(AllergyReactionType.AllergyReactionTypeID == allergy_reaction_type_id)
-        .first()
-    )
 
 def update_reaction_type(
     db: Session,
@@ -71,8 +42,6 @@ def update_reaction_type(
     )
 
     if db_reaction_type:
-        # Update other fields from the request body
-        for key, value in reaction_type.model_dump(exclude_unset=True).items():
         for key, value in reaction_type.model_dump(exclude_unset=True).items():
             setattr(db_reaction_type, key, value)
 
@@ -81,22 +50,12 @@ def update_reaction_type(
 
         # Update the modifiedById field
         db_reaction_type.ModifiedById = modified_by
-        # Update the modifiedById field
-        db_reaction_type.ModifiedById = modified_by
 
         # Commit and refresh the object
         db.commit()
         db.refresh(db_reaction_type)
         return db_reaction_type
     return None
-
-
-def delete_reaction_type(db: Session, allergy_reaction_type_id: int, modified_by: int):
-    db_reaction_type = (
-        db.query(AllergyReactionType)
-        .filter(AllergyReactionType.AllergyReactionTypeID == allergy_reaction_type_id)
-        .first()
-    )
 
 def delete_reaction_type(db: Session, allergy_reaction_type_id: int, modified_by: int):
     db_reaction_type = (
