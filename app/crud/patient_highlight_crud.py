@@ -16,7 +16,7 @@ def get_highlights_by_patient(db: Session, patient_id: int):
 
 def create_highlight(db: Session, highlight_data: PatientHighlightCreate, created_by: int):
     db_highlight = PatientHighlight(
-        **highlight_data.dict(), CreatedById=created_by, ModifiedById=created_by
+        **highlight_data.model_dump(), CreatedById=created_by, ModifiedById=created_by
     )
     db.add(db_highlight)
     db.commit()
@@ -29,7 +29,7 @@ def update_highlight(db: Session, highlight_id: int, highlight_data: PatientHigh
     if not db_highlight or db_highlight.IsDeleted == "1":
         raise HTTPException(status_code=404, detail="Highlight not found")
 
-    for key, value in highlight_data.dict(exclude_unset=True).items():
+    for key, value in highlight_data.model_dump(exclude_unset=True).items():
         setattr(db_highlight, key, value)
 
     db_highlight.ModifiedDate = datetime.now()
