@@ -1,67 +1,67 @@
-name: Continuous Deployment
+# name: Continuous Deployment
 
-on:
-  push:
-    branches:
-      - feat/cd
+# on:
+#   push:
+#     branches:
+#       - feat/cd
 
-jobs:
-  deploy:
-    runs-on: ubuntu-24.04
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-24.04
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
 
-      - name: Install GlobalProtect dependencies
-        run: |
-          sudo add-apt-repository ppa:yuezk/globalprotect-openconnect
-          sudo apt-get install globalprotect-openconnect
+#       - name: Install GlobalProtect dependencies
+#         run: |
+#           sudo add-apt-repository ppa:yuezk/globalprotect-openconnect
+#           sudo apt-get install globalprotect-openconnect
 
-      - name: Install expect
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y expect
+#       - name: Install expect
+#         run: |
+#           sudo apt-get update
+#           sudo apt-get install -y expect
 
-      # - name: Download GlobalProtect client
-      #   run: |
-      #     curl -L -o globalprotect-installer.zip https://globalprotect.example.com/download # Adjust URL accordingly
-      #     unzip globalprotect-installer.zip
-      #     sudo dpkg -i globalprotect-installer.deb
-      # gpclient connect vpngate.ntu.edu.sg
-      # - name: Connect to GlobalProtect VPN
-      #   run: |
-      #     #!/usr/bin/expect
-      #     spawn gpclient connect vpngate.ntu.edu.sg
-      #     expect "Username:"
-      #     send "tlew004@student.main.ntu.edu.sg\r"
-      #     expect "Password:"
-      #     send "${{ secrets.VPN_PASSWORD }}\r"
-      #     interact
+#       # - name: Download GlobalProtect client
+#       #   run: |
+#       #     curl -L -o globalprotect-installer.zip https://globalprotect.example.com/download # Adjust URL accordingly
+#       #     unzip globalprotect-installer.zip
+#       #     sudo dpkg -i globalprotect-installer.deb
+#       # gpclient connect vpngate.ntu.edu.sg
+#       # - name: Connect to GlobalProtect VPN
+#       #   run: |
+#       #     #!/usr/bin/expect
+#       #     spawn gpclient connect vpngate.ntu.edu.sg
+#       #     expect "Username:"
+#       #     send "tlew004@student.main.ntu.edu.sg\r"
+#       #     expect "Password:"
+#       #     send "${{ secrets.VPN_PASSWORD }}\r"
+#       #     interact
 
-      - name: Create expect script to connect to GlobalProtect VPN
-        run: |
-          echo '#!/usr/bin/expect' > connect_vpn.expect
-          echo 'spawn gpclient connect vpngate.ntu.edu.sg' >> connect_vpn.expect
-          echo 'sleep 20' >> connect_vpn.expect  # Sleep for 20 seconds
-          echo 'expect "Username:"' >> connect_vpn.expect
-          echo 'send "tlew004@student.main.ntu.edu.sg\r"' >> connect_vpn.expect
-          echo 'expect "Password:"' >> connect_vpn.expect
-          echo 'send "${{ secrets.VPN_PASSWORD }}\r"' >> connect_vpn.expect
-          echo 'interact' >> connect_vpn.expect
-          chmod +x connect_vpn.expect
+#       - name: Create expect script to connect to GlobalProtect VPN
+#         run: |
+#           echo '#!/usr/bin/expect' > connect_vpn.expect
+#           echo 'spawn gpclient connect vpngate.ntu.edu.sg' >> connect_vpn.expect
+#           echo 'sleep 20' >> connect_vpn.expect  # Sleep for 20 seconds
+#           echo 'expect "Username:"' >> connect_vpn.expect
+#           echo 'send "tlew004@student.main.ntu.edu.sg\r"' >> connect_vpn.expect
+#           echo 'expect "Password:"' >> connect_vpn.expect
+#           echo 'send "${{ secrets.VPN_PASSWORD }}\r"' >> connect_vpn.expect
+#           echo 'interact' >> connect_vpn.expect
+#           chmod +x connect_vpn.expect
 
-      - name: Connect to GlobalProtect VPN using expect
-        run: |
-          ./connect_vpn.expect
+#       - name: Connect to GlobalProtect VPN using expect
+#         run: |
+#           ./connect_vpn.expect
 
-        # run: |
-        #   echo "${{ secrets.VPN_PASSWORD }}" | sudo globalprotect connect --portal=your.school.vpn.portal --username="${{ secrets.VPN_USERNAME }}" --password="${{ secrets.VPN_PASSWORD }}" &
+#         # run: |
+#         #   echo "${{ secrets.VPN_PASSWORD }}" | sudo globalprotect connect --portal=your.school.vpn.portal --username="${{ secrets.VPN_USERNAME }}" --password="${{ secrets.VPN_PASSWORD }}" &
 
-      # - name: Wait for VPN connection to establish
-      #   run: |
-      #     sleep 30  # Wait for the VPN to fully establish the connection
+#       # - name: Wait for VPN connection to establish
+#       #   run: |
+#       #     sleep 30  # Wait for the VPN to fully establish the connection
 
-      # - name: Deploy
-      #   run: |
-      #     # Your deployment commands go here
+#       # - name: Deploy
+#       #   run: |
+#       #     # Your deployment commands go here

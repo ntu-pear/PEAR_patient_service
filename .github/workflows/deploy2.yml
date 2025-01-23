@@ -1,19 +1,19 @@
-# name: Continuous Deployment2
+name: Continuous Deployment2
 
-# on:
-#   push:
-#     branches:
-#       - feat/cd
+on:
+  push:
+    branches:
+      - feat/cd
 
-# jobs:
-#   deploy:
-#     runs-on: ubuntu-24.04
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
 
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-#       - name: Install GlobalProtect dependencies
-#         run: |
-#           sudo dpkg -i ./.github/workflows/GlobalProtect_focal_deb-6.2.1.1-276.deb
-#           globalprotect connect -p vpngate.ntu.edu.sg -u tlew004@student.main.ntu.edu.sg
+      - name: Install GlobalProtect dependencies
+        run: |
+          sudo dpkg -i ./.github/workflows/GlobalProtect_focal_deb-6.2.1.1-276.deb
+          globalprotect connect -p vpngate.ntu.edu.sg -u tlew004@student.main.ntu.edu.sg
