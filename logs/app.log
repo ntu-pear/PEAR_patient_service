@@ -31,3 +31,27 @@
 2025-01-19 10:45:54,232 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8080/api/v1/MobilityMapping/List
 2025-01-19 10:45:55,378 - app.main - INFO - Incoming request: GET http://127.0.0.1:8080/api/v1/MobilityMapping/List
 2025-01-19 10:45:55,391 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8080/api/v1/MobilityMapping/List
+2025-01-24 23:35:29,986 - app.main - INFO - Database tables created successfully.
+2025-01-24 23:35:33,523 - app.main - INFO - Incoming request: GET http://127.0.0.1:8000/
+2025-01-24 23:35:33,526 - app.main - INFO - Root endpoint accessed
+2025-01-24 23:35:33,527 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8000/
+2025-01-24 23:35:33,636 - app.main - INFO - Incoming request: GET http://127.0.0.1:8000/favicon.ico
+2025-01-24 23:35:33,637 - app.main - INFO - Response status: 404 for GET http://127.0.0.1:8000/favicon.ico
+2025-01-24 23:35:36,140 - app.main - INFO - Incoming request: GET http://127.0.0.1:8000/docs
+2025-01-24 23:35:36,140 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8000/docs
+2025-01-24 23:35:36,295 - app.main - INFO - Incoming request: GET http://127.0.0.1:8000/openapi.json
+2025-01-24 23:35:36,376 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8000/openapi.json
+2025-01-24 23:43:22,333 - app.main - INFO - Database tables created successfully.
+2025-01-24 23:43:27,857 - app.main - INFO - Incoming request: GET http://127.0.0.1:8000/
+2025-01-24 23:43:27,860 - app.main - INFO - Root endpoint accessed
+2025-01-24 23:43:27,861 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8000/
+2025-01-24 23:43:31,623 - app.main - INFO - Incoming request: GET http://127.0.0.1:8000/docs
+2025-01-24 23:43:31,623 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8000/docs
+2025-01-24 23:43:31,813 - app.main - INFO - Incoming request: GET http://127.0.0.1:8000/openapi.json
+2025-01-24 23:43:31,875 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8000/openapi.json
+2025-01-24 23:43:37,874 - app.main - INFO - Incoming request: GET http://127.0.0.1:8000/api/v1/get_all_assigned_dementias
+2025-01-24 23:43:37,951 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8000/api/v1/get_all_assigned_dementias
+2025-01-24 23:43:45,646 - app.main - INFO - Incoming request: GET http://127.0.0.1:8000/api/v1/get_assigned_dementias/1
+2025-01-24 23:43:46,155 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8000/api/v1/get_assigned_dementias/1
+2025-01-24 23:43:55,850 - app.main - INFO - Incoming request: GET http://127.0.0.1:8000/api/v1/get_assigned_dementias/2
+2025-01-24 23:43:55,883 - app.main - INFO - Response status: 200 for GET http://127.0.0.1:8000/api/v1/get_assigned_dementias/2
