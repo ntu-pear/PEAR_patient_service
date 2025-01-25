@@ -38,7 +38,7 @@ def get_mobility_list_entry_by_id(db: Session, mobility_list_id: int):
 # Create a new mobility list entry
 def create_mobility_list_entry(db: Session, mobility_list_data: PatientMobilityListCreate, created_by: int):
     new_entry = PatientMobilityList(
-        **mobility_list_data.dict(exclude={"CreatedDateTime", "ModifiedDateTime", "CreatedById", "ModifiedById"}),  # Corrected set syntax
+        **mobility_list_data.model_dump(exclude={"CreatedDateTime", "ModifiedDateTime", "CreatedById", "ModifiedById"}),  # Corrected set syntax
         CreatedDateTime=datetime.utcnow(),
         ModifiedDateTime=datetime.utcnow(),
         CreatedById=created_by,
@@ -64,7 +64,7 @@ def update_mobility_list_entry(
         return None
 
     # Update the fields of the entry
-    update_data = mobility_list_data.dict(exclude={"MobilityListId"}, exclude_unset=True)
+    update_data = mobility_list_data.model_dump(exclude={"MobilityListId"}, exclude_unset=True)
     for key, value in update_data.items():
         setattr(db_entry, key, value)
 

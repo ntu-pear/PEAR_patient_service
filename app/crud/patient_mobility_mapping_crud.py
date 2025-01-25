@@ -37,7 +37,7 @@ def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, cre
 
     # Create entry
     new_entry = PatientMobility(
-        **mobility_data.dict(),
+        **mobility_data.model_dump(),
         CreatedDateTime=datetime.utcnow(),
         ModifiedDateTime=datetime.utcnow(),
         CreatedById=created_by,
@@ -61,7 +61,7 @@ def update_mobility_entry(
     if not db_entry:
         raise HTTPException(status_code=404, detail=f"Mobility entry with ID {patient_id} not found.")
 
-    for key, value in mobility_data.dict(exclude_unset=True).items():
+    for key, value in mobility_data.model_dump(exclude_unset=True).items():
         setattr(db_entry, key, value)
 
     db_entry.ModifiedDateTime = datetime.utcnow()

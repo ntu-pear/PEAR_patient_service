@@ -56,7 +56,7 @@ def create_patient_patient_guardian(db: Session, patientPatientGuradian: Patient
 def update_patient_patient_guardian(db: Session, id: int, patientPatientGuradian: PatientPatientGuardianUpdate):
     db_relationship = db.query(PatientPatientGuardian).filter(PatientPatientGuardian.id == id).first()
     if db_relationship:
-        for key, value in patientPatientGuradian.dict().items():
+        for key, value in patientPatientGuradian.model_dump().items():
             setattr(db_relationship, key, value)
         db.commit()
         db.refresh(db_relationship)

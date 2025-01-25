@@ -18,7 +18,7 @@ def create_social_history(db: Session, social_history: PatientSocialHistoryCreat
         raise HTTPException(status_code=400, detail=f"Patient with id {social_history.patientId} does not exist.")
     
     # If patient exists, proceed with creating the social history record
-    db_social_history = PatientSocialHistory(**social_history.dict())
+    db_social_history = PatientSocialHistory(**social_history.model_dump())
     db.add(db_social_history)
     db.commit()
     db.refresh(db_social_history)
@@ -30,7 +30,7 @@ def update_social_history(db: Session, patient_id: int, social_history: PatientS
     """
     db_social_history = db.query(PatientSocialHistory).filter(PatientSocialHistory.patientId == patient_id).first()
     if db_social_history:
-        for key, value in social_history.dict().items():
+        for key, value in social_history.model_dump().items():
             setattr(db_social_history, key, value)
         db.commit()
         db.refresh(db_social_history)

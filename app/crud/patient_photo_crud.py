@@ -12,7 +12,7 @@ def get_max_patient_photo(db: Session):
     return db.query(PatientPhoto).order_by(PatientPhoto.id.desc()).first()
 
 def create_patient_photo(db: Session, photo: PatientPhotoCreate):
-    db_photo = PatientPhoto(**photo.dict())
+    db_photo = PatientPhoto(**photo.model_dump())
     db.add(db_photo)
     db.commit()
     db.refresh(db_photo)
@@ -21,7 +21,7 @@ def create_patient_photo(db: Session, photo: PatientPhotoCreate):
 def update_patient_photo(db: Session, photo_id: int, photo: PatientPhotoUpdate):
     db_photo = db.query(PatientPhoto).filter(PatientPhoto.id == photo_id).first()
     if db_photo:
-        for key, value in photo.dict().items():
+        for key, value in photo.model_dump().items():
             setattr(db_photo, key, value)
         db.commit()
         db.refresh(db_photo)
@@ -30,7 +30,7 @@ def update_patient_photo(db: Session, photo_id: int, photo: PatientPhotoUpdate):
 def delete_patient_photo(db: Session, photo_id: int, photo: PatientPhotoUpdate):
     db_photo = db.query(PatientPhoto).filter(PatientPhoto.id == photo_id).first()
     if db_photo:
-        for key, value in photo.dict().items():
+        for key, value in photo.model_dump().items():
             setattr(db_photo, key, value)
         db.commit()
         db.refresh(db_photo)
