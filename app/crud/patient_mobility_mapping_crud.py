@@ -14,13 +14,13 @@ def get_all_mobility_entries(db: Session):
     return db.query(PatientMobility).filter(PatientMobility.IsDeleted == False).all()
 
 # Get a single mobility entry by ID
-def get_mobility_entry_by_id(db: Session, mobility_id: int):
+def get_mobility_entry_by_id(db: Session, patient_id: int):
     entry = db.query(PatientMobility).filter(
-        PatientMobility.MobilityID == mobility_id,
+        PatientMobility.PatientID == patient_id,
         PatientMobility.IsDeleted == False
     ).first()
     if not entry:
-        raise HTTPException(status_code=404, detail=f"Mobility entry with ID {mobility_id} not found.")
+        raise HTTPException(status_code=404, detail=f"Patient entry with ID {patient_id} not found.")
     return entry
 
 # Create a new mobility entry
@@ -51,15 +51,15 @@ def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, cre
 
 # Update an existing mobility entry
 def update_mobility_entry(
-    db: Session, mobility_id: int, mobility_data: PatientMobilityUpdate, modified_by: int
+    db: Session, patient_id: int, mobility_data: PatientMobilityUpdate, modified_by: int
 ):
     db_entry = db.query(PatientMobility).filter(
-        PatientMobility.MobilityID == mobility_id,
+        PatientMobility.PatientID == patient_id,
         PatientMobility.IsDeleted == False,
     ).first()
 
     if not db_entry:
-        raise HTTPException(status_code=404, detail=f"Mobility entry with ID {mobility_id} not found.")
+        raise HTTPException(status_code=404, detail=f"Mobility entry with ID {patient_id} not found.")
 
     for key, value in mobility_data.dict(exclude_unset=True).items():
         setattr(db_entry, key, value)
@@ -72,14 +72,14 @@ def update_mobility_entry(
     return db_entry
 
 # Soft delete a mobility entry
-def delete_mobility_entry(db: Session, mobility_id: int, modified_by: int):
+def delete_mobility_entry(db: Session, patient_id: int, modified_by: int):
     db_entry = db.query(PatientMobility).filter(
-        PatientMobility.MobilityID == mobility_id,
+        PatientMobility.PatientID == patient_id,
         PatientMobility.IsDeleted == False,
     ).first()
 
     if not db_entry:
-        raise HTTPException(status_code=404, detail=f"Mobility entry with ID {mobility_id} not found.")
+        raise HTTPException(status_code=404, detail=f"Mobility entry with ID {patient_id} not found.")
 
     db_entry.IsDeleted = True
     db_entry.ModifiedDateTime = datetime.utcnow()

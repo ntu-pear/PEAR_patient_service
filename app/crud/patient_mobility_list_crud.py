@@ -53,22 +53,36 @@ def create_mobility_list_entry(db: Session, mobility_list_data: PatientMobilityL
 def update_mobility_list_entry(
     db: Session, mobility_list_id: int, mobility_list_data: PatientMobilityListUpdate, modified_by: int
 ):
+    # Query the database for the entry to update
     db_entry = db.query(PatientMobilityList).filter(
         PatientMobilityList.MobilityListId == mobility_list_id,
-        PatientMobilityList.IsDeleted == '0',
+        PatientMobilityList.IsDeleted == '0',  # Ensure the entry is not marked as deleted
     ).first()
 
-    if db_entry:
-        for key, value in mobility_list_data.dict(exclude={"MobilityListId"}).items():  # Exclude MobilityListId
-            setattr(db_entry, key, value)
+    if not db_entry:
+        # If the entry is not found, return None (or optionally raise an exception)
+        return None
 
-        db_entry.ModifiedDateTime = datetime.utcnow()
-        db_entry.ModifiedById = modified_by
+    # Update the fields of the entry
+    update_data = mobility_list_data.dict(exclude={"MobilityListId"}, exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_entry, key, value)
 
+    # Update the modified fields
+    db_entry.ModifiedDateTime = datetime.utcnow()
+    db_entry.ModifiedById = modified_by
+
+    try:
+        # Commit the transaction and refresh the entry
         db.commit()
         db.refresh(db_entry)
-        return db_entry
-    return None
+    except Exception as e:
+        # Rollback in case of an error
+        db.rollback()
+        raise e
+
+    return db_entry
+
 
 # Soft delete a mobility list entry (set IsDeleted to '1')
 
