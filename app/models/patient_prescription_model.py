@@ -10,7 +10,7 @@ class PatientPrescription(Base):
     Id = Column(Integer, primary_key=True, index=True)  # Changed to Integer
     IsDeleted = Column(String(1), default='1', nullable=False)  # used to check if record is active or not, substitute isDeleted column
     PatientId = Column(Integer, ForeignKey('PATIENT.id'))  # Changed to Integer
-    PrescriptionListId = Column(Integer, ForeignKey('PATIENT_PRESCRIPTION_LIST.id'))  # Changed to Integer
+    PrescriptionListId = Column(Integer, ForeignKey('PATIENT_PRESCRIPTION_LIST.Id'))  # Changed to Integer
     Dosage = Column(String(255), nullable=False)
     FrequencyPerDay = Column(BigInteger, nullable=False)
     Instruction = Column(String(255), nullable=False)

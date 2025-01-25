@@ -12,7 +12,7 @@ def get_prescription(db: Session, prescription_id: int):
     return db.query(PatientPrescription).filter(PatientPrescription.Id == prescription_id).first()
 
 def create_prescription(db: Session, prescription: PatientPrescriptionCreate):
-    db_prescription = PatientPrescription(**prescription.dict())
+    db_prescription = PatientPrescription(**prescription.model_dump())
     db.add(db_prescription)
     db.commit()
     db.refresh(db_prescription)
@@ -21,7 +21,7 @@ def create_prescription(db: Session, prescription: PatientPrescriptionCreate):
 def update_prescription(db: Session, prescription_id: int, prescription: PatientPrescriptionUpdate):
     db_prescription = db.query(PatientPrescription).filter(PatientPrescription.Id == prescription_id).first()
     if db_prescription:
-        for key, value in prescription.dict().items():
+        for key, value in prescription.model_dump().items():
             setattr(db_prescription, key, value)
         db.commit()
         db.refresh(db_prescription)
@@ -30,7 +30,7 @@ def update_prescription(db: Session, prescription_id: int, prescription: Patient
 def delete_prescription(db: Session, prescription_id: int, prescription: PatientPrescriptionUpdate):
     db_prescription = db.query(PatientPrescription).filter(PatientPrescription.Id == prescription_id).first()
     if db_prescription:
-        setattr(db_prescription, "IsDeleted", "0")
+        setattr(db_prescription, "IsDeleted", "1")
         db.commit()
         db.refresh(db_prescription)
     return db_prescription

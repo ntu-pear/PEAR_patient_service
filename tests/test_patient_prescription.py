@@ -1,15 +1,26 @@
 import pytest
 from unittest import mock
 from datetime import datetime
-from app.crud.patient_prescription_crud import get_prescriptions, create_prescription, update_prescription, delete_prescription
-from app.schemas.patient_prescription import PatientPrescriptionCreate, PatientPrescriptionUpdate, PatientPrescription
+from app.crud.patient_prescription_crud import (
+    get_prescriptions,
+    create_prescription,
+    update_prescription,
+    delete_prescription,
+)
+from app.schemas.patient_prescription import (
+    PatientPrescriptionCreate,
+    PatientPrescriptionUpdate,
+    PatientPrescription,
+)
 
 from tests.utils.mock_db import get_db_session_mock
+
 
 @pytest.fixture
 def db_session_mock():
     """Fixture to mock the database session."""
     return get_db_session_mock()
+
 
 # TODO: fix this test
 # def test_get_prescriptions(db_session_mock):
@@ -75,43 +86,54 @@ def db_session_mock():
 #         assert "CreatedById" in prescription
 #         assert "UpdatedById" in prescription
 
+
 # Mocking the relevant models
 @mock.patch("app.models.patient_model.Patient")
 @mock.patch("app.models.patient_patient_guardian_model.PatientPatientGuardian")
 @mock.patch("app.models.patient_allergy_mapping_model.PatientAllergyMapping")
-@mock.patch("app.models.allergy_reaction_type_model.AllergyReactionType")  # Ensure AllergyReactionType is mocked
+@mock.patch(
+    "app.models.allergy_reaction_type_model.AllergyReactionType"
+)  # Ensure AllergyReactionType is mocked
 @mock.patch("app.models.patient_doctor_note_model.PatientDoctorNote")
 @mock.patch("app.models.patient_photo_model.PatientPhoto")
-@mock.patch("app.models.patient_assigned_dementia_list_model.PatientAssignedDementiaList")
-@mock.patch("app.models.patient_mobility_list_model.PatientMobilityList")  # Mock PatientMobility
-@mock.patch("app.models.patient_mobility_mapping_model.PatientMobility")  # Mock PatientMobility
+@mock.patch(
+    "app.models.patient_assigned_dementia_list_model.PatientAssignedDementiaList"
+)
+@mock.patch(
+    "app.models.patient_assigned_dementia_mapping_model.PatientAssignedDementiaMapping"
+)
+@mock.patch("app.models.patient_mobility_list_model.PatientMobilityList")  # Mock PatientMobilityList
+@mock.patch("app.models.patient_mobility_mapping_model.PatientMobility") 
 @mock.patch("app.models.patient_prescription_list_model.PatientPrescriptionList")
 @mock.patch("app.models.patient_prescription_model.PatientPrescription")
 @mock.patch("app.models.patient_social_history_model.PatientSocialHistory")
 @mock.patch("app.models.patient_vital_model.PatientVital")
 @mock.patch("app.models.patient_highlight_model.PatientHighlight")
 @mock.patch("app.models.allergy_type_model.AllergyType")
-@mock.patch("app.models.patient_guardian_relationship_mapping_model.PatientGuardianRelationshipMapping")
+@mock.patch(
+    "app.models.patient_guardian_relationship_mapping_model.PatientGuardianRelationshipMapping"
+)
 def test_create_prescription(
-    mock_patient,  
-    mock_patient_guardian, 
-    mock_patient_allergy_mapping, 
-    mock_allergy_reaction_type, 
-    mock_patient_doctor_note, 
-    mock_patient_photo,  
-    mock_patient_assigned_dementia_list,  
-    mock_patient_mobility,  
-    mock_patient_mobility_list,  
+    mock_patient,
+    mock_patient_guardian,
+    mock_patient_allergy_mapping,
+    mock_allergy_reaction_type,
+    mock_patient_doctor_note,
+    mock_patient_photo,
+    mock_patient_assigned_dementia_list,
+    mock_patient_assigned_dementia_mapping,
+    mock_patient_mobility,
+    mock_patient_mobility_list,
     mock_patient_prescription_list,
-    mock_patient_prescription,  
+    mock_patient_prescription,
     mock_patient_vital,
     mock_patient_highlight,
     mock_allergy_type,
     mock_patient_guardian_relationship_mapping,
-    db_session_mock, 
+    db_session_mock,
 ):
     data = {
-        "IsDeleted": "1", 
+        "IsDeleted": "1",
         "PatientId": 1,
         "Dosage": "500mg",
         "PrescriptionListId": 1,
@@ -125,9 +147,11 @@ def test_create_prescription(
         "CreatedDateTime": datetime(2023, 1, 1, 10, 0),
         "UpdatedDateTime": datetime(2023, 1, 1, 10, 0),
         "CreatedById": 1,
-        "UpdatedById": 1
+        "UpdatedById": 1,
     }
-    prescription = create_prescription(db_session_mock, PatientPrescriptionCreate(**data))
+    prescription = create_prescription(
+        db_session_mock, PatientPrescriptionCreate(**data)
+    )
     assert prescription.PatientId == 1
     assert prescription.Dosage == "500mg"
     assert prescription.FrequencyPerDay == 3
@@ -141,6 +165,7 @@ def test_create_prescription(
     assert prescription.UpdatedDateTime == datetime(2023, 1, 1, 10, 0)
     assert prescription.CreatedById == 1
     assert prescription.UpdatedById == 1
+
 
 def test_update_prescription(db_session_mock):
     data = {
@@ -156,9 +181,11 @@ def test_update_prescription(db_session_mock):
         "PrescriptionRemarks": "No remarks",
         "Status": "Active",
         "UpdatedDateTime": datetime(2023, 1, 1, 10, 0),
-        "UpdatedById": 1
+        "UpdatedById": 1,
     }
-    prescription = update_prescription(db_session_mock, 1, PatientPrescriptionUpdate(**data))
+    prescription = update_prescription(
+        db_session_mock, 1, PatientPrescriptionUpdate(**data)
+    )
     db_session_mock.commit.assert_called_once()
     assert prescription.PatientId == 1
     assert prescription.Dosage == "500mg"
@@ -172,9 +199,10 @@ def test_update_prescription(db_session_mock):
     assert prescription.UpdatedDateTime == datetime(2023, 1, 1, 10, 0)
     assert prescription.UpdatedById == 1
 
+
 def test_delete_prescription(db_session_mock):
     data = {
-        "IsDeleted": "1",
+        "IsDeleted": "0",
         "PatientId": 1,
         "PrescriptionListId": 1,
         "Dosage": "500mg",
@@ -186,10 +214,12 @@ def test_delete_prescription(db_session_mock):
         "PrescriptionRemarks": "No remarks",
         "Status": "Active",
         "UpdatedDateTime": datetime(2023, 1, 1, 10, 0),
-        "UpdatedById": 1
+        "UpdatedById": 1,
     }
 
     prescription_id = 1
-    result = delete_prescription(db_session_mock, prescription_id, PatientPrescriptionUpdate(**data))
+    result = delete_prescription(
+        db_session_mock, prescription_id, PatientPrescriptionUpdate(**data)
+    )
     db_session_mock.commit.assert_called_once()
-    assert result.IsDeleted == "0"
+    assert result.IsDeleted == "1"

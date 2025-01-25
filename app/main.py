@@ -1,4 +1,5 @@
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import os
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -13,6 +14,7 @@ from app.routers import (
     patient_doctor_note_router,
     patient_guardian_router,
     patient_highlight_router,
+    patient_highlight_type_router,
     patient_list_router,
     patient_mobility_router,
     patient_photo_router,
@@ -26,19 +28,33 @@ from app.routers import (
 )
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
-# Logger Configuration
+# Logger Configuration with Date-Suffix Log Rotation
 LOG_DIR = "logs"
-os.makedirs(LOG_DIR, exist_ok=True)  # Create logs directory if it doesn't exist
+os.makedirs(LOG_DIR, exist_ok=True)  # Ensure logs directory exists
+
+# Add suffix to log file name 
+today = datetime.now().strftime("%Y-%m-%d")
+log_file = f"{LOG_DIR}/app_{today}.log"
+
+# TimedRotatingFileHandler rotates logs daily and appends the date to the filename
+# Stores max 30 days worth of logs before deleting.
+file_handler = TimedRotatingFileHandler(
+    log_file, when="midnight", interval=1, backupCount=30
+)
+file_handler.setFormatter(logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+))
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler(f"{LOG_DIR}/app.log"),
-        logging.StreamHandler()
+        file_handler,  # File handler for daily rotation
+        logging.StreamHandler()  # Log to console
     ]
 )
 
@@ -71,6 +87,12 @@ app.add_middleware(
 # Middleware to log requests and responses
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    # TODO: Extract user information from headers
+    # user = request.headers.get("Authorization", "xxxxx")  # Replace "Authorization" with our actual header key
+    
+    # Get the user information from JWT Token 
+    # logger.info(f"Incoming request: {request.method} {request.url} by user: {user}")
+
     logger.info(f"Incoming request: {request.method} {request.url}")
     try:
         response = await call_next(request)
@@ -78,6 +100,8 @@ async def log_requests(request: Request, call_next):
         logger.error(f"Unhandled error occurred: {str(e)}", exc_info=True)
         raise
     logger.info(f"Response status: {response.status_code} for {request.method} {request.url}")
+    
+    # logger.info(f"Response status: {response.status_code} for {request.method} {request.url} by user: {user}")
     return response
 
 # Exception handler for request validation errors
@@ -101,27 +125,54 @@ async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
 # Database setup
 try:
     Base.metadata.create_all(bind=engine)
-    logger.info("Database tables created successfully.")
+    logger.info("Database initialized successfully.")
 except Exception as db_init_error:
     logger.error(f"Failed to initialize database: {str(db_init_error)}", exc_info=True)
 
-# Include the routers with prefixes and tags
-app.include_router(patient_router.router, prefix="/api/v1", tags=["patients"])
-app.include_router(patient_allergy_mapping_router.router, prefix="/api/v1", tags=["Patient Allergies"])
-app.include_router(allergy_type_router.router, prefix="/api/v1", tags=["Allergy Types"])
-app.include_router(allergy_reaction_type_router.router, prefix="/api/v1", tags=["Allergy Reaction Types"])
-app.include_router(patient_assigned_dementia_list_router.router, prefix="/api/v1", tags=["Dementia List"])
-app.include_router(patient_assigned_dementia_mapping_router.router, prefix="/api/v1", tags=["Patient Assigned Dementia"])
-app.include_router(patient_doctor_note_router.router, prefix="/api/v1", tags=["doctor notes"])
-app.include_router(patient_guardian_router.router, prefix="/api/v1", tags=["guardians"])
-app.include_router(patient_highlight_router.router, prefix="/api/v1", tags=["highlights"])
-app.include_router(patient_list_router.router, prefix="/api/v1", tags=["patient lists"])
-app.include_router(patient_mobility_router.router, prefix="/api/v1", tags=["mobility"])
-app.include_router(patient_mobility_mapping_router.router, prefix="/api/v1", tags=["Patient Mobility Mapping"])
-app.include_router(patient_photo_router.router, prefix="/api/v1", tags=["photos"])
-app.include_router(patient_prescription_router.router, prefix="/api/v1", tags=["prescriptions"])
-app.include_router(patient_social_history_router.router, prefix="/api/v1", tags=["social history"])
-app.include_router(patient_vital_router.router, prefix="/api/v1", tags=["vitals"])
+API_VERSION_PREFIX = "/api/v1"  
+
+app.include_router(patient_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patients"])
+
+app.include_router(
+    allergy_type_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Allergy Types"]
+)
+app.include_router(
+    allergy_reaction_type_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Allergy Reaction Types"]
+)
+app.include_router(
+    patient_assigned_dementia_list_router.router, prefix=f"{API_VERSION_PREFIX}",tags=["Dementia List"]
+)
+app.include_router(
+    patient_assigned_dementia_mapping_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patient Assigned Dementia"]
+)
+app.include_router(
+    patient_allergy_mapping_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patient Allergies"]
+)
+app.include_router(
+    patient_doctor_note_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Doctor Notes"]
+)
+app.include_router(patient_guardian_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Guardians"])
+
+# highlights
+app.include_router(
+    patient_highlight_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Highlights"]
+)
+app.include_router(
+    patient_highlight_type_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Highlights Type"]
+)
+
+app.include_router(
+    patient_list_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patient Lists"]
+)
+app.include_router(patient_mobility_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Mobility"])
+app.include_router(patient_photo_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Photos"])
+app.include_router(
+    patient_prescription_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Prescriptions"]
+)
+app.include_router(
+    patient_social_history_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Social History"]
+)
+app.include_router(patient_vital_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Vitals"])
 
 @app.get("/")
 def read_root():

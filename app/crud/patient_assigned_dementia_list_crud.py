@@ -24,7 +24,7 @@ def get_dementia_list_entry_by_id(db: Session, dementia_list_id: int):
 # Create a new dementia list entry
 def create_dementia_list_entry(db: Session, dementia_list_data: PatientAssignedDementiaListCreate, created_by: int):
     new_entry = PatientAssignedDementiaList(
-        **dementia_list_data.dict(),
+        **dementia_list_data.model_dump(),
         
         CreatedDate=datetime.utcnow(),
         ModifiedDate=datetime.utcnow(),
@@ -46,7 +46,7 @@ def update_dementia_list_entry(
     ).first()
 
     if db_entry:
-        for key, value in dementia_list_data.dict(exclude_unset=True).items():
+        for key, value in dementia_list_data.model_dump(exclude_unset=True).items():
             setattr(db_entry, key, value)
 
         # Update timestamps and modifiedById

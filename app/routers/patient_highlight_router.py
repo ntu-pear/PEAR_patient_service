@@ -1,40 +1,46 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..crud import patient_highlight_crud as crud_highlight
-from ..schemas import patient_highlight as schemas_highlight
+from ..crud.patient_highlight_crud import (
+    get_all_highlights,
+    get_highlights_by_patient,
+    create_highlight,
+    update_highlight,
+    delete_highlight,
+)
+from ..schemas.patient_highlight import (
+    PatientHighlight,
+    PatientHighlightCreate,
+    PatientHighlightUpdate,
+)
 
 router = APIRouter()
 
-@router.get("/Highlight/list", response_model=list[schemas_highlight.Highlight])
-def get_highlights_grouped_by_patient(db: Session = Depends(get_db)):
-    return crud_highlight.get_highlights_grouped_by_patient(db)
+@router.get("/get_all_highlights", response_model=list[PatientHighlight], description="Get all highlights.")
+def get_all_patient_highlights(db: Session = Depends(get_db)):
+    return get_all_highlights(db)
 
-@router.get("/Highlight", response_model=list[schemas_highlight.Highlight])
-def get_highlights(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return crud_highlight.get_highlights(db, skip=skip, limit=limit)
+@router.get("/get_highlights_by_patient/{patient_id}", response_model=list[PatientHighlight], description="Get highlights by patient ID.")
+def get_patient_highlights(patient_id: int, db: Session = Depends(get_db)):
+    highlights = get_highlights_by_patient(db, patient_id)
+    if not highlights:
+        raise HTTPException(status_code=404, detail="No highlights found for the patient")
+    return highlights
 
-@router.get("/Highlight/{highlight_id}", response_model=schemas_highlight.Highlight)
-def get_highlight(highlight_id: int, db: Session = Depends(get_db)):
-    db_highlight = crud_highlight.get_highlight(db, highlight_id)
-    if not db_highlight:
-        raise HTTPException(status_code=404, detail="Highlight not found")
-    return db_highlight
+@router.post("/create_highlight", response_model=PatientHighlight, description="Create a new highlight.")
+def create_patient_highlight(highlight_data: PatientHighlightCreate, db: Session = Depends(get_db)):
+    # Replace with actual user ID in a real-world scenario
+    created_by = 1
+    return create_highlight(db, highlight_data, created_by)
 
-@router.post("/Highlight/add", response_model=schemas_highlight.Highlight)
-def create_highlight(highlight: schemas_highlight.HighlightCreate, db: Session = Depends(get_db)):
-    return crud_highlight.create_highlight(db, highlight)
+@router.put("/update_highlight/{highlight_id}", response_model=PatientHighlight, description="Update an existing highlight.")
+def update_patient_highlight(highlight_id: int, highlight_data: PatientHighlightUpdate, db: Session = Depends(get_db)):
+    # Replace with actual user ID in a real-world scenario
+    modified_by = 1
+    return update_highlight(db, highlight_id, highlight_data, modified_by)
 
-@router.put("/Highlight/update", response_model=schemas_highlight.Highlight)
-def update_highlight(highlight_id: int, highlight: schemas_highlight.HighlightUpdate, db: Session = Depends(get_db)):
-    db_highlight = crud_highlight.update_highlight(db, highlight_id, highlight)
-    if not db_highlight:
-        raise HTTPException(status_code=404, detail="Highlight not found")
-    return db_highlight
-
-@router.put("/Highlight/delete", response_model=schemas_highlight.Highlight)
-def delete_highlight(highlight_id: int, db: Session = Depends(get_db)):
-    db_highlight = crud_highlight.delete_highlight(db, highlight_id)
-    if not db_highlight:
-        raise HTTPException(status_code=404, detail="Highlight not found")
-    return db_highlight
+@router.delete("/delete_highlight/{highlight_id}", response_model=PatientHighlight, description="Soft delete a highlight by ID.")
+def delete_patient_highlight(highlight_id: int, db: Session = Depends(get_db)):
+    # Replace with actual user ID in a real-world scenario
+    modified_by = 1
+    return delete_highlight(db, highlight_id, modified_by)
