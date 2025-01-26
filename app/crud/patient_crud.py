@@ -18,7 +18,7 @@ def create_patient(db: Session, patient: PatientCreate):
 def update_patient(db: Session, patient_id: int, patient: PatientUpdate):
     db_patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if db_patient:
-        for key, value in patient.dict().items():
+        for key, value in patient.model_dump().items():
             setattr(db_patient, key, value)
         db.commit()
         db.refresh(db_patient)

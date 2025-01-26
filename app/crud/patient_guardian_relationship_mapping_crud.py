@@ -10,7 +10,7 @@ def get_relationshipId_by_relationshipName(db: Session, relationshipName: str):
     return db.query(PatientGuardianRelationshipMapping).filter(PatientGuardianRelationshipMapping.relationshipName == relationshipName).first()
 
 def create_relationship_mapping(db: Session, relationship: PatientGuardianRelationshipMappingCreate):
-    db_relationship = PatientGuardianRelationshipMapping(**relationship.dict())
+    db_relationship = PatientGuardianRelationshipMapping(**relationship.model_dump())
     db.add(db_relationship)
     db.commit()
     db.refresh(db_relationship)
@@ -19,7 +19,7 @@ def create_relationship_mapping(db: Session, relationship: PatientGuardianRelati
 def update_relationship_mapping(db: Session, id: int, relationship: PatientGuardianRelationshipMappingUpdate):
     db_relationship = db.query(PatientGuardianRelationshipMapping).filter(PatientGuardianRelationshipMapping.id == id).first()
     if db_relationship:
-        for key, value in relationship.dict().items():
+        for key, value in relationship.model_dump().items():
             setattr(db_relationship, key, value)
         db.commit()
         db.refresh(db_relationship)

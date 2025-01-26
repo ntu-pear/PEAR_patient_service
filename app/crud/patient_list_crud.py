@@ -12,7 +12,7 @@ def get_list(db: Session, list_type: str, item_id: int = None):
     return query.all()
 
 def create_list_item(db: Session, list_item: PatientListCreate):
-    db_list_item = PatientList(**list_item.dict())
+    db_list_item = PatientList(**list_item.model_dump())
     db.add(db_list_item)
     db.commit()
     db.refresh(db_list_item)
@@ -21,7 +21,7 @@ def create_list_item(db: Session, list_item: PatientListCreate):
 def update_list_item(db: Session, item_id: int, list_item: PatientListUpdate):
     db_list_item = db.query(PatientList).filter(PatientList.id == item_id).first()
     if db_list_item:
-        for key, value in list_item.dict().items():
+        for key, value in list_item.model_dump().items():
             setattr(db_list_item, key, value)
         db.commit()
         db.refresh(db_list_item)
