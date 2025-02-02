@@ -1,6 +1,7 @@
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
+import json
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -121,13 +122,20 @@ async def log_requests(request: Request, call_next):
 
     logger.info(f"Incoming request: {request.method} {request.url}")
     try:
+        body = await request.body()
+        body_str = body.decode("utf-8") if body else "{}"
+        try:
+            body_str = json.dumps(json.loads(body_str))  # Parses and re-dumps to ensure it's compact
+        except json.JSONDecodeError:
+            # If the body is not JSON, escape and compact it
+            body_str = json.dumps(body_str)
         response = await call_next(request)
     except Exception as e:
         logger.error(f"Unhandled error occurred: {str(e)}", exc_info=True)
         raise
-    logger.info(f"Response status: {response.status_code} for {request.method} {request.url}")
-    
-    # logger.info(f"Response status: {response.status_code} for {request.method} {request.url} by user: {user}")
+    # logger.info(f"Response status: {response.status_code} for {request.method} {request.url} ")
+    user = "admin"
+    logger.info(f"Response status: {response.status_code} for {request.method} {request.url} by user: {user} request body: {body_str}")
     return response
 
 # Exception handler for request validation errors
