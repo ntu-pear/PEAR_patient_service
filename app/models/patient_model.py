@@ -2,14 +2,12 @@ from sqlalchemy import Column, Integer, String, DateTime, Numeric, ForeignKey
 from sqlalchemy.orm import relationship
 from app.database import Base
 import datetime
-
 class Patient(Base):
     __tablename__ = "PATIENT"
 
     id = Column(Integer, primary_key=True, index=True)  # Changed to Integer
     active = Column(String(1), default='Y', nullable=False)
-    firstName = Column(String(255), nullable=False)
-    lastName = Column(String(255), nullable=False)
+    name = Column(String(255), nullable=False)
     nric = Column(String(9), unique=True, nullable=False)
     address = Column(String(255))
     tempAddress = Column(String(255))
@@ -17,7 +15,6 @@ class Patient(Base):
     handphoneNo = Column(String(32))
     gender = Column(String(1), nullable=False)
     dateOfBirth = Column(DateTime, nullable=False)
-    guardianId = Column(Integer, ForeignKey('PATIENT.id'))  # Changed to Integer
     isApproved = Column(String(1))
     preferredName = Column(String(255))
     preferredLanguageId = Column(Integer, ForeignKey('PATIENT_LIST_LANGUAGE.id'))  # Changed to Integer
@@ -36,7 +33,8 @@ class Patient(Base):
     modifiedDate = Column(DateTime, nullable=False, default=datetime.datetime.now)
     createdById = Column(Integer, nullable=False)  # Changed to Integer
     modifiedById = Column(Integer, nullable=False)  # Changed to Integer
-    
+    isDeleted = Column(Integer, default='0', nullable=False)
+
     allocations = relationship("PatientAllocation", back_populates="patient")
     #guardian = relationship("PatientGuardian", back_populates="patient")
     patient_patient_guardian = relationship("PatientPatientGuardian", back_populates="patient")
