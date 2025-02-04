@@ -1,12 +1,11 @@
 SET IDENTITY_INSERT patient_service_dev.dbo.PATIENT ON;
 INSERT INTO patient_service_dev.dbo.PATIENT
-(id, active, firstName, lastName, nric, address, tempAddress, homeNo, handphoneNo, gender, dateOfBirth, guardianId, isApproved, preferredName, preferredLanguageId, updateBit, autoGame, startDate, endDate, isActive , isRespiteCare , terminationReason, inActiveReason , inActiveDate, profilePicture, createdDate, modifiedDate, createdById, modifiedById, privacyLevel)
+(id, active, name, nric, address, tempAddress, homeNo, handphoneNo, gender, dateOfBirth, guardianId, isApproved, preferredName, preferredLanguageId, updateBit, autoGame, startDate, endDate, isActive , isRespiteCare , terminationReason, inActiveReason , inActiveDate, profilePicture, createdDate, modifiedDate, createdById, modifiedById, privacyLevel)
 VALUES
 (
 1,  -- id (was PatientID)
 '1',  -- active (using '1' to represent active)
-'Alice',  -- firstName
-'Lee',  -- lastName
+'Alice Lee',  -- name
 'S1234567D',  -- nric
 '71 KAMPONG BAHR ROAD 169373, SINGAPORE',  -- address
 'WOODLANDS',  -- tempAddress
@@ -39,8 +38,7 @@ NULL,  -- inActiveDate (no corresponding data)
 (
 2,  -- id (was PatientID)
 '1',  -- active (using '1' to represent active)
-'Yan',  -- firstName
-'Yi',  -- lastName
+'Yan Yi',  -- firstName
 'S5090148C',  -- nric
 '1000 ANSON ROAD #30-08 INTERNATIONAL PLAZA, 079903, SINGAPORE',  -- address
 NULL,  -- tempAddress
@@ -73,8 +71,7 @@ NULL,  -- inActiveDate (no corresponding data)
 (
 3,  -- id (was PatientID)
 '1',  -- active (using '1' to represent active)
-'Jon',  -- firstName
-'Ong',  -- lastName
+'Jon Ong',  -- name
 'S6421300H',  -- nric
 'Blk 3007 Ubi Rd 1 05-412, 406701, Singapore',  -- address
 NULL,  -- tempAddress
@@ -107,8 +104,7 @@ NULL,  -- inActiveDate (no corresponding data)
 (
 4,  -- id (was PatientID)
 '0',  -- active (using '1' to represent active)
-'Bi',  -- firstName
-'Gong',  -- lastName
+'Bi Gong',  -- name
 'S7866443F',  -- nric
 '41 Sungei Kadut Loop S 729509, Singapore',  -- address
 '42 Sungei Kadut Loop S 729509, Singapore',  -- tempAddress
@@ -141,8 +137,7 @@ NULL,  -- inActiveDate (no corresponding data)
 (
 5,  -- id (was PatientID)
 '1',  -- active (using '1' to represent active)
-'Jeline',  -- firstName
-'Mao',  -- lastName
+'Jeline Mao',  -- firstName
 'S5862481J',  -- nric
 '20 CECIL STREET #16-04 EQUITY PLAZA, 049705, SINGAPOR',  -- address
 NULL,  -- tempAddress

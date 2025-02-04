@@ -4,8 +4,7 @@ from typing import Optional
 import re
 
 class PatientBase(BaseModel):
-    firstName: str  # VARCHAR (255) -> str
-    lastName: str  # VARCHAR (255) -> str
+    name: str  # VARCHAR (255) -> str
     nric: str  # VARCHAR (9) -> str
     address: Optional[str] = None  # VARCHAR (255) -> Optional[str]
     tempAddress: Optional[str] = None  # VARCHAR (255) -> Optional[str]
