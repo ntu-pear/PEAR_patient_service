@@ -167,3 +167,5 @@ NULL,  -- inActiveDate (no corresponding data)
 )
 ;
 SET IDENTITY_INSERT patient_service_dev.dbo.PATIENT OFF;
+
+ALTER TABLE patient_service_dev.dbo.PATIENT ADD CONSTRAINT PATIENT_PATIENT_LIST_LANGUAGE_FK FOREIGN KEY (preferredLanguageId) REFERENCES patient_service_dev.dbo.PATIENT_LIST_LANGUAGE(id);
