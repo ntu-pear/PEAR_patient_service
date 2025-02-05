@@ -29,6 +29,7 @@ from app.models import (
     patient_patient_guardian_model,
     patient_assigned_dementia_list_model,
     patient_assigned_dementia_mapping_model,
+    patient_list_language_model
 )
 from app.routers import (
     allergy_reaction_type_router,
@@ -47,6 +48,7 @@ from app.routers import (
     patient_vital_router,
     patient_assigned_dementia_list_router,
     patient_assigned_dementia_mapping_router,
+    patient_list_language_router,
     patient_mobility_mapping_router,
 )
 from fastapi.middleware.cors import CORSMiddleware
@@ -187,6 +189,7 @@ app.include_router(
 app.include_router(
     patient_list_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patient Lists"]
 )
+app.include_router(patient_list_language_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Language List"])
 app.include_router(patient_mobility_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Mobility"])
 app.include_router(patient_photo_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Photos"])
 app.include_router(
