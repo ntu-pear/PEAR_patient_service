@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: [self-hosted, Linux, X64, patient]
+    runs-on: [self-hosted, Linux]
 
     steps:
       #   - uses: actions/checkout@v4
