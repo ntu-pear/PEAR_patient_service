@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: [self-hosted, Linux]
+    runs-on: [self-hosted, Linux, X64, patient]
 
     steps:
       #   - uses: actions/checkout@v4
@@ -23,6 +23,6 @@ jobs:
       #     with:
       #       python-version: '3.9.19'
 
-      - name: Create .env file from GitHub Secrets
+      - name: echo
         run: |
           echo "hello world"
