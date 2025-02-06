@@ -59,9 +59,9 @@ jobs:
       - name: Delete old deployment
         run: |
           echo "Deleting old deployment..."
-          kubectl delete -f './k8s/deployment-dev.yml'
+          kubectl delete -f './app/k8s/deployment-dev.yml'
 
       - name: Deploying to Kubernetes
         run: |
           echo "Deleting old deployment..."
-          kubectl apply -f './k8s/deployment-dev.yml'
+          kubectl apply -f './app/k8s/deployment-dev.yml'
