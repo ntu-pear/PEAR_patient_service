@@ -1,7 +1,7 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
-name: Python application
+name: CD
 
 on:
   push:
@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: [self-hosted, Linux, X64, patient]
+    runs-on: [self-hosted, Linux, X64, patient2]
 
     steps:
       #   - uses: actions/checkout@v4
