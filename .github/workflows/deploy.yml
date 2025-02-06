@@ -23,7 +23,9 @@ jobs:
           echo "hello world"
           pwd
           ls -la
+          git status
 
-      - name: whoami
-        run: |
-          whoami
+      # - name: Build Docker image
+      #   run: |
+      #     docker build -f Dockerfile.dev -t patient_service_dev .
+      #     docker build --no-cache -f Dockerfile.dev -t patient_service_dev .
