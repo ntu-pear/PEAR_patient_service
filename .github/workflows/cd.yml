@@ -5,7 +5,7 @@ name: CD
 
 on:
   push:
-    branches: ['test/timothy']
+    branches: ['main']
 
 permissions:
   contents: read
