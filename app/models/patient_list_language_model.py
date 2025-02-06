@@ -9,7 +9,7 @@ class PatientListLanguage(Base):
     id = Column(Integer, primary_key=True, index=True)  # Changed to Integer
     isDeleted = Column(String(1), default='0', nullable=False)  # used to check if record is active or not, substitute isDeleted column
 
-    createdDateTime = Column(DateTime, nullable=False, default=datetime.now)
-    modifiedDateTime = Column(DateTime, nullable=False, default=datetime.now)
+    createdDate = Column(DateTime, nullable=False, default=datetime.now)
+    modifiedDate = Column(DateTime, nullable=False, default=datetime.now)
 
-    value = Column(String(255))
+    value = Column(String(255), unique=True, nullable=False)
