@@ -5,7 +5,7 @@ name: CD
 
 on:
   push:
-    branches: ['timothy/test']
+    branches: ['test/timothy']
   pull_request:
     branches: ['**']
 
