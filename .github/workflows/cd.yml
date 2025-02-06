@@ -1,0 +1,65 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: CD
+
+on:
+  push:
+    branches: ['main']
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: [self-hosted, Linux, X64, patient]
+
+    env:
+      DB_SERVER_DEV: ${{ secrets.DB_SERVER_DEV }}
+      DB_DATABASE_DEV: ${{ secrets.DB_DATABASE_DEV }}
+      DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
+      DB_USERNAME_DEV: ${{ secrets.DB_USERNAME_DEV }}
+      DB_PASSWORD_DEV: ${{ secrets.DB_PASSWORD_DEV }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Print working directory
+        run: |
+          pwd
+          ls -la
+          git status
+
+      - name: Create .env file from GitHub Secrets
+        run: |
+          echo "DB_SERVER_DEV=${{ secrets.DB_SERVER_DEV }}" >> .env
+          echo "DB_DATABASE_DEV=${{ secrets.DB_DATABASE_DEV }}" >> .env
+          echo "DB_DATABASE_PORT=${{ secrets.DB_DATABASE_PORT }}" >> .env
+          echo "DB_USERNAME_DEV=${{ secrets.DB_USERNAME_DEV }}" >> .env
+          echo "DB_PASSWORD_DEV=${{ secrets.DB_PASSWORD_DEV }}" >> .env
+          echo "DB_DRIVER_DEV=${{ secrets.DB_DRIVER_DEV }}" >> .env
+
+      - name: Build Docker image
+        run: |
+          echo "Building Docker image..."
+          docker build -f Dockerfile.dev -t patient_service_dev .
+          docker build --no-cache -f Dockerfile.dev -t patient_service_dev .
+
+      - name: Tag Docker image
+        run: |
+          echo "Tagging Docker image..."
+          docker tag patient_service_dev:latest localhost:5000/patient_service_dev:latest
+
+      - name: Push Docker image to local registry
+        run: |
+          echo "Pushing Docker image to localhost:5000...."
+          docker push localhost:5000/patient_service_dev:latest
+
+      - name: Delete old deployment
+        run: |
+          echo "Deleting old deployment..."
+          kubectl delete -f './k8s/deployment-dev.yaml'
+
+      - name: Deploying to Kubernetes
+        run: |
+          echo "Deploying..."
+          kubectl apply -f './k8s/deployment-dev.yaml'
