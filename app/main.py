@@ -200,4 +200,4 @@ app.include_router(patient_vital_router.router, prefix=f"{API_VERSION_PREFIX}", 
 @app.get("/")
 def read_root():
     logger.info("Root endpoint accessed")
-    return {"message": "Welcome to the Patient API Testing by timothy3"}
+    return {"message": "Welcome to the Patient API Testing by timothy4"}
