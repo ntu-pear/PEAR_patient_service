@@ -40,22 +40,28 @@ jobs:
           echo "DB_PASSWORD_DEV=${{ secrets.DB_PASSWORD_DEV }}" >> .env
           echo "DB_DRIVER_DEV=${{ secrets.DB_DRIVER_DEV }}" >> .env
 
-      - name: check .env file exists
-        run: |
-          ls -la
-
       - name: Build Docker image
         run: |
           echo "Building Docker image..."
-          docker build -f Dockerfile.dev -t patient_service_dev_timothy .
-          docker build --no-cache -f Dockerfile.dev -t patient_service_dev_timothy .
+          docker build -f Dockerfile.dev -t patient_service_dev .
+          docker build --no-cache -f Dockerfile.dev -t patient_service_dev .
 
       - name: Tag Docker image
         run: |
           echo "Tagging Docker image..."
-          docker tag patient_service_dev_timothy:latest localhost:5000/patient_service_dev_timothy:latest
+          docker tag patient_service_dev:latest localhost:5000/patient_service_dev:latest
 
       - name: Push Docker image to local registry
         run: |
           echo "Pushing Docker image to localhost:5000...."
-          docker push localhost:5000/patient_service_dev_timothy:latest
+          docker push localhost:5000/patient_service_dev:latest
+
+      - name: Delete old deployment
+        run: |
+          echo "Deleting old deployment..."
+          kubectl delete -f './k8s/deployment-dev.yml'
+
+      - name: Deploying to Kubernetes
+        run: |
+          echo "Deleting old deployment..."
+          kubectl apply -f './k8s/deployment-dev.yml'
