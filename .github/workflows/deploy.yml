@@ -27,7 +27,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: echo
         run: |
-          echo "hello world"
           pwd
           ls -la
           git status
@@ -47,5 +46,16 @@ jobs:
 
       - name: Build Docker image
         run: |
+          echo "Building Docker image..."
           docker build -f Dockerfile.dev -t patient_service_dev_timothy .
           docker build --no-cache -f Dockerfile.dev -t patient_service_dev_timothy .
+
+      - name: Tag Docker image
+        run: |
+          echo "Tagging Docker image..."
+          docker tag patient_service_dev_timothy:latest localhost:5000/patient_service_dev_timothy:latest
+
+      - name: Push Docker image to local registry
+        run: |
+          echo "Pushing Docker image to localhost:5000...."
+          docker push localhost:5000/patient_service_dev_timothy:latest
