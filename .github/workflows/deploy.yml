@@ -26,3 +26,12 @@ jobs:
       - name: echo
         run: |
           echo "hello world"
+
+      - name: check workdir
+        run: |
+          pwd
+          ls -la
+
+      - name: whoami
+        run: |
+          whoami
