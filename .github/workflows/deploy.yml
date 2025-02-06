@@ -5,7 +5,7 @@ name: CD
 
 on:
   push:
-    branches: ['**']
+    branches: ['timothy/test']
   pull_request:
     branches: ['**']
 
@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: [self-hosted, Linux, X64, patient2]
+    runs-on: [self-hosted, Linux, X64, patient]
 
     env:
       DB_SERVER_DEV: ${{ secrets.DB_SERVER_DEV }}
@@ -25,7 +25,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: echo
+      - name: Print working directory
         run: |
           pwd
           ls -la
@@ -58,7 +58,6 @@ jobs:
 
       - name: Delete old deployment
         run: |
-          pwd
           echo "Deleting old deployment..."
           kubectl delete -f './k8s/deployment-dev.yaml'
 
