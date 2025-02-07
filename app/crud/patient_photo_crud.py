@@ -1,37 +1,103 @@
 from sqlalchemy.orm import Session
+import cloudinary.uploader
 from ..models.patient_photo_model import PatientPhoto
 from ..schemas.patient_photo import PatientPhotoCreate, PatientPhotoUpdate
+from datetime import datetime
 
-def get_patient_photos(db: Session, patient_id: int):
-    return db.query(PatientPhoto).filter(PatientPhoto.patient_id == patient_id).all()
+PATIENT_ID = 2  # Fixed Patient ID
+SYSTEM_USER_ID = 1  # System-generated default user ID
 
-def get_album_by_category(db: Session, album_category_list_id: int):
-    return db.query(PatientPhoto).filter(PatientPhoto.album_category_list_id == album_category_list_id).all()
+def upload_photo_to_cloudinary(file):
+    """ Upload photo to Cloudinary and return the URL """
+    try:
+        upload_result = cloudinary.uploader.upload(file)
+        return upload_result["secure_url"]
+    except Exception as e:
+        raise ValueError(f"Cloudinary upload failed: {str(e)}")
 
-def get_max_patient_photo(db: Session):
-    return db.query(PatientPhoto).order_by(PatientPhoto.id.desc()).first()
+def create_patient_photo(db: Session, file, photo_data: PatientPhotoCreate):
+    """ Create a new patient photo record with system-generated defaults """
+    
+    # Upload photo to Cloudinary
+    photo_url = upload_photo_to_cloudinary(file)
 
-def create_patient_photo(db: Session, photo: PatientPhotoCreate):
-    db_photo = PatientPhoto(**photo.model_dump())
+    # Create the PatientPhoto object with default system values
+    db_photo = PatientPhoto(
+        PhotoPath=photo_url,
+        PhotoDetails=photo_data.PhotoDetails,
+        AlbumCategoryListID=photo_data.AlbumCategoryListID,
+        PatientID=PATIENT_ID,  # Default to 2
+        IsDeleted=0,  # Default to active photo
+        CreatedDateTime=datetime.utcnow(),
+        UpdatedDateTime=datetime.utcnow(),
+        CreatedById=SYSTEM_USER_ID,  # Default system user
+        ModifiedById=SYSTEM_USER_ID  # Default system user
+    )
+
+    # Save to DB
     db.add(db_photo)
+    db.commit()
+    db.refresh(db_photo)
+
+    return db_photo
+
+def get_patient_photos(db: Session):
+    """ Retrieve all active patient photos """
+    return db.query(PatientPhoto).filter(
+        PatientPhoto.IsDeleted == 0
+    ).all()
+
+def get_patient_photo_by_id(db: Session, patienti_id: int):
+    """ Retrieve a single patient photo by ID (only if not deleted) """
+    return db.query(PatientPhoto).filter(
+        PatientPhoto.PatientID == patienti_id,
+        PatientPhoto.IsDeleted == 0
+    ).first()
+
+
+def update_patient_photo(db: Session, patient_id: int, file, update_data: PatientPhotoUpdate):
+    """ Update patient photo by PatientID and replace PhotoPath with the latest uploaded photo """
+    
+    # Check if patient has an existing photo
+    db_photo = db.query(PatientPhoto).filter(
+        PatientPhoto.PatientID == patient_id,
+        PatientPhoto.IsDeleted == 0
+    ).first()
+
+    if not db_photo:
+        return None  # No photo found for this patient
+
+    # Upload new photo to Cloudinary
+    new_photo_url = upload_photo_to_cloudinary(file)
+
+    # Update only provided fields
+    db_photo.PhotoPath = new_photo_url  # Replace the path with the latest photo
+    for key, value in update_data.dict(exclude_unset=True).items():
+        setattr(db_photo, key, value)
+
+    db_photo.UpdatedDateTime = datetime.utcnow()
+
     db.commit()
     db.refresh(db_photo)
     return db_photo
 
-def update_patient_photo(db: Session, photo_id: int, photo: PatientPhotoUpdate):
-    db_photo = db.query(PatientPhoto).filter(PatientPhoto.id == photo_id).first()
-    if db_photo:
-        for key, value in photo.model_dump().items():
-            setattr(db_photo, key, value)
-        db.commit()
-        db.refresh(db_photo)
-    return db_photo
+def delete_patient_photo(db: Session, patient_id: int, modified_by_id: int):
+    """ Soft delete all photos for a given PatientID (set IsDeleted = 1) """
+    
+    # Get all photos for the patient
+    db_photos = db.query(PatientPhoto).filter(
+        PatientPhoto.PatientID == patient_id,
+        PatientPhoto.IsDeleted == 0
+    ).all()
 
-def delete_patient_photo(db: Session, photo_id: int, photo: PatientPhotoUpdate):
-    db_photo = db.query(PatientPhoto).filter(PatientPhoto.id == photo_id).first()
-    if db_photo:
-        for key, value in photo.model_dump().items():
-            setattr(db_photo, key, value)
-        db.commit()
-        db.refresh(db_photo)
-    return db_photo
+    if not db_photos:
+        return None  # No photos found for this patient
+
+    for db_photo in db_photos:
+        db_photo.IsDeleted = 1
+        db_photo.ModifiedById = modified_by_id
+        db_photo.UpdatedDateTime = datetime.utcnow()
+    
+    db.commit()
+    return db_photos
+
