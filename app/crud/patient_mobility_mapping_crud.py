@@ -15,7 +15,7 @@ def get_all_mobility_entries(db: Session):
     return db.query(PatientMobility).filter(PatientMobility.IsDeleted == False).all()
 
 # Get mobility entries by Patient ID
-def get_mobility_entries_by_patient_id(db: Session, patient_id: int):
+def get_mobility_entries_by_id(db: Session, patient_id: int):
     entries = db.query(PatientMobility).filter(
         PatientMobility.PatientID == patient_id,
         PatientMobility.IsDeleted == False
