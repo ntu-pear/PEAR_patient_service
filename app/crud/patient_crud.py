@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from ..models.patient_model import Patient
 from ..schemas.patient import PatientCreate, PatientUpdate
 from datetime import datetime
@@ -16,10 +17,11 @@ def get_patient(db: Session, patient_id: int, mask: bool = True):
 
 def get_patients(db: Session, mask: bool = True, skip: int = 0, limit: int = 10):
     db_patients = db.query(Patient).filter(Patient.isDeleted == '0').order_by(Patient.id).offset(skip).limit(limit).all()
+    total = total = db.query(func.count()).select_from(Patient).filter(Patient.isDeleted == '0').scalar()
     if db_patients and mask:
         for db_patient in db_patients:
             db_patient.nric = mask_nric(db_patient.nric)
-    return db_patients
+    return db_patients, total
 
 def create_patient(db: Session, patient: PatientCreate):
     db_patient = Patient(**patient.model_dump())

@@ -1,10 +1,13 @@
 from datetime import datetime
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from ..models.patient_doctor_note_model import PatientDoctorNote
 from ..schemas.patient_doctor_note import PatientDoctorNoteCreate, PatientDoctorNoteUpdate
 
-def get_doctor_notes_by_patient(db: Session, patient_id: int):
-    return db.query(PatientDoctorNote).filter(PatientDoctorNote.patientId == patient_id).all()
+def get_doctor_notes_by_patient(db: Session, patient_id: int, skip: int = 0, limit: int = 10):
+    db_doctor_note = db.query(PatientDoctorNote).filter(PatientDoctorNote.patientId == patient_id, PatientDoctorNote.isDeleted == '0').order_by(PatientDoctorNote.patientId).offset(skip).limit(limit).all()
+    total = total = db.query(func.count()).select_from(PatientDoctorNote).filter(PatientDoctorNote.patientId == patient_id,PatientDoctorNote.isDeleted == '0').scalar()
+    return db_doctor_note, total
 
 def get_doctor_note_by_id(db: Session, note_id: int):
     return db.query(PatientDoctorNote).filter(PatientDoctorNote.id == note_id).first()
