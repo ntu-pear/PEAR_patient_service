@@ -1,47 +1,46 @@
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from typing import Optional
-import re
 
 class PatientBase(BaseModel):
-    name: str  # VARCHAR (255) -> str
-    nric: str  # VARCHAR (9) -> str
-    address: Optional[str] = None  # VARCHAR (255) -> Optional[str]
-    tempAddress: Optional[str] = None  # VARCHAR (255) -> Optional[str]
-    homeNo: Optional[str] = None  # VARCHAR (32) -> Optional[str]
-    handphoneNo: Optional[str] = None  # VARCHAR (32) -> Optional[str]
-    gender: str = Field(..., pattern="^[MF]$", json_schema_extra={"example": "M"})  # Gender restricted to 'M' or 'F'
-    dateOfBirth: datetime  # DATETIME -> datetime
-    isApproved: str = Field(..., pattern="^[01]$", json_schema_extra={"example": "1"})  # VARCHAR (1) -> Optional[str]
-    preferredName: Optional[str] = None  # VARCHAR (255) -> Optional[str]
-    preferredLanguageId: int = Field(default="1", json_schema_extra={"example": "1"})  # INT -> Optional[int]
-    updateBit: str = Field(..., pattern="^[01]$", json_schema_extra={"example": "1"})  # VARCHAR (1) -> str
-    autoGame: str = Field(..., pattern="^[01]$", json_schema_extra={"example": "1"})  # VARCHAR (1) -> str
-    startDate: datetime  # DATETIME -> datetime
-    endDate: Optional[datetime] = None  # DATETIME -> Optional[datetime]
-    isActive: str = Field(..., pattern="^[01]$", json_schema_extra={"example": "1"})  # VARCHAR (1) -> str
-    isRespiteCare: str = Field(..., pattern="^[01]$", json_schema_extra={"example": "1"})  # VARCHAR (1) -> str
-    privacyLevel: int  # INT -> int
-    terminationReason: Optional[str] = None
-    inActiveReason: Optional[str] = None  # VARCHAR (255) -> Optional[str]
-    inActiveDate: Optional[datetime] = None  # DATETIME -> Optional[datetime]
-    profilePicture: Optional[str] = None
-    isDeleted: Optional[int] = Field(default=0, json_schema_extra={"example": "0"})
+    Name: str  # VARCHAR (255) -> str
+    Nric: str  # VARCHAR (9) -> str
+    Address: Optional[str] = None  # VARCHAR (255) -> Optional[str]
+    TempAddress: Optional[str] = None  # VARCHAR (255) -> Optional[str]
+    HomeNo: Optional[str] = None  # VARCHAR (32) -> Optional[str]
+    HandphoneNo: Optional[str] = None  # VARCHAR (32) -> Optional[str]
+    Gender: str = Field(..., pattern="^[MF]$", json_schema_extra={"example": "M"})  # Gender restricted to 'M' or 'F'
+    DateOfBirth: datetime  # DATETIME -> datetime
+    IsApproved: str = Field(..., pattern="^[01]$", json_schema_extra={"example": "1"})  # VARCHAR (1) -> Optional[str]
+    PreferredName: Optional[str] = None  # VARCHAR (255) -> Optional[str]
+    PreferredLanguageId: int = Field(default="1", json_schema_extra={"example": "1"})  # INT -> Optional[int]
+    UpdateBit: str = Field(..., pattern="^[01]$", json_schema_extra={"example": "1"})  # VARCHAR (1) -> str
+    AutoGame: str = Field(..., pattern="^[01]$", json_schema_extra={"example": "1"})  # VARCHAR (1) -> str
+    StartDate: datetime  # DATETIME -> datetime
+    EndDate: Optional[datetime] = None  # DATETIME -> Optional[datetime]
+    IsActive: str = Field(..., pattern="^[01]$", json_schema_extra={"example": "1"})  # VARCHAR (1) -> str
+    IsRespiteCare: str = Field(..., pattern="^[01]$", json_schema_extra={"example": "1"})  # VARCHAR (1) -> str
+    PrivacyLevel: int  # INT -> int
+    TerminationReason: Optional[str] = None
+    InActiveReason: Optional[str] = None  # VARCHAR (255) -> Optional[str]
+    InActiveDate: Optional[datetime] = None  # DATETIME -> Optional[datetime]
+    ProfilePicture: Optional[str] = None
+    IsDeleted: Optional[int] = Field(default=0, json_schema_extra={"example": "0"})
 
 class PatientCreate(PatientBase):
-    createdDate: datetime  # DATETIME -> datetime
-    modifiedDate: datetime
-    createdById: int  # INT -> int
-    modifiedById: int 
+    CreatedDate: datetime  # DATETIME -> datetime
+    ModifiedDate: datetime
+    CreatedById: str  
+    ModifiedById: str 
 
 class PatientUpdate(PatientBase):
-    modifiedDate: datetime
-    modifiedById: int 
+    ModifiedDate: datetime
+    ModifiedById: str 
 
 class Patient(PatientBase):
     id: int # INT -> int (primary key)
-    createdDate: datetime  # DATETIME -> datetime
-    modifiedDate: datetime  # DATETIME -> datetime
-    createdById: int  # INT -> int
-    modifiedById: int  # INT -> int
+    CreatedDate: datetime  # DATETIME -> datetime
+    ModifiedDate: datetime  # DATETIME -> datetime
+    CreatedById: str  # INT -> str
+    ModifiedById: str  # INT -> str
     model_config = ConfigDict(from_attributes=True)
