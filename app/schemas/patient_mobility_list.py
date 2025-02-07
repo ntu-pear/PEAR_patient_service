@@ -7,8 +7,8 @@ class PatientMobilityListBase(BaseModel):
     IsDeleted: int
     CreatedDateTime: datetime
     ModifiedDateTime: datetime
-    CreatedById: int
-    ModifiedById: int
+    CreatedById: str
+    ModifiedById: str
     Value: str
 
 class PatientMobilityListCreate(PatientMobilityListBase):

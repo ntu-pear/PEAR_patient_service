@@ -41,3 +41,4 @@ class PatientAssignedDementiaCreateResp(BaseModel):
     CreatedById: str
     ModifiedById: str
     model_config = {"from_attributes": True}
+

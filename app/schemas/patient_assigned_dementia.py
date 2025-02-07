@@ -3,25 +3,25 @@ from datetime import datetime
 from typing import Optional
 
 class PatientAssignedDementiaBase(BaseModel):
-    active: Optional[str] = 'Y'
-    patientId: int
-    dementiaTypeListId: int
+    IsDeleted: Optional[str] = '0'
+    PatientId: int
+    DementiaTypeListId: int
 
 class PatientAssignedDementiaCreate(PatientAssignedDementiaBase):
-    createdDate: datetime
-    modifiedDate: datetime
-    createdById: int
-    modifiedById: int
+    CreatedDate: datetime
+    ModifiedDate: datetime
+    CreatedById: str
+    ModifiedById: str
 
 class PatientAssignedDementiaUpdate(PatientAssignedDementiaBase):
-    modifiedDate: datetime
-    modifiedById: int
+    ModifiedDate: datetime
+    ModifiedById: int
 
 class PatientAssignedDementia(PatientAssignedDementiaBase):
     id: int
-    createdDate: datetime
-    modifiedDate: datetime
-    createdById: int
-    modifiedById: int
+    CreatedDate: datetime
+    ModifiedDate: datetime
+    CreatedById: str
+    ModifiedById: str
 
     model_config = {"from_attributes": True}

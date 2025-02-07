@@ -17,8 +17,8 @@ class PatientVitalBase(BaseModel):
     VitalRemarks: Optional[str] = None
 
 class PatientVitalCreate(PatientVitalBase):
-    CreatedById: int
-    UpdatedById: int
+    CreatedById: str
+    UpdatedById: str
 
 class PatientVitalUpdate(PatientVitalBase):
     UpdatedById: int
@@ -31,7 +31,7 @@ class PatientVital(PatientVitalBase):
     Id: int
     CreatedDateTime: datetime
     UpdatedDateTime: datetime
-    CreatedById: int
-    UpdatedById: int
+    CreatedById: str
+    UpdatedById: str
 
     model_config = {"from_attributes": True}

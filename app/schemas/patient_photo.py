@@ -3,26 +3,26 @@ from datetime import datetime
 from typing import Optional
 
 class PatientPhotoBase(BaseModel):
-    active: Optional[str] = 'Y'
-    patientId: int
-    photoPath: Optional[str] = None
-    albumCategoryListId: int
+    IsDeleted: Optional[str] = '0'
+    PatientId: int
+    PhotoPath: Optional[str] = None
+    AlbumCategoryListId: int
 
 class PatientPhotoCreate(PatientPhotoBase):
-    createdDate: datetime
-    modifiedDate: datetime
-    createdById: int
-    modifiedById: int
+    CreatedDate: datetime
+    ModifiedDate: datetime
+    CreatedById: str
+    ModifiedById: str
 
 class PatientPhotoUpdate(PatientPhotoBase):
-    modifiedDate: datetime
-    modifiedById: int
+    ModifiedDate: datetime
+    ModifiedById: int
 
 class PatientPhoto(PatientPhotoBase):
     id: int
-    createdDate: datetime
-    modifiedDate: datetime
-    createdById: int
-    modifiedById: int
+    CreatedDate: datetime
+    ModifiedDate: datetime
+    CreatedById: int
+    ModifiedById: int
 
     model_config = {"from_attributes": True}

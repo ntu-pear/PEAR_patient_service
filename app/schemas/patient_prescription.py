@@ -18,18 +18,18 @@ class PatientPrescriptionBase(BaseModel):
 class PatientPrescriptionCreate(PatientPrescriptionBase):
     CreatedDateTime: datetime
     UpdatedDateTime: datetime
-    CreatedById: int
-    UpdatedById: int
+    CreatedById: str
+    UpdatedById: str
 
 class PatientPrescriptionUpdate(PatientPrescriptionBase):
     UpdatedDateTime: datetime
-    UpdatedById: int
+    UpdatedById: str
 
 class PatientPrescription(PatientPrescriptionBase):
     Id: int
     CreatedDateTime: datetime
     UpdatedDateTime: datetime
-    CreatedById: int
-    UpdatedById: int
+    CreatedById: str
+    UpdatedById: str
 
     model_config = {"from_attributes": True}

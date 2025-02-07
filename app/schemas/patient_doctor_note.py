@@ -4,27 +4,27 @@ from typing import Optional
 
 
 class PatientDoctorNoteBase(BaseModel):
-    isDeleted: str = '0'
-    patientId: int
-    doctorId: int
-    doctorRemarks: Optional[str] = None
+    IsDeleted: str = '0'
+    PatientId: int
+    DoctorId: int
+    DoctorRemarks: Optional[str] = None
 
 
 class PatientDoctorNoteCreate(PatientDoctorNoteBase):
-    createdById: int
-    modifiedById: int
+    CreatedById: str
+    ModifiedById: str
 
 
 class PatientDoctorNoteUpdate(PatientDoctorNoteBase):
-    modifiedById: int
+    ModifiedById: int
 
 
 class PatientDoctorNote(PatientDoctorNoteBase):
     id: int
-    createdDate: datetime
-    modifiedDate: datetime
-    createdById: int
-    modifiedById: int
+    CreatedDate: datetime
+    ModifiedDate: datetime
+    CreatedById: str
+    ModifiedById: str
 
 
 model_config = {"from_attributes": True}
