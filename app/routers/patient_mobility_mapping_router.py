@@ -14,9 +14,9 @@ router = APIRouter()
 def get_all_mobility_entries(db: Session = Depends(get_db)):
     return patient_mobility_mapping_crud.get_all_mobility_entries(db)
 
-@router.get("/MobilityMapping/List/{patient_id}", response_model=PatientMobilityResponse)
+@router.get("/MobilityMapping/List/{patient_id}", response_model=list[PatientMobilityResponse])
 def get_mobility_entry(patient_id: int, db: Session = Depends(get_db)):
-    return patient_mobility_mapping_crud.get_mobility_entry_by_id(db, patient_id)
+    return patient_mobility_mapping_crud.get_mobility_entries_by_patient_id(db, patient_id)
 
 @router.post("/MobilityMapping/List", response_model=PatientMobilityResponse)
 def create_mobility_entry(
