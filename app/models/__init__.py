@@ -6,5 +6,5 @@ from .patient_guardian_model import PatientGuardian
 from .patient_assigned_dementia_list_model import PatientAssignedDementiaList
 from .patient_assigned_dementia_mapping_model import PatientAssignedDementiaMapping
 # from .patient_social_history_list_mapping_model import PatientSocialHistoryListMapping
-from .patient_list_model import PatientList
+# from .patient_list_model import PatientList
 # Import other models as needed

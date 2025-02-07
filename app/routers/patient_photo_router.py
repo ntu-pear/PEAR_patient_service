@@ -1,37 +1,60 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..crud import patient_photo_crud as crud_photo
-from ..schemas import patient_photo as schemas_photo
+from ..schemas.patient_photo import *
+from ..crud.patient_photo_crud import (
+    create_patient_photo,
+    get_patient_photos,
+    get_patient_photo_by_id,
+    update_patient_photo,
+    delete_patient_photo
+)
 
 router = APIRouter()
 
-@router.get("/PatientPhoto", response_model=list[schemas_photo.PatientPhoto])
-def get_patient_photos(patient_id: int, db: Session = Depends(get_db)):
-    return crud_photo.get_patient_photos(db, patient_id)
+PATIENT_ID = 2  # Fixed PatientID for all API calls
 
-@router.get("/PatientPhoto/GetAlbumByCategory", response_model=list[schemas_photo.PatientPhoto])
-def get_album_by_category(album_category_list_id: int, db: Session = Depends(get_db)):
-    return crud_photo.get_album_by_category(db, album_category_list_id)
+@router.post("/", response_model=PatientPhotoResponse)
+async def upload_patient_photo(
+    file: UploadFile = File(...),
+    photo_data: PatientPhotoCreate = Depends(),
+    db: Session = Depends(get_db)
+):
+    """ Upload a new patient photo (PatientID always = 2) """
+    photo_data.PatientID = PATIENT_ID  # Override PatientID
+    return create_patient_photo(db, file.file, photo_data)
 
-@router.get("/PatientPhoto/MaxPatientPhoto", response_model=schemas_photo.PatientPhoto)
-def get_max_patient_photo(db: Session = Depends(get_db)):
-    return crud_photo.get_max_patient_photo(db)
+@router.get("/", response_model=list[PatientPhotoResponse])
+async def get_photos(db: Session = Depends(get_db)):
+    """ Retrieve all active patient photos """
+    photos = get_patient_photos(db)
+    return photos
 
-@router.post("/PatientPhoto/add", response_model=schemas_photo.PatientPhoto)
-def create_patient_photo(photo: schemas_photo.PatientPhotoCreate, db: Session = Depends(get_db)):
-    return crud_photo.create_patient_photo(db, photo)
+@router.get("/{photo_id}", response_model=PatientPhotoResponse)
+async def get_photo(photo_id: int, db: Session = Depends(get_db)):
+    """ Retrieve a specific patient photo """
+    photo = get_patient_photo_by_id(db, photo_id)
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found or deleted")
+    return photo
 
-@router.put("/PatientPhoto/update", response_model=schemas_photo.PatientPhoto)
-def update_patient_photo(photo_id: int, photo: schemas_photo.PatientPhotoUpdate, db: Session = Depends(get_db)):
-    db_photo = crud_photo.update_patient_photo(db, photo_id, photo)
-    if not db_photo:
-        raise HTTPException(status_code=404, detail="Patient photo not found")
-    return db_photo
+@router.put("/{patient_id}", response_model=PatientPhotoResponse)
+async def update_photo(
+    patient_id: int,
+    file: UploadFile = File(...),
+    update_data: PatientPhotoUpdate = Depends(),
+    db: Session = Depends(get_db)
+):
+    """ Update a patient's photo (replace `PhotoPath` with latest) """
+    photo = update_patient_photo(db, patient_id, file.file, update_data)
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    return photo
 
-@router.put("/PatientPhoto/delete", response_model=schemas_photo.PatientPhoto)
-def delete_patient_photo(photo_id: int, photo: schemas_photo.PatientPhotoUpdate, db: Session = Depends(get_db)):
-    db_photo = crud_photo.delete_patient_photo(db, photo_id, photo)
-    if not db_photo:
-        raise HTTPException(status_code=404, detail="Patient photo not found")
-    return db_photo
+@router.delete("/{patient_id}")
+async def delete_photo(patient_id: int, modified_by_id: int, db: Session = Depends(get_db)):
+    """ Soft delete a specific patient photo """
+    photo = delete_patient_photo(db, patient_id, modified_by_id)
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    return {"message": "Photo deleted successfully"}

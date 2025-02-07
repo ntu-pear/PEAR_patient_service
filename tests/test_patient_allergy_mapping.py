@@ -17,6 +17,7 @@ from app.models.allergy_reaction_type_model import AllergyReactionType
 from app.models.patient_patient_guardian_model import PatientPatientGuardian
 from app.models.patient_doctor_note_model import PatientDoctorNote
 from app.models.patient_photo_model import PatientPhoto
+from app.models.patient_photo_list_model import PatientPhotoList
 from app.models.patient_model import Patient
 from app.models.patient_assigned_dementia_list_model import PatientAssignedDementiaList
 from app.models.patient_assigned_dementia_mapping_model import PatientAssignedDementiaMapping
