@@ -191,6 +191,7 @@ app.include_router(
 )
 app.include_router(patient_list_language_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Language List"])
 app.include_router(patient_mobility_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Mobility"])
+app.include_router(patient_mobility_mapping_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patient Mobility Mapping"])
 app.include_router(patient_photo_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Photos"])
 app.include_router(
     patient_prescription_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Prescriptions"]
