@@ -14,9 +14,9 @@ def get_pet_type_by_id(db: Session, pet_type_id: int):
         .first()
     )
 
-def create_pet_type(db: Session, pet_type: PatientPetListCreate, created_by: int):
+def create_pet_type(db: Session, pet_type: PatientPetListCreate):
     db_pet_type = PatientPetList(
-        **pet_type.model_dump(), CreatedById=created_by, ModifiedById=created_by
+        **pet_type.model_dump()
     )
     db.add(db_pet_type)
     db.commit()
@@ -25,7 +25,7 @@ def create_pet_type(db: Session, pet_type: PatientPetListCreate, created_by: int
 
 
 def update_pet_type(
-    db: Session, pet_type_id: int, pet_type: PatientPetListUpdate, modified_by: int
+    db: Session, pet_type_id: int, pet_type: PatientPetListUpdate
 ):
     db_pet_type = (
         db.query(PatientPetList)
@@ -40,16 +40,13 @@ def update_pet_type(
         # Set UpdatedDateTime to the current datetime
         db_pet_type.UpdatedDateTime = datetime.now()
 
-        # Update the modifiedById field
-        db_pet_type.ModifiedById = modified_by
-
         db.commit()
         db.refresh(db_pet_type)
         return db_pet_type
     return None
 
 
-def delete_pet_type(db: Session, pet_type_id: int, modified_by: int):
+def delete_pet_type(db: Session, pet_type_id: int):
     db_pet_type = (
         db.query(PatientPetList)
         .filter(PatientPetList.Id == pet_type_id)
@@ -60,7 +57,6 @@ def delete_pet_type(db: Session, pet_type_id: int, modified_by: int):
         # Soft delete by marking the record as inactive
         db_pet_type.IsDeleted = "1"
         db_pet_type.UpdatedDateTime = datetime.now()
-        db_pet_type.ModifiedById = modified_by
         db.commit()
         return db_pet_type
     return None

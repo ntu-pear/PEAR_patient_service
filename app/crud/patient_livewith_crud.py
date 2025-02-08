@@ -14,9 +14,9 @@ def get_livewith_type_by_id(db: Session, livewith_type_id: int):
         .first()
     )
 
-def create_livewith_type(db: Session, livewith_type: PatientLiveWithListCreate, created_by: int):
+def create_livewith_type(db: Session, livewith_type: PatientLiveWithListCreate):
     db_livewith_type = PatientLiveWithList(
-        **livewith_type.model_dump(), CreatedById=created_by, ModifiedById=created_by
+        **livewith_type.model_dump()
     )
     db.add(db_livewith_type)
     db.commit()
@@ -25,7 +25,7 @@ def create_livewith_type(db: Session, livewith_type: PatientLiveWithListCreate, 
 
 
 def update_livewith_type(
-    db: Session, livewith_type_id: int, livewith_type: PatientLiveWithListUpdate, modified_by: int
+    db: Session, livewith_type_id: int, livewith_type: PatientLiveWithListUpdate
 ):
     db_livewith_type = (
         db.query(PatientLiveWithList)
@@ -40,16 +40,13 @@ def update_livewith_type(
         # Set UpdatedDateTime to the current datetime
         db_livewith_type.UpdatedDateTime = datetime.now()
 
-        # Update the modifiedById field
-        db_livewith_type.ModifiedById = modified_by
-
         db.commit()
         db.refresh(db_livewith_type)
         return db_livewith_type
     return None
 
 
-def delete_livewith_type(db: Session, livewith_type_id: int, modified_by: int):
+def delete_livewith_type(db: Session, livewith_type_id: int):
     db_livewith_type = (
         db.query(PatientLiveWithList)
         .filter(PatientLiveWithList.Id == livewith_type_id)
@@ -60,7 +57,6 @@ def delete_livewith_type(db: Session, livewith_type_id: int, modified_by: int):
         # Soft delete by marking the record as inactive
         db_livewith_type.IsDeleted = "1"
         db_livewith_type.UpdatedDateTime = datetime.now()
-        db_livewith_type.ModifiedById = modified_by
         db.commit()
         return db_livewith_type
     return None

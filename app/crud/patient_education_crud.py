@@ -14,9 +14,9 @@ def get_education_type_by_id(db: Session, education_type_id: int):
         .first()
     )
 
-def create_education_type(db: Session, education_type: PatientEducationListCreate, created_by: int):
+def create_education_type(db: Session, education_type: PatientEducationListCreate):
     db_education_type = PatientEducationList(
-        **education_type.model_dump(), CreatedById=created_by, ModifiedById=created_by
+        **education_type.model_dump()
     )
     db.add(db_education_type)
     db.commit()
@@ -25,7 +25,7 @@ def create_education_type(db: Session, education_type: PatientEducationListCreat
 
 
 def update_education_type(
-    db: Session, education_type_id: int, education_type: PatientEducationListUpdate, modified_by: int
+    db: Session, education_type_id: int, education_type: PatientEducationListUpdate
 ):
     db_education_type = (
         db.query(PatientEducationList)
@@ -40,16 +40,13 @@ def update_education_type(
         # Set UpdatedDateTime to the current datetime
         db_education_type.UpdatedDateTime = datetime.now()
 
-        # Update the modifiedById field
-        db_education_type.ModifiedById = modified_by
-
         db.commit()
         db.refresh(db_education_type)
         return db_education_type
     return None
 
 
-def delete_education_type(db: Session, education_type_id: int, modified_by: int):
+def delete_education_type(db: Session, education_type_id: int):
     db_education_type = (
         db.query(PatientEducationList)
         .filter(PatientEducationList.Id == education_type_id)
@@ -60,7 +57,6 @@ def delete_education_type(db: Session, education_type_id: int, modified_by: int)
         # Soft delete by marking the record as inactive
         db_education_type.IsDeleted = "1"
         db_education_type.UpdatedDateTime = datetime.now()
-        db_education_type.ModifiedById = modified_by
         db.commit()
         return db_education_type
     return None

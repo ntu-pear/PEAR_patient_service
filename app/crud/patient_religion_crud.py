@@ -14,9 +14,9 @@ def get_religion_type_by_id(db: Session, religion_type_id: int):
         .first()
     )
 
-def create_religion_type(db: Session, religion_type: PatientReligionListCreate, created_by: int):
+def create_religion_type(db: Session, religion_type: PatientReligionListCreate):
     db_religion_type = PatientReligionList(
-        **religion_type.model_dump(), CreatedById=created_by, ModifiedById=created_by
+        **religion_type.model_dump()
     )
     db.add(db_religion_type)
     db.commit()
@@ -25,7 +25,7 @@ def create_religion_type(db: Session, religion_type: PatientReligionListCreate, 
 
 
 def update_religion_type(
-    db: Session, religion_type_id: int, religion_type: PatientReligionListUpdate, modified_by: int
+    db: Session, religion_type_id: int, religion_type: PatientReligionListUpdate
 ):
     db_religion_type = (
         db.query(PatientReligionList)
@@ -40,16 +40,13 @@ def update_religion_type(
         # Set UpdatedDateTime to the current datetime
         db_religion_type.UpdatedDateTime = datetime.now()
 
-        # Update the modifiedById field
-        db_religion_type.ModifiedById = modified_by
-
         db.commit()
         db.refresh(db_religion_type)
         return db_religion_type
     return None
 
 
-def delete_religion_type(db: Session, religion_type_id: int, modified_by: int):
+def delete_religion_type(db: Session, religion_type_id: int):
     db_religion_type = (
         db.query(PatientReligionList)
         .filter(PatientReligionList.Id == religion_type_id)
@@ -60,7 +57,6 @@ def delete_religion_type(db: Session, religion_type_id: int, modified_by: int):
         # Soft delete by marking the record as inactive
         db_religion_type.IsDeleted = "1"
         db_religion_type.UpdatedDateTime = datetime.now()
-        db_religion_type.ModifiedById = modified_by
         db.commit()
         return db_religion_type
     return None
