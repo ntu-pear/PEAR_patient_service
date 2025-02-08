@@ -21,10 +21,9 @@ def test_create_diet_type(
 ):
     """Test case for creating a diet type."""
     # Arrange
-    created_by = 1
 
     # Act
-    result = create_diet_type(db_session_mock, diet_type_create, created_by)
+    result = create_diet_type(db_session_mock, diet_type_create)
 
     # Assert
     db_session_mock.add.assert_called_once_with(result)
@@ -32,7 +31,6 @@ def test_create_diet_type(
     db_session_mock.refresh.assert_called_once_with(result)
     assert result.Value == "Diabetic"
     assert result.IsDeleted == "0"
-    assert result.CreatedById == created_by
 
 
 def test_get_all_diet_types(db_session_mock):
@@ -56,8 +54,6 @@ def test_get_diet_type_by_id(db_session_mock):
         Id=1,
         Value="Diabetic",
         IsDeleted="0",
-        CreatedById=1,
-        ModifiedById=1,
         CreatedDateTime=datetime.now(),
         UpdatedDateTime=datetime.now(),
     )
@@ -79,14 +75,11 @@ def test_get_diet_type_by_id(db_session_mock):
 def test_update_diet_type(db_session_mock):
     """Test case for updating a diet type."""
     # Arrange
-    modified_by = 2
     diet_type_update = PatientDietListUpdate(Value="Diabetes II", IsDeleted="0")
     mock_diet_type = PatientDietList(
         Id=1,
         Value="Diabetes",
         IsDeleted="0",
-        CreatedById=1,
-        ModifiedById=1,
         CreatedDateTime=datetime.now(),
         UpdatedDateTime=datetime.now(),
     )
@@ -98,27 +91,22 @@ def test_update_diet_type(db_session_mock):
     result = update_diet_type(
         db_session_mock,
         mock_diet_type.Id,
-        diet_type_update,
-        modified_by,
+        diet_type_update
     )
 
     # Assert
     db_session_mock.commit.assert_called_once()
     db_session_mock.refresh.assert_called_once_with(mock_diet_type)
     assert result.Value == diet_type_update.Value
-    assert result.ModifiedById == modified_by
 
 
 def test_delete_diet_type(db_session_mock):
     """Test case for deleting (soft-deleting) a diet type."""
     # Arrange
-    modified_by = 2
     mock_diet_type = PatientDietList(
         Id=1,
         Value="Diabetes",
         IsDeleted="0",
-        CreatedById=1,
-        ModifiedById=1,
         CreatedDateTime=datetime.now(),
         UpdatedDateTime=datetime.now(),
     )
@@ -128,13 +116,12 @@ def test_delete_diet_type(db_session_mock):
 
     # Act
     result = delete_diet_type(
-        db_session_mock, mock_diet_type.Id, modified_by
+        db_session_mock, mock_diet_type.Id
     )
 
     # Assert
     db_session_mock.commit.assert_called_once()
     assert result.IsDeleted == "1"
-    assert result.ModifiedById == modified_by
 
 
 @pytest.fixture
