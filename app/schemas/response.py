@@ -7,6 +7,7 @@ class SingleResponse(BaseModel, Generic[T]):
 
 class PaginatedResponse(BaseModel, Generic[T]):
     data: List[T]
-    skip: int
-    limit: int
+    pageNo: int
+    pageSize: int
     totalRecords: int
+    totalPages: int

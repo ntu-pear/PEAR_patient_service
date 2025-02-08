@@ -19,10 +19,10 @@ def read_patient(patient_id: int, db: Session = Depends(get_db), mask: bool = Tr
     return SingleResponse(data = patient)
 
 @router.get("/patients/", response_model=PaginatedResponse[Patient])
-def read_patients(mask: bool = True, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    patients, total = crud_patient.get_patients(db=db, skip=skip, limit=limit, mask=mask)
+def read_patients(mask: bool = True, pageNo: int = 0, pageSize: int = 10, db: Session = Depends(get_db)):
+    patients, totalRecords, totalPages = crud_patient.get_patients(db=db, pageNo=pageNo, pageSize=pageSize, mask=mask)
     patients = [Patient.model_validate(patient) for patient in patients]
-    return PaginatedResponse(data=patients, skip= skip, limit=limit, totalRecords= total)
+    return PaginatedResponse(data=patients, pageNo=pageNo, pageSize=pageSize, totalRecords= totalRecords, totalPages=totalPages)
 
 @router.post("/patients/", response_model=SingleResponse[Patient])
 def create_patient(patient: PatientCreate, db: Session = Depends(get_db)):

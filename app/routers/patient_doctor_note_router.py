@@ -15,12 +15,12 @@ from ..schemas.response import SingleResponse, PaginatedResponse
 router = APIRouter()
 
 @router.get("/DoctorNote/GetDoctorNotesByPatient", response_model=PaginatedResponse[PatientDoctorNote])
-def get_doctor_notes_by_patient_id(patient_id: int, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+def get_doctor_notes_by_patient_id(patient_id: int, pageNo: int = 0, pageSize: int = 10, db: Session = Depends(get_db)):
     if not crud_patient.get_patient(db, patient_id):
         raise HTTPException(status_code=404, detail="Patient does not exist")
-    db_notes, total = crud_doctor_note.get_doctor_notes_by_patient(db=db, patient_id = patient_id, skip=skip, limit=limit)
+    db_notes, totalRecords, totalPages = crud_doctor_note.get_doctor_notes_by_patient(db=db, patient_id = patient_id, pageNo=pageNo, pageSize=pageSize)
     notes = [PatientDoctorNote.model_validate(note) for note in db_notes]
-    return PaginatedResponse(data=notes, skip= skip, limit=limit, totalRecords= total)
+    return PaginatedResponse(data=notes, pageNo= pageNo, totalRecords= totalRecords, totalPages = totalPages)
 
 @router.get("/DoctorNote", response_model=SingleResponse[PatientDoctorNote])
 def get_doctor_note(note_id: int, db: Session = Depends(get_db)):
