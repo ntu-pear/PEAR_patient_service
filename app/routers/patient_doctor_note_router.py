@@ -20,7 +20,7 @@ def get_doctor_notes_by_patient_id(patient_id: int, pageNo: int = 0, pageSize: i
         raise HTTPException(status_code=404, detail="Patient does not exist")
     db_notes, totalRecords, totalPages = crud_doctor_note.get_doctor_notes_by_patient(db=db, patient_id = patient_id, pageNo=pageNo, pageSize=pageSize)
     notes = [PatientDoctorNote.model_validate(note) for note in db_notes]
-    return PaginatedResponse(data=notes, pageNo= pageNo, totalRecords= totalRecords, totalPages = totalPages)
+    return PaginatedResponse(data=notes, pageNo= pageNo, pageSize=pageSize, totalRecords= totalRecords, totalPages = totalPages)
 
 @router.get("/DoctorNote", response_model=SingleResponse[PatientDoctorNote])
 def get_doctor_note(note_id: int, db: Session = Depends(get_db)):
