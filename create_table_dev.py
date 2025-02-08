@@ -4,6 +4,7 @@ from app.database import engine, Base
 clear_mappers()
 
 from app.models import (
+    allergy_reaction_type_model,
     patient_allergy_mapping_model,  # Import all models to ensure they are registered
     patient_allocation_model,
     patient_attendance_model,
