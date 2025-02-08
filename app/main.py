@@ -59,33 +59,33 @@ from datetime import datetime
 
 load_dotenv()
 
-# Logger Configuration with Date-Suffix Log Rotation
-LOG_DIR = "logs"
-os.makedirs(LOG_DIR, exist_ok=True)  # Ensure logs directory exists
+# # Logger Configuration with Date-Suffix Log Rotation
+# LOG_DIR = "logs"
+# os.makedirs(LOG_DIR, exist_ok=True)  # Ensure logs directory exists
 
-# Add suffix to log file name 
-today = datetime.now().strftime("%Y-%m-%d")
-log_file = f"{LOG_DIR}/app_{today}.log"
+# # Add suffix to log file name 
+# today = datetime.now().strftime("%Y-%m-%d")
+# log_file = f"{LOG_DIR}/app_{today}.log"
 
-# TimedRotatingFileHandler rotates logs daily and appends the date to the filename
-# Stores max 30 days worth of logs before deleting.
-file_handler = TimedRotatingFileHandler(
-    log_file, when="midnight", interval=1, backupCount=30
-)
-file_handler.setFormatter(logging.Formatter(
-    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-))
+# # TimedRotatingFileHandler rotates logs daily and appends the date to the filename
+# # Stores max 30 days worth of logs before deleting.
+# file_handler = TimedRotatingFileHandler(
+#     log_file, when="midnight", interval=1, backupCount=30
+# )
+# file_handler.setFormatter(logging.Formatter(
+#     "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+# ))
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        file_handler,  # File handler for daily rotation
-        logging.StreamHandler()  # Log to console
-    ]
-)
+# logging.basicConfig(
+#     level=logging.INFO,
+#     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+#     handlers=[
+#         file_handler,  # File handler for daily rotation
+#         logging.StreamHandler()  # Log to console
+#     ]
+# )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn")
 
 app = FastAPI(
     title="NTU FYP PEAR PATIENT SERVICE",
@@ -112,31 +112,31 @@ app.add_middleware(
 )
 
 # Middleware to log requests and responses
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    # TODO: Extract user information from headers
-    # user = request.headers.get("Authorization", "xxxxx")  # Replace "Authorization" with our actual header key
+# @app.middleware("http")
+# async def log_requests(request: Request, call_next):
+#     # TODO: Extract user information from headers
+#     # user = request.headers.get("Authorization", "xxxxx")  # Replace "Authorization" with our actual header key
     
-    # Get the user information from JWT Token 
-    # logger.info(f"Incoming request: {request.method} {request.url} by user: {user}")
+#     # Get the user information from JWT Token 
+#     # logger.info(f"Incoming request: {request.method} {request.url} by user: {user}")
 
-    logger.info(f"Incoming request: {request.method} {request.url}")
-    try:
-        body = await request.body()
-        body_str = body.decode("utf-8") if body else "{}"
-        try:
-            body_str = json.dumps(json.loads(body_str))  # Parses and re-dumps to ensure it's compact
-        except json.JSONDecodeError:
-            # If the body is not JSON, escape and compact it
-            body_str = json.dumps(body_str)
-        response = await call_next(request)
-    except Exception as e:
-        logger.error(f"Unhandled error occurred: {str(e)}", exc_info=True)
-        raise
-    # logger.info(f"Response status: {response.status_code} for {request.method} {request.url} ")
-    user = "admin"
-    logger.info(f"Response status: {response.status_code} for {request.method} {request.url} by user: {user} request body: {body_str}")
-    return response
+#     logger.info(f"Incoming request: {request.method} {request.url}")
+#     try:
+#         body = await request.body()
+#         body_str = body.decode("utf-8") if body else "{}"
+#         try:
+#             body_str = json.dumps(json.loads(body_str))  # Parses and re-dumps to ensure it's compact
+#         except json.JSONDecodeError:
+#             # If the body is not JSON, escape and compact it
+#             body_str = json.dumps(body_str)
+#         response = await call_next(request)
+#     except Exception as e:
+#         logger.error(f"Unhandled error occurred: {str(e)}", exc_info=True)
+#         raise
+#     # logger.info(f"Response status: {response.status_code} for {request.method} {request.url} ")
+#     user = "admin"
+#     logger.info(f"Response status: {response.status_code} for {request.method} {request.url} by user: {user} request body: {body_str}")
+#     return response
 
 # Exception handler for request validation errors
 @app.exception_handler(RequestValidationError)
