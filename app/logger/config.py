@@ -2,30 +2,26 @@ from datetime import datetime
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
+import json
 
 LOG_DIR = os.path.join(os.path.dirname(__file__), '..', 'logs')
-os.makedirs(LOG_DIR, exist_ok=True)  # Ensure logs directory exists
+os.makedirs(LOG_DIR, exist_ok=True) 
 
-# Add suffix to log file name 
 today = datetime.now().strftime("%Y-%m-%d")
 log_file = f"{LOG_DIR}/app_{today}.log"
 
-# TimedRotatingFileHandler rotates logs daily and appends the date to the filename
-# Stores max 30 days worth of logs before deleting.
-file_handler = TimedRotatingFileHandler(
-    log_file, when="midnight", interval=1, backupCount=30
-)
-file_handler.setFormatter(logging.Formatter(
-    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-))
+log_format = '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": %(message)s}'
+date_format = "%Y-%m-%dT%H:%M:%S"  
+
+file_handler = logging.FileHandler(log_file)
+file_handler.setFormatter(logging.Formatter(log_format, datefmt=date_format)) 
+
+# stream_handler = logging.StreamHandler()
+# stream_handler.setFormatter(logging.Formatter(log_format, datefmt=date_format))
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        file_handler,  # File handler for daily rotation
-        logging.StreamHandler()  # Log to console
-    ]
+    handlers=[file_handler]
 )
 
 logger = logging.getLogger(__name__)

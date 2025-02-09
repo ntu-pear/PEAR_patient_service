@@ -2,28 +2,44 @@ from sqlalchemy.orm import Session
 from ..models.patient_model import Patient
 from ..schemas.patient import PatientCreate, PatientUpdate
 from datetime import datetime
-from ..logger.logger_utils import log_crud_action, ActionType
-import json
-#To Change
+from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
+
+# To Change
 user = 1
 def mask_nric(nric: str):
-    return ('*' * 5) + nric[-4:]
+    return ("*" * 5) + nric[-4:]
+
 
 def get_patient(db: Session, patient_id: int, mask: bool = True):
-    db_patient = db.query(Patient).filter(Patient.id == patient_id, Patient.isDeleted == '0').first()
+    db_patient = (
+        db.query(Patient)
+        .filter(Patient.id == patient_id, Patient.isDeleted == "0")
+        .first()
+    )
     if db_patient and mask:
         db_patient.nric = mask_nric(db_patient.nric)
     return db_patient
 
+
 def get_patients(db: Session, mask: bool = True, skip: int = 0, limit: int = 10):
-    db_patients = db.query(Patient).filter(Patient.isDeleted == '0').order_by(Patient.id).offset(skip).limit(limit).all()
+    db_patients = (
+        db.query(Patient)
+        .filter(Patient.isDeleted == "0")
+        .order_by(Patient.id)
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
     if db_patients and mask:
         for db_patient in db_patients:
             db_patient.nric = mask_nric(db_patient.nric)
     return db_patients
 
+
 def create_patient(db: Session, patient: PatientCreate):
     db_patient = Patient(**patient.model_dump())
+    
+    updated_data_dict = serialize_data(patient.model_dump())
     if db_patient:
         db_patient.modifiedDate = datetime.now()
         db_patient.createdDate = datetime.now()
@@ -33,26 +49,26 @@ def create_patient(db: Session, patient: PatientCreate):
         db.commit()
         db.refresh(db_patient)
 
-        updated_data_json = json.dumps(patient.model_dump(), default=str)
-
         log_crud_action(
             action=ActionType.CREATE,
             user=user,
             table="Patient",
             entity_id=db_patient.id,
             original_data=None,
-            updated_data=updated_data_json
+            updated_data=updated_data_dict,
         )
     return db_patient
+
 
 def update_patient(db: Session, patient_id: int, patient: PatientUpdate):
     db_patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if db_patient:
-        original_data_dict = {k: v for k, v in db_patient.__dict__.items() if not k.startswith('_')}
-        try:
-            original_data_json = json.dumps(original_data_dict, default=str)
+        try: 
+            original_data_dict = {
+                k: serialize_data(v) for k, v in db_patient.__dict__.items() if not k.startswith("_")
+            }
         except Exception as e:
-            original_data_json = "{}"
+            original_data_dict = "{}"
 
         for key, value in patient.model_dump().items():
             setattr(db_patient, key, value)
@@ -60,36 +76,37 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate):
         db_patient.modifiedById = user
         db.commit()
         db.refresh(db_patient)
-        
-        updated_data_json = json.dumps(patient.model_dump(), default=str)
+
+        updated_data_dict = serialize_data(patient.model_dump())
         log_crud_action(
             action=ActionType.UPDATE,
             user=user,
             table="Patient",
             entity_id=patient_id,
-            original_data=original_data_json,
-            updated_data=updated_data_json
+            original_data=original_data_dict,
+            updated_data=updated_data_dict,
         )
     return db_patient
+
 
 def delete_patient(db: Session, patient_id: int):
     db_patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if db_patient:
-        original_data_dict = {k: v for k, v in db_patient.__dict__.items() if not k.startswith('_')}
         try:
-            original_data_json = json.dumps(original_data_dict, default=str)
+            original_data_dict = {
+                k: serialize_data(v) for k, v in db_patient.__dict__.items() if not k.startswith("_")
+            }
         except Exception as e:
-            original_data_json = "{}"
-        setattr(db_patient, 'isDeleted', '1')
+            original_data_dict = "{}"
+        setattr(db_patient, "isDeleted", "1")
         db.commit()
 
-        
         log_crud_action(
             action=ActionType.DELETE,
             user=user,
             table="Patient",
             entity_id=patient_id,
-            original_data=original_data_json,
-            updated_data=None
+            original_data=original_data_dict,
+            updated_data=None,
         )
     return db_patient
