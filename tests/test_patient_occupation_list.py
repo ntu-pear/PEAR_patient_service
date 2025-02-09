@@ -6,7 +6,7 @@ from app.crud.patient_occupation_crud import (
     update_occupation_type,
     delete_occupation_type,
 )
-from app.schemas.patient_occupation_list import PatientOccupationListCreate, PatientOccupationListUpdate
+from app.schemas.patient_occupation_list import PatientOccupationListTypeCreate, PatientOccupationListTypeUpdate
 from app.models.patient_occupation_list_model import PatientOccupationList
 
 from datetime import datetime
@@ -75,7 +75,7 @@ def test_get_occupation_type_by_id(db_session_mock):
 def test_update_occupation_type(db_session_mock):
     """Test case for updating an occupation type."""
     # Arrange
-    occupation_type_update = PatientOccupationListUpdate(Value="Accounting", IsDeleted="0")
+    occupation_type_update = PatientOccupationListTypeUpdate(Value="Accounting", IsDeleted="0")
     mock_occupation_type = PatientOccupationList(
         Id=1,
         Value="Accountant",
@@ -133,7 +133,7 @@ def db_session_mock():
 @pytest.fixture
 def occupation_type_create():
     """Fixture to provide a mock PatientOccupationListCreate object."""
-    return PatientOccupationListCreate(Value="Accountant", IsDeleted="0")
+    return PatientOccupationListTypeCreate(Value="Accountant", IsDeleted="0")
 
 
 ## MOCK DATA ##

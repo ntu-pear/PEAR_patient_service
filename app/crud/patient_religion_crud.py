@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy.orm import Session
 from ..models.patient_religion_list_model import PatientReligionList
-from ..schemas.patient_religion_list import PatientReligionListCreate, PatientReligionListUpdate
+from ..schemas.patient_religion_list import PatientReligionListTypeCreate, PatientReligionListTypeUpdate
 
 
 def get_all_religion_types(db: Session):
@@ -15,7 +15,7 @@ def get_religion_type_by_id(db: Session, religion_type_id: int):
         .first()
     )
 
-def create_religion_type(db: Session, religion_type: PatientReligionListCreate):
+def create_religion_type(db: Session, religion_type: PatientReligionListTypeCreate):
     db_religion_type = PatientReligionList(
         **religion_type.model_dump()
     )
@@ -26,7 +26,7 @@ def create_religion_type(db: Session, religion_type: PatientReligionListCreate):
 
 
 def update_religion_type(
-    db: Session, religion_type_id: int, religion_type: PatientReligionListUpdate
+    db: Session, religion_type_id: int, religion_type: PatientReligionListTypeUpdate
 ):
     db_religion_type = (
         db.query(PatientReligionList)

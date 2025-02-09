@@ -6,7 +6,7 @@ from app.crud.patient_education_crud import (
     update_education_type,
     delete_education_type,
 )
-from app.schemas.patient_education_list import PatientEducationListCreate, PatientEducationListUpdate
+from app.schemas.patient_education_list import PatientEducationListTypeCreate, PatientEducationListTypeUpdate
 from app.models.patient_education_list_model import PatientEducationList
 
 from datetime import datetime
@@ -75,7 +75,7 @@ def test_get_education_type_by_id(db_session_mock):
 def test_update_education_type(db_session_mock):
     """Test case for updating an education type."""
     # Arrange
-    education_type_update = PatientEducationListUpdate(Value="Junior College", IsDeleted="0")
+    education_type_update = PatientEducationListTypeUpdate(Value="Junior College", IsDeleted="0")
     mock_education_type = PatientEducationList(
         Id=1,
         Value="Primary or lower",
@@ -133,7 +133,7 @@ def db_session_mock():
 @pytest.fixture
 def education_type_create():
     """Fixture to provide a mock PatientEducationListCreate object."""
-    return PatientEducationListCreate(Value="Primary or lower", IsDeleted="0")
+    return PatientEducationListTypeCreate(Value="Primary or lower", IsDeleted="0")
 
 
 ## MOCK DATA ##

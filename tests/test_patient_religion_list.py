@@ -6,7 +6,7 @@ from app.crud.patient_religion_crud import (
     update_religion_type,
     delete_religion_type,
 )
-from app.schemas.patient_religion_list import PatientReligionListCreate, PatientReligionListUpdate
+from app.schemas.patient_religion_list import PatientReligionListTypeCreate, PatientReligionListTypeUpdate
 from app.models.patient_religion_list_model import PatientReligionList
 
 from datetime import datetime
@@ -75,7 +75,7 @@ def test_get_religion_type_by_id(db_session_mock):
 def test_update_religion_type(db_session_mock):
     """Test case for updating a religion type."""
     # Arrange
-    religion_type_update = PatientReligionListUpdate(Value="Christian", IsDeleted="0")
+    religion_type_update = PatientReligionListTypeUpdate(Value="Christian", IsDeleted="0")
     mock_religion_type = PatientReligionList(
         Id=1,
         Value="Atheist",
@@ -133,7 +133,7 @@ def db_session_mock():
 @pytest.fixture
 def religion_type_create():
     """Fixture to provide a mock PatientReligionListCreate object."""
-    return PatientReligionListCreate(Value="Atheist", IsDeleted="0")
+    return PatientReligionListTypeCreate(Value="Atheist", IsDeleted="0")
 
 
 ## MOCK DATA ##

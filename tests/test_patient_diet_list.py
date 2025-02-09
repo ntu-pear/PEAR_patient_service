@@ -6,7 +6,7 @@ from app.crud.patient_diet_crud import (
     update_diet_type,
     delete_diet_type,
 )
-from app.schemas.patient_diet_list import PatientDietListCreate, PatientDietListUpdate
+from app.schemas.patient_diet_list import PatientDietListTypeCreate, PatientDietListTypeUpdate
 from app.models.patient_diet_list_model import PatientDietList
 
 from datetime import datetime
@@ -75,7 +75,7 @@ def test_get_diet_type_by_id(db_session_mock):
 def test_update_diet_type(db_session_mock):
     """Test case for updating a diet type."""
     # Arrange
-    diet_type_update = PatientDietListUpdate(Value="Diabetes II", IsDeleted="0")
+    diet_type_update = PatientDietListTypeUpdate(Value="Diabetes II", IsDeleted="0")
     mock_diet_type = PatientDietList(
         Id=1,
         Value="Diabetes",
@@ -133,7 +133,7 @@ def db_session_mock():
 @pytest.fixture
 def diet_type_create():
     """Fixture to provide a mock PatientDietListCreate object."""
-    return PatientDietListCreate(Value="Diabetic", IsDeleted="0")
+    return PatientDietListTypeCreate(Value="Diabetic", IsDeleted="0")
 
 
 ## MOCK DATA ##

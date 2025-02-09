@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy.orm import Session
 from ..models.patient_pet_list_model import PatientPetList
-from ..schemas.patient_pet_list import PatientPetListCreate, PatientPetListUpdate
+from ..schemas.patient_pet_list import PatientPetListTypeCreate, PatientPetListTypeUpdate
 
 
 def get_all_pet_types(db: Session):
@@ -15,7 +15,7 @@ def get_pet_type_by_id(db: Session, pet_type_id: int):
         .first()
     )
 
-def create_pet_type(db: Session, pet_type: PatientPetListCreate):
+def create_pet_type(db: Session, pet_type: PatientPetListTypeCreate):
     db_pet_type = PatientPetList(
         **pet_type.model_dump()
     )
@@ -26,7 +26,7 @@ def create_pet_type(db: Session, pet_type: PatientPetListCreate):
 
 
 def update_pet_type(
-    db: Session, pet_type_id: int, pet_type: PatientPetListUpdate
+    db: Session, pet_type_id: int, pet_type: PatientPetListTypeUpdate
 ):
     db_pet_type = (
         db.query(PatientPetList)

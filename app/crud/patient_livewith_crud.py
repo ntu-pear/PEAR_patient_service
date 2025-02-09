@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy.orm import Session
 from ..models.patient_livewith_list_model import PatientLiveWithList
-from ..schemas.patient_livewith_list import PatientLiveWithListCreate, PatientLiveWithListUpdate
+from ..schemas.patient_livewith_list import PatientLiveWithListTypeCreate, PatientLiveWithListUpdate
 
 
 def get_all_livewith_types(db: Session):
@@ -15,7 +15,7 @@ def get_livewith_type_by_id(db: Session, livewith_type_id: int):
         .first()
     )
 
-def create_livewith_type(db: Session, livewith_type: PatientLiveWithListCreate):
+def create_livewith_type(db: Session, livewith_type: PatientLiveWithListTypeCreate):
     db_livewith_type = PatientLiveWithList(
         **livewith_type.model_dump()
     )

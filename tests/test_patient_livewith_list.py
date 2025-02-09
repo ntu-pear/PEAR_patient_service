@@ -6,7 +6,7 @@ from app.crud.patient_livewith_crud import (
     update_livewith_type,
     delete_livewith_type,
 )
-from app.schemas.patient_livewith_list import PatientLiveWithListCreate, PatientLiveWithListUpdate
+from app.schemas.patient_livewith_list import PatientLiveWithListTypeCreate, PatientLiveWithListTypeUpdate
 from app.models.patient_livewith_list_model import PatientLiveWithList
 
 from datetime import datetime
@@ -75,7 +75,7 @@ def test_get_livewith_type_by_id(db_session_mock):
 def test_update_livewith_type(db_session_mock):
     """Test case for updating a livewith type."""
     # Arrange
-    livewith_type_update = PatientLiveWithListUpdate(Value="Siblings", IsDeleted="0")
+    livewith_type_update = PatientLiveWithListTypeUpdate(Value="Siblings", IsDeleted="0")
     mock_livewith_type = PatientLiveWithList(
         Id=1,
         Value="Alone",
@@ -133,7 +133,7 @@ def db_session_mock():
 @pytest.fixture
 def livewith_type_create():
     """Fixture to provide a mock PatientLiveWithListCreate object."""
-    return PatientLiveWithListCreate(Value="Alone", IsDeleted="0")
+    return PatientLiveWithListTypeCreate(Value="Alone", IsDeleted="0")
 
 
 ## MOCK DATA ##

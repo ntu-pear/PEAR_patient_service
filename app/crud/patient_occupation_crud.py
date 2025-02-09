@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy.orm import Session
 from ..models.patient_occupation_list_model import PatientOccupationList
-from ..schemas.patient_occupation_list import PatientOccupationListCreate, PatientOccupationListUpdate
+from ..schemas.patient_occupation_list import PatientOccupationListTypeCreate, PatientOccupationListTypeUpdate
 
 
 def get_all_occupation_types(db: Session):
@@ -15,7 +15,7 @@ def get_occupation_type_by_id(db: Session, occupation_type_id: int):
         .first()
     )
 
-def create_occupation_type(db: Session, occupation_type: PatientOccupationListCreate):
+def create_occupation_type(db: Session, occupation_type: PatientOccupationListTypeCreate):
     db_occupation_type = PatientOccupationList(
         **occupation_type.model_dump()
     )
@@ -26,7 +26,7 @@ def create_occupation_type(db: Session, occupation_type: PatientOccupationListCr
 
 
 def update_occupation_type(
-    db: Session, occupation_type_id: int, occupation_type: PatientOccupationListUpdate
+    db: Session, occupation_type_id: int, occupation_type: PatientOccupationListTypeUpdate
 ):
     db_occupation_type = (
         db.query(PatientOccupationList)

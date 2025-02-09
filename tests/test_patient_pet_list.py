@@ -6,7 +6,7 @@ from app.crud.patient_pet_crud import (
     update_pet_type,
     delete_pet_type,
 )
-from app.schemas.patient_pet_list import PatientPetListCreate, PatientPetListUpdate
+from app.schemas.patient_pet_list import PatientPetListTypeCreate, PatientPetListTypeUpdate
 from app.models.patient_pet_list_model import PatientPetList
 
 from datetime import datetime
@@ -75,7 +75,7 @@ def test_get_pet_type_by_id(db_session_mock):
 def test_update_pet_type(db_session_mock):
     """Test case for updating a pet type."""
     # Arrange
-    pet_type_update = PatientPetListUpdate(Value="Parrot", IsDeleted="0")
+    pet_type_update = PatientPetListTypeUpdate(Value="Parrot", IsDeleted="0")
     mock_pet_type = PatientPetList(
         Id=1,
         Value="Bird",
@@ -133,7 +133,7 @@ def db_session_mock():
 @pytest.fixture
 def pet_type_create():
     """Fixture to provide a mock PatientPetListCreate object."""
-    return PatientPetListCreate(Value="Bird", IsDeleted="0")
+    return PatientPetListTypeCreate(Value="Bird", IsDeleted="0")
 
 
 ## MOCK DATA ##

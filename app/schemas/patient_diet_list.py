@@ -8,16 +8,16 @@ class PatientDietListBase(BaseModel):
     IsDeleted: Optional[str] = Field(default="0", json_schema_extra={"example": "0"})
 
 
-class PatientDietListCreate(PatientDietListBase):
+class PatientDietListTypeCreate(PatientDietListBase):
     pass
 
 
-class PatientDietListUpdate(PatientDietListBase):
+class PatientDietListTypeUpdate(PatientDietListBase):
     pass
 
 
 class PatientDietListType(PatientDietListBase):
-    List_DietID: int = Field(json_schema_extra={"example": 1})
+    ID: int = Field(json_schema_extra={"example": 1})
     CreatedDateTime: datetime = Field(default_factory=datetime.now)
     UpdatedDateTime: datetime = Field(default_factory=datetime.now)
 

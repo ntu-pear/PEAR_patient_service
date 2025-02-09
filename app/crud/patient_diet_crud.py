@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from ..models.patient_diet_list_model import PatientDietList
-from ..schemas.patient_diet_list import PatientDietListCreate, PatientDietListUpdate
+from ..schemas.patient_diet_list import PatientDietListTypeCreate, PatientDietListTypeUpdate
 from datetime import datetime
 
 
@@ -15,7 +15,7 @@ def get_diet_type_by_id(db: Session, diet_type_id: int):
         .first()
     )
 
-def create_diet_type(db: Session, diet_type: PatientDietListCreate):
+def create_diet_type(db: Session, diet_type: PatientDietListTypeCreate):
     db_diet_type = PatientDietList(
         **diet_type.model_dump()
     )
@@ -26,7 +26,7 @@ def create_diet_type(db: Session, diet_type: PatientDietListCreate):
 
 
 def update_diet_type(
-    db: Session, diet_type_id: int, diet_type: PatientDietListUpdate
+    db: Session, diet_type_id: int, diet_type: PatientDietListTypeUpdate
 ):
     db_diet_type = (
         db.query(PatientDietList)
