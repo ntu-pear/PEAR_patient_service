@@ -71,13 +71,13 @@ def update_vital(db: Session, vital_id: int, vital: PatientVitalUpdate):
             updated_data_dict = serialize_data(vital.model_dump())
 
             log_crud_action(
-            action=ActionType.UPDATE,
-            user=user,
-            table="PatientVital",
-            entity_id=db_vital.Id,
-            original_data=original_data_dict,
-            updated_data=updated_data_dict,
-        )
+                action=ActionType.UPDATE,
+                user=user,
+                table="PatientVital",
+                entity_id=db_vital.Id,
+                original_data=original_data_dict,
+                updated_data=updated_data_dict,
+            )
         return db_vital
     
     except ValueError as e:
