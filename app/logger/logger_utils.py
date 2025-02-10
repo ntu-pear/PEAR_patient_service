@@ -25,10 +25,6 @@ def log_crud_action(
         updated_data = None
         
     log_data = {
-        "timestamp": datetime.utcnow().isoformat(),
-        "action": action.value,
-        "user": user,
-        "table": table,
         "entity_id": entity_id,
         "original_data": original_data,
         "updated_data": updated_data,
@@ -36,7 +32,7 @@ def log_crud_action(
 
     log_data = {key: value for key, value in log_data.items() if value is not None}
     log_message = json.dumps(log_data)
-    logger.info(log_message)
+    logger.info(log_message, extra={"table": table, "user": user, "action": action.value})
 
 def serialize_data(data):
     if isinstance(data, datetime):

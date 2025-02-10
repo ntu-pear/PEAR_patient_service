@@ -10,7 +10,7 @@ os.makedirs(LOG_DIR, exist_ok=True)
 today = datetime.now().strftime("%Y-%m-%d")
 log_file = f"{LOG_DIR}/app_{today}.log"
 
-log_format = '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": %(message)s}'
+log_format = '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "user": "%(user)s", "table": "%(table)s", "action": "%(action)s", "message": %(message)s}'
 date_format = "%Y-%m-%dT%H:%M:%S"  
 
 file_handler = logging.FileHandler(log_file)
