@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from ..models.patient_model import Patient
 from ..schemas.patient import PatientCreate, PatientUpdate
 from datetime import datetime
-
+from fastapi import HTTPException
 #To Change
 user = 1
 
@@ -20,6 +20,11 @@ def get_patients(db: Session, mask: bool = True, skip: int = 0, limit: int = 10)
     return db_patients
 
 def create_patient(db: Session, patient: PatientCreate):
+    #Check nric uniqueness
+    db_patient_with_same_nric = db.query(Patient).filter(Patient.nric == patient.nric, Patient.isDeleted == '0').first()
+    if db_patient_with_same_nric:
+        raise HTTPException(status_code=400, detail=f"Nric must be unique for active records")
+    
     db_patient = Patient(**patient.model_dump())
     db_patient.modifiedDate = datetime.now()
     db_patient.createdDate = datetime.now()
@@ -33,6 +38,11 @@ def create_patient(db: Session, patient: PatientCreate):
 def update_patient(db: Session, patient_id: int, patient: PatientUpdate):
     db_patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if db_patient:
+        #Check nric uniqueness
+        db_patient_with_same_nric = db.query(Patient).filter(Patient.id != patient_id, Patient.nric == patient.nric, Patient.isDeleted == '0').first()
+        if db_patient_with_same_nric:
+            raise HTTPException(status_code=400, detail=f"Nric must be unique for active records")
+        
         for key, value in patient.model_dump().items():
             setattr(db_patient, key, value)
         db_patient.modifiedDate = datetime.now()

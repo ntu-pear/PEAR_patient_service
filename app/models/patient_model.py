@@ -8,7 +8,7 @@ class Patient(Base):
     id = Column(Integer, primary_key=True, index=True)  # Changed to Integer
     active = Column(String(1), default='Y', nullable=False)
     name = Column(String(255), nullable=False)
-    nric = Column(String(9), unique=True, nullable=False)
+    nric = Column(String(9), nullable=False) # Remove Unique constraint due to presence soft deletes
     address = Column(String(255))
     tempAddress = Column(String(255))
     homeNo = Column(String(32))
