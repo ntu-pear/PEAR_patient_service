@@ -5,20 +5,18 @@ from datetime import datetime
 
 #To Change
 user = 1
-def mask_nric(nric: str):
-    return ('*' * 5) + nric[-4:]
 
 def get_patient(db: Session, patient_id: int, mask: bool = True):
     db_patient = db.query(Patient).filter(Patient.id == patient_id, Patient.isDeleted == '0').first()
     if db_patient and mask:
-        db_patient.nric = mask_nric(db_patient.nric)
+        db_patient.nric = db_patient.mask_nric
     return db_patient
 
 def get_patients(db: Session, mask: bool = True, skip: int = 0, limit: int = 10):
     db_patients = db.query(Patient).filter(Patient.isDeleted == '0').order_by(Patient.id).offset(skip).limit(limit).all()
     if db_patients and mask:
         for db_patient in db_patients:
-            db_patient.nric = mask_nric(db_patient.nric)
+            db_patient.nric = db_patient.mask_nric
     return db_patients
 
 def create_patient(db: Session, patient: PatientCreate):

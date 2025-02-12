@@ -51,3 +51,6 @@ class Patient(Base):
     attendances = relationship("PatientAttendance", back_populates="patient")
     highlights = relationship("PatientHighlight", back_populates="patient")
 # Ensure other models follow similar changes for consistency
+    @property
+    def mask_nric(self):
+        return ('*' * 5) + self.nric[-4:]
