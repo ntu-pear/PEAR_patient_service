@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from ..models.patient_doctor_note_model import PatientDoctorNote
 from ..schemas.patient_doctor_note import PatientDoctorNoteCreate, PatientDoctorNoteUpdate
-from ..logger.logger_utils import log_crud_action, ActionType
+from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 import json
 import math
 
@@ -27,7 +27,7 @@ def create_doctor_note(db: Session, doctor_note: PatientDoctorNoteCreate):
         db.commit()
         db.refresh(db_doctor_note)
 
-        updated_data_json = json.dumps(doctor_note.model_dump(), default=str)
+        updated_data_dict = serialize_data(doctor_note.model_dump())
 
         log_crud_action(
             action=ActionType.CREATE,
@@ -35,7 +35,7 @@ def create_doctor_note(db: Session, doctor_note: PatientDoctorNoteCreate):
             table="Doctor Note",
             entity_id=None,
             original_data=None,
-            updated_data=updated_data_json
+            updated_data=updated_data_dict
         )
     return db_doctor_note
 
@@ -43,12 +43,12 @@ def update_doctor_note(db: Session, note_id: int, doctor_note: PatientDoctorNote
     db_doctor_note = db.query(PatientDoctorNote).filter(PatientDoctorNote.id == note_id).first()
 
     if db_doctor_note:
-        original_data_dict = {k: v for k, v in db_doctor_note.__dict__.items() if not k.startswith('_')}
-        
-        try:
-            original_data_json = json.dumps(original_data_dict, default=str)
+        try: 
+            original_data_dict = {
+                k: serialize_data(v) for k, v in db_doctor_note.__dict__.items() if not k.startswith("_")
+            }
         except Exception as e:
-            original_data_json = "{}"
+            original_data_dict = "{}"
 
         for key, value in doctor_note.model_dump().items():
             setattr(db_doctor_note, key, value)
@@ -57,15 +57,15 @@ def update_doctor_note(db: Session, note_id: int, doctor_note: PatientDoctorNote
         db.commit()
         db.refresh(db_doctor_note)
 
-        updated_data_json = json.dumps(doctor_note.model_dump(), default=str)
+        updated_data_dict = serialize_data(doctor_note.model_dump())
 
         log_crud_action(
             action=ActionType.UPDATE,
             user=user,
             table="Doctor Note",
             entity_id=note_id,
-            original_data=original_data_json,
-            updated_data=updated_data_json
+            original_data=original_data_dict,
+            updated_data=updated_data_dict
         )
 
     return db_doctor_note
@@ -73,11 +73,12 @@ def update_doctor_note(db: Session, note_id: int, doctor_note: PatientDoctorNote
 def delete_doctor_note(db: Session, note_id: int):
     db_doctor_note = db.query(PatientDoctorNote).filter(PatientDoctorNote.id == note_id).first()
     if db_doctor_note:
-        original_data_dict = {k: v for k, v in db_doctor_note.__dict__.items() if not k.startswith('_')}
-        try:
-            original_data_json = json.dumps(original_data_dict, default=str)
+        try: 
+            original_data_dict = {
+                k: serialize_data(v) for k, v in db_doctor_note.__dict__.items() if not k.startswith("_")
+            }
         except Exception as e:
-            original_data_json = "{}"
+            original_data_dict = "{}"
 
         setattr(db_doctor_note, 'isDeleted', '1')
         db.commit()
@@ -88,7 +89,7 @@ def delete_doctor_note(db: Session, note_id: int):
             user=user,
             table="Doctor Note",
             entity_id=note_id,
-            original_data=original_data_json,
+            original_data=original_data_dict,
             updated_data=None
         )
     return db_doctor_note
