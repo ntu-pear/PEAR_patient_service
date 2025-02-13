@@ -58,7 +58,7 @@ def create_patient_patient_guardian(db: Session, patientPatientGuradian: Patient
 
     log_crud_action(
         action=ActionType.CREATE,
-        user=user,
+        user=SYSTEM_USER_ID,
         table="PatientPatientGuardian",
         entity_id=db_patient_patient_guardian.id,
         original_data=None,

@@ -56,7 +56,7 @@ def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, cre
         action=ActionType.CREATE,
         user=created_by,
         table="PatientMobility",
-        entity_id=new_entry.id,
+        entity_id=new_entry.MobilityID,
         original_data=None,
         updated_data=updated_data_dict,
     )
@@ -74,7 +74,7 @@ def update_mobility_entry(
     if not db_entry:
         raise HTTPException(status_code=404, detail=f"Mobility entry with ID {patient_id} not found.")
 
-    original_data_dict = serialize_data(db_entry)
+    original_data_dict = serialize_data(mobility_data.model_dump())
 
     for key, value in mobility_data.model_dump(exclude_unset=True).items():
         setattr(db_entry, key, value)
