@@ -44,4 +44,4 @@ class Patient(PatientBase):
     modifiedDate: datetime  # DATETIME -> datetime
     createdById: int  # INT -> int
     modifiedById: int  # INT -> int
-    model_config = ConfigDict(from_attributes=True)
+    model_config = {"from_attributes": True}

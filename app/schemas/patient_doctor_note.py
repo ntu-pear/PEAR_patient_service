@@ -26,5 +26,4 @@ class PatientDoctorNote(PatientDoctorNoteBase):
     createdById: int
     modifiedById: int
 
-
-model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True}

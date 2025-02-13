@@ -1,10 +1,12 @@
 from datetime import datetime
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from fastapi import HTTPException
 from ..models.patient_vital_model import PatientVital
 from ..schemas.patient_vital import PatientVitalCreate, PatientVitalUpdate, PatientVitalDelete
 from ..config import Config
 from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
+import math
 
 # To Change
 user = 1
@@ -13,15 +15,12 @@ config = Config().Vital
 def get_latest_vital(db: Session, patient_id: int):
     return db.query(PatientVital).filter(PatientVital.PatientId == patient_id).order_by(PatientVital.CreatedDateTime.desc()).first()
 
-def get_vital_list(db: Session, patient_id: int, skip: int = 0, limit: int = 100):
-    return (
-        db.query(PatientVital)
-        .filter(PatientVital.PatientId == patient_id)
-        .order_by(PatientVital.CreatedDateTime.desc())  # Ensure ordering before OFFSET and LIMIT
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
+def get_vital_list(db: Session, patient_id: int, pageNo: int = 0, pageSize: int = 100):
+    offset = pageNo * pageSize
+    db_patient_vital = db.query(PatientVital).filter(PatientVital.PatientId == patient_id, PatientVital.IsDeleted == '0').order_by(PatientVital.CreatedDateTime.desc()).offset(offset).limit(pageSize).all()
+    totalRecords = db.query(func.count()).select_from(PatientVital).filter(PatientVital.PatientId == patient_id, PatientVital.IsDeleted == '0').scalar()
+    totalPages = math.ceil(totalRecords/pageSize)
+    return db_patient_vital, totalRecords, totalPages
     
 def create_vital(db: Session, vital: PatientVitalCreate):
     try:
