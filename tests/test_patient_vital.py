@@ -1,6 +1,5 @@
 import pytest
 from unittest import mock
-from unittest.mock import MagicMock
 from datetime import datetime
 from app.crud.patient_vital_crud import (
     get_vital_list,
@@ -102,8 +101,9 @@ def test_update_patient_vital(mock_patient_vital, db_session_mock, vital_update)
 
     # Arrange
     patient_vital_id = 1
-    mock_vital = get_mock_patient_vitals()[0]
-    mock_patient_vital.query.filter.return_value.first.return_value = mock_vital
+    mock_patient_vital.query.filter.return_value.first.return_value = (
+        get_mock_patient_vitals()[0]
+    )  # Mocking existing vital
 
     # Act
     result = update_vital(db_session_mock, patient_vital_id, vital_update)
@@ -128,7 +128,9 @@ def test_delete_patient_vital(mock_patient_vital, db_session_mock):
 
     # Arrange
     patient_vital_id = 1
-    mock_patient_vital.query.filter.return_value.first.return_value = get_mock_patient_vitals()[0]
+    mock_patient_vital.query.filter.return_value.first.return_value = (
+        get_mock_patient_vitals()[0]
+    )  # Mocking existing vital
 
     # Act
     result = delete_vital(db_session_mock, patient_vital_id)
@@ -208,7 +210,6 @@ def get_mock_patient_vitals():
     return [
         PatientVital(
             Id=1,
-            IsDeleted="0",
             PatientId=1,
             IsAfterMeal="0",
             Temperature=36.6,
