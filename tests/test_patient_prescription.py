@@ -170,6 +170,26 @@ def test_create_prescription(
 
 
 def test_update_prescription(db_session_mock):
+    # Mock data
+    mock_data = mock.MagicMock(
+        Id=1,
+        PatientId=1,
+        Dosage="500mg",
+        FrequencyPerDay=3,
+        Instruction="Take after meal",
+        StartDate=datetime(2023, 1, 1),
+        EndDate=datetime(2023, 1, 10),
+        IsAfterMeal="1",
+        PrescriptionRemarks="No remarks",
+        Status="Active",
+        UpdatedDateTime=datetime(2023, 1, 1, 10, 0),
+        UpdatedById=1,
+    )
+    
+
+    # Set up the mock query to return the mock prescriptions
+    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_data
+
     data = {
         "Active": "1",
         "PatientId": 1,
@@ -203,6 +223,16 @@ def test_update_prescription(db_session_mock):
 
 
 def test_delete_prescription(db_session_mock):
+    # Mock data
+    mock_data = mock.MagicMock(
+        Id=1,
+        PatientId=1,
+        IsDeleted="0",
+    )
+    
+    # Set up the mock query to return the mock prescriptions
+    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_data
+
     data = {
         "IsDeleted": "0",
         "PatientId": 1,

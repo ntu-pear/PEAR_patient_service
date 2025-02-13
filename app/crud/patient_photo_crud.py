@@ -3,6 +3,7 @@ import cloudinary.uploader
 from ..models.patient_photo_model import PatientPhoto
 from ..schemas.patient_photo import PatientPhotoCreate, PatientPhotoUpdate
 from datetime import datetime
+from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 
 PATIENT_ID = 2  # Fixed Patient ID
 SYSTEM_USER_ID = 1  # System-generated default user ID
@@ -34,11 +35,20 @@ def create_patient_photo(db: Session, file, photo_data: PatientPhotoCreate):
         ModifiedById=SYSTEM_USER_ID  # Default system user
     )
 
+    updated_data_dict = serialize_data(photo_data.model_dump())
     # Save to DB
     db.add(db_photo)
     db.commit()
     db.refresh(db_photo)
 
+    log_crud_action(
+        action=ActionType.CREATE,
+        user=SYSTEM_USER_ID,
+        table="PatientPhoto",
+        entity_id=db_photo.PhotoID,
+        original_data=None,
+        updated_data=updated_data_dict,
+    )
     return db_photo
 
 def get_patient_photos(db: Session):
@@ -72,6 +82,13 @@ def update_patient_photo(db: Session, patient_id: int, file, update_data: Patien
 
     # Update only provided fields
     db_photo.PhotoPath = new_photo_url  # Replace the path with the latest photo
+
+    try: 
+        original_data_dict = {
+            k: serialize_data(v) for k, v in db_photo.__dict__.items() if not k.startswith("_")
+        }
+    except Exception as e:
+        original_data_dict = "{}"
     for key, value in update_data.dict(exclude_unset=True).items():
         setattr(db_photo, key, value)
 
@@ -79,6 +96,16 @@ def update_patient_photo(db: Session, patient_id: int, file, update_data: Patien
 
     db.commit()
     db.refresh(db_photo)
+
+    updated_data_dict = serialize_data(update_data.model_dump())
+    log_crud_action(
+        action=ActionType.UPDATE,
+        user=SYSTEM_USER_ID,
+        table="PatientPhoto",
+        entity_id=db_photo.PhotoID,
+        original_data=original_data_dict,
+        updated_data=updated_data_dict,
+    )
     return db_photo
 
 def delete_patient_photo(db: Session, patient_id: int, modified_by_id: int):
@@ -93,11 +120,27 @@ def delete_patient_photo(db: Session, patient_id: int, modified_by_id: int):
     if not db_photos:
         return None  # No photos found for this patient
 
+    try: 
+        original_data_dict = {
+            k: serialize_data(v) for k, v in db_photo.__dict__.items() if not k.startswith("_")
+        }
+    except Exception as e:
+        original_data_dict = "{}"
+
     for db_photo in db_photos:
         db_photo.IsDeleted = 1
         db_photo.ModifiedById = modified_by_id
         db_photo.UpdatedDateTime = datetime.utcnow()
     
     db.commit()
+
+    log_crud_action(
+        action=ActionType.DELETE,
+        user=modified_by_id,
+        table="PatientPhoto",
+        entity_id=patient_id,
+        original_data=original_data_dict,
+        updated_data=None,
+    )
     return db_photos
 

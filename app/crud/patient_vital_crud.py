@@ -5,8 +5,11 @@ from fastapi import HTTPException
 from ..models.patient_vital_model import PatientVital
 from ..schemas.patient_vital import PatientVitalCreate, PatientVitalUpdate, PatientVitalDelete
 from ..config import Config
+from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 import math
 
+# To Change
+user = 1
 config = Config().Vital
 
 def get_latest_vital(db: Session, patient_id: int):
@@ -22,11 +25,21 @@ def get_vital_list(db: Session, patient_id: int, pageNo: int = 0, pageSize: int 
 def create_vital(db: Session, vital: PatientVitalCreate):
     try:
         validate_vital_threshold(vital)
+        updated_data_dict = serialize_data(vital.model_dump())
         
         db_vital = PatientVital(**vital.model_dump())
         db.add(db_vital)
         db.commit()
         db.refresh(db_vital)
+
+        log_crud_action(
+            action=ActionType.CREATE,
+            user=user,
+            table="PatientVital",
+            entity_id=db_vital.Id,
+            original_data=None,
+            updated_data=updated_data_dict,
+        )
         return db_vital
     
     except ValueError as e:
@@ -37,7 +50,15 @@ def update_vital(db: Session, vital_id: int, vital: PatientVitalUpdate):
         validate_vital_threshold(vital)
         
         db_vital = db.query(PatientVital).filter(PatientVital.Id == vital_id).first()
+
         if db_vital:
+            try: 
+                original_data_dict = {
+                k: serialize_data(v) for k, v in db_vital.__dict__.items() if not k.startswith("_")
+            }
+            except Exception as e:
+                original_data_dict = "{}"
+        
             for key, value in vital.model_dump().items():
                 if key == "UpdatedDateTime":
                     setattr(db_vital, key, datetime.now())
@@ -45,6 +66,17 @@ def update_vital(db: Session, vital_id: int, vital: PatientVitalUpdate):
                     setattr(db_vital, key, value)
             db.commit()
             db.refresh(db_vital)
+
+            updated_data_dict = serialize_data(vital.model_dump())
+
+            log_crud_action(
+                action=ActionType.UPDATE,
+                user=user,
+                table="PatientVital",
+                entity_id=vital_id,
+                original_data=original_data_dict,
+                updated_data=updated_data_dict,
+            )
         return db_vital
     
     except ValueError as e:
@@ -53,9 +85,25 @@ def update_vital(db: Session, vital_id: int, vital: PatientVitalUpdate):
 def delete_vital(db: Session, vital_id: int):
     db_vital = db.query(PatientVital).filter(PatientVital.Id == vital_id).first()
     if db_vital:
+        try:
+            original_data_dict = {
+                k: serialize_data(v) for k, v in db_vital.__dict__.items() if not k.startswith("_")
+            }
+        except Exception as e:
+            original_data_dict = "{}"
+
         setattr(db_vital, "IsDeleted", "1")
         db.commit()
         db.refresh(db_vital)
+
+        log_crud_action(
+            action=ActionType.DELETE,
+            user=user,
+            table="PatientVital",
+            entity_id=vital_id,
+            original_data=original_data_dict,
+            updated_data=None,
+        )
     return db_vital
 
 def validate_vital_threshold(vital: PatientVitalCreate):
