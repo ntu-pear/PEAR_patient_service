@@ -1,4 +1,5 @@
 from fastapi import HTTPException
+from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 from sqlalchemy.orm import Session
 from ..models.patient_allergy_mapping_model import PatientAllergyMapping
 from ..schemas.patient_allergy_mapping import (
@@ -191,6 +192,15 @@ def create_patient_allergy(
     db.commit()
     db.refresh(db_allergy)
 
+    updated_data_dict = serialize_data(allergy_data.model_dump())
+    log_crud_action(
+        action=ActionType.CREATE,
+        user=created_by,
+        table="PatientAllergyMapping",
+        entity_id=db_allergy.Patient_AllergyID,
+        original_data=None,
+        updated_data=updated_data_dict,
+    )
     return db_allergy
 
 
@@ -237,6 +247,13 @@ def update_patient_allergy(
             status_code=400, detail="Invalid or inactive Allergy Reaction Type"
         )
 
+    try:
+        original_data_dict = {
+            k: serialize_data(v) for k, v in allergy_reaction_type.__dict__.items() if not k.startswith("_")
+        }
+    except Exception as e:
+        original_data_dict = "{}"
+
     # Update the allergy record
     db_allergy.AllergyTypeID = allergy_data.AllergyTypeID
     db_allergy.AllergyReactionTypeID = allergy_data.AllergyReactionTypeID
@@ -249,6 +266,15 @@ def update_patient_allergy(
     db.commit()
     db.refresh(db_allergy)
 
+    updated_data_dict = serialize_data(allergy_data.model_dump())
+    log_crud_action(
+        action=ActionType.UPDATE,
+        user=modified_by,
+        table="PatientAllergyMapping",
+        entity_id=allergy_data.Patient_AllergyID,
+        original_data=None,
+        updated_data=updated_data_dict,
+    )
     return db_allergy
 
 
@@ -272,4 +298,19 @@ def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: in
     db.commit()
     db.refresh(db_allergy)
 
+    try:
+        original_data_dict = {
+            k: serialize_data(v) for k, v in db_allergy.__dict__.items() if not k.startswith("_")
+        }
+    except Exception as e:
+        original_data_dict = "{}"
+
+    log_crud_action(
+        action=ActionType.DELETE,
+        user=modified_by,
+        table="PatientAllergyMapping",
+        entity_id=patient_allergy_id,
+        original_data=original_data_dict,
+        updated_data=None,
+    )
     return db_allergy

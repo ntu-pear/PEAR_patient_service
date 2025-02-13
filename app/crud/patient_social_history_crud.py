@@ -3,6 +3,9 @@ from fastapi import HTTPException
 from ..models.patient_model import Patient  # Ensure you import the Patient model correctly
 from ..models.patient_social_history_model import PatientSocialHistory
 from ..schemas.patient_social_history import PatientSocialHistoryCreate, PatientSocialHistoryUpdate
+from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
+
+SYSTEM_USER_ID = 1
 
 #should it be based on the patientID or the socialID?
 
@@ -19,9 +22,19 @@ def create_social_history(db: Session, social_history: PatientSocialHistoryCreat
     
     # If patient exists, proceed with creating the social history record
     db_social_history = PatientSocialHistory(**social_history.model_dump())
+    updated_data_dict = serialize_data(social_history.model_dump())
     db.add(db_social_history)
     db.commit()
     db.refresh(db_social_history)
+
+    log_crud_action(
+        action=ActionType.CREATE,
+        user=SYSTEM_USER_ID,
+        table="PatientSocialHistory",
+        entity_id=db_social_history.id,
+        original_data=None,
+        updated_data=updated_data_dict,
+    )
     return db_social_history
 
 def update_social_history(db: Session, patient_id: int, social_history: PatientSocialHistoryUpdate):
@@ -30,10 +43,27 @@ def update_social_history(db: Session, patient_id: int, social_history: PatientS
     """
     db_social_history = db.query(PatientSocialHistory).filter(PatientSocialHistory.patientId == patient_id).first()
     if db_social_history:
+        try: 
+            original_data_dict = {
+                k: serialize_data(v) for k, v in db_social_history.__dict__.items() if not k.startswith("_")
+            }
+        except Exception as e:
+            original_data_dict = "{}"
+
         for key, value in social_history.model_dump().items():
             setattr(db_social_history, key, value)
         db.commit()
         db.refresh(db_social_history)
+
+        updated_data_dict = serialize_data(social_history.model_dump())
+        log_crud_action(
+            action=ActionType.UPDATE,
+            user=SYSTEM_USER_ID,
+            table="PatientSocialHistory",
+            entity_id=db_social_history.id,
+            original_data=original_data_dict,
+            updated_data=updated_data_dict,
+        )
     else:
         raise HTTPException(status_code=404, detail=f"Social history record for patient with id {patient_id} not found.")
     return db_social_history
@@ -45,10 +75,26 @@ def delete_social_history(db: Session, patient_id: int):
     db_social_history = db.query(PatientSocialHistory).filter(PatientSocialHistory.patientId == patient_id).first()
     
     if db_social_history:
+        try:
+            original_data_dict = {
+                k: serialize_data(v) for k, v in db_social_history.__dict__.items() if not k.startswith("_")
+            }
+        except Exception as e:
+            original_data_dict = "{}"
+
         # Perform the soft delete by setting active to 'N'
         db_social_history.active = 'N'
         db.commit()
         db.refresh(db_social_history)
+
+        log_crud_action(
+            action=ActionType.DELETE,
+            user=SYSTEM_USER_ID,
+            table="PatientSocialHistory",
+            entity_id=db_social_history.id,
+            original_data=original_data_dict,
+            updated_data=None,
+        )
     else:
         raise HTTPException(status_code=404, detail=f"Social history record for patient with id {patient_id} not found.")
     

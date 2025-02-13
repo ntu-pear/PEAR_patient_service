@@ -74,7 +74,7 @@ def update_vital(db: Session, vital_id: int, vital: PatientVitalUpdate):
                 action=ActionType.UPDATE,
                 user=user,
                 table="PatientVital",
-                entity_id=db_vital.Id,
+                entity_id=vital_id,
                 original_data=original_data_dict,
                 updated_data=updated_data_dict,
             )
@@ -101,7 +101,7 @@ def delete_vital(db: Session, vital_id: int):
             action=ActionType.DELETE,
             user=user,
             table="PatientVital",
-            entity_id=db_vital.Id,
+            entity_id=vital_id,
             original_data=original_data_dict,
             updated_data=None,
         )
