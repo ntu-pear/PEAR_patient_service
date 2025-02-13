@@ -18,6 +18,7 @@ from app.models import (
     patient_mobility_mapping_model,
     patient_list_language_model,
     patient_model,
+    patient_photo_list_model,
     patient_photo_model,
     patient_prescription_list_model,
     patient_prescription_model,
@@ -29,7 +30,7 @@ from app.models import (
     patient_patient_guardian_model,
     patient_assigned_dementia_list_model,
     patient_assigned_dementia_mapping_model,
-    patient_list_language_model
+    patient_list_language_model,
 )
 from app.routers import (
     allergy_reaction_type_router,
@@ -191,6 +192,7 @@ app.include_router(
 )
 app.include_router(patient_list_language_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Language List"])
 app.include_router(patient_mobility_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Mobility"])
+app.include_router(patient_mobility_mapping_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patient Mobility Mapping"])
 app.include_router(patient_photo_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Photos"])
 app.include_router(
     patient_prescription_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Prescriptions"]

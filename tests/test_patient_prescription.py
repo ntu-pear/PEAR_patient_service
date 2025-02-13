@@ -96,6 +96,7 @@ def db_session_mock():
 )  # Ensure AllergyReactionType is mocked
 @mock.patch("app.models.patient_doctor_note_model.PatientDoctorNote")
 @mock.patch("app.models.patient_photo_model.PatientPhoto")
+@mock.patch("app.models.patient_photo_list_model.PatientPhotoList")
 @mock.patch(
     "app.models.patient_assigned_dementia_list_model.PatientAssignedDementiaList"
 )
@@ -120,6 +121,7 @@ def test_create_prescription(
     mock_allergy_reaction_type,
     mock_patient_doctor_note,
     mock_patient_photo,
+    mock_patient_photo_list,
     mock_patient_assigned_dementia_list,
     mock_patient_assigned_dementia_mapping,
     mock_patient_mobility,

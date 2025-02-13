@@ -7,21 +7,24 @@ from ..models.patient_mobility_mapping_model import PatientMobility
 from ..schemas.patient_mobility_mapping import (
     PatientMobilityCreate,
     PatientMobilityUpdate,
+    PatientMobilityResponse,
 )
 
 # Get all mobility entries
 def get_all_mobility_entries(db: Session):
     return db.query(PatientMobility).filter(PatientMobility.IsDeleted == False).all()
 
-# Get a single mobility entry by ID
-def get_mobility_entry_by_id(db: Session, patient_id: int):
-    entry = db.query(PatientMobility).filter(
+# Get mobility entries by Patient ID
+def get_mobility_entries_by_id(db: Session, patient_id: int):
+    entries = db.query(PatientMobility).filter(
         PatientMobility.PatientID == patient_id,
         PatientMobility.IsDeleted == False
-    ).first()
-    if not entry:
-        raise HTTPException(status_code=404, detail=f"Patient entry with ID {patient_id} not found.")
-    return entry
+    ).all()
+
+    if not entries:
+        raise HTTPException(status_code=404, detail=f"No mobility entries found for Patient ID {patient_id}.")
+
+    return entries
 
 # Create a new mobility entry
 def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, created_by: int):
@@ -47,7 +50,6 @@ def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, cre
     db.commit()
     db.refresh(new_entry)
     return new_entry
-
 
 # Update an existing mobility entry
 def update_mobility_entry(
