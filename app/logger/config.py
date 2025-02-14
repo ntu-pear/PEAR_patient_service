@@ -4,7 +4,12 @@ from logging.handlers import TimedRotatingFileHandler
 import os
 import json
 
-LOG_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../..", "logs"))
+# This is for localtesting logs
+# LOG_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../..", "logs"))
+
+# Note that this is production Kubernetes logs
+LOG_DIR = "/app/logs"
+
 os.makedirs(LOG_DIR, exist_ok=True) 
 
 today = datetime.now().strftime("%Y-%m-%d")
