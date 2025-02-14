@@ -50,7 +50,7 @@ jobs:
       - name: Delete old deployment
         run: |
           echo "Deleting old deployment..."
-          kubectl delete -f './k8s/deployment-dev.yaml'
+          kubectl delete deployment.apps/patient-service-dev service/patient-service-dev
 
       - name: Delete old docker images
         run: |
