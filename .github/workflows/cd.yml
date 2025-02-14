@@ -47,6 +47,15 @@ jobs:
           echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" >> .env
           echo "WEB_FE_ORIGIN=${{ secrets.WEB_FE_ORIGIN }}" >> .env
 
+      - name: Delete old deployment
+        run: |
+          echo "Deleting old deployment..."
+          kubectl delete -f './k8s/deployment-dev.yaml'
+
+      - name: Delete old docker images
+        run: |
+          docker rmi patient_service_dev
+          docker rmi localhost:5000/patient_service_dev
 
       - name: Build Docker image
         run: |
@@ -64,10 +73,6 @@ jobs:
           echo "Pushing Docker image to localhost:5000...."
           docker push localhost:5000/patient_service_dev:latest
 
-      - name: Delete old deployment
-        run: |
-          echo "Deleting old deployment..."
-          kubectl delete -f './k8s/deployment-dev.yaml'
 
       - name: Deploying to Kubernetes
         run: |

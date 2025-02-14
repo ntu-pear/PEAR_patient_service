@@ -67,3 +67,4 @@ dmypy.json
 
 # Ignore 
 logs/*.log
+*.log

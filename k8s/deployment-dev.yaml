@@ -32,6 +32,14 @@ spec:
           value: "fypcom_fypcom"
         - name: DB_PASSWORD_DEV
           value: "Fyppear@1"
+        volumeMounts:
+        - name: log-volume
+          mountPath: /app/logs  # Path inside the container
+      volumes:
+      - name: log-volume
+        hostPath:
+          path: /home/VMadmin/FYP_microservices/PEAR_patient_service/logs  # Path on the host machine
+          type: DirectoryOrCreate  # Ensures directory is created if it doesn’t exist
 ---
 apiVersion: v1
 kind: Service
@@ -44,5 +52,5 @@ spec:
     - protocol: TCP
       port: 8000
       targetPort: 8000
-      nodePort: 30000 # Specify the NodePort here
+      nodePort: 30000
   type: NodePort
