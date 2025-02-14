@@ -247,10 +247,10 @@ def update_patient_allergy(
         raise HTTPException(status_code=404, detail="Patient allergy record not found")
 
     #Check if the allergy type and reaction type combination exists for the particular patient
-    db_allergy_combo = (
+    allergy_combo = (
         db.query(PatientAllergyMapping)
         .filter(
-            #PatientAllergyMapping.Patient_AllergyID == allergy_data.Patient_AllergyID,
+            PatientAllergyMapping.Patient_AllergyID != allergy_data.Patient_AllergyID,
             PatientAllergyMapping.PatientID == patient_id,
             PatientAllergyMapping.AllergyTypeID == allergy_data.AllergyTypeID,
             PatientAllergyMapping.AllergyReactionTypeID == allergy_data.AllergyReactionTypeID,
@@ -258,7 +258,7 @@ def update_patient_allergy(
         )
         .first()
     )
-    if db_allergy_combo:
+    if allergy_combo:
         raise HTTPException(status_code=400, detail="Patient allergy record exists for the specified allergy type and reaction")
     
     try:
