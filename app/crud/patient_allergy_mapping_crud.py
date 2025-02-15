@@ -295,6 +295,7 @@ def update_patient_allergy(
 
 
 def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: int):
+    
     # Check if the record exists
     db_allergy = (
         db.query(PatientAllergyMapping)
@@ -313,13 +314,14 @@ def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: in
 
     # Commit the changes to the database
     db.commit()
-    db.merge(db_allergy)
     db.refresh(db_allergy)
 
     try:
         original_data_dict = {
             k: serialize_data(v) for k, v in db_allergy.__dict__.items() if not k.startswith("_")
         }
+        connection = Session.connection()
+        print("connection true")
     except Exception as e:
         original_data_dict = "{}"
 
