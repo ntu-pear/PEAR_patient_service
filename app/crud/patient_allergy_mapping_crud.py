@@ -246,21 +246,23 @@ def update_patient_allergy(
     if not db_allergy:
         raise HTTPException(status_code=404, detail="Patient allergy record not found")
 
-    #Check if the allergy type and reaction type combination exists for the particular patient
-    allergy_combo = (
-        db.query(PatientAllergyMapping)
-        .filter(
-            PatientAllergyMapping.Patient_AllergyID != allergy_data.Patient_AllergyID,
-            PatientAllergyMapping.PatientID == patient_id,
-            PatientAllergyMapping.AllergyTypeID == allergy_data.AllergyTypeID,
-            PatientAllergyMapping.AllergyReactionTypeID == allergy_data.AllergyReactionTypeID,
-            PatientAllergyMapping.IsDeleted == "0"
+    #If any updates were made to allergy type and reaction type combination, check if it exists for the particular patient already
+    if not (db_allergy.AllergyTypeID == allergy_data.AllergyTypeID) or not (db_allergy.AllergyReactionTypeID == allergy_data.AllergyReactionTypeID):
+
+        allergy_combo = (
+            db.query(PatientAllergyMapping)
+            .filter(
+                PatientAllergyMapping.Patient_AllergyID != allergy_data.Patient_AllergyID,
+                PatientAllergyMapping.PatientID == patient_id,
+                PatientAllergyMapping.AllergyTypeID == allergy_data.AllergyTypeID,
+                PatientAllergyMapping.AllergyReactionTypeID == allergy_data.AllergyReactionTypeID,
+                PatientAllergyMapping.IsDeleted == "0"
+            )
+            .first()
         )
-        .first()
-    )
-    if allergy_combo:
-        raise HTTPException(status_code=400, detail="Patient allergy record exists for the specified allergy type and reaction")
-    
+        if allergy_combo:
+            raise HTTPException(status_code=400, detail="Patient allergy record exists for the specified allergy type and reaction")
+        
     try:
         original_data_dict = {
             k: serialize_data(v) for k, v in allergy_reaction_type.__dict__.items() if not k.startswith("_")
