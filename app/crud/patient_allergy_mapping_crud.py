@@ -311,6 +311,7 @@ def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: in
 
     # Commit the changes to the database
     db.commit()
+    db.merge(db_allergy)
     db.refresh(db_allergy)
 
     try:
