@@ -30,7 +30,7 @@ def test_get_patient_photos(db_session_mock):
             CreatedDateTime = datetime.now(),
             UpdatedDateTime = datetime.now(),
             CreatedById = 1,
-            ModifiedById = 1
+            ModifiedById = 1,
         ),
         MagicMock(
             PatientPhotoID = 2,
@@ -42,11 +42,11 @@ def test_get_patient_photos(db_session_mock):
             CreatedDateTime = datetime.now(),
             UpdatedDateTime = datetime.now(),
             CreatedById = 1,
-            ModifiedById = 1
+            ModifiedById = 1,
         ),
     ]
 
-    db_session_mock.query.filter.all = mock_data
+    db_session_mock.query.return_value.filter.return_value.all.return_value = mock_data
 
     #Act
     result = get_patient_photos(db_session_mock)
@@ -55,52 +55,46 @@ def test_get_patient_photos(db_session_mock):
     assert len(result) == 2
 
 
-# def test_get_patient_photos_by_id(db_session_mock, patient_id):
-#     """Test case for retrieving all photos of a given active patient"""
+def test_get_patient_photos_by_id(db_session_mock):
+    """Test case for retrieving all photos of a given active patient"""
 
-#     #Arrange
-#     patient_id = 1
-#     mock_data = [
-#         MagicMock(
-#             PatientPhotoID = 1,
-#             IsDeleted = 0,
-#             PhotoPath = "Path String A",
-#             PhotoDetails = "Portrait profile photo of A",
-#             AlbumCategoryListID = 1,
-#             PatientID = 1,
-#             CreatedDateTime = datetime.now(),
-#             UpdatedDateTime = datetime.now(),
-#             CreatedById = 1,
-#             ModifiedById = 1
-#         ),
-#         MagicMock(
-#             PatientPhotoID = 2,
-#             IsDeleted = 0,
-#             PhotoPath = "Path String B",
-#             PhotoDetails = "Portrait profile photo of B",
-#             AlbumCategoryListID = 1,
-#             PatientID = 2,
-#             CreatedDateTime = datetime.now(),
-#             UpdatedDateTime = datetime.now(),
-#             CreatedById = 1,
-#             ModifiedById = 1
-#         ),
-#     ]
-#     db_session_mock.query.return_value.join.return_value.join.return_value.all.return_value = mock_data
+    #Arrange
+    patient_id = 1
+    mock_data = [
+        MagicMock(
+            PatientPhotoID = 1,
+            IsDeleted = 0,
+            PhotoPath = "Path String A",
+            PhotoDetails = "Portrait profile photo of A",
+            AlbumCategoryListID = 1,
+            PatientID = 1,
+            CreatedDateTime = datetime.now(),
+            UpdatedDateTime = datetime.now(),
+            CreatedById = 1,
+            ModifiedById = 1,
+        ),
+        MagicMock(
+            PatientPhotoID = 2,
+            IsDeleted = 0,
+            PhotoPath = "Path String B",
+            PhotoDetails = "Portrait profile photo of B",
+            AlbumCategoryListID = 1,
+            PatientID = 2,
+            CreatedDateTime = datetime.now(),
+            UpdatedDateTime = datetime.now(),
+            CreatedById = 1,
+            ModifiedById = 1,
+        ),
+    ]
+    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_data
 
-#     #Act
-#     result = get_patient_photo_by_id(db_session_mock, patient_id)
+    #Act
+    result = get_patient_photo_by_id(db_session_mock, patient_id)
 
-#     #Assert
-#     assert len(result) == 1
+    #Assert
+    assert len(result) == 1
 
 @pytest.fixture
 def db_session_mock():
     """Fixture to mock the database session."""
     return get_db_session_mock()
-
-
-# @pytest.fixture
-# def mock_patient_photo():
-#     return PatientPhoto(PatientPhotoID = 1, IsDeleted = 0, PhotoPath = "Path String A", PhotoDetails = "Portrait profile photo of A",  AlbumCategoryListID = 1,
-#                          PatientID = 1, CreatedDateTime = datetime.now(), UpdatedDateTime = datetime.now(), CreatedById = 1, ModifiedById = 1,)
