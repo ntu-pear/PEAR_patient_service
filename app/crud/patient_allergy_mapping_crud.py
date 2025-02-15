@@ -320,8 +320,6 @@ def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: in
         original_data_dict = {
             k: serialize_data(v) for k, v in db_allergy.__dict__.items() if not k.startswith("_")
         }
-        connection = Session.connection()
-        print("connection true")
     except Exception as e:
         original_data_dict = "{}"
 
