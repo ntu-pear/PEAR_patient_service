@@ -210,23 +210,11 @@ def update_patient_allergy(
     allergy_data: PatientAllergyUpdateReq,
     modified_by: int,
 ):
-    # Check if the record exists
-    db_allergy = (
-        db.query(PatientAllergyMapping)
-        .filter(
-            PatientAllergyMapping.Patient_AllergyID == allergy_data.Patient_AllergyID,
-            PatientAllergyMapping.PatientID == patient_id,
-        )
-        .first()
-    )
-
-    if not db_allergy:
-        raise HTTPException(status_code=404, detail="Patient allergy record not found")
-
     # Check if the AllergyTypeID exists and is active
     allergy_type = (
         db.query(AllergyType)
-        .filter(AllergyType.AllergyTypeID == allergy_data.AllergyTypeID)
+        .filter(AllergyType.AllergyTypeID == allergy_data.AllergyTypeID,
+                AllergyType.IsDeleted == "0")
         .first()
     )
     if not allergy_type or allergy_type.IsDeleted != "0":
@@ -236,8 +224,7 @@ def update_patient_allergy(
     allergy_reaction_type = (
         db.query(AllergyReactionType)
         .filter(
-            AllergyReactionType.AllergyReactionTypeID
-            == allergy_data.AllergyReactionTypeID,
+            AllergyReactionType.AllergyReactionTypeID == allergy_data.AllergyReactionTypeID,
             AllergyReactionType.IsDeleted == "0",
         )
         .first()
@@ -247,6 +234,35 @@ def update_patient_allergy(
             status_code=400, detail="Invalid or inactive Allergy Reaction Type"
         )
 
+    # Check if the record exists
+    db_allergy = (
+        db.query(PatientAllergyMapping)
+        .filter(
+            PatientAllergyMapping.Patient_AllergyID == allergy_data.Patient_AllergyID,
+            PatientAllergyMapping.IsDeleted == "0"
+        )
+        .first()
+    )
+    if not db_allergy:
+        raise HTTPException(status_code=404, detail="Patient allergy record not found")
+
+    #If any updates were made to allergy type and reaction type combination, check if it exists for the particular patient already
+    if not (db_allergy.AllergyTypeID == allergy_data.AllergyTypeID) or not (db_allergy.AllergyReactionTypeID == allergy_data.AllergyReactionTypeID):
+
+        allergy_combo = (
+            db.query(PatientAllergyMapping)
+            .filter(
+                PatientAllergyMapping.Patient_AllergyID != allergy_data.Patient_AllergyID,
+                PatientAllergyMapping.PatientID == patient_id,
+                PatientAllergyMapping.AllergyTypeID == allergy_data.AllergyTypeID,
+                PatientAllergyMapping.AllergyReactionTypeID == allergy_data.AllergyReactionTypeID,
+                PatientAllergyMapping.IsDeleted == "0"
+            )
+            .first()
+        )
+        if allergy_combo:
+            raise HTTPException(status_code=400, detail="Patient allergy record exists for the specified allergy type and reaction")
+        
     try:
         original_data_dict = {
             k: serialize_data(v) for k, v in allergy_reaction_type.__dict__.items() if not k.startswith("_")
@@ -279,10 +295,12 @@ def update_patient_allergy(
 
 
 def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: int):
+    
     # Check if the record exists
     db_allergy = (
         db.query(PatientAllergyMapping)
-        .filter(PatientAllergyMapping.Patient_AllergyID == patient_allergy_id)
+        .filter(PatientAllergyMapping.Patient_AllergyID == patient_allergy_id,
+                PatientAllergyMapping.IsDeleted == "0")
         .first()
     )
 
