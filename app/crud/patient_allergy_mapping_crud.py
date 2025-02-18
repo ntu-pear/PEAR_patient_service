@@ -25,6 +25,7 @@ def get_all_allergies(db: Session):
             PatientAllergyMapping.UpdatedDateTime,
             PatientAllergyMapping.CreatedById,
             PatientAllergyMapping.ModifiedById,
+            PatientAllergyMapping.IsDeleted,
         )
         .join(
             AllergyType,
@@ -65,6 +66,7 @@ def get_all_allergies(db: Session):
                 "UpdatedDateTime": result.UpdatedDateTime,
                 "CreatedById": result.CreatedById,
                 "ModifiedById": result.ModifiedById,
+                "IsDeleted": result.IsDeleted,
             }
         )
 
@@ -85,6 +87,7 @@ def get_patient_allergies(db: Session, patient_id: int):
             PatientAllergyMapping.UpdatedDateTime,
             PatientAllergyMapping.CreatedById,
             PatientAllergyMapping.ModifiedById,
+            PatientAllergyMapping.IsDeleted,
         )
         .join(
             AllergyType,
@@ -109,7 +112,7 @@ def get_patient_allergies(db: Session, patient_id: int):
         )
         allergy_reaction_value = (
             result.AllergyReactionTypeValue
-            if result.AllergyReactionTypeValue == "0"
+            if result.AllergyReactionTypeIsDeleted == "0"
             else "No allergy reaction"
         )
 
@@ -124,6 +127,7 @@ def get_patient_allergies(db: Session, patient_id: int):
                 "UpdatedDateTime": result.UpdatedDateTime,
                 "CreatedById": result.CreatedById,
                 "ModifiedById": result.ModifiedById,
+                "IsDeleted": result.IsDeleted,
             }
         )
 
