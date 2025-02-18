@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 from datetime import datetime
 from typing import Optional
 
@@ -7,8 +7,8 @@ class PatientPhotoListBase(BaseModel):
     Value: str  # Album category name (e.g., Family, Friends)
 
 class PatientPhotoListCreate(PatientPhotoListBase):
-    CreatedById: int
-    ModifiedById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
 class PatientPhotoListUpdate(BaseModel):
     IsDeleted: Optional[int]
@@ -20,8 +20,8 @@ class PatientPhotoList(PatientPhotoListBase):
     PatientPhotoListAlbumID: int
     CreatedDateTime: datetime
     UpdatedDateTime: datetime
-    CreatedById: int
-    ModifiedById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
     class Config:
-        orm_mode = True
+        model_config = {"from_attributes": True}

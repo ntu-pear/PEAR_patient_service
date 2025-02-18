@@ -20,5 +20,7 @@ class AllergyType(AllergyTypeBase):
     AllergyTypeID: int = Field(json_schema_extra={"example": 1})
     CreatedDateTime: datetime = Field(default_factory=datetime.now)
     UpdatedDateTime: datetime = Field(default_factory=datetime.now)
-
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
+    
     model_config = {"from_attributes": True}

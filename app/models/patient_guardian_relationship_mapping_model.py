@@ -11,5 +11,5 @@ class PatientGuardianRelationshipMapping(Base):
 
     createdDate = Column(DateTime, nullable=False)
     modifiedDate = Column(DateTime, nullable=False)
-    createdById = Column(Integer, nullable=False)
-    modifiedById = Column(Integer, nullable=False)
+    CreatedById = Column(String, nullable=False)  # Changed to String
+    ModifiedById = Column(String, nullable=False)  # Changed to String

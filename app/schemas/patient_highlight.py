@@ -22,7 +22,7 @@ class PatientHighlight(PatientHighlightBase):
     Id: int = Field(..., json_schema_extra={"example": 1})
     CreatedDate: datetime = Field(..., json_schema_extra={"example": "2025-01-04T23:13:59.107"})
     ModifiedDate: datetime = Field(..., json_schema_extra={"example": "2025-01-04T23:13:59.107"})
-    CreatedById: int = Field(..., json_schema_extra={"example": 1})
-    ModifiedById: int = Field(..., json_schema_extra={"example": 1})
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
     model_config = {"from_attributes": True}

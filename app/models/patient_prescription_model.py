@@ -22,8 +22,8 @@ class PatientPrescription(Base):
 
     CreatedDateTime = Column(DateTime, nullable=False, default=DateTime)
     UpdatedDateTime = Column(DateTime, nullable=False, default=DateTime)
-    CreatedById = Column(Integer, nullable=False)  # Changed to Integer
-    UpdatedById = Column(Integer, nullable=False)  # Changed to Integer
+    CreatedById = Column(String, nullable=False)  # Changed to String
+    ModifiedById = Column(String, nullable=False)  # Changed to String
 
     patient = relationship("Patient", back_populates="prescriptions")
     prescription_list = relationship("PatientPrescriptionList", back_populates="prescriptions")
