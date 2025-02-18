@@ -33,7 +33,7 @@ def create_dementia_list_entry(
     dementia_list_data: PatientAssignedDementiaListCreate, db: Session = Depends(get_db)
 ):
     # Replace `created_by` with the current user ID in a real-world scenario
-    created_by = 1
+    created_by = "1"
     try:
         return crud_dementia_list.create_dementia_list_entry(db, dementia_list_data, created_by)
     except Exception as e:
@@ -49,7 +49,7 @@ def update_dementia_list_entry(
     db: Session = Depends(get_db),
 ):
     # Replace `modified_by` with the current user ID in a real-world scenario
-    modified_by = 1
+    modified_by = "1"
     db_entry = crud_dementia_list.update_dementia_list_entry(db, dementia_list_id, dementia_list_data, modified_by)
     if not db_entry:
         raise HTTPException(status_code=404, detail="Dementia list entry not found")
@@ -59,7 +59,7 @@ def update_dementia_list_entry(
 @router.delete("/PatientAssignedDementiaList/{dementia_list_id}", response_model=PatientAssignedDementiaListRead)
 def delete_dementia_list_entry(dementia_list_id: int, db: Session = Depends(get_db)):
     # Replace `modified_by` with the current user ID in a real-world scenario
-    modified_by = 1
+    modified_by = "1"
     db_entry = crud_dementia_list.delete_dementia_list_entry(db, dementia_list_id, modified_by)
     if not db_entry:
         raise HTTPException(status_code=404, detail="Dementia list entry not found")

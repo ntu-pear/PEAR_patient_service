@@ -4,7 +4,7 @@ from ..models.patient_guardian_model import PatientGuardian
 from ..schemas.patient_guardian import PatientGuardianCreate, PatientGuardianUpdate
 from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 
-SYSTEM_USER_ID = 1
+SYSTEM_USER_ID = "1"
 
 def get_guardian(db: Session, guardian_id: int):
     return db.query(PatientGuardian).filter(PatientGuardian.id == guardian_id).first()

@@ -131,7 +131,7 @@ def get_patient_allergies(db: Session, patient_id: int):
 
 
 def create_patient_allergy(
-    db: Session, allergy_data: PatientAllergyCreate, created_by: int
+    db: Session, allergy_data: PatientAllergyCreate, created_by: str
 ):
     # Check if the AllergyTypeID exists in the AllergyType table
     allergy_type = (
@@ -208,7 +208,7 @@ def update_patient_allergy(
     db: Session,
     patient_id: int,
     allergy_data: PatientAllergyUpdateReq,
-    modified_by: int,
+    modified_by: str,
 ):
     # Check if the AllergyTypeID exists and is active
     allergy_type = (
@@ -294,7 +294,7 @@ def update_patient_allergy(
     return db_allergy
 
 
-def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: int):
+def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: str):
     
     # Check if the record exists
     db_allergy = (

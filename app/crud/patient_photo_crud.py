@@ -6,7 +6,7 @@ from datetime import datetime
 from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 
 PATIENT_ID = 2  # Fixed Patient ID
-SYSTEM_USER_ID = 1  # System-generated default user ID
+SYSTEM_USER_ID = "1"  # System-generated default user ID
 
 def upload_photo_to_cloudinary(file):
     """ Upload photo to Cloudinary and return the URL """

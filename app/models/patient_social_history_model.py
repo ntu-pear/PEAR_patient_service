@@ -3,12 +3,15 @@ from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from app.database import Base
 
+
 class PatientSocialHistory(Base):
     __tablename__ = "PATIENT_SOCIAL_HISTORY"
 
     id = Column(Integer, primary_key=True, index=True)  # Changed to Integer
-    active = Column(String(1), default='Y', nullable=False)  # used to check if record is active or not, substitute isDeleted column
-    patientId = Column(Integer, ForeignKey('PATIENT.id'))  # Changed to Integer
+    IsDeleted = Column(
+        String(1), default="0", nullable=False
+    )  # used to check if record is active or not, substitute isDeleted column
+    patientId = Column(Integer, ForeignKey("PATIENT.id"))  # Changed to Integer
     sexuallyActive = Column(String(1))
     secondHandSmoker = Column(String(1))
     alcoholUse = Column(String(1))

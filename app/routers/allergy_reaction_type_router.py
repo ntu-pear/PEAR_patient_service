@@ -24,14 +24,14 @@ def get_allergy_reaction_type(allergy_reaction_type_id: int, db: Session = Depen
 @router.post("/create_allergy_reaction_types", response_model=AllergyReactionType)
 def create_allergy_reaction_type(reaction_type: AllergyReactionTypeCreate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
-    user_id = 1
+    user_id = "1"
     
     return crud_reaction_type.create_reaction_type(db, reaction_type, user_id)
 
 @router.put("/update_allergy_reaction_type/{reaction_type_id}", response_model=AllergyReactionType)
 def update_allergy_reaction_type(allergy_reaction_type_id: int, reaction_type: AllergyReactionTypeUpdate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
-    user_id = 1
+    user_id = "1"
 
     db_reaction_type = crud_reaction_type.update_reaction_type(db, allergy_reaction_type_id, reaction_type, user_id)
     if not db_reaction_type:
@@ -41,7 +41,7 @@ def update_allergy_reaction_type(allergy_reaction_type_id: int, reaction_type: A
 @router.delete("/delete_allergy_reaction_type/{reaction_type_id}", response_model=AllergyReactionType, description = "Soft delete an allergy reaction type by marking it as active '0'")
 def delete_allergy_reaction_type(allergy_reaction_type_id: int, db: Session = Depends(get_db)):  
     #TODO: change user_id to current user
-    user_id = 1
+    user_id = "1"
 
     db_reaction_type = crud_reaction_type.delete_reaction_type(db, allergy_reaction_type_id,user_id)
     if not db_reaction_type:
