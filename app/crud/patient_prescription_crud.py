@@ -4,7 +4,7 @@ from ..models.patient_prescription_model import PatientPrescription
 from ..schemas.patient_prescription import PatientPrescriptionCreate, PatientPrescriptionUpdate
 from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 import math
-user = 1
+user = "1"
 
 def get_prescriptions(db: Session, pageNo: int = 0, pageSize: int = 10):
     offset = pageNo * pageSize

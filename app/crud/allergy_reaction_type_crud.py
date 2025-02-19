@@ -20,7 +20,7 @@ def get_reaction_type_by_id(db: Session, allergy_reaction_type_id: int):
 
 
 def create_reaction_type(
-    db: Session, reaction_type: AllergyReactionTypeCreate, created_by: int
+    db: Session, reaction_type: AllergyReactionTypeCreate, created_by: str
 ):
     db_reaction_type = AllergyReactionType(
         **reaction_type.model_dump(), CreatedById=created_by, ModifiedById=created_by
@@ -44,7 +44,7 @@ def update_reaction_type(
     db: Session,
     allergy_reaction_type_id: int,
     reaction_type: AllergyReactionTypeUpdate,
-    modified_by: int,
+    modified_by: str,
 ):
     db_reaction_type = (
         db.query(AllergyReactionType)
@@ -85,7 +85,7 @@ def update_reaction_type(
         return db_reaction_type
     return None
 
-def delete_reaction_type(db: Session, allergy_reaction_type_id: int, modified_by: int):
+def delete_reaction_type(db: Session, allergy_reaction_type_id: int, modified_by: str):
     db_reaction_type = (
         db.query(AllergyReactionType)
         .filter(AllergyReactionType.AllergyReactionTypeID == allergy_reaction_type_id)

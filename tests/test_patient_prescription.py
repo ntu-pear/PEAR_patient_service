@@ -148,8 +148,8 @@ def test_create_prescription(
         "Status": "Active",
         "CreatedDateTime": datetime(2023, 1, 1, 10, 0),
         "UpdatedDateTime": datetime(2023, 1, 1, 10, 0),
-        "CreatedById": 1,
-        "UpdatedById": 1,
+        "CreatedById": "1",
+        "ModifiedById": "1",
     }
     prescription = create_prescription(
         db_session_mock, PatientPrescriptionCreate(**data)
@@ -165,8 +165,8 @@ def test_create_prescription(
     assert prescription.Status == "Active"
     assert prescription.CreatedDateTime == datetime(2023, 1, 1, 10, 0)
     assert prescription.UpdatedDateTime == datetime(2023, 1, 1, 10, 0)
-    assert prescription.CreatedById == 1
-    assert prescription.UpdatedById == 1
+    assert prescription.CreatedById == "1"
+    assert prescription.ModifiedById == "1"
 
 
 def test_update_prescription(db_session_mock):
@@ -183,7 +183,7 @@ def test_update_prescription(db_session_mock):
         PrescriptionRemarks="No remarks",
         Status="Active",
         UpdatedDateTime=datetime(2023, 1, 1, 10, 0),
-        UpdatedById=1,
+        ModifiedById="1",
     )
     
 
@@ -203,7 +203,7 @@ def test_update_prescription(db_session_mock):
         "PrescriptionRemarks": "No remarks",
         "Status": "Active",
         "UpdatedDateTime": datetime(2023, 1, 1, 10, 0),
-        "UpdatedById": 1,
+        "ModifiedById": "1",
     }
     prescription = update_prescription(
         db_session_mock, 1, PatientPrescriptionUpdate(**data)
@@ -219,7 +219,7 @@ def test_update_prescription(db_session_mock):
     assert prescription.PrescriptionRemarks == "No remarks"
     assert prescription.Status == "Active"
     assert prescription.UpdatedDateTime == datetime(2023, 1, 1, 10, 0)
-    assert prescription.UpdatedById == 1
+    assert prescription.ModifiedById == "1"
 
 
 def test_delete_prescription(db_session_mock):
@@ -246,7 +246,7 @@ def test_delete_prescription(db_session_mock):
         "PrescriptionRemarks": "No remarks",
         "Status": "Active",
         "UpdatedDateTime": datetime(2023, 1, 1, 10, 0),
-        "UpdatedById": 1,
+        "ModifiedById": "1",
     }
 
     prescription_id = 1

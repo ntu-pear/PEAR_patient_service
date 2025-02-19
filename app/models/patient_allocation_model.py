@@ -20,8 +20,8 @@ class PatientAllocation(Base):
 
     createdDate = Column(DateTime, nullable=False, default=datetime.now)
     modifiedDate = Column(DateTime, nullable=False, default=datetime.now)
-    createdById = Column(Integer, nullable=False)
-    modifiedById = Column(Integer, nullable=False)
+    CreatedById = Column(String, nullable=False)  # Changed to String
+    ModifiedById = Column(String, nullable=False)  # Changed to String
 
     patient = relationship("Patient", back_populates="allocations")
     guardian = relationship("PatientGuardian", foreign_keys=[guardianId], back_populates="allocations")

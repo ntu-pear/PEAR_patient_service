@@ -22,7 +22,7 @@ def get_dementia_list_entry_by_id(db: Session, dementia_list_id: int):
     ).first()
 
 # Create a new dementia list entry
-def create_dementia_list_entry(db: Session, dementia_list_data: PatientAssignedDementiaListCreate, created_by: int):
+def create_dementia_list_entry(db: Session, dementia_list_data: PatientAssignedDementiaListCreate, created_by: str):
     new_entry = PatientAssignedDementiaList(
         **dementia_list_data.model_dump(),
         CreatedDate=datetime.utcnow(),
@@ -47,7 +47,7 @@ def create_dementia_list_entry(db: Session, dementia_list_data: PatientAssignedD
 
 # Update a dementia list entry
 def update_dementia_list_entry(
-    db: Session, dementia_list_id: int, dementia_list_data: PatientAssignedDementiaListUpdate, modified_by: int
+    db: Session, dementia_list_id: int, dementia_list_data: PatientAssignedDementiaListUpdate, modified_by: str
 ):
     db_entry = db.query(PatientAssignedDementiaList).filter(
         PatientAssignedDementiaList.DementiaTypeListId == dementia_list_id,
@@ -85,7 +85,7 @@ def update_dementia_list_entry(
     return None
 
 # Soft delete a dementia list entry (set isDeleted to '1')
-def delete_dementia_list_entry(db: Session, dementia_list_id: int, modified_by: int):
+def delete_dementia_list_entry(db: Session, dementia_list_id: int, modified_by: str):
     db_entry = db.query(PatientAssignedDementiaList).filter(
         PatientAssignedDementiaList.DementiaTypeListId == dementia_list_id,
         PatientAssignedDementiaList.IsDeleted == "0",

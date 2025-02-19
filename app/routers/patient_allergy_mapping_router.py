@@ -25,7 +25,7 @@ def get_patient_allergy(patient_id: int, db: Session = Depends(get_db)):
 def create_patient_allergy(allergy_data: PatientAllergyCreate, db: Session = Depends(get_db)):
     
     # TODO: CHANGE USER ID to the actual user ID
-    userId = 1
+    userId = "1"
     
     return patient_allergy_mapping_crud.create_patient_allergy(db, allergy_data, userId)
 
@@ -33,13 +33,13 @@ def create_patient_allergy(allergy_data: PatientAllergyCreate, db: Session = Dep
 def update_patient_allergy(patient_id:int, allergy_data: PatientAllergyUpdateReq, db: Session = Depends(get_db)):
     
     # TODO: Replace with the actual user ID
-    userId = 1
+    userId = "1"
     
     return patient_allergy_mapping_crud.update_patient_allergy(db, patient_id, allergy_data, userId)
 
 @router.delete("/delete_patient_allergy/{patient_allergy_id}", response_model=PatientAllergyCreateResp, description="Soft delete a patient allergy record by marking it as inactive.")
 def delete_patient_allergy(patient_allergy_id: int, db: Session = Depends(get_db)):
     # TODO: Replace with the actual user ID
-    userId = 1
+    userId = "1"
     
     return patient_allergy_mapping_crud.delete_patient_allergy(db, patient_allergy_id, userId)

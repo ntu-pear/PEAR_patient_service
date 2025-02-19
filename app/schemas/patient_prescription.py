@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 from datetime import datetime
 from typing import Optional
 
@@ -18,18 +18,18 @@ class PatientPrescriptionBase(BaseModel):
 class PatientPrescriptionCreate(PatientPrescriptionBase):
     CreatedDateTime: datetime
     UpdatedDateTime: datetime
-    CreatedById: int
-    UpdatedById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
 class PatientPrescriptionUpdate(PatientPrescriptionBase):
     UpdatedDateTime: datetime
-    UpdatedById: int
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
 class PatientPrescription(PatientPrescriptionBase):
     Id: int
     CreatedDateTime: datetime
     UpdatedDateTime: datetime
-    CreatedById: int
-    UpdatedById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
     model_config = {"from_attributes": True}

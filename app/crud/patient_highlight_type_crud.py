@@ -15,7 +15,7 @@ def get_highlight_type_by_id(db: Session, highlight_type_id: int):
     )
 
 def create_highlight_type(
-    db: Session, highlight_type: HighlightTypeCreate, created_by: int
+    db: Session, highlight_type: HighlightTypeCreate, created_by: str
 ):
     db_highlight_type = HighlightType(
         **highlight_type.model_dump(), CreatedById=created_by, ModifiedById=created_by
@@ -39,7 +39,7 @@ def update_highlight_type(
     db: Session,
     highlight_type_id: int,
     highlight_type: HighlightTypeUpdate,
-    modified_by: int,
+    modified_by: str,
 ):
     db_highlight_type = (
         db.query(HighlightType)
@@ -81,7 +81,7 @@ def update_highlight_type(
         return db_highlight_type
     return None
 
-def delete_highlight_type(db: Session, highlight_type_id: int, modified_by: int):
+def delete_highlight_type(db: Session, highlight_type_id: int, modified_by: str):
     db_highlight_type = (
         db.query(HighlightType)
         .filter(HighlightType.HighlightTypeID == highlight_type_id)
