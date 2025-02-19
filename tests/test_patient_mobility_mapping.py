@@ -71,8 +71,8 @@ def mock_mobility_entries():
             IsDeleted=0,
             CreatedDateTime=datetime.now(),
             ModifiedDateTime=datetime.now(),
-            CreatedById=1,
-            ModifiedById=1,
+            CreatedById="1",
+            ModifiedById="1",
         ),
         PatientMobilityResponse(
             PatientID=2,
@@ -82,8 +82,8 @@ def mock_mobility_entries():
             IsDeleted=0,
             CreatedDateTime=datetime.now(),
             ModifiedDateTime=datetime.now(),
-            CreatedById=1,
-            ModifiedById=1,
+            CreatedById="1",
+            ModifiedById="1",
         ),
     ]
 
@@ -97,8 +97,8 @@ def mock_mobility_entry():
         IsDeleted=0,
         CreatedDateTime=datetime.now(),
         ModifiedDateTime=datetime.now(),
-        CreatedById=1,
-        ModifiedById=1,
+        CreatedById="1",
+        ModifiedById="1",
     )
 
 # @pytest.fixture

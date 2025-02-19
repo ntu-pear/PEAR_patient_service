@@ -9,7 +9,7 @@ class PatientAssignedDementiaList(Base):
     IsDeleted = Column(String(1), default="0", nullable=False)  # boolean 1 or 0
 
     Value = Column(String, nullable=False)
-    CreatedById = Column(Integer, nullable=False)  # Add this field
-    ModifiedById = Column(Integer, nullable=False)  # Add this field
+    CreatedById = Column(String, nullable=False)  # Changed to String
+    ModifiedById = Column(String, nullable=False)  # Changed to String
     CreatedDate = Column(DateTime, nullable=False, default=datetime.utcnow)
     ModifiedDate = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)

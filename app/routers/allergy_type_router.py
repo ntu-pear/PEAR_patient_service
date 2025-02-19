@@ -25,7 +25,7 @@ def get_allergy_type(allergy_type_id: int, db: Session = Depends(get_db)):
 def create_allergy_type(allergy_type: AllergyTypeCreate, db: Session = Depends(get_db)): 
     
     #TODO: change user_id to current user
-    user_id = 1
+    user_id = "1"
 
     return crud_allergy_type.create_allergy_type(db, allergy_type, user_id)
 
@@ -33,7 +33,7 @@ def create_allergy_type(allergy_type: AllergyTypeCreate, db: Session = Depends(g
 def update_allergy_type(allergy_type_id: int, allergy_type: AllergyTypeUpdate, db: Session = Depends(get_db)): 
     
     #TODO: change user_id to current user
-    user_id = 1
+    user_id = "1"
 
     db_allergy_type = crud_allergy_type.update_allergy_type(db, allergy_type_id, allergy_type, user_id)
     if not db_allergy_type:
@@ -44,7 +44,7 @@ def update_allergy_type(allergy_type_id: int, allergy_type: AllergyTypeUpdate, d
 def delete_allergy_type(allergy_type_id: int, db: Session = Depends(get_db)): 
     
     #TODO: change user_id to current user
-    user_id = 1
+    user_id = "1"
 
     db_allergy_type = crud_allergy_type.delete_allergy_type(db, allergy_type_id, user_id)
     if not db_allergy_type:

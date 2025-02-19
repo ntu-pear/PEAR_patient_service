@@ -15,8 +15,8 @@ class PatientPhoto(Base):
 
     CreatedDateTime = Column(DateTime, default=datetime.utcnow, nullable=False)
     UpdatedDateTime = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    CreatedById = Column(Integer, nullable=False)
-    ModifiedById = Column(Integer, nullable=False)
+    CreatedById = Column(String, nullable=False)  # Changed to String
+    ModifiedById = Column(String, nullable=False)  # Changed to String
 
     # Relationship with Patient
     patient = relationship("Patient", back_populates="photos")

@@ -15,7 +15,7 @@ def get_allergy_type_by_id(db: Session, allergy_type_id: int):
         .first()
     )
 
-def create_allergy_type(db: Session, allergy_type: AllergyTypeCreate, created_by: int):
+def create_allergy_type(db: Session, allergy_type: AllergyTypeCreate, created_by: str):
     db_allergy_type = AllergyType(
         **allergy_type.model_dump(), CreatedById=created_by, ModifiedById=created_by
     )
@@ -37,7 +37,7 @@ def create_allergy_type(db: Session, allergy_type: AllergyTypeCreate, created_by
 
 
 def update_allergy_type(
-    db: Session, allergy_type_id: int, allergy_type: AllergyTypeUpdate, modified_by: int
+    db: Session, allergy_type_id: int, allergy_type: AllergyTypeUpdate, modified_by: str
 ):
     db_allergy_type = (
         db.query(AllergyType)
@@ -76,7 +76,7 @@ def update_allergy_type(
     return None
 
 
-def delete_allergy_type(db: Session, allergy_type_id: int, modified_by: int):
+def delete_allergy_type(db: Session, allergy_type_id: int, modified_by: str):
     db_allergy_type = (
         db.query(AllergyType)
         .filter(AllergyType.AllergyTypeID == allergy_type_id)

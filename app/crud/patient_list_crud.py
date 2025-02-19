@@ -3,7 +3,7 @@ from ..models.patient_list_model import PatientList
 from ..schemas.patient_list import PatientListCreate, PatientListUpdate
 from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 
-SYSTEM_USER_ID = 1
+SYSTEM_USER_ID = "1"
 
 def get_all_list_types(db: Session):
     return db.query(PatientList).all()
