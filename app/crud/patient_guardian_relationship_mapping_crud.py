@@ -3,7 +3,7 @@ from ..models.patient_guardian_relationship_mapping_model import PatientGuardian
 from ..schemas.patient_guardian_relationship_mapping import PatientGuardianRelationshipMappingCreate, PatientGuardianRelationshipMappingUpdate
 from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 
-user=1
+user="1"
 
 def get_relationship_mapping(db: Session, id: int):
     return db.query(PatientGuardianRelationshipMapping).filter(PatientGuardianRelationshipMapping.id == id).first()
@@ -22,7 +22,7 @@ def create_relationship_mapping(
 
     log_crud_action(
         action=ActionType.CREATE,
-        user=1,
+        user=user,
         table="PatientGuardianRelationshipMapping",
         entity_id=db_relationship.id,
         original_data=None,

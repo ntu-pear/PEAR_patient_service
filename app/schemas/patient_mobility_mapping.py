@@ -20,8 +20,8 @@ class PatientMobilityResponse(PatientMobilityBase):
     IsDeleted: int
     CreatedDateTime: datetime
     ModifiedDateTime: datetime
-    CreatedById: int
-    ModifiedById: int
+    CreatedById: str
+    ModifiedById: str
 
     class ConfigDict:
         # Don't use orm_mode = True anymore. Deprecated.

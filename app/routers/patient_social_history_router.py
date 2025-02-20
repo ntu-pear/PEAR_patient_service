@@ -33,7 +33,7 @@ def delete_social_history(social_history_id: int, db: Session = Depends(get_db))
     
     if db_social_history:
         # Perform the soft delete by setting 'active' to 'N'
-        db_social_history.active = 'N'
+        db_social_history.isDeleted = '1'
         db.commit()
         db.refresh(db_social_history)
         return db_social_history

@@ -37,7 +37,7 @@ def get_mobility_list_entry_by_id(db: Session, mobility_list_id: int):
     return entry
 
 # Create a new mobility list entry
-def create_mobility_list_entry(db: Session, mobility_list_data: PatientMobilityListCreate, created_by: int):
+def create_mobility_list_entry(db: Session, mobility_list_data: PatientMobilityListCreate, created_by: str):
     new_entry = PatientMobilityList(
         **mobility_list_data.model_dump(exclude={"CreatedDateTime", "ModifiedDateTime", "CreatedById", "ModifiedById"}),  # Corrected set syntax
         CreatedDateTime=datetime.utcnow(),
@@ -62,7 +62,7 @@ def create_mobility_list_entry(db: Session, mobility_list_data: PatientMobilityL
 
 # Update a mobility list entry
 def update_mobility_list_entry(
-    db: Session, mobility_list_id: int, mobility_list_data: PatientMobilityListUpdate, modified_by: int
+    db: Session, mobility_list_id: int, mobility_list_data: PatientMobilityListUpdate, modified_by: str
 ):
     # Query the database for the entry to update
     db_entry = db.query(PatientMobilityList).filter(
@@ -115,7 +115,7 @@ def update_mobility_list_entry(
 
 # Soft delete a mobility list entry (set IsDeleted to '1')
 
-def delete_mobility_list_entry(db: Session, mobility_list_id: int, modified_by: int):
+def delete_mobility_list_entry(db: Session, mobility_list_id: int, modified_by: str):
     # Query for the entry to be deleted
     db_entry = db.query(PatientMobilityList).filter(
         PatientMobilityList.MobilityListId == mobility_list_id,

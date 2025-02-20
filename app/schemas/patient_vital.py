@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 from datetime import datetime
 from typing import Optional
 
@@ -17,11 +17,11 @@ class PatientVitalBase(BaseModel):
     VitalRemarks: Optional[str] = None
 
 class PatientVitalCreate(PatientVitalBase):
-    CreatedById: int
-    UpdatedById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
 class PatientVitalUpdate(PatientVitalBase):
-    UpdatedById: int
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
     UpdatedDateTime: Optional[datetime] = None
 
 class PatientVitalDelete(BaseModel):
@@ -31,7 +31,7 @@ class PatientVital(PatientVitalBase):
     Id: int
     CreatedDateTime: datetime
     UpdatedDateTime: datetime
-    CreatedById: int
-    UpdatedById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
     model_config = {"from_attributes": True}

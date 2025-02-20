@@ -25,6 +25,7 @@ def get_all_allergies(db: Session):
             PatientAllergyMapping.UpdatedDateTime,
             PatientAllergyMapping.CreatedById,
             PatientAllergyMapping.ModifiedById,
+            PatientAllergyMapping.IsDeleted,
         )
         .join(
             AllergyType,
@@ -65,6 +66,7 @@ def get_all_allergies(db: Session):
                 "UpdatedDateTime": result.UpdatedDateTime,
                 "CreatedById": result.CreatedById,
                 "ModifiedById": result.ModifiedById,
+                "IsDeleted": result.IsDeleted,
             }
         )
 
@@ -85,6 +87,7 @@ def get_patient_allergies(db: Session, patient_id: int):
             PatientAllergyMapping.UpdatedDateTime,
             PatientAllergyMapping.CreatedById,
             PatientAllergyMapping.ModifiedById,
+            PatientAllergyMapping.IsDeleted,
         )
         .join(
             AllergyType,
@@ -109,7 +112,7 @@ def get_patient_allergies(db: Session, patient_id: int):
         )
         allergy_reaction_value = (
             result.AllergyReactionTypeValue
-            if result.AllergyReactionTypeValue == "0"
+            if result.AllergyReactionTypeIsDeleted == "0"
             else "No allergy reaction"
         )
 
@@ -124,6 +127,7 @@ def get_patient_allergies(db: Session, patient_id: int):
                 "UpdatedDateTime": result.UpdatedDateTime,
                 "CreatedById": result.CreatedById,
                 "ModifiedById": result.ModifiedById,
+                "IsDeleted": result.IsDeleted,
             }
         )
 
@@ -131,7 +135,7 @@ def get_patient_allergies(db: Session, patient_id: int):
 
 
 def create_patient_allergy(
-    db: Session, allergy_data: PatientAllergyCreate, created_by: int
+    db: Session, allergy_data: PatientAllergyCreate, created_by: str
 ):
     # Check if the AllergyTypeID exists in the AllergyType table
     allergy_type = (
@@ -165,6 +169,7 @@ def create_patient_allergy(
             PatientAllergyMapping.AllergyTypeID == allergy_data.AllergyTypeID,
             PatientAllergyMapping.AllergyReactionTypeID
             == allergy_data.AllergyReactionTypeID,
+            PatientAllergyMapping.IsDeleted == "0",
         )
         .first()
     )
@@ -208,7 +213,7 @@ def update_patient_allergy(
     db: Session,
     patient_id: int,
     allergy_data: PatientAllergyUpdateReq,
-    modified_by: int,
+    modified_by: str,
 ):
     # Check if the AllergyTypeID exists and is active
     allergy_type = (
@@ -294,7 +299,7 @@ def update_patient_allergy(
     return db_allergy
 
 
-def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: int):
+def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: str):
     
     # Check if the record exists
     db_allergy = (

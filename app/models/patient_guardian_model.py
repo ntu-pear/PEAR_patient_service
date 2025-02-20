@@ -24,8 +24,8 @@ class PatientGuardian(Base):
 
     createdDate = Column(DateTime, nullable=False,  default=datetime.now)
     modifiedDate = Column(DateTime, nullable=False,  default=datetime.now)
-    createdById = Column(Integer, nullable=False)
-    modifiedById = Column(Integer, nullable=False)
+    CreatedById = Column(String, nullable=False)  # Changed to String
+    ModifiedById = Column(String, nullable=False)  # Changed to String
 
     patient_patient_guardian = relationship ("PatientPatientGuardian", foreign_keys="[PatientPatientGuardian.guardianId]", back_populates="patient_guardian")
     allocations = relationship("PatientAllocation", foreign_keys="[PatientAllocation.guardianId]", back_populates="guardian")

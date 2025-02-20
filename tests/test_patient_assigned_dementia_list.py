@@ -29,8 +29,8 @@ def get_mock_dementia_list_entry():
         IsDeleted="0",
         CreatedDate=datetime.utcnow(),
         ModifiedDate=datetime.utcnow(),
-        CreatedById=1,
-        ModifiedById=1,
+        CreatedById="1",
+        ModifiedById="1",
     )
 
 # Test: Get all dementia list entries
@@ -74,8 +74,8 @@ def test_get_all_dementia_list_entries(
     mock_instance.DementiaTypeListId = 1
     mock_instance.Value = "Alzheimer's"
     mock_instance.IsDeleted = "0"
-    mock_instance.CreatedById = 1
-    mock_instance.ModifiedById = 1
+    mock_instance.CreatedById = "1"
+    mock_instance.ModifiedById = "1"
     mock_instance.CreatedDate = datetime.utcnow()
     mock_instance.ModifiedDate = datetime.utcnow()
 
@@ -146,7 +146,7 @@ def test_update_dementia_list_entry(mock_patient_assigned_dementia_list, db_sess
         db_session_mock,
         mock_entry.DementiaTypeListId,
         mock_input,
-        modified_by=1,
+        modified_by="1",
     )
 
     # Assert: Validate the updated fields
@@ -168,7 +168,7 @@ def test_delete_dementia_list_entry(mock_patient_assigned_dementia_list, db_sess
     deleted_entry = delete_dementia_list_entry(
         db_session_mock,
         mock_entry.DementiaTypeListId,
-        modified_by=1,
+        modified_by="1",
     )
 
     # Assert: Verify the entry is marked as deleted

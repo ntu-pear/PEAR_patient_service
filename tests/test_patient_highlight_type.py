@@ -36,7 +36,7 @@ from tests.utils.mock_db import get_db_session_mock
 def test_create_highlight_type(db_session_mock):
     """Test case for creating a highlight type."""
     # Arrange
-    created_by = 1
+    created_by = "1"
     highlight_type_create = HighlightTypeCreate(Value="newPrescription", IsDeleted="0")
 
     # Act
@@ -74,8 +74,8 @@ def test_get_highlight_type_by_id(db_session_mock):
         HighlightTypeID=1,
         Value="newPrescription",
         IsDeleted="0",
-        CreatedById=1,
-        ModifiedById=1,
+        CreatedById="1",
+        ModifiedById="1",
         CreatedDateTime=datetime.now(),
         UpdatedDateTime=datetime.now(),
     )
@@ -98,14 +98,14 @@ def test_get_highlight_type_by_id(db_session_mock):
 def test_update_highlight_type(db_session_mock):
     """Test case for updating a highlight type."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     highlight_type_update = HighlightTypeUpdate(Value="updatedPrescription", IsDeleted="0")
     mock_highlight_type = HighlightType(
         HighlightTypeID=1,
         Value="newPrescription",
         IsDeleted="0",
-        CreatedById=1,
-        ModifiedById=1,
+        CreatedById="1",
+        ModifiedById="1",
         CreatedDateTime=datetime.now(),
         UpdatedDateTime=datetime.now(),
     )
@@ -132,7 +132,7 @@ def test_update_highlight_type(db_session_mock):
 def test_delete_highlight_type(db_session_mock):
     """Test case for deleting (soft-deleting) a highlight type."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     mock_highlight_type = HighlightType(
         HighlightTypeID=1,
         Value="newPrescription",

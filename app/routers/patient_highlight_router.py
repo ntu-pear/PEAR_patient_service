@@ -30,17 +30,17 @@ def get_patient_highlights(patient_id: int, db: Session = Depends(get_db)):
 @router.post("/create_highlight", response_model=PatientHighlight, description="Create a new highlight.")
 def create_patient_highlight(highlight_data: PatientHighlightCreate, db: Session = Depends(get_db)):
     # Replace with actual user ID in a real-world scenario
-    created_by = 1
+    created_by = "1"
     return create_highlight(db, highlight_data, created_by)
 
 @router.put("/update_highlight/{highlight_id}", response_model=PatientHighlight, description="Update an existing highlight.")
 def update_patient_highlight(highlight_id: int, highlight_data: PatientHighlightUpdate, db: Session = Depends(get_db)):
     # Replace with actual user ID in a real-world scenario
-    modified_by = 1
+    modified_by = "1"
     return update_highlight(db, highlight_id, highlight_data, modified_by)
 
 @router.delete("/delete_highlight/{highlight_id}", response_model=PatientHighlight, description="Soft delete a highlight by ID.")
 def delete_patient_highlight(highlight_id: int, db: Session = Depends(get_db)):
     # Replace with actual user ID in a real-world scenario
-    modified_by = 1
+    modified_by = "1"
     return delete_highlight(db, highlight_id, modified_by)

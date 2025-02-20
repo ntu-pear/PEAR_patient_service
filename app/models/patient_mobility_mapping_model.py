@@ -14,8 +14,8 @@ class PatientMobility(Base):
     IsDeleted = Column(Boolean, default=False, nullable=False)
     CreatedDateTime = Column(DateTime, nullable=False, default=datetime.utcnow)
     ModifiedDateTime = Column(DateTime, nullable=False, default=datetime.utcnow)
-    CreatedById = Column(Integer, nullable=False)
-    ModifiedById = Column(Integer, nullable=False)
+    CreatedById = Column(String, nullable=False)  # Changed to String
+    ModifiedById = Column(String, nullable=False)  # Changed to String
 
     mobility_list = relationship(
         "PatientMobilityList",

@@ -15,7 +15,7 @@ def get_highlights_by_patient(db: Session, patient_id: int):
         .all()
     )
 
-def create_highlight(db: Session, highlight_data: PatientHighlightCreate, created_by: int):
+def create_highlight(db: Session, highlight_data: PatientHighlightCreate, created_by: str):
     db_highlight = PatientHighlight(
         **highlight_data.model_dump(), CreatedById=created_by, ModifiedById=created_by
     )
@@ -34,7 +34,7 @@ def create_highlight(db: Session, highlight_data: PatientHighlightCreate, create
     )
     return db_highlight
 
-def update_highlight(db: Session, highlight_id: int, highlight_data: PatientHighlightUpdate, modified_by: int):
+def update_highlight(db: Session, highlight_id: int, highlight_data: PatientHighlightUpdate, modified_by: str):
     db_highlight = db.query(PatientHighlight).filter(PatientHighlight.Id == highlight_id).first()
 
     if not db_highlight or db_highlight.IsDeleted == "1":
@@ -66,7 +66,7 @@ def update_highlight(db: Session, highlight_id: int, highlight_data: PatientHigh
     )
     return db_highlight
 
-def delete_highlight(db: Session, highlight_id: int, modified_by: int):
+def delete_highlight(db: Session, highlight_id: int, modified_by: str):
     db_highlight = db.query(PatientHighlight).filter(PatientHighlight.Id == highlight_id).first()
 
     if not db_highlight or db_highlight.IsDeleted == "1":

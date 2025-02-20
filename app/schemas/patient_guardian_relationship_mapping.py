@@ -17,6 +17,6 @@ class PatientGuardianRelationshipMapping(PatientGuardianRelationshipMappingBase)
     id: int
     createdDate: datetime
     modifiedDate: datetime
-    createdById: int
-    modifiedById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
     

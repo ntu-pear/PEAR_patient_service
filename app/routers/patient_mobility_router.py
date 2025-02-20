@@ -25,12 +25,12 @@ def get_mobility_list_by_id(mobility_list_id: int, db: Session = Depends(get_db)
 # Create a new mobility list entry
 @router.post("/Mobility/List", response_model=schemas_mobility_list.PatientMobilityList)
 def create_mobility_list_entry(mobility_list: schemas_mobility_list.PatientMobilityListCreate, db: Session = Depends(get_db)):
-    return crud_mobility_list.create_mobility_list_entry(db, mobility_list, created_by=1)  # Replace 1 with dynamic user ID if needed
+    return crud_mobility_list.create_mobility_list_entry(db, mobility_list, created_by="1")  # Replace 1 with dynamic user ID if needed
 
 # Update a mobility list entry
 @router.put("/Mobility/List/{mobility_list_id}", response_model=schemas_mobility_list.PatientMobilityList)
 def update_mobility_list_entry(mobility_list_id: int, mobility_list: schemas_mobility_list.PatientMobilityListUpdate, db: Session = Depends(get_db)):
-    updated_entry = crud_mobility_list.update_mobility_list_entry(db, mobility_list_id, mobility_list, modified_by=1)  # Replace 1 with dynamic user ID if needed
+    updated_entry = crud_mobility_list.update_mobility_list_entry(db, mobility_list_id, mobility_list, modified_by="1")  # Replace 1 with dynamic user ID if needed
     if not updated_entry:
         raise HTTPException(status_code=404, detail="Mobility list entry not found")
     return updated_entry
@@ -38,7 +38,7 @@ def update_mobility_list_entry(mobility_list_id: int, mobility_list: schemas_mob
 # Soft delete a mobility list entry
 @router.delete("/Mobility/List/delete/{mobility_list_id}", response_model=schemas_mobility_list.PatientMobilityList)
 def delete_mobility_list_entry(mobility_list_id: int, db: Session = Depends(get_db)):
-    deleted_entry = crud_mobility_list.delete_mobility_list_entry(db, mobility_list_id, modified_by=1)  # Replace 1 with dynamic user ID if needed
+    deleted_entry = crud_mobility_list.delete_mobility_list_entry(db, mobility_list_id, modified_by="1")  # Replace 1 with dynamic user ID if needed
     if not deleted_entry:
         raise HTTPException(status_code=404, detail="Mobility list entry not found")
     return deleted_entry

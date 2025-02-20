@@ -10,8 +10,8 @@ class PatientPatientGuardianBase(BaseModel):
     isDeleted: str
     patientId: int
     guardianId: int
-    createdById: int
-    modifiedById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
 class PatientPatientGuardianCreate(PatientPatientGuardianBase):
     relationshipId: int
@@ -25,8 +25,8 @@ class PatientPatientGuardian(PatientPatientGuardianBase):
     id: int
     createdDate: datetime
     modifiedDate: datetime
-    createdById: int
-    modifiedById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
     patient_guardian: PatientGuardian
     relationship: PatientGuardianRelationshipMapping
 

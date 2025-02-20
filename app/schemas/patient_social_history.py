@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 from datetime import datetime
 from typing import Optional
 
@@ -16,18 +16,18 @@ class PatientSocialHistoryBase(BaseModel):
 class PatientSocialHistoryCreate(PatientSocialHistoryBase):
     createdDate: datetime
     modifiedDate: datetime
-    createdById: int
-    modifiedById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
 class PatientSocialHistoryUpdate(PatientSocialHistoryBase):
     modifiedDate: datetime
-    modifiedById: int
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
 class PatientSocialHistory(PatientSocialHistoryBase):
     id: int
     createdDate: datetime
     modifiedDate: datetime
-    createdById: int
-    modifiedById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
     model_config = {"from_attributes": True}

@@ -48,8 +48,8 @@ def test_get_all_allergies(db_session_mock):
             AllergyReactionTypeIsDeleted="0",
             CreatedDateTime=datetime.now(),
             UpdatedDateTime=datetime.now(),
-            CreatedById=1,
-            ModifiedById=1,
+            CreatedById="1",
+            ModifiedById="1",
         ),
         MagicMock(
             Patient_AllergyID=2,
@@ -61,8 +61,8 @@ def test_get_all_allergies(db_session_mock):
             AllergyReactionTypeIsDeleted="0",
             CreatedDateTime=datetime.now(),
             UpdatedDateTime=datetime.now(),
-            CreatedById=1,
-            ModifiedById=1,
+            CreatedById="1",
+            ModifiedById="1",
         ),
     ]
     db_session_mock.query.return_value.join.return_value.join.return_value.all.return_value = mock_data
@@ -92,8 +92,8 @@ def test_get_patient_allergies(db_session_mock):
             AllergyReactionTypeIsDeleted="0",
             CreatedDateTime=datetime.now(),
             UpdatedDateTime=datetime.now(),
-            CreatedById=1,
-            ModifiedById=1,
+            CreatedById="1",
+            ModifiedById="1",
         )
     ]
     db_session_mock.query.return_value.join.return_value.join.return_value.filter.return_value.all.return_value = mock_data
@@ -110,7 +110,7 @@ def test_get_patient_allergies(db_session_mock):
 def test_create_patient_allergy(db_session_mock, patient_allergy_create):
     """Test case for creating a new patient allergy."""
     # Arrange
-    created_by = 1
+    created_by = "1"
     mock_allergy_type = AllergyType(AllergyTypeID=3, Value="Corn", IsDeleted="0")
     mock_reaction_type = AllergyReactionType(
         AllergyReactionTypeID=1, Value="Rashes", IsDeleted="0"
@@ -136,7 +136,7 @@ def test_create_patient_allergy(db_session_mock, patient_allergy_create):
 def test_update_patient_allergy(db_session_mock, patient_allergy_update):
     """Test case for updating a patient allergy."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     mock_patient_allergy = PatientAllergyMapping(
         Patient_AllergyID=1,
         PatientID=1,
@@ -146,8 +146,8 @@ def test_update_patient_allergy(db_session_mock, patient_allergy_update):
         IsDeleted="0",
         CreatedDateTime=datetime.now(),
         UpdatedDateTime=datetime.now(),
-        CreatedById=1,
-        ModifiedById=1,
+        CreatedById="1",
+        ModifiedById="1",
     )
     db_session_mock.query.return_value.filter.return_value.first.return_value = (
         mock_patient_allergy
@@ -168,7 +168,7 @@ def test_update_patient_allergy(db_session_mock, patient_allergy_update):
 def test_delete_patient_allergy(db_session_mock):
     """Test case for deleting (soft-deleting) a patient allergy."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     mock_patient_allergy = PatientAllergyMapping(
         Patient_AllergyID=1,
         PatientID=1,
@@ -178,8 +178,8 @@ def test_delete_patient_allergy(db_session_mock):
         IsDeleted="0",
         CreatedDateTime=datetime.now(),
         UpdatedDateTime=datetime.now(),
-        CreatedById=1,
-        ModifiedById=1,
+        CreatedById="1",
+        ModifiedById="1",
     )
     db_session_mock.query.return_value.filter.return_value.first.return_value = (
         mock_patient_allergy

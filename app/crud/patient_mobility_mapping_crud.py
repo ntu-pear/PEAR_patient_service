@@ -28,7 +28,7 @@ def get_mobility_entries_by_id(db: Session, patient_id: int):
     return entries
 
 # Create a new mobility entry
-def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, created_by: int):
+def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, created_by: str):
     # Validate PatientID
     patient = db.query(Patient).filter(Patient.id == mobility_data.PatientID).first()
     if not patient:
@@ -38,6 +38,18 @@ def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, cre
     mobility_list = db.query(PatientMobilityList).filter(PatientMobilityList.MobilityListId == mobility_data.MobilityListId).first()
     if not mobility_list:
         raise HTTPException(status_code=400, detail="Invalid MobilityListId. No matching mobility list found.")
+
+    patient_not_recovered = db.query(PatientMobility).filter(
+        PatientMobility.PatientID == mobility_data.PatientID,
+        PatientMobility.IsRecovered == False,
+        PatientMobility.IsDeleted == False
+        ).first()
+    
+    if patient_not_recovered:
+        existing_mobility = patient_not_recovered.MobilityListId != 0
+        
+        if existing_mobility:
+            raise HTTPException(status_code=400, detail="Patient already has an existing mobility aid.")    
 
     # Create entry
     new_entry = PatientMobility(
@@ -64,7 +76,7 @@ def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, cre
 
 # Update an existing mobility entry
 def update_mobility_entry(
-    db: Session, patient_id: int, mobility_data: PatientMobilityUpdate, modified_by: int
+    db: Session, patient_id: int, mobility_data: PatientMobilityUpdate, modified_by: str
 ):
     db_entry = db.query(PatientMobility).filter(
         PatientMobility.PatientID == patient_id,
@@ -97,7 +109,7 @@ def update_mobility_entry(
     return db_entry
 
 # Soft delete a mobility entry
-def delete_mobility_entry(db: Session, patient_id: int, modified_by: int):
+def delete_mobility_entry(db: Session, patient_id: int, modified_by: str):
     db_entry = db.query(PatientMobility).filter(
         PatientMobility.PatientID == patient_id,
         PatientMobility.IsDeleted == False,

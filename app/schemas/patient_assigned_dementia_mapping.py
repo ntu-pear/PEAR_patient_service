@@ -13,23 +13,23 @@ class PatientAssignedDementiaBase(BaseModel):
 class PatientAssignedDementiaCreate(PatientAssignedDementiaBase):
     CreatedDate: datetime = Field(default_factory=datetime.utcnow, description="Timestamp when the record was created.")
     ModifiedDate: datetime = Field(default_factory=datetime.utcnow, description="Timestamp when the record was last modified.")
-    CreatedById: int = Field(..., description="ID of the user who created the record.")
-    ModifiedById: int = Field(..., description="ID of the user who last modified the record.")
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
 # Schema for updating an existing record
 class PatientAssignedDementiaUpdate(BaseModel):
     IsDeleted: Optional[str] = Field("0", description="Indicates if the record is isDeleted ('1' for yes, '0' for no).")
     DementiaTypeListId: Optional[int] = Field(None, description="Updated dementia type list ID.")
     ModifiedDate: datetime = Field(default_factory=datetime.utcnow, description="Timestamp when the record was last modified.")
-    ModifiedById: int = Field(..., description="ID of the user who last modified the record.")
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
 # Schema for reading a record
 class PatientAssignedDementia(PatientAssignedDementiaBase):
     id: int = Field(..., description="Primary key ID of the record.")
     CreatedDate: datetime = Field(..., description="Timestamp when the record was created.")
     ModifiedDate: datetime = Field(..., description="Timestamp when the record was last modified.")
-    CreatedById: int = Field(..., description="ID of the user who created the record.")
-    ModifiedById: int = Field(..., description="ID of the user who last modified the record.")
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
 class PatientAssignedDementiaCreateResp(BaseModel):
     id: int
@@ -38,6 +38,6 @@ class PatientAssignedDementiaCreateResp(BaseModel):
     DementiaTypeListId: int
     CreatedDate: datetime
     ModifiedDate: datetime
-    CreatedById: int
-    ModifiedById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
     model_config = {"from_attributes": True}

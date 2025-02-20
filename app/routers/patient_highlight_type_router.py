@@ -20,13 +20,13 @@ def get_highlight_type(highlight_type_id: int, db: Session = Depends(get_db)):
 @router.post("/create_highlight_type", response_model=HighlightType)
 def create_highlight_type(highlight_type: HighlightTypeCreate, db: Session = Depends(get_db)): 
     # TODO: change user_id to current user
-    user_id = 1
+    user_id = "1"
     return crud_highlight_type.create_highlight_type(db, highlight_type, user_id)
 
 @router.put("/update_highlight_type/{highlight_type_id}", response_model=HighlightType)
 def update_highlight_type(highlight_type_id: int, highlight_type: HighlightTypeUpdate, db: Session = Depends(get_db)): 
     # TODO: change user_id to current user
-    user_id = 1
+    user_id = "1"
     db_highlight_type = crud_highlight_type.update_highlight_type(db, highlight_type_id, highlight_type, user_id)
     if not db_highlight_type:
         raise HTTPException(status_code=404, detail="Highlight type not found")
@@ -35,7 +35,7 @@ def update_highlight_type(highlight_type_id: int, highlight_type: HighlightTypeU
 @router.delete("/delete_highlight_type/{highlight_type_id}", response_model=HighlightType, description="Soft delete a highlight type by marking it as IsDeleted '1'")
 def delete_highlight_type(highlight_type_id: int, db: Session = Depends(get_db)):  
     # TODO: change user_id to current user
-    user_id = 1
+    user_id = "1"
     db_highlight_type = crud_highlight_type.delete_highlight_type(db, highlight_type_id, user_id)
     if not db_highlight_type:
         raise HTTPException(status_code=404, detail="Highlight type not found")

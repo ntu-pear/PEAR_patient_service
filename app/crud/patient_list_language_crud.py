@@ -36,7 +36,7 @@ def create_patient_list_language(
 
     log_crud_action(
         action=ActionType.CREATE,
-        user=1,
+        user="1",
         table="PatientListLanguage",
         entity_id=db_language_item.id,
         original_data=None,
@@ -83,7 +83,7 @@ def update_patient_list_language(
 
     log_crud_action(
         action=ActionType.UPDATE,
-        user=1,
+        user="1",
         table="PatientListLanguage",
         entity_id=db_patient_language.id,
         original_data=original_data_dict,
@@ -115,7 +115,7 @@ def delete_patient_list_language(db: Session, patient_language_id: int):
 
     log_crud_action(
         action=ActionType.DELETE,
-        user=1,
+        user="1",
         table="PatientListLanguage",
         entity_id=db_patient_language.id,
         original_data=original_data_dict,

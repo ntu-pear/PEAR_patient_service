@@ -27,8 +27,8 @@ def test_get_all_highlights(db_session_mock):
             IsDeleted="0",
             CreatedDate=datetime.now(),
             ModifiedDate=datetime.now(),
-            CreatedById=1,
-            ModifiedById=1,
+            CreatedById="2",
+            ModifiedById="2",
         ),
         MagicMock(
             Id=2,
@@ -40,8 +40,8 @@ def test_get_all_highlights(db_session_mock):
             IsDeleted="0",
             CreatedDate=datetime.now(),
             ModifiedDate=datetime.now(),
-            CreatedById=1,
-            ModifiedById=1,
+            CreatedById="2",
+            ModifiedById="2",
         ),
     ]
     db_session_mock.query.return_value.filter.return_value.all.return_value = mock_data
@@ -70,8 +70,8 @@ def test_get_highlights_by_patient(db_session_mock):
             IsDeleted="0",
             CreatedDate=datetime.now(),
             ModifiedDate=datetime.now(),
-            CreatedById=1,
-            ModifiedById=1,
+            CreatedById="2",
+            ModifiedById="2",
         )
     ]
     db_session_mock.query.return_value.filter.return_value.all.return_value = mock_data
@@ -88,7 +88,7 @@ def test_get_highlights_by_patient(db_session_mock):
 def test_create_highlight(db_session_mock, patient_highlight_create):
     """Test case for creating a new patient highlight."""
     # Arrange
-    created_by = 1
+    created_by = "1"
 
     # Act
     result = create_highlight(db_session_mock, patient_highlight_create, created_by)
@@ -105,7 +105,7 @@ def test_create_highlight(db_session_mock, patient_highlight_create):
 def test_update_highlight(db_session_mock, patient_highlight_update):
     """Test case for updating a patient highlight."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     mock_highlight = PatientHighlight(
         Id=1,
         PatientId=1,
@@ -116,10 +116,12 @@ def test_update_highlight(db_session_mock, patient_highlight_update):
         IsDeleted="0",
         CreatedDate=datetime.now(),
         ModifiedDate=datetime.now(),
-        CreatedById=1,
-        ModifiedById=1,
+        CreatedById="1",
+        ModifiedById="1",
     )
-    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_highlight
+    db_session_mock.query.return_value.filter.return_value.first.return_value = (
+        mock_highlight
+    )
 
     # Act
     result = update_highlight(
@@ -136,7 +138,7 @@ def test_update_highlight(db_session_mock, patient_highlight_update):
 def test_delete_highlight(db_session_mock):
     """Test case for deleting (soft-deleting) a patient highlight."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     mock_highlight = PatientHighlight(
         Id=1,
         PatientId=1,
@@ -147,10 +149,12 @@ def test_delete_highlight(db_session_mock):
         IsDeleted="0",
         CreatedDate=datetime.now(),
         ModifiedDate=datetime.now(),
-        CreatedById=1,
-        ModifiedById=1,
+        CreatedById="1",
+        ModifiedById="1",
     )
-    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_highlight
+    db_session_mock.query.return_value.filter.return_value.first.return_value = (
+        mock_highlight
+    )
 
     # Act
     result = delete_highlight(db_session_mock, mock_highlight.Id, modified_by)
@@ -183,7 +187,7 @@ def patient_highlight_create():
 def patient_highlight_update():
     """Fixture to provide a mock PatientHighlightUpdate object."""
     return PatientHighlightUpdate(
-        PatientId=1,  
+        PatientId=1,
         Type="Updated Allergy",
         HighlightJSON='{"id":1,"value":"Updated Shellfish"}',
         StartDate=datetime(2024, 3, 3),

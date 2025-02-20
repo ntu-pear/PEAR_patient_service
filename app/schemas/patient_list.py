@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 from datetime import datetime
 from typing import List, Optional
 
@@ -11,18 +11,18 @@ class PatientListBase(BaseModel):
 class PatientListCreate(PatientListBase):
     createdDate: datetime
     modifiedDate: datetime
-    createdById: int
-    modifyById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
 class PatientListUpdate(PatientListBase):
     modifiedDate: datetime
-    modifyById: int
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
 class PatientList(PatientListBase):
     id: int
     createdDate: datetime
     modifiedDate: datetime
-    createdById: int
-    modifyById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
     model_config = {"from_attributes": True}

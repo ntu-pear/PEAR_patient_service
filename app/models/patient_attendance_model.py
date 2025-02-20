@@ -15,7 +15,7 @@ class PatientAttendance(Base):
 
     createdDate = Column(DateTime, nullable=False, default=DateTime)
     modifiedDate = Column(DateTime, nullable=False, default=DateTime)
-    createdById = Column(Integer, nullable=False)  # Changed to Integer
-    modifiedById = Column(Integer, nullable=False)  # Changed to Integer
+    CreatedById = Column(String, nullable=False)  # Changed to String
+    ModifiedById = Column(String, nullable=False)  # Changed to String
 
     patient = relationship("Patient", back_populates="attendances")

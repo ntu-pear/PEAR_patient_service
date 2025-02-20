@@ -39,8 +39,10 @@ def db_session_mock():
 @mock.patch(
     "app.models.patient_assigned_dementia_mapping_model.PatientAssignedDementiaMapping"
 )
-@mock.patch("app.models.patient_mobility_list_model.PatientMobilityList")  # Mock PatientMobilityList
-@mock.patch("app.models.patient_mobility_mapping_model.PatientMobility") 
+@mock.patch(
+    "app.models.patient_mobility_list_model.PatientMobilityList"
+)  # Mock PatientMobilityList
+@mock.patch("app.models.patient_mobility_mapping_model.PatientMobility")
 @mock.patch("app.models.patient_prescription_list_model.PatientPrescriptionList")
 @mock.patch("app.models.patient_prescription_model.PatientPrescription")
 @mock.patch("app.models.patient_social_history_model.PatientSocialHistory")
@@ -223,8 +225,8 @@ def get_mock_patient_vitals():
             VitalRemarks="Normal",
             CreatedDateTime=datetime.now(),
             UpdatedDateTime=datetime.now(),
-            CreatedById=1,
-            UpdatedById=1,
+            CreatedById="1",
+            ModifiedById="1",
         ),
         PatientVital(
             Id=2,
@@ -241,8 +243,8 @@ def get_mock_patient_vitals():
             VitalRemarks="Slightly high BP",
             CreatedDateTime=datetime.now(),
             UpdatedDateTime=datetime.now(),
-            CreatedById=1,
-            UpdatedById=1,
+            CreatedById="1",
+            ModifiedById="1",
         ),
     ]
 
@@ -261,10 +263,8 @@ def vital_create():
         Height=170.0,
         Weight=70.0,
         VitalRemarks="Normal",
-        CreatedDateTime=datetime.now(),
-        UpdatedDateTime=datetime.now(),
-        CreatedById=1,
-        UpdatedById=1,
+        CreatedById="1",
+        ModifiedById="1",
     )
 
 
@@ -282,7 +282,7 @@ def vital_update():
         Height=170.0,
         Weight=70.0,
         VitalRemarks="Slightly high BP",
-        UpdatedById=1,
+        ModifiedById="1",
         UpdatedDateTime=datetime.now(),
     )
 

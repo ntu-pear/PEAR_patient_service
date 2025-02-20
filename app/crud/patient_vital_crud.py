@@ -9,7 +9,7 @@ from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 import math
 
 # To Change
-user = 1
+user = "1"
 config = Config().Vital
 
 def get_latest_vital(db: Session, patient_id: int):

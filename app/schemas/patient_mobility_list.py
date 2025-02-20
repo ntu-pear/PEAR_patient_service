@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 from datetime import datetime
 from typing import Optional
 
@@ -7,8 +7,8 @@ class PatientMobilityListBase(BaseModel):
     IsDeleted: int
     CreatedDateTime: datetime
     ModifiedDateTime: datetime
-    CreatedById: int
-    ModifiedById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
     Value: str
 
 class PatientMobilityListCreate(PatientMobilityListBase):

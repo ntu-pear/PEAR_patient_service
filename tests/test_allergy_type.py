@@ -39,7 +39,7 @@ def test_create_allergy_type(
 ):
     """Test case for creating an allergy type."""
     # Arrange
-    created_by = 1
+    created_by = "1"
 
     # Act
     result = create_allergy_type(db_session_mock, allergy_type_create, created_by)
@@ -74,8 +74,8 @@ def test_get_allergy_type_by_id(db_session_mock):
         AllergyTypeID=1,
         Value="Corn",
         IsDeleted="0",
-        CreatedById=1,
-        ModifiedById=1,
+        CreatedById="1",
+        ModifiedById="1",
         CreatedDateTime=datetime.now(),
         UpdatedDateTime=datetime.now(),
     )
@@ -97,14 +97,14 @@ def test_get_allergy_type_by_id(db_session_mock):
 def test_update_allergy_type(db_session_mock):
     """Test case for updating an allergy type."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     allergy_type_update = AllergyTypeUpdate(Value="Updated Corn", IsDeleted="0")
     mock_allergy_type = AllergyType(
         AllergyTypeID=1,
         Value="Corn",
         IsDeleted="0",
-        CreatedById=1,
-        ModifiedById=1,
+        CreatedById="1",
+        ModifiedById="1",
         CreatedDateTime=datetime.now(),
         UpdatedDateTime=datetime.now(),
     )
@@ -130,13 +130,13 @@ def test_update_allergy_type(db_session_mock):
 def test_delete_allergy_type(db_session_mock):
     """Test case for deleting (soft-deleting) an allergy type."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     mock_allergy_type = AllergyType(
         AllergyTypeID=1,
         Value="Corn",
         IsDeleted="0",
-        CreatedById=1,
-        ModifiedById=1,
+        CreatedById="1",
+        ModifiedById="1",
         CreatedDateTime=datetime.now(),
         UpdatedDateTime=datetime.now(),
     )

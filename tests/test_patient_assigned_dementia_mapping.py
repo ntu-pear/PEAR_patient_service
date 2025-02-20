@@ -34,8 +34,8 @@ def patient_assigned_dementia_create():
         DementiaTypeListId=1,
         CreatedDate=now,
         ModifiedDate=now,
-        CreatedById=1,
-        ModifiedById=1,
+        CreatedById="1",
+        ModifiedById="1",
     )
 
 
@@ -121,7 +121,7 @@ def test_create_assigned_dementia(
     mock_patient_assigned_dementia_mapping.return_value = mock_instance
 
     # Act
-    created_by = 1
+    created_by = "1"
     result = create_assigned_dementia(
         db_session_mock, patient_assigned_dementia_create, created_by
     )
@@ -272,17 +272,17 @@ def test_update_assigned_dementia(mock_patient_assigned_dementia_mapping, db_ses
         IsDeleted="0",
         CreatedDate="2025-01-01",
         ModifiedDate="2025-01-02",
-        CreatedById=1,
-        ModifiedById=2,
+        CreatedById="1",
+        ModifiedById="2",
     )
     db_session_mock.query.return_value.filter.return_value.first.return_value = mock_existing_record
 
     # Provide updated data
     updated_data = PatientAssignedDementiaUpdate(
         DementiaTypeListId=2,  # Updated field
-        ModifiedById=3  # Required field
+        ModifiedById="3"  # Required field
     )
-    modified_by = 3  # Simulate the ID of the user modifying the record
+    modified_by = "3"  # Simulate the ID of the user modifying the record
 
     # Act: Call the update function
     result = update_assigned_dementia(

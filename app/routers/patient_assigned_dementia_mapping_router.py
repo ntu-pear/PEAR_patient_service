@@ -34,13 +34,13 @@ def get_assigned_dementias(patient_id: int, db: Session = Depends(get_db)):
 @router.post("/create_assigned_dementia", response_model=PatientAssignedDementiaCreateResp, description="Create a new assigned dementia record.")
 def create_assigned_dementia(assigned_dementia_data: PatientAssignedDementiaCreate, db: Session = Depends(get_db)):
     # TODO: Replace with the actual user ID
-    userId = 1
+    userId = "1"
     return crud_assigned_dementia.create_assigned_dementia(db, assigned_dementia_data, userId)
 
 @router.put("/update_assigned_dementia/{assigned_dementia_id}", response_model=PatientAssignedDementiaCreateResp, description="Update an existing assigned dementia record.")
 def update_assigned_dementia(assigned_dementia_id: int, assigned_dementia_data: PatientAssignedDementiaUpdate, db: Session = Depends(get_db)):
     # TODO: Replace with the actual user ID
-    userId = 1
+    userId = "1"
     result = crud_assigned_dementia.update_assigned_dementia(db, assigned_dementia_id, assigned_dementia_data, userId)
     if not result:
         raise HTTPException(status_code=404, detail=f"Assigned dementia with ID {assigned_dementia_id} not found")
@@ -49,7 +49,7 @@ def update_assigned_dementia(assigned_dementia_id: int, assigned_dementia_data: 
 @router.delete("/delete_assigned_dementia/{assigned_dementia_id}", response_model=PatientAssignedDementiaCreateResp, description="Soft delete an assigned dementia record by marking it as isDeleted.")
 def delete_assigned_dementia(assigned_dementia_id: int, db: Session = Depends(get_db)):
     # TODO: Replace with the actual user ID
-    userId = 1
+    userId = "1"
     result = crud_assigned_dementia.delete_assigned_dementia(db, assigned_dementia_id, userId)
     if not result:
         raise HTTPException(status_code=404, detail=f"Assigned dementia with ID {assigned_dementia_id} not found")
