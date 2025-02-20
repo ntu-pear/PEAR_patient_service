@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..crud import patient_occupation_crud as crud_occupation_type
-from ..schemas.patient_occupation_list import (
+from ..crud import patient_list_occupation_crud as crud_occupation_type
+from ..schemas.patient_list_occupation import (
     PatientOccupationListType,
     PatientOccupationListTypeCreate,
     PatientOccupationListTypeUpdate
@@ -21,14 +21,14 @@ def get_occupation_type(occupation_type_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Occupation type not found")
     return db_occupation_type
 
-@router.post("/create_occupation_type", response_model=PatientOccupationListType)
+@router.post("/create_occupation_type", response_model=PatientOccupationListTypeCreate)
 def create_occupation_type(occupation_type: PatientOccupationListTypeCreate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
     user_id = 1
     
     return crud_occupation_type.create_occupation_type(db, occupation_type, user_id)
 
-@router.put("/update_occupation_type/{occupation_type_id}", response_model=PatientOccupationListType)
+@router.put("/update_occupation_type/{occupation_type_id}", response_model=PatientOccupationListTypeUpdate)
 def update_occupation_type(occupation_type_id: int, occupation_type: PatientOccupationListTypeUpdate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
     user_id = 1

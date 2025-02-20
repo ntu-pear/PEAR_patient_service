@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..crud import patient_diet_crud as crud_diet_type
-from ..schemas.patient_diet_list import (
+from ..crud import patient_list_diet_crud as crud_diet_type
+from ..schemas.patient_list_diet import (
     PatientDietListType,
     PatientDietListTypeCreate,
     PatientDietListTypeUpdate
@@ -21,14 +21,14 @@ def get_diet_type(diet_type_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Diet type not found")
     return db_diet_type
 
-@router.post("/create_diet_type", response_model=PatientDietListType)
+@router.post("/create_diet_type", response_model=PatientDietListTypeCreate, description="Create a new diet type.")
 def create_diet_type(diet_type: PatientDietListTypeCreate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
     user_id = 1
     
     return crud_diet_type.create_diet_type(db, diet_type, user_id)
 
-@router.put("/update_diet_type/{diet_type_id}", response_model=PatientDietListType)
+@router.put("/update_diet_type/{diet_type_id}", response_model=PatientDietListTypeUpdate, description="Update a diet type by ID.")
 def update_diet_type(diet_type_id: int, diet_type: PatientDietListTypeUpdate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
     user_id = 1

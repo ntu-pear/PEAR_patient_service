@@ -1,13 +1,13 @@
 import pytest
-from app.crud.patient_occupation_crud import (
+from app.crud.patient_list_occupation_crud import (
     create_occupation_type,
     get_all_occupation_types,
     get_occupation_type_by_id,
     update_occupation_type,
     delete_occupation_type,
 )
-from app.schemas.patient_occupation_list import PatientOccupationListTypeCreate, PatientOccupationListTypeUpdate
-from app.models.patient_occupation_list_model import PatientOccupationList
+from app.schemas.patient_list_occupation import PatientOccupationListTypeCreate, PatientOccupationListTypeUpdate
+from app.models.patient_list_occupation_model import PatientOccupationList
 
 from datetime import datetime
 from tests.utils.mock_db import get_db_session_mock
@@ -21,9 +21,10 @@ def test_create_occupation_type(
 ):
     """Test case for creating an occupation type."""
     # Arrange
+    created_by = 1
 
     # Act
-    result = create_occupation_type(db_session_mock, occupation_type_create)
+    result = create_occupation_type(db_session_mock, occupation_type_create, created_by)
 
     # Assert
     db_session_mock.add.assert_called_once_with(result)
@@ -31,6 +32,7 @@ def test_create_occupation_type(
     db_session_mock.refresh.assert_called_once_with(result)
     assert result.Value == "Accountant"
     assert result.IsDeleted == "0"
+    assert result.CreatedById == created_by
 
 
 def test_get_all_occupation_types(db_session_mock):
@@ -75,6 +77,7 @@ def test_get_occupation_type_by_id(db_session_mock):
 def test_update_occupation_type(db_session_mock):
     """Test case for updating an occupation type."""
     # Arrange
+    modified_by = 2
     occupation_type_update = PatientOccupationListTypeUpdate(Value="Accounting", IsDeleted="0")
     mock_occupation_type = PatientOccupationList(
         Id=1,
@@ -91,18 +94,21 @@ def test_update_occupation_type(db_session_mock):
     result = update_occupation_type(
         db_session_mock,
         mock_occupation_type.Id,
-        occupation_type_update
+        occupation_type_update,
+        modified_by
     )
 
     # Assert
     db_session_mock.commit.assert_called_once()
     db_session_mock.refresh.assert_called_once_with(mock_occupation_type)
     assert result.Value == occupation_type_update.Value
+    assert result.ModifiedById == modified_by
 
 
 def test_delete_occupation_type(db_session_mock):
     """Test case for deleting (soft-deleting) an occupation type."""
     # Arrange
+    modified_by = 2
     mock_occupation_type = PatientOccupationList(
         Id=1,
         Value="Accountant",
@@ -116,12 +122,13 @@ def test_delete_occupation_type(db_session_mock):
 
     # Act
     result = delete_occupation_type(
-        db_session_mock, mock_occupation_type.Id
+        db_session_mock, mock_occupation_type.Id, modified_by
     )
 
     # Assert
     db_session_mock.commit.assert_called_once()
     assert result.IsDeleted == "1"
+    assert result.ModifiedById == modified_by
 
 
 @pytest.fixture

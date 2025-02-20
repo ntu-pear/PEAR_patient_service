@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..crud import patient_education_crud as crud_education_type
-from ..schemas.patient_education_list import (
+from ..crud import patient_list_education_crud as crud_education_type
+from ..schemas.patient_list_education import (
     PatientEducationListType,
     PatientEducationListTypeCreate,
     PatientEducationListTypeUpdate
@@ -21,14 +21,14 @@ def get_education_type(education_type_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Education type not found")
     return db_education_type
 
-@router.post("/create_education_type", response_model=PatientEducationListType)
+@router.post("/create_education_type", response_model=PatientEducationListTypeCreate, description="Create a new education type.")
 def create_education_type(education_type: PatientEducationListTypeCreate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
     user_id = 1
     
     return crud_education_type.create_education_type(db, education_type, user_id)
 
-@router.put("/update_education_type/{education_type_id}", response_model=PatientEducationListType)
+@router.put("/update_education_type/{education_type_id}", response_model=PatientEducationListTypeUpdate, description="Update an education type by ID.")
 def update_education_type(education_type_id: int, education_type: PatientEducationListTypeUpdate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
     user_id = 1

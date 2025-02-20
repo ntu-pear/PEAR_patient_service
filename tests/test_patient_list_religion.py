@@ -1,13 +1,13 @@
 import pytest
-from app.crud.patient_religion_crud import (
+from app.crud.patient_list_religion_crud import (
     create_religion_type,
     get_all_religion_types,
     get_religion_type_by_id,
     update_religion_type,
     delete_religion_type,
 )
-from app.schemas.patient_religion_list import PatientReligionListTypeCreate, PatientReligionListTypeUpdate
-from app.models.patient_religion_list_model import PatientReligionList
+from app.schemas.patient_list_religion import PatientReligionListTypeCreate, PatientReligionListTypeUpdate
+from app.models.patient_list_religion_model import PatientReligionList
 
 from datetime import datetime
 from tests.utils.mock_db import get_db_session_mock
@@ -21,9 +21,10 @@ def test_create_religion_type(
 ):
     """Test case for creating a religion type."""
     # Arrange
+    created_by = 1
 
     # Act
-    result = create_religion_type(db_session_mock, religion_type_create)
+    result = create_religion_type(db_session_mock, religion_type_create, created_by)
 
     # Assert
     db_session_mock.add.assert_called_once_with(result)
@@ -31,6 +32,7 @@ def test_create_religion_type(
     db_session_mock.refresh.assert_called_once_with(result)
     assert result.Value == "Atheist"
     assert result.IsDeleted == "0"
+    assert result.CreatedById == created_by
 
 
 def test_get_all_religion_types(db_session_mock):
@@ -75,6 +77,7 @@ def test_get_religion_type_by_id(db_session_mock):
 def test_update_religion_type(db_session_mock):
     """Test case for updating a religion type."""
     # Arrange
+    modified_by = 2
     religion_type_update = PatientReligionListTypeUpdate(Value="Christian", IsDeleted="0")
     mock_religion_type = PatientReligionList(
         Id=1,
@@ -91,18 +94,21 @@ def test_update_religion_type(db_session_mock):
     result = update_religion_type(
         db_session_mock,
         mock_religion_type.Id,
-        religion_type_update
+        religion_type_update,
+        modified_by,
     )
 
     # Assert
     db_session_mock.commit.assert_called_once()
     db_session_mock.refresh.assert_called_once_with(mock_religion_type)
     assert result.Value == religion_type_update.Value
+    assert result.ModifiedById == modified_by
 
 
 def test_delete_religion_type(db_session_mock):
     """Test case for deleting (soft-deleting) a religion type."""
     # Arrange
+    modified_by = 2
     mock_religion_type = PatientReligionList(
         Id=1,
         Value="Atheist",
@@ -116,12 +122,13 @@ def test_delete_religion_type(db_session_mock):
 
     # Act
     result = delete_religion_type(
-        db_session_mock, mock_religion_type.Id
+        db_session_mock, mock_religion_type.Id, modified_by
     )
 
     # Assert
     db_session_mock.commit.assert_called_once()
     assert result.IsDeleted == "1"
+    assert result.ModifiedById == modified_by
 
 
 @pytest.fixture

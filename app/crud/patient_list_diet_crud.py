@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from ..models.patient_diet_list_model import PatientDietList
-from ..schemas.patient_diet_list import PatientDietListTypeCreate, PatientDietListTypeUpdate
+from ..models.patient_list_diet_model import PatientDietList
+from ..schemas.patient_list_diet import PatientDietListTypeCreate, PatientDietListTypeUpdate
 from datetime import datetime
 
 
@@ -15,9 +15,9 @@ def get_diet_type_by_id(db: Session, diet_type_id: int):
         .first()
     )
 
-def create_diet_type(db: Session, diet_type: PatientDietListTypeCreate):
+def create_diet_type(db: Session, diet_type: PatientDietListTypeCreate, created_by: int):
     db_diet_type = PatientDietList(
-        **diet_type.model_dump()
+        **diet_type.model_dump(), CreatedById=created_by, ModifiedById=created_by
     )
     db.add(db_diet_type)
     db.commit()
@@ -26,7 +26,7 @@ def create_diet_type(db: Session, diet_type: PatientDietListTypeCreate):
 
 
 def update_diet_type(
-    db: Session, diet_type_id: int, diet_type: PatientDietListTypeUpdate
+    db: Session, diet_type_id: int, diet_type: PatientDietListTypeUpdate, modified_by: int
 ):
     db_diet_type = (
         db.query(PatientDietList)
@@ -41,13 +41,16 @@ def update_diet_type(
         # Set UpdatedDateTime to the current datetime
         db_diet_type.UpdatedDateTime = datetime.now()
 
+        # Update the modifiedById field
+        db_diet_type.ModifiedById = modified_by
+
         db.commit()
         db.refresh(db_diet_type)
         return db_diet_type
     return None
 
 
-def delete_diet_type(db: Session, diet_type_id: int):
+def delete_diet_type(db: Session, diet_type_id: int, modified_by: int):
     db_diet_type = (
         db.query(PatientDietList)
         .filter(PatientDietList.Id == diet_type_id)
@@ -58,6 +61,7 @@ def delete_diet_type(db: Session, diet_type_id: int):
         # Soft delete by marking the record as inactive
         db_diet_type.IsDeleted = "1"
         db_diet_type.UpdatedDateTime = datetime.now()
+        db_diet_type.ModifiedById = modified_by
         db.commit()
         return db_diet_type
     return None

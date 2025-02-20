@@ -1,29 +1,23 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 
 class PatientSocialHistoryBase(BaseModel):
-    IsDeleted: Optional[str] = '0'
+    isDeleted: Optional[str] = '0'
     patientId: int
-    sexuallyActive: Optional[str] = None
-    secondHandSmoker: Optional[str] = None
-    alcoholUse: Optional[str] = None
-    caffeineUse: Optional[str] = None
-    tobaccoUse: Optional[str] = None
-    drugUse: Optional[str] = None
-    exercise: Optional[str] = None
-    dietListId: Optional[str] = None
-    dietDescription: Optional[str] = None
-    educationListId: Optional[str] = None
-    educationDescription: Optional[str] = None
-    liveWithListId: Optional[str] = None
-    liveWithDescription: Optional[str] = None
-    occupationListId: Optional[str] = None
-    occupationDescription: Optional[str] = None
-    petListId: Optional[str] = None
-    petDescription: Optional[str] = None
-    religionListId: Optional[str] = None
-    religionDescription: Optional[str] = None
+    sexuallyActive: int = Field(json_schema_extra={"example": 1})
+    secondHandSmoker: int = Field(json_schema_extra={"example": 1})
+    alcoholUse: int = Field(json_schema_extra={"example": 1})
+    caffeineUse: int = Field(json_schema_extra={"example": 1})
+    tobaccoUse: int = Field(json_schema_extra={"example": 1})
+    drugUse: int = Field(json_schema_extra={"example": 1})
+    exercise: int = Field(json_schema_extra={"example": 1})
+    dietListId: int = Field(json_schema_extra={"example": 1})
+    educationListId: int = Field(json_schema_extra={"example": 1})
+    liveWithListId: int = Field(json_schema_extra={"example": 1})
+    occupationListId: int = Field(json_schema_extra={"example": 1})
+    petListId: int = Field(json_schema_extra={"example": 1})
+    religionListId: int = Field(json_schema_extra={"example": 1})
 
 class PatientSocialHistoryCreate(PatientSocialHistoryBase):
     createdDate: datetime
@@ -32,6 +26,7 @@ class PatientSocialHistoryCreate(PatientSocialHistoryBase):
     modifiedById: int
 
 class PatientSocialHistoryUpdate(PatientSocialHistoryBase):
+    id: int
     modifiedDate: datetime
     modifiedById: int
 
@@ -43,3 +38,16 @@ class PatientSocialHistory(PatientSocialHistoryBase):
     modifiedById: int
 
     model_config = {"from_attributes": True}
+
+class PatientSocialHistoryDecode(PatientSocialHistoryBase):
+    id: int
+    dietValue: str
+    educationValue: str
+    liveWithValue: str
+    occupationValue: str
+    petValue: str
+    religionValue: str
+    createdDate: datetime
+    modifiedDate: datetime
+    createdById: int
+    modifiedById: int

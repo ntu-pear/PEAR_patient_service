@@ -1,13 +1,13 @@
 import pytest
-from app.crud.patient_livewith_crud import (
+from app.crud.patient_list_livewith_crud import (
     create_livewith_type,
     get_all_livewith_types,
     get_livewith_type_by_id,
     update_livewith_type,
     delete_livewith_type,
 )
-from app.schemas.patient_livewith_list import PatientLiveWithListTypeCreate, PatientLiveWithListTypeUpdate
-from app.models.patient_livewith_list_model import PatientLiveWithList
+from app.schemas.patient_list_livewith import PatientLiveWithListTypeCreate, PatientLiveWithListTypeUpdate
+from app.models.patient_list_livewith_model import PatientLiveWithList
 
 from datetime import datetime
 from tests.utils.mock_db import get_db_session_mock
@@ -21,9 +21,10 @@ def test_create_livewith_type(
 ):
     """Test case for creating a livewith type."""
     # Arrange
+    created_by = 1
 
     # Act
-    result = create_livewith_type(db_session_mock, livewith_type_create)
+    result = create_livewith_type(db_session_mock, livewith_type_create, created_by)
 
     # Assert
     db_session_mock.add.assert_called_once_with(result)
@@ -31,6 +32,7 @@ def test_create_livewith_type(
     db_session_mock.refresh.assert_called_once_with(result)
     assert result.Value == "Alone"
     assert result.IsDeleted == "0"
+    assert result.CreatedById == created_by
 
 
 def test_get_all_livewith_types(db_session_mock):
@@ -75,6 +77,7 @@ def test_get_livewith_type_by_id(db_session_mock):
 def test_update_livewith_type(db_session_mock):
     """Test case for updating a livewith type."""
     # Arrange
+    modified_by = 2
     livewith_type_update = PatientLiveWithListTypeUpdate(Value="Siblings", IsDeleted="0")
     mock_livewith_type = PatientLiveWithList(
         Id=1,
@@ -91,18 +94,21 @@ def test_update_livewith_type(db_session_mock):
     result = update_livewith_type(
         db_session_mock,
         mock_livewith_type.Id,
-        livewith_type_update
+        livewith_type_update,
+        modified_by,
     )
 
     # Assert
     db_session_mock.commit.assert_called_once()
     db_session_mock.refresh.assert_called_once_with(mock_livewith_type)
     assert result.Value == livewith_type_update.Value
+    assert result.ModifiedById == modified_by
 
 
 def test_delete_livewith_type(db_session_mock):
     """Test case for deleting (soft-deleting) a livewith type."""
     # Arrange
+    modified_by = 2
     mock_livewith_type = PatientLiveWithList(
         Id=1,
         Value="Alone",
@@ -116,12 +122,13 @@ def test_delete_livewith_type(db_session_mock):
 
     # Act
     result = delete_livewith_type(
-        db_session_mock, mock_livewith_type.Id
+        db_session_mock, mock_livewith_type.Id, modified_by
     )
 
     # Assert
     db_session_mock.commit.assert_called_once()
     assert result.IsDeleted == "1"
+    assert result.ModifiedById == modified_by
 
 
 @pytest.fixture

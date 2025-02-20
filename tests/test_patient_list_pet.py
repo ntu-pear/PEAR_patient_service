@@ -1,13 +1,13 @@
 import pytest
-from app.crud.patient_pet_crud import (
+from app.crud.patient_list_pet_crud import (
     create_pet_type,
     get_all_pet_types,
     get_pet_type_by_id,
     update_pet_type,
     delete_pet_type,
 )
-from app.schemas.patient_pet_list import PatientPetListTypeCreate, PatientPetListTypeUpdate
-from app.models.patient_pet_list_model import PatientPetList
+from app.schemas.patient_list_pet import PatientPetListTypeCreate, PatientPetListTypeUpdate
+from app.models.patient_list_pet_model import PatientPetList
 
 from datetime import datetime
 from tests.utils.mock_db import get_db_session_mock
@@ -21,9 +21,10 @@ def test_create_pet_type(
 ):
     """Test case for creating a pet type."""
     # Arrange
+    created_by = 1
 
     # Act
-    result = create_pet_type(db_session_mock, pet_type_create)
+    result = create_pet_type(db_session_mock, pet_type_create, created_by)
 
     # Assert
     db_session_mock.add.assert_called_once_with(result)
@@ -31,6 +32,7 @@ def test_create_pet_type(
     db_session_mock.refresh.assert_called_once_with(result)
     assert result.Value == "Bird"
     assert result.IsDeleted == "0"
+    assert result.CreatedById == created_by
 
 
 def test_get_all_pet_types(db_session_mock):
@@ -75,6 +77,7 @@ def test_get_pet_type_by_id(db_session_mock):
 def test_update_pet_type(db_session_mock):
     """Test case for updating a pet type."""
     # Arrange
+    modified_by = 2
     pet_type_update = PatientPetListTypeUpdate(Value="Parrot", IsDeleted="0")
     mock_pet_type = PatientPetList(
         Id=1,
@@ -91,18 +94,21 @@ def test_update_pet_type(db_session_mock):
     result = update_pet_type(
         db_session_mock,
         mock_pet_type.Id,
-        pet_type_update
+        pet_type_update,
+        modified_by,
     )
 
     # Assert
     db_session_mock.commit.assert_called_once()
     db_session_mock.refresh.assert_called_once_with(mock_pet_type)
     assert result.Value == pet_type_update.Value
+    assert result.ModifiedById == modified_by
 
 
 def test_delete_pet_type(db_session_mock):
     """Test case for deleting (soft-deleting) a pet type."""
     # Arrange
+    modified_by = 2
     mock_pet_type = PatientPetList(
         Id=1,
         Value="Bird",
@@ -116,12 +122,13 @@ def test_delete_pet_type(db_session_mock):
 
     # Act
     result = delete_pet_type(
-        db_session_mock, mock_pet_type.Id
+        db_session_mock, mock_pet_type.Id, modified_by
     )
 
     # Assert
     db_session_mock.commit.assert_called_once()
     assert result.IsDeleted == "1"
+    assert result.ModifiedById == modified_by
 
 
 @pytest.fixture

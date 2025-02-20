@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy.orm import Session
-from ..models.patient_occupation_list_model import PatientOccupationList
-from ..schemas.patient_occupation_list import PatientOccupationListTypeCreate, PatientOccupationListTypeUpdate
+from ..models.patient_list_occupation_model import PatientOccupationList
+from ..schemas.patient_list_occupation import PatientOccupationListTypeCreate, PatientOccupationListTypeUpdate
 
 
 def get_all_occupation_types(db: Session):
@@ -15,9 +15,9 @@ def get_occupation_type_by_id(db: Session, occupation_type_id: int):
         .first()
     )
 
-def create_occupation_type(db: Session, occupation_type: PatientOccupationListTypeCreate):
+def create_occupation_type(db: Session, occupation_type: PatientOccupationListTypeCreate, created_by: int):
     db_occupation_type = PatientOccupationList(
-        **occupation_type.model_dump()
+        **occupation_type.model_dump(), CreatedById=created_by, ModifiedById=created_by
     )
     db.add(db_occupation_type)
     db.commit()
@@ -26,7 +26,7 @@ def create_occupation_type(db: Session, occupation_type: PatientOccupationListTy
 
 
 def update_occupation_type(
-    db: Session, occupation_type_id: int, occupation_type: PatientOccupationListTypeUpdate
+    db: Session, occupation_type_id: int, occupation_type: PatientOccupationListTypeUpdate, modified_by: int
 ):
     db_occupation_type = (
         db.query(PatientOccupationList)
@@ -41,13 +41,16 @@ def update_occupation_type(
         # Set UpdatedDateTime to the current datetime
         db_occupation_type.UpdatedDateTime = datetime.now()
 
+        # Update the modifiedById field
+        db_occupation_type.ModifiedById = modified_by
+
         db.commit()
         db.refresh(db_occupation_type)
         return db_occupation_type
     return None
 
 
-def delete_occupation_type(db: Session, occupation_type_id: int):
+def delete_occupation_type(db: Session, occupation_type_id: int, modified_by: int):
     db_occupation_type = (
         db.query(PatientOccupationList)
         .filter(PatientOccupationList.Id == occupation_type_id)
@@ -58,6 +61,7 @@ def delete_occupation_type(db: Session, occupation_type_id: int):
         # Soft delete by marking the record as inactive
         db_occupation_type.IsDeleted = "1"
         db_occupation_type.UpdatedDateTime = datetime.now()
+        db_occupation_type.ModifiedById = modified_by
         db.commit()
         return db_occupation_type
     return None

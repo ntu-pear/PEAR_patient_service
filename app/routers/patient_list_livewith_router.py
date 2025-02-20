@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..crud import patient_livewith_crud as crud_livewith_type
-from ..schemas.patient_livewith_list import (
+from ..crud import patient_list_livewith_crud as crud_livewith_type
+from ..schemas.patient_list_livewith import (
     PatientLiveWithListType,
     PatientLiveWithListTypeCreate,
     PatientLiveWithListTypeUpdate
@@ -21,14 +21,14 @@ def get_livewith_type(livewith_type_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Livewith type not found")
     return db_livewith_type
 
-@router.post("/create_livewith_type", response_model=PatientLiveWithListType)
+@router.post("/create_livewith_type", response_model=PatientLiveWithListTypeCreate, description="Create a new livewith type.")
 def create_livewith_type(livewith_type: PatientLiveWithListTypeCreate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
     user_id = 1
     
     return crud_livewith_type.create_livewith_type(db, livewith_type, user_id)
 
-@router.put("/update_livewith_type/{livewith_type_id}", response_model=PatientLiveWithListType)
+@router.put("/update_livewith_type/{livewith_type_id}", response_model=PatientLiveWithListTypeUpdate, description="Update a livewith type by ID.")
 def update_livewith_type(livewith_type_id: int, livewith_type: PatientLiveWithListTypeUpdate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
     user_id = 1

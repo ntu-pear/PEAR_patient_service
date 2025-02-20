@@ -7,7 +7,7 @@ class PatientSocialHistory(Base):
     __tablename__ = "PATIENT_SOCIAL_HISTORY"
 
     id = Column(Integer, primary_key=True, index=True)  # Changed to Integer
-    active = Column(String(1), default='Y', nullable=False)  # used to check if record is active or not, substitute isDeleted column
+    isDeleted = Column(String(1), default='0', nullable=False)  # used to check if record is active or not, substitute isDeleted column
     patientId = Column(Integer, ForeignKey('PATIENT.id'))  # Changed to Integer
     sexuallyActive = Column(String(1))
     secondHandSmoker = Column(String(1))
@@ -16,12 +16,12 @@ class PatientSocialHistory(Base):
     tobaccoUse = Column(String(1))
     drugUse = Column(String(1))
     exercise = Column(String(1))
-    dietListId = Column(Integer, ForeignKey("PATIENT_DIET_LIST.Id"), nullable=False)
-    educationListId = Column(Integer, ForeignKey("PATIENT_EDUCATION_LIST.Id"), nullable=False)
-    liveWithListId = Column(Integer, ForeignKey("PATIENT_LIVEWITH_LIST.Id"), nullable=False)
-    occupationListId = Column(Integer, ForeignKey("PATIENT_OCCUPATION_LIST.Id"), nullable=False)
-    petListId = Column(Integer, ForeignKey("PATIENT_PET_LIST.Id"), nullable=False)
-    religionListId = Column(Integer, ForeignKey("PATIENT_RELIGION_LIST.Id"), nullable=False)
+    dietListId = Column(Integer, ForeignKey("PATIENT_LIST_DIET.Id"), nullable=False)
+    educationListId = Column(Integer, ForeignKey("PATIENT_LIST_EDUCATION.Id"), nullable=False)
+    liveWithListId = Column(Integer, ForeignKey("PATIENT_LIST_LIVEWITH.Id"), nullable=False)
+    occupationListId = Column(Integer, ForeignKey("PATIENT_LIST_OCCUPATION.Id"), nullable=False)
+    petListId = Column(Integer, ForeignKey("PATIENT_LIST_PET.Id"), nullable=False)
+    religionListId = Column(Integer, ForeignKey("PATIENT_LIST_RELIGION.Id"), nullable=False)
 
     createdDate = Column(DateTime, nullable=False, default=DateTime)
     modifiedDate = Column(DateTime, nullable=False, default=DateTime)

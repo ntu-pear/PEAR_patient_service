@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..crud import patient_religion_crud as crud_religion_type
-from ..schemas.patient_religion_list import (
+from ..crud import patient_list_religion_crud as crud_religion_type
+from ..schemas.patient_list_religion import (
     PatientReligionListType,
     PatientReligionListTypeCreate,
     PatientReligionListTypeUpdate
@@ -21,14 +21,14 @@ def get_religion_type(religion_type_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Religion type not found")
     return db_religion_type
 
-@router.post("/create_religion_type", response_model=PatientReligionListType)
+@router.post("/create_religion_type", response_model=PatientReligionListTypeCreate, description="Create a new religion type.")
 def create_religion_type(religion_type: PatientReligionListTypeCreate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
     user_id = 1
     
     return crud_religion_type.create_religion_type(db, religion_type, user_id)
 
-@router.put("/update_religion_type/{religion_type_id}", response_model=PatientReligionListType)
+@router.put("/update_religion_type/{religion_type_id}", response_model=PatientReligionListTypeUpdate, description="Update a religion type by ID.")
 def update_religion_type(religion_type_id: int, religion_type: PatientReligionListTypeUpdate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
     user_id = 1

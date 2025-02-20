@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..crud import patient_pet_crud as crud_pet_type
-from ..schemas.patient_pet_list import (
+from ..crud import patient_list_pet_crud as crud_pet_type
+from ..schemas.patient_list_pet import (
     PatientPetListType,
     PatientPetListTypeCreate,
     PatientPetListTypeUpdate
@@ -21,14 +21,14 @@ def get_pet_type(pet_type_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Pet type not found")
     return db_pet_type
 
-@router.post("/create_pet_type", response_model=PatientPetListType)
+@router.post("/create_pet_type", response_model=PatientPetListTypeCreate, description="Create a new pet type.")
 def create_pet_type(pet_type: PatientPetListTypeCreate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
     user_id = 1
     
     return crud_pet_type.create_pet_type(db, pet_type, user_id)
 
-@router.put("/update_pet_type/{pet_type_id}", response_model=PatientPetListType)
+@router.put("/update_pet_type/{pet_type_id}", response_model=PatientPetListTypeUpdate, description="Update a pet type by ID.")
 def update_pet_type(pet_type_id: int, pet_type: PatientPetListTypeUpdate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
     user_id = 1

@@ -1,13 +1,13 @@
 import pytest
-from app.crud.patient_education_crud import (
+from app.crud.patient_list_education_crud import (
     create_education_type,
     get_all_education_types,
     get_education_type_by_id,
     update_education_type,
     delete_education_type,
 )
-from app.schemas.patient_education_list import PatientEducationListTypeCreate, PatientEducationListTypeUpdate
-from app.models.patient_education_list_model import PatientEducationList
+from app.schemas.patient_list_education import PatientEducationListTypeCreate, PatientEducationListTypeUpdate
+from app.models.patient_list_education_model import PatientEducationList
 
 from datetime import datetime
 from tests.utils.mock_db import get_db_session_mock
@@ -21,9 +21,10 @@ def test_create_education_type(
 ):
     """Test case for creating an education type."""
     # Arrange
+    created_by = 1
 
     # Act
-    result = create_education_type(db_session_mock, education_type_create)
+    result = create_education_type(db_session_mock, education_type_create, created_by)
 
     # Assert
     db_session_mock.add.assert_called_once_with(result)
@@ -31,6 +32,7 @@ def test_create_education_type(
     db_session_mock.refresh.assert_called_once_with(result)
     assert result.Value == "Primary or lower"
     assert result.IsDeleted == "0"
+    assert result.CreatedById == created_by
 
 
 def test_get_all_education_types(db_session_mock):
@@ -75,7 +77,8 @@ def test_get_education_type_by_id(db_session_mock):
 def test_update_education_type(db_session_mock):
     """Test case for updating an education type."""
     # Arrange
-    education_type_update = PatientEducationListTypeUpdate(Value="Junior College", IsDeleted="0")
+    modified_by = 2
+    education_type_update = PatientEducationListTypeUpdate(Value="Junior College", IsDeleted="0",)
     mock_education_type = PatientEducationList(
         Id=1,
         Value="Primary or lower",
@@ -91,18 +94,21 @@ def test_update_education_type(db_session_mock):
     result = update_education_type(
         db_session_mock,
         mock_education_type.Id,
-        education_type_update
+        education_type_update,
+        modified_by,
     )
 
     # Assert
     db_session_mock.commit.assert_called_once()
     db_session_mock.refresh.assert_called_once_with(mock_education_type)
     assert result.Value == education_type_update.Value
+    assert result.ModifiedById == modified_by
 
 
 def test_delete_education_type(db_session_mock):
     """Test case for deleting (soft-deleting) an education type."""
     # Arrange
+    modified_by = 2
     mock_education_type = PatientEducationList(
         Id=1,
         Value="Primary or lower",
@@ -116,12 +122,13 @@ def test_delete_education_type(db_session_mock):
 
     # Act
     result = delete_education_type(
-        db_session_mock, mock_education_type.Id
+        db_session_mock, mock_education_type.Id, modified_by
     )
 
     # Assert
     db_session_mock.commit.assert_called_once()
     assert result.IsDeleted == "1"
+    assert result.ModifiedById == modified_by
 
 
 @pytest.fixture
