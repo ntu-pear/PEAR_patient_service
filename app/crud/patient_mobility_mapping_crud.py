@@ -39,6 +39,18 @@ def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, cre
     if not mobility_list:
         raise HTTPException(status_code=400, detail="Invalid MobilityListId. No matching mobility list found.")
 
+    patient_not_recovered = db.query(PatientMobility).filter(
+        PatientMobility.PatientID == mobility_data.PatientID,
+        PatientMobility.IsRecovered == False,
+        PatientMobility.IsDeleted == False
+        ).first()
+    
+    if patient_not_recovered:
+        existing_mobility = patient_not_recovered.MobilityListId != 0
+        
+        if existing_mobility:
+            raise HTTPException(status_code=400, detail="Patient already has an existing mobility aid.")    
+
     # Create entry
     new_entry = PatientMobility(
         **mobility_data.model_dump(),
