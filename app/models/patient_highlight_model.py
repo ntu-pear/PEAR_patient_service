@@ -16,7 +16,7 @@ class PatientHighlight(Base):
     EndDate = Column(DateTime, nullable=False)
     CreatedDate = Column(DateTime, nullable=False, default=datetime.now)
     ModifiedDate = Column(DateTime, nullable=False, default=datetime.now)
-    CreatedById = Column(Integer, nullable=False, default=1)
-    ModifiedById = Column(Integer, nullable=False, default=1)
+    CreatedById = Column(String, nullable=False)  # Changed to String
+    ModifiedById = Column(String, nullable=False)  # Changed to String
     
     patient = relationship("Patient", back_populates="highlights")

@@ -1,11 +1,15 @@
 import pytest
 from unittest import mock
-from app.crud.patient_guardian_crud import get_guardian, create_guardian, update_guardian
+from app.crud.patient_guardian_crud import (
+    get_guardian,
+    create_guardian,
+    update_guardian,
+)
 from app.crud.patient_patient_guardian_crud import create_patient_patient_guardian
 from app.schemas.patient_guardian import PatientGuardianCreate, PatientGuardianUpdate
 from app.schemas.patient_patient_guardian import PatientPatientGuardianCreate
 from app.models.patient_guardian_model import PatientGuardian
-from app.models.patient_patient_guardian_model import PatientPatientGuardian 
+from app.models.patient_patient_guardian_model import PatientPatientGuardian
 from app.models.patient_guardian_relationship_mapping_model import (
     PatientGuardianRelationshipMapping,
 )
@@ -15,7 +19,6 @@ from tests.utils.mock_db import get_db_session_mock
 from unittest.mock import call
 
 
-
 # @mock.patch("app.models.patient_guardian_model.PatientGuardian")
 # def test_create_patient_guardian(
 #  # Ensure this mock is passed in
@@ -23,7 +26,7 @@ from unittest.mock import call
 #     db_session_mock,
 # ):
 #     """Test case for creating a social history."""
-    
+
 #     # Arrange
 #     patient_guardian = patient_guardian_create()
 
@@ -37,20 +40,21 @@ from unittest.mock import call
 
 @mock.patch("app.models.patient_guardian_model.PatientGuardian")
 def test_update_patient_guardian(
- # Ensure this mock is passed in
+    # Ensure this mock is passed in
     mock_patient_guardian,
     db_session_mock,
 ):
-    
+
     # Arrange
     patient_guardian = patient_guardian_update()
 
     # Act
     updated_guardian = update_guardian(db_session_mock, 1, patient_guardian)
 
-    #Assert
+    # Assert
     db_session_mock.commit.assert_called_once()
     db_session_mock.refresh.assert_called_once_with(updated_guardian)
+
 
 @pytest.fixture
 def db_session_mock():
@@ -77,12 +81,13 @@ def get_mock_patient_guardian():
         guardianApplicationUserId="B22698B8-42A2-4115-9631-1C2D1E2AC5F5",
         createdDate=datetime.now(),
         modifiedDate=datetime.now(),
-        createdById=1,
-        modifiedById=1,
+        CreatedById="1",
+        ModifiedById="1",
     )
+
+
 def patient_guardian_update():
     return PatientGuardianUpdate(
-        id="1",
         active="Y",
         firstName="Test",
         lastName="TestLastName",
@@ -98,14 +103,14 @@ def patient_guardian_update():
         isDeleted="0",
         guardianApplicationUserId="B22698B8-42A2-4115-9631-1C2D1E2AC5F5",
         modifiedDate=datetime.now(),
-        modifiedById=1,
-        patientId = '1',
-        relationshipName= "Husband"
+        ModifiedById="1",
+        patientId="1",
+        relationshipName="Husband",
     )
+
 
 def patient_guardian_create():
     return PatientGuardianCreate(
-        id="1",
         active="Y",
         firstName="Test",
         lastName="TestLastName",
@@ -122,11 +127,12 @@ def patient_guardian_create():
         guardianApplicationUserId="B22698B8-42A2-4115-9631-1C2D1E2AC5F5",
         createdDate=datetime.now(),
         modifiedDate=datetime.now(),
-        createdById=1,
-        modifiedById=1,
-        patientId = '1',
-        relationshipName= "Husband"
+        CreatedById="1",
+        ModifiedById="1",
+        patientId="1",
+        relationshipName="Husband",
     )
+
 
 def get_mock_patient():
     return Patient(
@@ -156,9 +162,9 @@ def get_mock_patient():
         profilePicture=None,
         createdDate="2021-01-01 00:00:00.000",
         modifiedDate="2021-01-01 00:00:00.000",
-        createdById=1,
-        modifiedById=1,
-        isDeleted = "0",
+        CreatedById="1",
+        ModifiedById="1",
+        isDeleted="0",
     )
 
 
@@ -170,31 +176,32 @@ def get_patient_patient_guardian():
         relationshipId="1",
         createdDate=datetime.now(),
         modifiedDate=datetime.now(),
-        createdById="1",
-        modifiedById="1",
-        isDeleted = "0",
+        CreatedById="1",
+        ModifiedById="1",
+        isDeleted="0",
     )
+
 
 def patient_patient_guardian_create():
     return PatientPatientGuardianCreate(
-        id="1",
         patientId="1",
         guardianId="1",
         relationshipId="1",
         createdDate=datetime.now(),
         modifiedDate=datetime.now(),
-        createdById="1",
-        modifiedById="1",
-        isDeleted = "0",
+        CreatedById="1",
+        ModifiedById="1",
+        isDeleted="0",
     )
+
 
 def get_patient_guardian_relationship_mapping():
     return PatientGuardianRelationshipMapping(
-        id = "1",
-        isDeleted = '0',
-        relationshipName = "Husband",
+        id="1",
+        isDeleted="0",
+        relationshipName="Husband",
         createdDate="2021-01-01 00:00:00.000",
         modifiedDate="2021-01-01 00:00:00.000",
-        createdById="1",
-        modifiedById="1",
+        CreatedById="1",
+        ModifiedById="1",
     )

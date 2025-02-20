@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 from datetime import datetime
 from typing import Optional
 
@@ -10,8 +10,8 @@ class PatientAssignedDementiaBase(BaseModel):
 class PatientAssignedDementiaCreate(PatientAssignedDementiaBase):
     createdDate: datetime
     modifiedDate: datetime
-    createdById: int
-    modifiedById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
 class PatientAssignedDementiaUpdate(PatientAssignedDementiaBase):
     modifiedDate: datetime

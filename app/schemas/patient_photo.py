@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 from datetime import datetime
 from typing import Optional
 
@@ -14,8 +14,8 @@ class PatientPhotoCreate(PatientPhotoBase):
     """ Schema for creating a new patient photo (System fills other fields) """
     CreatedDateTime: datetime = datetime.utcnow()
     UpdatedDateTime: datetime = datetime.utcnow()
-    CreatedById: int
-    ModifiedById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
 class PatientPhotoUpdate(BaseModel):
     """ Schema for updating patient photo (Only allow certain fields) """
@@ -29,8 +29,8 @@ class PatientPhotoResponse(PatientPhotoBase):
     PatientPhotoID: int
     CreatedDateTime: datetime
     UpdatedDateTime: datetime
-    CreatedById: int
-    ModifiedById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
     class Config:
-        orm_mode = True  # Ensures compatibility with SQLAlchemy ORM
+        model_config = {"from_attributes": True}

@@ -38,6 +38,16 @@ def delete_social_history(social_history_id: int, db: Session = Depends(get_db))
     """
     Perform a soft delete on the social history record by changing 'isDeleted' from '0' to '1'.
     """
+    db_social_history = db.query(crud_social_history.PatientSocialHistory).filter(crud_social_history.PatientSocialHistory.patientId == social_history_id).first()
+    
+    if db_social_history:
+        # Perform the soft delete by setting 'active' to 'N'
+        db_social_history.isDeleted = '1'
+        db.commit()
+        db.refresh(db_social_history)
+        return db_social_history
+    else:
+        raise HTTPException(status_code=404, detail="Social history not found")
     # TODO: CHANGE USER ID to the actual user ID
     userId = 1
     return crud_social_history.delete_patient_social_history(db, social_history_id, userId)

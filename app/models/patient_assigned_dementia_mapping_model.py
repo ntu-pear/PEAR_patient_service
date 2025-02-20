@@ -13,8 +13,8 @@ class PatientAssignedDementiaMapping(Base):
 
     CreatedDate = Column(DateTime, nullable=False, default=DateTime)
     ModifiedDate = Column(DateTime, nullable=False, default=DateTime)
-    CreatedById = Column(Integer, nullable=False)  # Changed to Integer
-    ModifiedById = Column(Integer, nullable=False)  # Changed to Integer
+    CreatedById = Column(String, nullable=False)  # Changed to String
+    ModifiedById = Column(String, nullable=False)  # Changed to String
     
     patient = relationship("Patient", back_populates="assigned_dementias")
 

@@ -31,17 +31,18 @@ class PatientBase(BaseModel):
 class PatientCreate(PatientBase):
     createdDate: datetime  # DATETIME -> datetime
     modifiedDate: datetime
-    createdById: int  # INT -> int
-    modifiedById: int 
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
 class PatientUpdate(PatientBase):
     modifiedDate: datetime
-    modifiedById: int 
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
+
 
 class Patient(PatientBase):
     id: int # INT -> int (primary key)
     createdDate: datetime  # DATETIME -> datetime
     modifiedDate: datetime  # DATETIME -> datetime
-    createdById: int  # INT -> int
-    modifiedById: int  # INT -> int
-    model_config = ConfigDict(from_attributes=True)
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
+    model_config = {"from_attributes": True}

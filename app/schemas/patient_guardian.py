@@ -24,14 +24,14 @@ class PatientGuardianBase(BaseModel):
 class PatientGuardianCreate(PatientGuardianBase):
     createdDate: datetime = Field(default_factory=datetime.now)
     modifiedDate: datetime = Field(default_factory=datetime.now)
-    createdById: int
-    modifiedById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
     patientId: int
     relationshipName: str
 
 class PatientGuardianUpdate(PatientGuardianBase):
     modifiedDate: datetime = Field(default_factory=datetime.now)
-    modifiedById: int
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
     patientId: int
     relationshipName: str
 
@@ -39,7 +39,7 @@ class PatientGuardian(PatientGuardianBase):
     id: int
     createdDate: datetime
     modifiedDate: datetime
-    createdById: int
-    modifiedById: int
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
     model_config = ConfigDict(from_attributes=True)
     

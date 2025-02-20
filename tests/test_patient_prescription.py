@@ -148,8 +148,8 @@ def test_create_prescription(
         "Status": "Active",
         "CreatedDateTime": datetime(2023, 1, 1, 10, 0),
         "UpdatedDateTime": datetime(2023, 1, 1, 10, 0),
-        "CreatedById": 1,
-        "UpdatedById": 1,
+        "CreatedById": "1",
+        "ModifiedById": "1",
     }
     prescription = create_prescription(
         db_session_mock, PatientPrescriptionCreate(**data)
@@ -165,11 +165,31 @@ def test_create_prescription(
     assert prescription.Status == "Active"
     assert prescription.CreatedDateTime == datetime(2023, 1, 1, 10, 0)
     assert prescription.UpdatedDateTime == datetime(2023, 1, 1, 10, 0)
-    assert prescription.CreatedById == 1
-    assert prescription.UpdatedById == 1
+    assert prescription.CreatedById == "1"
+    assert prescription.ModifiedById == "1"
 
 
 def test_update_prescription(db_session_mock):
+    # Mock data
+    mock_data = mock.MagicMock(
+        Id=1,
+        PatientId=1,
+        Dosage="500mg",
+        FrequencyPerDay=3,
+        Instruction="Take after meal",
+        StartDate=datetime(2023, 1, 1),
+        EndDate=datetime(2023, 1, 10),
+        IsAfterMeal="1",
+        PrescriptionRemarks="No remarks",
+        Status="Active",
+        UpdatedDateTime=datetime(2023, 1, 1, 10, 0),
+        ModifiedById="1",
+    )
+    
+
+    # Set up the mock query to return the mock prescriptions
+    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_data
+
     data = {
         "Active": "1",
         "PatientId": 1,
@@ -183,7 +203,7 @@ def test_update_prescription(db_session_mock):
         "PrescriptionRemarks": "No remarks",
         "Status": "Active",
         "UpdatedDateTime": datetime(2023, 1, 1, 10, 0),
-        "UpdatedById": 1,
+        "ModifiedById": "1",
     }
     prescription = update_prescription(
         db_session_mock, 1, PatientPrescriptionUpdate(**data)
@@ -199,10 +219,20 @@ def test_update_prescription(db_session_mock):
     assert prescription.PrescriptionRemarks == "No remarks"
     assert prescription.Status == "Active"
     assert prescription.UpdatedDateTime == datetime(2023, 1, 1, 10, 0)
-    assert prescription.UpdatedById == 1
+    assert prescription.ModifiedById == "1"
 
 
 def test_delete_prescription(db_session_mock):
+    # Mock data
+    mock_data = mock.MagicMock(
+        Id=1,
+        PatientId=1,
+        IsDeleted="0",
+    )
+    
+    # Set up the mock query to return the mock prescriptions
+    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_data
+
     data = {
         "IsDeleted": "0",
         "PatientId": 1,
@@ -216,7 +246,7 @@ def test_delete_prescription(db_session_mock):
         "PrescriptionRemarks": "No remarks",
         "Status": "Active",
         "UpdatedDateTime": datetime(2023, 1, 1, 10, 0),
-        "UpdatedById": 1,
+        "ModifiedById": "1",
     }
 
     prescription_id = 1
