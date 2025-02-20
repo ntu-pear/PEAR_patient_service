@@ -169,6 +169,7 @@ def create_patient_allergy(
             PatientAllergyMapping.AllergyTypeID == allergy_data.AllergyTypeID,
             PatientAllergyMapping.AllergyReactionTypeID
             == allergy_data.AllergyReactionTypeID,
+            PatientAllergyMapping.IsDeleted == "0",
         )
         .first()
     )
