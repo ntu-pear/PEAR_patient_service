@@ -27,8 +27,6 @@ class PatientSocialHistoryCreate(PatientSocialHistoryBase):
 
 class PatientSocialHistoryUpdate(PatientSocialHistoryBase):
     id: int
-    modifiedDate: datetime
-    modifiedById: int
 
 class PatientSocialHistory(PatientSocialHistoryBase):
     id: int

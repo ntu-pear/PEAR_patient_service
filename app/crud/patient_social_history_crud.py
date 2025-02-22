@@ -263,7 +263,7 @@ def update_patient_social_history(db: Session, patient_id: int, social_data: Pat
     """
     record = (
         db.query(PatientSocialHistory)
-        .filter(PatientSocialHistory.id == social_data.id, PatientSocialHistory.patientId == social_data.patientId)
+        .filter(PatientSocialHistory.id == social_data.id, PatientSocialHistory.patientId == patient_id)
         .first()
     )
     if not record:
@@ -317,11 +317,11 @@ def update_patient_social_history(db: Session, patient_id: int, social_data: Pat
     return record
 
 
-def delete_patient_social_history(db: Session, social_history_id: int, modified_by: int):
+def delete_patient_social_history(db: Session, patient_id: int, modified_by: int):
     """
     Soft delete a social history record by setting isDeleted to "1".
     """
-    record = db.query(PatientSocialHistory).filter(PatientSocialHistory.id == social_history_id).first()
+    record = db.query(PatientSocialHistory).filter(PatientSocialHistory.patientId == patient_id, PatientSocialHistory.isDeleted == "0").first()
     if not record:
         raise HTTPException(status_code=404, detail="Social history record not found")
 
