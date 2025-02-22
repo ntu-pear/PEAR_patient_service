@@ -11,18 +11,23 @@ from app.models import (
     patient_allocation_model,
     patient_attendance_model,
     patient_doctor_note_model,
+    patient_list_diet_model,
+    patient_list_education_model,
     patient_guardian_model,
     patient_highlight_model,
     patient_list_model,
     patient_mobility_mapping_model,
+    patient_list_livewith_model,
     patient_list_language_model,
     patient_model,
+    patient_list_occupation_model,
+    patient_list_pet_model,
     patient_photo_list_model,
     patient_photo_model,
     patient_prescription_list_model,
     patient_prescription_model,
+    patient_list_religion_model,
     patient_social_history_model,
-    patient_social_history_list_mapping_model,
     patient_vital_model,
     patient_mobility_list_model,
     patient_guardian_relationship_mapping_model,
@@ -39,6 +44,12 @@ from app.routers import (
     patient_guardian_router,
     patient_highlight_router,
     patient_highlight_type_router,
+    patient_list_diet_router,
+    patient_list_education_router,
+    patient_list_livewith_router,
+    patient_list_occupation_router,
+    patient_list_pet_router,
+    patient_list_religion_router,
     patient_list_router,
     patient_mobility_router,
     patient_photo_router,
@@ -143,17 +154,30 @@ app.include_router(
 app.include_router(
     patient_list_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patient Lists"]
 )
-app.include_router(patient_list_language_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Language List"])
-app.include_router(patient_mobility_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Mobility"])
-app.include_router(patient_mobility_mapping_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patient Mobility Mapping"])
-app.include_router(patient_photo_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Photos"])
-app.include_router(
-    patient_prescription_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Prescriptions"]
-)
+
+# Social History
 app.include_router(
     patient_social_history_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Social History"]
 )
+app.include_router(patient_list_diet_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Diet List"])
+app.include_router(patient_list_education_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Education List"])
+app.include_router(patient_list_livewith_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Live With List"])
+app.include_router(patient_list_occupation_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Occupation List"])
+app.include_router(patient_list_pet_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Pet List"])
+app.include_router(patient_list_religion_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Religion List"])
+
 app.include_router(patient_vital_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Vitals"])
+
+app.include_router(patient_list_language_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Language List"])
+app.include_router(patient_mobility_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Mobility"])
+app.include_router(patient_mobility_mapping_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patient Mobility Mapping"])
+
+app.include_router(
+    patient_prescription_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Prescriptions"]
+)
+# Shift Photos route to below. Photos route catches / routes which interferes with most GET ALL routes.
+app.include_router(patient_photo_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Photos"])
+
 
 @app.get("/")
 def read_root():
