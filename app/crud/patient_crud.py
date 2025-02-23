@@ -125,7 +125,7 @@ def create_patient(db: Session, patient: PatientCreate):
 
 
 def update_patient(db: Session, patient_id: int, patient: PatientUpdate):
-    db_patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    db_patient = db.query(Patient).filter(Patient.id == patient_id, Patient.isDeleted == "0").first()
     if not db_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 
