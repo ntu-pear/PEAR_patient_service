@@ -64,11 +64,11 @@ from app.routers import (
 )
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from datetime import datetime
 
 load_dotenv()
 
 logger = logging.getLogger("uvicorn")
+
 
 app = FastAPI(
     title="NTU FYP PEAR PATIENT SERVICE",
@@ -76,6 +76,7 @@ app = FastAPI(
     version="1.0.0",
     servers=[],  # This removes the servers dropdown in Swagger UI
 )
+
 
 origins = [
     "http://localhost",
@@ -103,14 +104,18 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={"detail": exc.errors(), "body": exc.body},
     )
 
+
 # Exception handler for database errors
 @app.exception_handler(SQLAlchemyError)
 async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
     logger.error(f"Database error at {request.url}: {str(exc)}")
     return JSONResponse(
         status_code=500,
-        content={"detail": "Internal server error. Please contact People in charge of servers."},
+        content={
+            "detail": "Internal server error. Please contact People in charge of servers."
+        },
     )
+
 
 # Database setup
 try:
@@ -119,36 +124,52 @@ try:
 except Exception as db_init_error:
     logger.error(f"Failed to initialize database: {str(db_init_error)}", exc_info=True)
 
-API_VERSION_PREFIX = "/api/v1"  
+API_VERSION_PREFIX = "/api/v1"
 
-app.include_router(patient_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patients"])
+app.include_router(
+    patient_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patients"]
+)
 
 app.include_router(
     allergy_type_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Allergy Types"]
 )
 app.include_router(
-    allergy_reaction_type_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Allergy Reaction Types"]
+    allergy_reaction_type_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Allergy Reaction Types"],
 )
 app.include_router(
-    patient_assigned_dementia_list_router.router, prefix=f"{API_VERSION_PREFIX}",tags=["Dementia List"]
+    patient_assigned_dementia_list_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Dementia List"],
 )
 app.include_router(
-    patient_assigned_dementia_mapping_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patient Assigned Dementia"]
+    patient_assigned_dementia_mapping_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Patient Assigned Dementia"],
 )
 app.include_router(
-    patient_allergy_mapping_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patient Allergies"]
+    patient_allergy_mapping_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Patient Allergies"],
 )
 app.include_router(
-    patient_doctor_note_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Doctor Notes"]
+    patient_doctor_note_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Doctor Notes"],
 )
-app.include_router(patient_guardian_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Guardians"])
+app.include_router(
+    patient_guardian_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Guardians"]
+)
 
 # highlights
 app.include_router(
     patient_highlight_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Highlights"]
 )
 app.include_router(
-    patient_highlight_type_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Highlights Type"]
+    patient_highlight_type_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Highlights Type"],
 )
 
 app.include_router(
@@ -157,26 +178,64 @@ app.include_router(
 
 # Social History
 app.include_router(
-    patient_social_history_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Social History"]
+    patient_social_history_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Social History"],
 )
-app.include_router(patient_list_diet_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Diet List"])
-app.include_router(patient_list_education_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Education List"])
-app.include_router(patient_list_livewith_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Live With List"])
-app.include_router(patient_list_occupation_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Occupation List"])
-app.include_router(patient_list_pet_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Pet List"])
-app.include_router(patient_list_religion_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Religion List"])
-
-app.include_router(patient_vital_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Vitals"])
-
-app.include_router(patient_list_language_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Language List"])
-app.include_router(patient_mobility_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Mobility"])
-app.include_router(patient_mobility_mapping_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patient Mobility Mapping"])
+app.include_router(
+    patient_list_diet_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Diet List"]
+)
+app.include_router(
+    patient_list_education_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Education List"],
+)
+app.include_router(
+    patient_list_livewith_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Live With List"],
+)
+app.include_router(
+    patient_list_occupation_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Occupation List"],
+)
+app.include_router(
+    patient_list_pet_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Pet List"]
+)
+app.include_router(
+    patient_list_religion_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Religion List"],
+)
 
 app.include_router(
-    patient_prescription_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Prescriptions"]
+    patient_vital_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Vitals"]
+)
+
+app.include_router(
+    patient_list_language_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Language List"],
+)
+app.include_router(
+    patient_mobility_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Mobility"]
+)
+app.include_router(
+    patient_mobility_mapping_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Patient Mobility Mapping"],
+)
+
+app.include_router(
+    patient_prescription_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Prescriptions"],
 )
 # Shift Photos route to below. Photos route catches / routes which interferes with most GET ALL routes.
-app.include_router(patient_photo_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Photos"])
+app.include_router(
+    patient_photo_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Photos"]
+)
 
 
 @app.get("/")
