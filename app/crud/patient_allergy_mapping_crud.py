@@ -135,7 +135,7 @@ def get_patient_allergies(db: Session, patient_id: int):
 
 
 def create_patient_allergy(
-    db: Session, allergy_data: PatientAllergyCreate, created_by: str
+    db: Session, allergy_data: PatientAllergyCreate, created_by: str, user_full_name:str
 ):
     # Check if the AllergyTypeID exists in the AllergyType table
     allergy_type = (
@@ -201,7 +201,9 @@ def create_patient_allergy(
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
+        user_full_name=user_full_name,
         table="PatientAllergyMapping",
+        message = "Created patient allergy",
         entity_id=db_allergy.Patient_AllergyID,
         original_data=None,
         updated_data=updated_data_dict,
@@ -214,6 +216,7 @@ def update_patient_allergy(
     patient_id: int,
     allergy_data: PatientAllergyUpdateReq,
     modified_by: str,
+    user_full_name:str
 ):
     # Check if the AllergyTypeID exists and is active
     allergy_type = (
@@ -291,15 +294,17 @@ def update_patient_allergy(
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
+        user_full_name=user_full_name,
+        message= "Updated patient allergy",
         table="PatientAllergyMapping",
         entity_id=allergy_data.Patient_AllergyID,
-        original_data=None,
+        original_data=original_data_dict,
         updated_data=updated_data_dict,
     )
     return db_allergy
 
 
-def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: str):
+def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: str, user_full_name: str):
     
     # Check if the record exists
     db_allergy = (
@@ -331,6 +336,8 @@ def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: st
     log_crud_action(
         action=ActionType.DELETE,
         user=modified_by,
+        user_full_name=user_full_name,
+        message="Deleted patient allergy",
         table="PatientAllergyMapping",
         entity_id=patient_allergy_id,
         original_data=original_data_dict,
