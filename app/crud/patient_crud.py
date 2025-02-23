@@ -68,7 +68,6 @@ def create_patient(db: Session, patient: PatientCreate):
     if existing_patient:
         raise HTTPException(status_code=400, detail="NRIC must be unique for active records")
 
-    # 🚀 Manually construct an INSERT statement **without OUTPUT inserted.id**
     query = text("""
         INSERT INTO [PATIENT] (
             active, name, nric, address, [tempAddress], [homeNo], [handphoneNo], gender, 
@@ -117,7 +116,7 @@ def create_patient(db: Session, patient: PatientCreate):
     }
 
     db.execute(query, params)
-    db.commit()  # 🚀 Commit first to avoid issues with OUTPUT inserted.id
+    db.commit() 
 
     # Retrieve the newly inserted patient using NRIC
     new_patient = db.query(Patient).filter(Patient.nric == patient.nric).first()
@@ -172,8 +171,8 @@ def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFil
     # Upload new profile picture to Cloudinary
     profile_picture_url = upload_photo_to_cloudinary(file)
 
-    # Log original data
-    original_data_dict = {"profilePicture": db_patient.profilePicture}
+    # # Log original data
+    # original_data_dict = {"profilePicture": db_patient.profilePicture}
 
     # Update patient profile picture
     db_patient.profilePicture = profile_picture_url
