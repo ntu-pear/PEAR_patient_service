@@ -63,21 +63,18 @@ from app.routers import (
     patient_mobility_mapping_router,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer
 from dotenv import load_dotenv
 
 load_dotenv()
 
 logger = logging.getLogger("uvicorn")
 
-security = HTTPBearer()
 
 app = FastAPI(
     title="NTU FYP PEAR PATIENT SERVICE",
     description="This is the patient service api docs",
     version="1.0.0",
     servers=[],  # This removes the servers dropdown in Swagger UI
-    openapi_tags=[{"name": "Patients", "description": "Patient-related endpoints"}],
 )
 
 
