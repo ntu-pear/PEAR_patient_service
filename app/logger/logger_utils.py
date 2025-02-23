@@ -12,6 +12,8 @@ class ActionType(Enum):
 def log_crud_action(
     action: ActionType,
     user: str,
+    user_full_name: str,
+    message: str,
     table: str,
     entity_id: Optional[int] = None,
     original_data: Optional[dict] = None,
@@ -30,9 +32,14 @@ def log_crud_action(
         "updated_data": updated_data,
     }
 
-    log_data = {key: value for key, value in log_data.items() if value is not None}
-    log_message = json.dumps(log_data)
-    logger.info(log_message, extra={"table": table, "user": user, "action": action.value})
+    extra = {
+        "table": table,
+        "user": user,
+        "action": action.value,
+        "user_full_name": user_full_name,
+        "log_text": message,
+    }
+    logger.info(log_data, extra=extra)
 
 def serialize_data(data):
     if isinstance(data, datetime):
