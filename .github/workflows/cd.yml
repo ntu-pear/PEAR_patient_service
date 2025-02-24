@@ -60,7 +60,6 @@ jobs:
       - name: Build Docker image
         run: |
           echo "Building Docker image..."
-          docker build -f Dockerfile.dev -t patient_service_dev .
           docker build --no-cache -f Dockerfile.dev -t patient_service_dev .
 
       - name: Tag Docker image
