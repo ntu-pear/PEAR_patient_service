@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..crud import patient_crud as crud_patient
@@ -37,6 +37,15 @@ def update_patient(patient_id: int, patient: PatientUpdate, db: Session = Depend
         raise HTTPException(status_code=404, detail="Patient not found")
     patient = Patient.model_validate(db_patient)
     return SingleResponse(data=patient)
+
+@router.put("/patients/update/{patient_id}/update_patient_profile_picture", response_model=SingleResponse[Patient])
+def update_patient_profile_picture(patient_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    db_patient = crud_patient.update_patient_profile_picture(db=db, patient_id=patient_id, file=file)
+    if db_patient is None:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    patient = Patient.model_validate(db_patient)
+    return SingleResponse(data=patient)
+
 
 @router.delete("/patients/delete/{patient_id}", response_model=SingleResponse[Patient])
 def delete_patient(patient_id: int, db: Session = Depends(get_db)):

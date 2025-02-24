@@ -241,4 +241,4 @@ app.include_router(
 @app.get("/")
 def read_root():
     logger.info("Root endpoint accessed")
-    return {"message": "Welcome to the Patient API Testing"}
+    return {"message": "Welcome to the Patient API"}

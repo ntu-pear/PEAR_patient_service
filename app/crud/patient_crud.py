@@ -1,14 +1,25 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, text
+import cloudinary.uploader
 from ..models.patient_model import Patient
 from ..schemas.patient import PatientCreate, PatientUpdate
 from datetime import datetime
 from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 import math
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
 
 # To Change
 user = "1"
+SYSTEM_USER_ID  = "1"
+
+
+def upload_photo_to_cloudinary(file: UploadFile):
+    """ Upload photo to Cloudinary and return the URL """
+    try:
+        upload_result = cloudinary.uploader.upload(file.file)
+        return upload_result["secure_url"]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Cloudinary upload failed: {str(e)}")
 
 
 def get_patient(db: Session, patient_id: int, mask: bool = True):
@@ -46,106 +57,148 @@ def get_patients(db: Session, mask: bool = True, pageNo: int = 0, pageSize: int 
 
 
 def create_patient(db: Session, patient: PatientCreate):
-    # Check nric uniqueness
-    db_patient_with_same_nric = (
+    """ Create a new patient while explicitly avoiding OUTPUT inserted.id """
+
+    # Check NRIC uniqueness
+    existing_patient = (
         db.query(Patient)
         .filter(Patient.nric == patient.nric, Patient.isDeleted == "0")
         .first()
     )
-    if db_patient_with_same_nric:
-        raise HTTPException(
-            status_code=400, detail=f"Nric must be unique for active records"
-        )
+    if existing_patient:
+        raise HTTPException(status_code=400, detail="NRIC must be unique for active records")
 
-    db_patient = Patient(**patient.model_dump())
+    query = text("""
+        INSERT INTO [PATIENT] (
+            active, name, nric, address, [tempAddress], [homeNo], [handphoneNo], gender, 
+            [dateOfBirth], [isApproved], [preferredName], [preferredLanguageId], [updateBit], 
+            [autoGame], [startDate], [endDate], [isActive], [isRespiteCare], [privacyLevel], 
+            [terminationReason], [inActiveReason], [inActiveDate], [profilePicture], [createdDate], 
+            [modifiedDate], [CreatedById], [ModifiedById], [isDeleted]
+        ) VALUES (
+            :active, :name, :nric, :address, :tempAddress, :homeNo, :handphoneNo, :gender, 
+            :dateOfBirth, :isApproved, :preferredName, :preferredLanguageId, :updateBit, 
+            :autoGame, :startDate, :endDate, :isActive, :isRespiteCare, :privacyLevel, 
+            :terminationReason, :inActiveReason, :inActiveDate, :profilePicture, :createdDate, 
+            :modifiedDate, :CreatedById, :ModifiedById, :isDeleted
+        );
+    """)
 
-    updated_data_dict = serialize_data(patient.model_dump())
-    if db_patient:
-        db_patient.modifiedDate = datetime.now()
-        db_patient.createdDate = datetime.now()
-        db_patient.CreatedById = user
-        db_patient.ModifiedById = user
-        db.add(db_patient)
-        db.commit()
-        db.refresh(db_patient)
+    params = {
+        "active": patient.active,
+        "name": patient.name,
+        "nric": patient.nric,
+        "address": patient.address,
+        "tempAddress": patient.tempAddress,
+        "homeNo": patient.homeNo,
+        "handphoneNo": patient.handphoneNo,
+        "gender": patient.gender,
+        "dateOfBirth": patient.dateOfBirth,
+        "isApproved": patient.isApproved,
+        "preferredName": patient.preferredName,
+        "preferredLanguageId": patient.preferredLanguageId,
+        "updateBit": patient.updateBit,
+        "autoGame": patient.autoGame,
+        "startDate": patient.startDate,
+        "endDate": patient.endDate,
+        "isActive": patient.isActive,
+        "isRespiteCare": patient.isRespiteCare,
+        "privacyLevel": patient.privacyLevel,
+        "terminationReason": patient.terminationReason,
+        "inActiveReason": patient.inActiveReason,
+        "inActiveDate": patient.inActiveDate,
+        "profilePicture": patient.profilePicture,
+        "createdDate": datetime.utcnow(),
+        "modifiedDate": datetime.utcnow(),
+        "CreatedById": user,
+        "ModifiedById": user,
+        "isDeleted": patient.isDeleted,
+    }
 
-        log_crud_action(
-            action=ActionType.CREATE,
-            user=user,
-            table="Patient",
-            entity_id=db_patient.id,
-            original_data=None,
-            updated_data=updated_data_dict,
-        )
-    return db_patient
+    db.execute(query, params)
+    db.commit() 
+
+    # Retrieve the newly inserted patient using NRIC
+    new_patient = db.query(Patient).filter(Patient.nric == patient.nric).first()
+
+    return new_patient
 
 
 def update_patient(db: Session, patient_id: int, patient: PatientUpdate):
-    db_patient = db.query(Patient).filter(Patient.id == patient_id).first()
-    if db_patient:
-        try:
-            original_data_dict = {
-                k: serialize_data(v)
-                for k, v in db_patient.__dict__.items()
-                if not k.startswith("_")
-            }
-        except Exception as e:
-            original_data_dict = "{}"
+    db_patient = db.query(Patient).filter(Patient.id == patient_id, Patient.isDeleted == "0").first()
+    if not db_patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
 
-        # Check nric uniqueness
-        db_patient_with_same_nric = (
-            db.query(Patient)
-            .filter(
-                Patient.id != patient_id,
-                Patient.nric == patient.nric,
-                Patient.isDeleted == "0",
-            )
-            .first()
+    try:
+        original_data_dict = {
+            k: serialize_data(v)
+            for k, v in db_patient.__dict__.items()
+            if not k.startswith("_")
+        }
+    except Exception:
+        original_data_dict = "{}"
+
+    # Check NRIC uniqueness
+    existing_patient = (
+        db.query(Patient)
+        .filter(
+            Patient.id != patient_id,
+            Patient.nric == patient.nric,
+            Patient.isDeleted == "0",
         )
-        if db_patient_with_same_nric:
-            raise HTTPException(
-                status_code=400, detail=f"Nric must be unique for active records"
-            )
+        .first()
+    )
+    if existing_patient:
+        raise HTTPException(status_code=400, detail="NRIC must be unique for active records")
 
-        for key, value in patient.model_dump().items():
-            setattr(db_patient, key, value)
-        db_patient.modifiedDate = datetime.now()
-        db_patient.ModifiedById = user
-        db.commit()
-        db.refresh(db_patient)
+    for key, value in patient.model_dump().items():
+        setattr(db_patient, key, value)
+    db_patient.modifiedDate = datetime.utcnow()
+    db_patient.ModifiedById = user
 
-        updated_data_dict = serialize_data(patient.model_dump())
-        log_crud_action(
-            action=ActionType.UPDATE,
-            user=user,
-            table="Patient",
-            entity_id=patient_id,
-            original_data=original_data_dict,
-            updated_data=updated_data_dict,
-        )
+    db.commit()
+    db.refresh(db_patient)
+
+    return db_patient
+
+
+def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFile):
+    """ Update only the patient's profile picture """
+    db_patient = db.query(Patient).filter(Patient.id == patient_id, Patient.isDeleted == "0").first()
+    if not db_patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    # Upload new profile picture to Cloudinary
+    profile_picture_url = upload_photo_to_cloudinary(file)
+
+    # # Log original data
+    # original_data_dict = {"profilePicture": db_patient.profilePicture}
+
+    # Update patient profile picture
+    db_patient.profilePicture = profile_picture_url
+    db_patient.modifiedDate = datetime.utcnow()
+    db_patient.ModifiedById = SYSTEM_USER_ID
+    db.commit()
+    db.refresh(db_patient)
+
     return db_patient
 
 
 def delete_patient(db: Session, patient_id: int):
     db_patient = db.query(Patient).filter(Patient.id == patient_id).first()
-    if db_patient:
-        try:
-            original_data_dict = {
-                k: serialize_data(v)
-                for k, v in db_patient.__dict__.items()
-                if not k.startswith("_")
-            }
-        except Exception as e:
-            original_data_dict = "{}"
-        setattr(db_patient, "isDeleted", "1")
-        db.commit()
+    if not db_patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
 
-        log_crud_action(
-            action=ActionType.DELETE,
-            user=user,
-            table="Patient",
-            entity_id=patient_id,
-            original_data=original_data_dict,
-            updated_data=None,
-        )
+    try:
+        original_data_dict = {
+            k: serialize_data(v)
+            for k, v in db_patient.__dict__.items()
+            if not k.startswith("_")
+        }
+    except Exception:
+        original_data_dict = "{}"
+
+    setattr(db_patient, "isDeleted", "1")
+    db.commit()
+
     return db_patient
