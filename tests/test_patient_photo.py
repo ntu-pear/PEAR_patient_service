@@ -67,24 +67,12 @@ def test_get_patient_photos_by_id(db_session_mock):
             PhotoPath = "Path String A",
             PhotoDetails = "Portrait profile photo of A",
             AlbumCategoryListID = 1,
-            PatientID = 1,
+            PatientID = patient_id,
             CreatedDateTime = datetime.now(),
             UpdatedDateTime = datetime.now(),
             CreatedById = 1,
             ModifiedById = 1,
-        ),
-        MagicMock(
-            PatientPhotoID = 2,
-            IsDeleted = 0,
-            PhotoPath = "Path String B",
-            PhotoDetails = "Portrait profile photo of B",
-            AlbumCategoryListID = 1,
-            PatientID = 2,
-            CreatedDateTime = datetime.now(),
-            UpdatedDateTime = datetime.now(),
-            CreatedById = 1,
-            ModifiedById = 1,
-        ),
+        )
     ]
     db_session_mock.query.return_value.filter.return_value.first.return_value = mock_data
 
@@ -93,6 +81,28 @@ def test_get_patient_photos_by_id(db_session_mock):
 
     #Assert
     assert len(result) == 1
+
+def test_create_patient_allergy(db_session_mock):
+    """Test case for creating a patient photo object"""
+    #Arrange
+    createdby = 1
+    patient_id = 1
+    mock_data = [
+
+        MagicMock(
+            PhotoPath = "photo_url",
+            PhotoDetails = "PhotoDetails",
+            AlbumCategoryListID = 1,
+            PatientID = patient_id,
+            IsDeleted = 0,
+            CreatedDateTime = datetime.utcnow(),
+            UpdatedDateTime = datetime.utcnow(),
+            CreatedById = createdby,
+            ModifiedById = createdby,
+        )
+    ]
+
+
 
 @pytest.fixture
 def db_session_mock():
