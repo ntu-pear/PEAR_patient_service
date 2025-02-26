@@ -1,33 +1,51 @@
-from pydantic import BaseModel,Field
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 
 class PatientSocialHistoryBase(BaseModel):
-    IsDeleted: Optional[str] = '0'
+    isDeleted: Optional[str] = '0'
     patientId: int
-    sexuallyActive: Optional[str] = None
-    secondHandSmoker: Optional[str] = None
-    alcoholUse: Optional[str] = None
-    caffeineUse: Optional[str] = None
-    tobaccoUse: Optional[str] = None
-    drugUse: Optional[str] = None
-    exercise: Optional[str] = None
+    sexuallyActive: int = Field(json_schema_extra={"example": 1})
+    secondHandSmoker: int = Field(json_schema_extra={"example": 1})
+    alcoholUse: int = Field(json_schema_extra={"example": 1})
+    caffeineUse: int = Field(json_schema_extra={"example": 1})
+    tobaccoUse: int = Field(json_schema_extra={"example": 1})
+    drugUse: int = Field(json_schema_extra={"example": 1})
+    exercise: int = Field(json_schema_extra={"example": 1})
+    dietListId: int = Field(json_schema_extra={"example": 1})
+    educationListId: int = Field(json_schema_extra={"example": 1})
+    liveWithListId: int = Field(json_schema_extra={"example": 1})
+    occupationListId: int = Field(json_schema_extra={"example": 1})
+    petListId: int = Field(json_schema_extra={"example": 1})
+    religionListId: int = Field(json_schema_extra={"example": 1})
 
 class PatientSocialHistoryCreate(PatientSocialHistoryBase):
     createdDate: datetime
     modifiedDate: datetime
-    CreatedById: str = Field(json_schema_extra={"example": "1"})
-    ModifiedById: str = Field(json_schema_extra={"example": "1"})
+    createdById: int
+    modifiedById: int
 
 class PatientSocialHistoryUpdate(PatientSocialHistoryBase):
-    modifiedDate: datetime
-    ModifiedById: str = Field(json_schema_extra={"example": "1"})
+    id: int
 
 class PatientSocialHistory(PatientSocialHistoryBase):
     id: int
     createdDate: datetime
     modifiedDate: datetime
-    CreatedById: str = Field(json_schema_extra={"example": "1"})
-    ModifiedById: str = Field(json_schema_extra={"example": "1"})
+    createdById: int
+    modifiedById: int
 
     model_config = {"from_attributes": True}
+
+class PatientSocialHistoryDecode(PatientSocialHistoryBase):
+    id: int
+    dietValue: str
+    educationValue: str
+    liveWithValue: str
+    occupationValue: str
+    petValue: str
+    religionValue: str
+    createdDate: datetime
+    modifiedDate: datetime
+    createdById: int
+    modifiedById: int
