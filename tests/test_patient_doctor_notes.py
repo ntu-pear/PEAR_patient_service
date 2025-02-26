@@ -31,12 +31,12 @@ def db_session_mock():
 
 @pytest.fixture
 def doctor_note_create():
-    return PatientDoctorNoteCreate(isDeleted='0', patientId=1, doctorId=1, doctorRemarks="Doctor Remarks", CreatedById="1" , ModifiedById="1")
+    return PatientDoctorNoteCreate(isDeleted='0', patientId=1, doctorId="1", doctorRemarks="Doctor Remarks", CreatedById="1" , ModifiedById="1")
 
 @pytest.fixture
 def doctor_note_update():
-    return PatientDoctorNoteUpdate(isDeleted='0', patientId=1, doctorId=1, doctorRemarks="Doctor Remarks", ModifiedById="1")
+    return PatientDoctorNoteUpdate(isDeleted='0', patientId=1, doctorId="1", doctorRemarks="Doctor Remarks", ModifiedById="1")
 
 @pytest.fixture
 def mock_doctor_note():
-    return PatientDoctorNote(id=1,isDeleted='0', patientId=1, doctorId=1, doctorRemarks="Doctor Remarks", CreatedById="1" , ModifiedById="1", createdDate=datetime.now(), modifiedDate=datetime.now())
+    return PatientDoctorNote(id=1,isDeleted='0', patientId=1, doctorId="1", doctorRemarks="Doctor Remarks", CreatedById="1" , ModifiedById="1", createdDate=datetime.now(), modifiedDate=datetime.now())
