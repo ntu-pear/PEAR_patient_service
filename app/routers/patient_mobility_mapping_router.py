@@ -15,8 +15,12 @@ def get_all_mobility_entries(db: Session = Depends(get_db)):
     return patient_mobility_mapping_crud.get_all_mobility_entries(db)
 
 @router.get("/MobilityMapping/List/{patient_id}", response_model=list[PatientMobilityResponse])
-def get_mobility_entry(patient_id: int, db: Session = Depends(get_db)):
-    return patient_mobility_mapping_crud.get_mobility_entries_by_id(db, patient_id)
+def get_mobility_entries_by_patient_id(patient_id: int, db: Session = Depends(get_db)):
+    return patient_mobility_mapping_crud.get_mobility_entries_by_patient_id(db, patient_id)
+
+@router.get("/MobilityMapping/List/{mobility_id}", response_model=list[PatientMobilityResponse])
+def get_mobility_entry_by_mobility_id(mobility_id: int, db: Session = Depends(get_db)):
+    return patient_mobility_mapping_crud.get_mobility_entry_by_mobility_id(db, mobility_id)
 
 @router.post("/MobilityMapping/List", response_model=PatientMobilityResponse)
 def create_mobility_entry(
@@ -25,18 +29,18 @@ def create_mobility_entry(
     # Replace `1` with the current user's ID if available
     return patient_mobility_mapping_crud.create_mobility_entry(db, mobility_data, created_by="1")
 
-@router.put("MobilityMapping/List/{patient_id}", response_model=PatientMobilityResponse)
+@router.put("MobilityMapping/List/{mobility_id}", response_model=PatientMobilityResponse)
 def update_mobility_entry(
-    patient_id: int,
+    mobility_id: int,
     mobility_data: PatientMobilityUpdate,
     db: Session = Depends(get_db),
 ):
     # Replace `1` with the current user's ID if available
     return patient_mobility_mapping_crud.update_mobility_entry(
-        db, patient_id, mobility_data, modified_by="1"
+        db, mobility_id, mobility_data, modified_by="1"
     )
 
-@router.delete("/MobilityMapping/List/{patient_id}", response_model=PatientMobilityResponse)
-def delete_mobility_entry(patient_id: int, db: Session = Depends(get_db)):
+@router.delete("/MobilityMapping/List/{mobility_id}", response_model=PatientMobilityResponse)
+def delete_mobility_entry(mobility_id: int, db: Session = Depends(get_db)):
     # Replace `1` with the current user's ID if available
-    return patient_mobility_mapping_crud.delete_mobility_entry(db, patient_id, modified_by="1")
+    return patient_mobility_mapping_crud.delete_mobility_entry(db, mobility_id, modified_by="1")
