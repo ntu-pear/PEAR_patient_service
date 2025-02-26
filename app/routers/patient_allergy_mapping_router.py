@@ -4,7 +4,6 @@ from ..database import get_db
 from ..crud import patient_allergy_mapping_crud
 from ..schemas.patient_allergy_mapping import PatientAllergy, PatientAllergyCreate, PatientAllergyCreateResp, PatientAllergyUpdateReq
 from ..auth.jwt_utils import extract_jwt_payload, get_user_id, get_full_name
-from ..logger.logger_utils import logger
 
 router = APIRouter()
 
