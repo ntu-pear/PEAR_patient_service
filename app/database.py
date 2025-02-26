@@ -13,7 +13,8 @@ DB_DRIVER_DEV = os.getenv("DB_DRIVER_DEV")
 
 DB_SERVER_DEV = os.getenv("DB_SERVER_DEV")
 
-DB_DATABASE_DEV = "patient_service_dev"
+# DB_DATABASE_DEV = "patient_service_dev" 
+DB_DATABASE_DEV = os.getenv("DB_DATABASE_DEV")
 DB_DATABASE_PORT = os.getenv("DB_DATABASE_PORT")
 DB_USERNAME_DEV = os.getenv("DB_USERNAME_DEV")
 DB_PASSWORD_DEV = os.getenv("DB_PASSWORD_DEV")

@@ -26,7 +26,7 @@ def create_livewith_type(db: Session, livewith_type: PatientLiveWithListTypeCrea
 
 
 def update_livewith_type(
-    db: Session, livewith_type_id: int, livewith_type: PatientLiveWithListTypeUpdate, modified_by: int
+    db: Session, livewith_type_id: int, livewith_type: PatientLiveWithListTypeUpdate, modified_by: str
 ):
     db_livewith_type = (
         db.query(PatientLiveWithList)
@@ -50,7 +50,7 @@ def update_livewith_type(
     return None
 
 
-def delete_livewith_type(db: Session, livewith_type_id: int, modified_by: int):
+def delete_livewith_type(db: Session, livewith_type_id: int, modified_by: str):
     db_livewith_type = (
         db.query(PatientLiveWithList)
         .filter(PatientLiveWithList.Id == livewith_type_id)

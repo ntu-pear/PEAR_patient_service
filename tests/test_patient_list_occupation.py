@@ -21,7 +21,7 @@ def test_create_occupation_type(
 ):
     """Test case for creating an occupation type."""
     # Arrange
-    created_by = 1
+    created_by = "1"
 
     # Act
     result = create_occupation_type(db_session_mock, occupation_type_create, created_by)
@@ -77,7 +77,7 @@ def test_get_occupation_type_by_id(db_session_mock):
 def test_update_occupation_type(db_session_mock):
     """Test case for updating an occupation type."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     occupation_type_update = PatientOccupationListTypeUpdate(Value="Accounting", IsDeleted="0")
     mock_occupation_type = PatientOccupationList(
         Id=1,
@@ -108,7 +108,7 @@ def test_update_occupation_type(db_session_mock):
 def test_delete_occupation_type(db_session_mock):
     """Test case for deleting (soft-deleting) an occupation type."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     mock_occupation_type = PatientOccupationList(
         Id=1,
         Value="Accountant",
