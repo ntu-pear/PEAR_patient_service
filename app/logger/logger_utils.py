@@ -39,7 +39,7 @@ def log_crud_action(
         "user_full_name": user_full_name,
         "log_text": message,
     }
-    logger.info(log_data, extra=extra)
+    logger.info(json.dumps(log_data), extra=extra)
 
 def serialize_data(data):
     if isinstance(data, datetime):
