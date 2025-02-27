@@ -26,7 +26,7 @@ def create_diet_type(db: Session, diet_type: PatientDietListTypeCreate, created_
 
 
 def update_diet_type(
-    db: Session, diet_type_id: int, diet_type: PatientDietListTypeUpdate, modified_by: int
+    db: Session, diet_type_id: int, diet_type: PatientDietListTypeUpdate, modified_by: str
 ):
     db_diet_type = (
         db.query(PatientDietList)
@@ -50,7 +50,7 @@ def update_diet_type(
     return None
 
 
-def delete_diet_type(db: Session, diet_type_id: int, modified_by: int):
+def delete_diet_type(db: Session, diet_type_id: int, modified_by: str):
     db_diet_type = (
         db.query(PatientDietList)
         .filter(PatientDietList.Id == diet_type_id)

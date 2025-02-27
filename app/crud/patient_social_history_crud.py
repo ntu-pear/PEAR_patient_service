@@ -257,7 +257,7 @@ def create_patient_social_history(db: Session, social_data: PatientSocialHistory
     return new_record
 
 
-def update_patient_social_history(db: Session, patient_id: int, social_data: PatientSocialHistoryUpdate, modified_by: int):
+def update_patient_social_history(db: Session, patient_id: int, social_data: PatientSocialHistoryUpdate, modified_by: str):
     """
     Update an existing patient social history record after validating list references.
     """
@@ -317,7 +317,7 @@ def update_patient_social_history(db: Session, patient_id: int, social_data: Pat
     return record
 
 
-def delete_patient_social_history(db: Session, patient_id: int, modified_by: int):
+def delete_patient_social_history(db: Session, patient_id: int, modified_by: str):
     """
     Soft delete a social history record by setting isDeleted to "1".
     """

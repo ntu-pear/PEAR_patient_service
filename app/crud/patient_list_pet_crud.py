@@ -26,7 +26,7 @@ def create_pet_type(db: Session, pet_type: PatientPetListTypeCreate, created_by:
 
 
 def update_pet_type(
-    db: Session, pet_type_id: int, pet_type: PatientPetListTypeUpdate, modified_by: int
+    db: Session, pet_type_id: int, pet_type: PatientPetListTypeUpdate, modified_by: str
 ):
     db_pet_type = (
         db.query(PatientPetList)
@@ -50,7 +50,7 @@ def update_pet_type(
     return None
 
 
-def delete_pet_type(db: Session, pet_type_id: int, modified_by: int):
+def delete_pet_type(db: Session, pet_type_id: int, modified_by: str):
     db_pet_type = (
         db.query(PatientPetList)
         .filter(PatientPetList.Id == pet_type_id)

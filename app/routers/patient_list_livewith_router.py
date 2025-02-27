@@ -24,14 +24,14 @@ def get_livewith_type(livewith_type_id: int, db: Session = Depends(get_db)):
 @router.post("/create_livewith_type", response_model=PatientLiveWithListTypeCreate, description="Create a new livewith type.")
 def create_livewith_type(livewith_type: PatientLiveWithListTypeCreate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
-    user_id = 1
+    user_id = "1"
     
     return crud_livewith_type.create_livewith_type(db, livewith_type, user_id)
 
 @router.put("/update_livewith_type/{livewith_type_id}", response_model=PatientLiveWithListTypeUpdate, description="Update a livewith type by ID.")
 def update_livewith_type(livewith_type_id: int, livewith_type: PatientLiveWithListTypeUpdate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
-    user_id = 1
+    user_id = "1"
 
     db_livewith_type = crud_livewith_type.update_livewith_type(db, livewith_type_id, livewith_type, user_id)
     if not db_livewith_type:
@@ -41,7 +41,7 @@ def update_livewith_type(livewith_type_id: int, livewith_type: PatientLiveWithLi
 @router.delete("/delete_livewith_type/{livewith_type_id}", response_model=PatientLiveWithListType, description = "Soft delete a livewith type by marking it as active '0'")
 def delete_livewith_type(livewith_type_id: int, db: Session = Depends(get_db)):  
     #TODO: change user_id to current user
-    user_id = 1
+    user_id = "1"
 
     db_livewith_type = crud_livewith_type.delete_livewith_type(db, livewith_type_id ,user_id)
     if not db_livewith_type:

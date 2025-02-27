@@ -64,7 +64,7 @@ def test_get_patient_social_history(db_session_mock, mock_patient_social_history
 def test_create_patient_social_history(db_session_mock, patient_social_history_create):
     """Test case for creating a new patient social history."""
     # Arrange
-    created_by = 1
+    created_by = "1"
     
     mock_diet = PatientDietList(Id=1, Value="Diabetic", IsDeleted="0")
     mock_education = PatientEducationList(Id=1, Value="Primary or lower", IsDeleted="0")
@@ -98,7 +98,7 @@ def test_create_patient_social_history(db_session_mock, patient_social_history_c
 def test_create_patient_social_history_invalid_list_type(db_session_mock, patient_social_history_create):
     """Test case for creating a new patient social history with invalid list type."""
     # Arrange
-    created_by = 1
+    created_by = "1"
     
     # Simulate valid records for other list types other than diet
     mock_education = PatientEducationList(Id=1, Value="Primary or lower", IsDeleted="0")
@@ -131,7 +131,7 @@ def test_update_patient_social_history(db_session_mock, patient_social_history_u
     """Test case for updating a patient social history."""
     # Arrange
     patient_id = 1
-    modified_by = 2
+    modified_by = "2"
     current_time = datetime.now()
     
     # Initial record
@@ -192,7 +192,7 @@ def test_delete_patient_social_history(db_session_mock):
     """Test case for deleting (soft-deleting) a patient social history."""
     # Arrange
     social_history_id = 1
-    modified_by = 2
+    modified_by = "2"
     current_time = datetime.now()
     mock_social_history = PatientSocialHistory(
         id=social_history_id,
