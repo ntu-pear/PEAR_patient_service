@@ -43,16 +43,8 @@ def create_highlight_type(
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
-    logger.info(
-        "Creating new highlight type",
-        extra={
-            "user": user_id,
-            "table": "PatientHighlightType",
-            "action": "create",
-            "user_full_name": user_full_name
-        }
-    )
-    return crud_highlight_type.create_highlight_type(db, highlight_type, user_id)
+    
+    return crud_highlight_type.create_highlight_type(db, highlight_type, user_id, user_full_name)
 
 @router.put("/update_highlight_type/{highlight_type_id}", response_model=HighlightType)
 def update_highlight_type(
@@ -65,17 +57,8 @@ def update_highlight_type(
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
-    logger.info(
-        "Updating highlight type",
-        extra={
-            "user": user_id,
-            "table": "PatientHighlightType",
-            "action": "update",
-            "user_full_name": user_full_name,
-            "entity_id": highlight_type_id
-        }
-    )
-    db_highlight_type = crud_highlight_type.update_highlight_type(db, highlight_type_id, highlight_type, user_id)
+    
+    db_highlight_type = crud_highlight_type.update_highlight_type(db, highlight_type_id, highlight_type, user_id, user_full_name)
     if not db_highlight_type:
         raise HTTPException(status_code=404, detail="Highlight type not found")
     return db_highlight_type
@@ -90,17 +73,8 @@ def delete_highlight_type(
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
-    logger.info(
-        "Deleting highlight type",
-        extra={
-            "user": user_id,
-            "table": "PatientHighlightType",
-            "action": "delete",
-            "user_full_name": user_full_name,
-            "entity_id": highlight_type_id
-        }
-    )
-    db_highlight_type = crud_highlight_type.delete_highlight_type(db, highlight_type_id, user_id)
+    
+    db_highlight_type = crud_highlight_type.delete_highlight_type(db, highlight_type_id, user_id, user_full_name)
     if not db_highlight_type:
         raise HTTPException(status_code=404, detail="Highlight type not found")
     return db_highlight_type

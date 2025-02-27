@@ -33,6 +33,8 @@ from app.models.patient_guardian_relationship_mapping_model import (
 from datetime import datetime
 from tests.utils.mock_db import get_db_session_mock
 
+USER_FULL_NAME = "TEST_NAME"
+
 
 def test_get_all_allergies(db_session_mock):
     """Test case for retrieving all patient allergies."""
@@ -122,7 +124,7 @@ def test_create_patient_allergy(db_session_mock, patient_allergy_create):
     ]
 
     # Act
-    result = create_patient_allergy(db_session_mock, patient_allergy_create, created_by)
+    result = create_patient_allergy(db_session_mock, patient_allergy_create, created_by, USER_FULL_NAME)
 
     # Assert
     db_session_mock.add.assert_called_once_with(result)
@@ -155,7 +157,7 @@ def test_update_patient_allergy(db_session_mock, patient_allergy_update):
 
     # Act
     result = update_patient_allergy(
-        db_session_mock, 1, patient_allergy_update, modified_by
+        db_session_mock, 1, patient_allergy_update, modified_by, USER_FULL_NAME
     )
 
     # Assert
@@ -187,7 +189,7 @@ def test_delete_patient_allergy(db_session_mock):
 
     # Act
     result = delete_patient_allergy(
-        db_session_mock, mock_patient_allergy.Patient_AllergyID, modified_by
+        db_session_mock, mock_patient_allergy.Patient_AllergyID, modified_by, USER_FULL_NAME
     )
 
     # Assert

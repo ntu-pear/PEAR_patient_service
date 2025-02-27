@@ -103,7 +103,7 @@ def get_assigned_dementias(db: Session, patient_id: int):
 
 # Create a new dementia assignment
 def create_assigned_dementia(
-    db: Session, dementia_data: PatientAssignedDementiaCreate, created_by: str
+    db: Session, dementia_data: PatientAssignedDementiaCreate, created_by: str, user_full_name:str
 ):
     # Check if the dementia type exists and is not deleted
     dementia_type = (
@@ -153,6 +153,8 @@ def create_assigned_dementia(
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
+        user_full_name=user_full_name,
+        message="Created patient assigned dementia mapping",
         table="PatientAssignedDementiaMapping",
         entity_id=new_assignment.id,
         original_data=None,
@@ -167,6 +169,7 @@ def update_assigned_dementia(
     dementia_id: int,
     dementia_data: PatientAssignedDementiaUpdate,
     modified_by: str,
+    user_full_name: str
 ):
     db_assignment = (
         db.query(PatientAssignedDementiaMapping)
@@ -204,6 +207,8 @@ def update_assigned_dementia(
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
+        user_full_name=user_full_name,
+        message="Updated patient assigned dementia mapping",
         table="PatientAssignedDementiaMapping",
         entity_id=dementia_id,
         original_data=original_data_dict,
@@ -213,7 +218,7 @@ def update_assigned_dementia(
 
 
 # Soft delete a dementia assignment (set IsDeleted to '1')
-def delete_assigned_dementia(db: Session, dementia_id: int, modified_by: str):
+def delete_assigned_dementia(db: Session, dementia_id: int, modified_by: str, user_full_name: str):
     db_assignment = (
         db.query(PatientAssignedDementiaMapping)
         .filter(
@@ -246,6 +251,8 @@ def delete_assigned_dementia(db: Session, dementia_id: int, modified_by: str):
     log_crud_action(
         action=ActionType.DELETE,
         user=modified_by,
+        user_full_name=user_full_name,
+        message="Deleted patient assigned dementia mapping",
         table="PatientAssignedDementiaMapping",
         entity_id=dementia_id,
         original_data=original_data_dict,

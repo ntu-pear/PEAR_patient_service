@@ -47,16 +47,8 @@ def create_allergy_type(
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
-    logger.info(
-        "Creating new allergy type",
-        extra={
-            "user": user_id,
-            "table": "AllergyType",
-            "action": "create",
-            "user_full_name": user_full_name
-        }
-    )
-    return crud_allergy_type.create_allergy_type(db, allergy_type, user_id)
+
+    return crud_allergy_type.create_allergy_type(db, allergy_type, user_id, user_full_name)
 
 @router.put("/update_allergy_type/{allergy_type_id}", response_model=AllergyType, description="Update an allergy type.")
 def update_allergy_type(
@@ -69,17 +61,8 @@ def update_allergy_type(
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
-    logger.info(
-        "Updating allergy type",
-        extra={
-            "user": user_id,
-            "table": "AllergyType",
-            "action": "update",
-            "user_full_name": user_full_name,
-            "entity_id": allergy_type_id
-        }
-    )
-    db_allergy_type = crud_allergy_type.update_allergy_type(db, allergy_type_id, allergy_type, user_id)
+    
+    db_allergy_type = crud_allergy_type.update_allergy_type(db, allergy_type_id, allergy_type, user_id, user_full_name)
     if not db_allergy_type:
         raise HTTPException(status_code=404, detail="Allergy type not found")
     return db_allergy_type
@@ -94,17 +77,8 @@ def delete_allergy_type(
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
-    logger.info(
-        "Deleting allergy type",
-        extra={
-            "user": user_id,
-            "table": "AllergyType",
-            "action": "delete",
-            "user_full_name": user_full_name,
-            "entity_id": allergy_type_id
-        }
-    )
-    db_allergy_type = crud_allergy_type.delete_allergy_type(db, allergy_type_id, user_id)
+    
+    db_allergy_type = crud_allergy_type.delete_allergy_type(db, allergy_type_id, user_id, user_full_name)
     if not db_allergy_type:
         raise HTTPException(status_code=404, detail="Allergy type not found")
     return db_allergy_type

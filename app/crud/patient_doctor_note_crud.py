@@ -7,7 +7,6 @@ from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 import json
 import math
 
-user = "admin"
 def get_doctor_notes_by_patient(db: Session, patient_id: int, pageNo: int = 0, pageSize: int = 10):
     offset = pageNo * pageSize
     db_doctor_note = db.query(PatientDoctorNote).filter(PatientDoctorNote.patientId == patient_id, PatientDoctorNote.isDeleted == '0').order_by(PatientDoctorNote.patientId).offset(offset).limit(pageSize).all()
@@ -18,7 +17,7 @@ def get_doctor_notes_by_patient(db: Session, patient_id: int, pageNo: int = 0, p
 def get_doctor_note_by_id(db: Session, note_id: int):
     return db.query(PatientDoctorNote).filter(PatientDoctorNote.id == note_id).first()
 
-def create_doctor_note(db: Session, doctor_note: PatientDoctorNoteCreate):
+def create_doctor_note(db: Session, doctor_note: PatientDoctorNoteCreate, user_id: str, user_full_name: str):
     db_doctor_note = PatientDoctorNote(**doctor_note.model_dump())
     if db_doctor_note:
         db_doctor_note.createdDate = datetime.now()
@@ -31,7 +30,9 @@ def create_doctor_note(db: Session, doctor_note: PatientDoctorNoteCreate):
 
         log_crud_action(
             action=ActionType.CREATE,
-            user=user,
+            user=user_id,
+            user_full_name=user_full_name,
+            message="Created doctor note",
             table="Doctor Note",
             entity_id=None,
             original_data=None,
@@ -39,7 +40,7 @@ def create_doctor_note(db: Session, doctor_note: PatientDoctorNoteCreate):
         )
     return db_doctor_note
 
-def update_doctor_note(db: Session, note_id: int, doctor_note: PatientDoctorNoteUpdate):
+def update_doctor_note(db: Session, note_id: int, doctor_note: PatientDoctorNoteUpdate, user_id: str, user_full_name: str):
     db_doctor_note = db.query(PatientDoctorNote).filter(PatientDoctorNote.id == note_id).first()
 
     if db_doctor_note:
@@ -61,7 +62,9 @@ def update_doctor_note(db: Session, note_id: int, doctor_note: PatientDoctorNote
 
         log_crud_action(
             action=ActionType.UPDATE,
-            user=user,
+            user=user_id,
+            user_full_name=user_full_name,
+            message="Updated doctor note",
             table="Doctor Note",
             entity_id=note_id,
             original_data=original_data_dict,
@@ -70,7 +73,7 @@ def update_doctor_note(db: Session, note_id: int, doctor_note: PatientDoctorNote
 
     return db_doctor_note
 
-def delete_doctor_note(db: Session, note_id: int):
+def delete_doctor_note(db: Session, note_id: int, user_id: str, user_full_name: str):
     db_doctor_note = db.query(PatientDoctorNote).filter(PatientDoctorNote.id == note_id).first()
     if db_doctor_note:
         try: 
@@ -86,7 +89,9 @@ def delete_doctor_note(db: Session, note_id: int):
 
         log_crud_action(
             action=ActionType.DELETE,
-            user=user,
+            user=user_id,
+            user_full_name=user_full_name,
+            message="Deleted doctor note",
             table="Doctor Note",
             entity_id=note_id,
             original_data=original_data_dict,

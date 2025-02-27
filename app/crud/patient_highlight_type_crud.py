@@ -15,7 +15,7 @@ def get_highlight_type_by_id(db: Session, highlight_type_id: int):
     )
 
 def create_highlight_type(
-    db: Session, highlight_type: HighlightTypeCreate, created_by: str
+    db: Session, highlight_type: HighlightTypeCreate, created_by: str, user_full_name:str
 ):
     db_highlight_type = HighlightType(
         **highlight_type.model_dump(), CreatedById=created_by, ModifiedById=created_by
@@ -28,6 +28,8 @@ def create_highlight_type(
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
+        user_full_name=user_full_name,
+        message="Creted highlight type",
         table="HighlightType",
         entity_id=db_highlight_type.HighlightTypeID,
         original_data=None,
@@ -40,6 +42,7 @@ def update_highlight_type(
     highlight_type_id: int,
     highlight_type: HighlightTypeUpdate,
     modified_by: str,
+    user_full_name: str
 ):
     db_highlight_type = (
         db.query(HighlightType)
@@ -73,6 +76,8 @@ def update_highlight_type(
         log_crud_action(
             action=ActionType.UPDATE,
             user=modified_by,
+            user_full_name=user_full_name,
+            message="Updated highlight type",
             table="HighlightType",
             entity_id=highlight_type_id,
             original_data=original_data_dict,
@@ -81,7 +86,7 @@ def update_highlight_type(
         return db_highlight_type
     return None
 
-def delete_highlight_type(db: Session, highlight_type_id: int, modified_by: str):
+def delete_highlight_type(db: Session, highlight_type_id: int, modified_by: str, user_full_name:str):
     db_highlight_type = (
         db.query(HighlightType)
         .filter(HighlightType.HighlightTypeID == highlight_type_id)
@@ -104,6 +109,8 @@ def delete_highlight_type(db: Session, highlight_type_id: int, modified_by: str)
         log_crud_action(
             action=ActionType.DELETE,
             user=modified_by,
+            user_full_name=user_full_name,
+            message="Deleted highlight type",
             table="HighlightType",
             entity_id=highlight_type_id,
             original_data=original_data_dict,
