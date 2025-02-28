@@ -9,6 +9,12 @@ class ActionType(Enum):
     UPDATE = "update"
     DELETE = "delete"
 
+EXCLUDED_KEYS = {"CreatedById", "ModifiedById", "ModifiedDate", "CreatedDate", "IsDeleted", "isDeleted"}
+
+def filter_data(data: dict) -> dict:
+    """Removes unwanted keys from the given dictionary."""
+    return {k: v for k, v in data.items() if k not in EXCLUDED_KEYS} if data else {}
+
 def log_crud_action(
     action: ActionType,
     user: str,
@@ -27,10 +33,10 @@ def log_crud_action(
         updated_data = None
         
     log_data = {
-        "entity_id": entity_id,
-        "original_data": original_data,
-        "updated_data": updated_data,
-    }
+    "entity_id": entity_id,
+    "original_data": filter_data(original_data),
+    "updated_data": filter_data(updated_data),
+}
 
     extra = {
         "table": table,
