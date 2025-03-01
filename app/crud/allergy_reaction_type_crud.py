@@ -20,7 +20,7 @@ def get_reaction_type_by_id(db: Session, allergy_reaction_type_id: int):
 
 
 def create_reaction_type(
-    db: Session, reaction_type: AllergyReactionTypeCreate, created_by: str
+    db: Session, reaction_type: AllergyReactionTypeCreate, created_by: str, user_full_name: str
 ):
     db_reaction_type = AllergyReactionType(
         **reaction_type.model_dump(), CreatedById=created_by, ModifiedById=created_by
@@ -33,6 +33,8 @@ def create_reaction_type(
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
+        user_full_name=user_full_name,
+        message="Created allergy reaction type",
         table="AllergyReactionType",
         entity_id=db_reaction_type.AllergyReactionTypeID,
         original_data=None,
@@ -45,6 +47,7 @@ def update_reaction_type(
     allergy_reaction_type_id: int,
     reaction_type: AllergyReactionTypeUpdate,
     modified_by: str,
+    user_full_name:str
 ):
     db_reaction_type = (
         db.query(AllergyReactionType)
@@ -77,6 +80,8 @@ def update_reaction_type(
         log_crud_action(
             action=ActionType.UPDATE,
             user=modified_by,
+            user_full_name=user_full_name,
+            message="Updated allergy reaction type",
             table="AllergyReactionType",
             entity_id=allergy_reaction_type_id,
             original_data=original_data_dict,
@@ -85,7 +90,7 @@ def update_reaction_type(
         return db_reaction_type
     return None
 
-def delete_reaction_type(db: Session, allergy_reaction_type_id: int, modified_by: str):
+def delete_reaction_type(db: Session, allergy_reaction_type_id: int, modified_by: str, user_full_name:str):
     db_reaction_type = (
         db.query(AllergyReactionType)
         .filter(AllergyReactionType.AllergyReactionTypeID == allergy_reaction_type_id)
@@ -110,6 +115,8 @@ def delete_reaction_type(db: Session, allergy_reaction_type_id: int, modified_by
         log_crud_action(
             action=ActionType.DELETE,
             user=modified_by,
+            user_full_name=user_full_name,
+            message="Deleted allergy reaction type",
             table="Patient",
             entity_id=allergy_reaction_type_id,
             original_data=original_data_dict,

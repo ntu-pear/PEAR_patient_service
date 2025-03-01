@@ -28,6 +28,7 @@ from datetime import datetime
 from tests.utils.mock_db import get_db_session_mock
 
 # Mocking the relevant models
+USER_FULL_NAME = "TEST_NAME"
 
 def test_create_reaction_type(
     db_session_mock, 
@@ -39,7 +40,7 @@ def test_create_reaction_type(
     created_by = "1"
 
     # Act
-    result = create_reaction_type(db_session_mock, allergy_reaction_type_create, created_by)
+    result = create_reaction_type(db_session_mock, allergy_reaction_type_create, created_by, USER_FULL_NAME)
 
     # Assert
     db_session_mock.add.assert_called_once_with(result)
@@ -105,7 +106,7 @@ def test_update_reaction_type(db_session_mock, allergy_reaction_type_create):
     db_session_mock.query.return_value.filter.return_value.first.return_value = mock_reaction_type
 
     # Act
-    result = update_reaction_type(db_session_mock, mock_reaction_type.AllergyReactionTypeID, allergy_reaction_type_update, modified_by)
+    result = update_reaction_type(db_session_mock, mock_reaction_type.AllergyReactionTypeID, allergy_reaction_type_update, modified_by, USER_FULL_NAME)
 
     # Assert
     db_session_mock.commit.assert_called_once()
@@ -130,7 +131,7 @@ def test_delete_reaction_type(db_session_mock):
     db_session_mock.query.return_value.filter.return_value.first.return_value = mock_reaction_type
 
     # Act
-    result = delete_reaction_type(db_session_mock, mock_reaction_type.AllergyReactionTypeID, modified_by)
+    result = delete_reaction_type(db_session_mock, mock_reaction_type.AllergyReactionTypeID, modified_by, USER_FULL_NAME)
 
     # Assert
     db_session_mock.commit.assert_called_once()

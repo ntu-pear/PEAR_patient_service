@@ -15,7 +15,7 @@ def get_highlights_by_patient(db: Session, patient_id: int):
         .all()
     )
 
-def create_highlight(db: Session, highlight_data: PatientHighlightCreate, created_by: str):
+def create_highlight(db: Session, highlight_data: PatientHighlightCreate, created_by: str, user_full_name:str):
     db_highlight = PatientHighlight(
         **highlight_data.model_dump(), CreatedById=created_by, ModifiedById=created_by
     )
@@ -27,6 +27,8 @@ def create_highlight(db: Session, highlight_data: PatientHighlightCreate, create
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
+        user_full_name= user_full_name,
+        message= "Created Patient Highlight",
         table="PatientHighlight",
         entity_id=db_highlight.Id,
         original_data=None,
@@ -34,7 +36,7 @@ def create_highlight(db: Session, highlight_data: PatientHighlightCreate, create
     )
     return db_highlight
 
-def update_highlight(db: Session, highlight_id: int, highlight_data: PatientHighlightUpdate, modified_by: str):
+def update_highlight(db: Session, highlight_id: int, highlight_data: PatientHighlightUpdate, modified_by: str,  user_full_name:str):
     db_highlight = db.query(PatientHighlight).filter(PatientHighlight.Id == highlight_id).first()
 
     if not db_highlight or db_highlight.IsDeleted == "1":
@@ -59,6 +61,8 @@ def update_highlight(db: Session, highlight_id: int, highlight_data: PatientHigh
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
+        user_full_name= user_full_name,
+        message= "Updated Patient Highlight",
         table="PatientHighlight",
         entity_id=highlight_id,
         original_data=original_data_dict,
@@ -66,7 +70,7 @@ def update_highlight(db: Session, highlight_id: int, highlight_data: PatientHigh
     )
     return db_highlight
 
-def delete_highlight(db: Session, highlight_id: int, modified_by: str):
+def delete_highlight(db: Session, highlight_id: int, modified_by: str,  user_full_name:str):
     db_highlight = db.query(PatientHighlight).filter(PatientHighlight.Id == highlight_id).first()
 
     if not db_highlight or db_highlight.IsDeleted == "1":
@@ -87,6 +91,8 @@ def delete_highlight(db: Session, highlight_id: int, modified_by: str):
     log_crud_action(
         action=ActionType.DELETE,
         user=modified_by,
+        user_full_name= user_full_name,
+        message= "Deleted Patient Highlight",
         table="PatientHighlight",
         entity_id=highlight_id,
         original_data=original_data_dict,

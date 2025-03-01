@@ -15,8 +15,14 @@ from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 def get_all_mobility_entries(db: Session):
     return db.query(PatientMobility).filter(PatientMobility.IsDeleted == False).all()
 
+def get_mobility_entry_by_mobility_id(db: Session, mobility_id: int):
+    db_entry =  db.query(PatientMobility).filter(PatientMobility.IsDeleted == False, PatientMobility.MobilityID == mobility_id).first()
+    if not db_entry:
+        raise HTTPException(status_code=404, detail=f"No mobility entries found for Mobility ID {mobility_id}.")
+    return db_entry
+
 # Get mobility entries by Patient ID
-def get_mobility_entries_by_id(db: Session, patient_id: int):
+def get_mobility_entries_by_patient_id(db: Session, patient_id: int):
     entries = db.query(PatientMobility).filter(
         PatientMobility.PatientID == patient_id,
         PatientMobility.IsDeleted == False
@@ -28,7 +34,7 @@ def get_mobility_entries_by_id(db: Session, patient_id: int):
     return entries
 
 # Create a new mobility entry
-def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, created_by: str):
+def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, created_by: str, user_full_name: str):
     # Validate PatientID
     patient = db.query(Patient).filter(Patient.id == mobility_data.PatientID).first()
     if not patient:
@@ -67,6 +73,8 @@ def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, cre
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
+        user_full_name=user_full_name,
+        message="Created mobility mapping entry",
         table="PatientMobility",
         entity_id=new_entry.MobilityID,
         original_data=None,
@@ -76,15 +84,15 @@ def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, cre
 
 # Update an existing mobility entry
 def update_mobility_entry(
-    db: Session, patient_id: int, mobility_data: PatientMobilityUpdate, modified_by: str
+    db: Session, mobility_id: int, mobility_data: PatientMobilityUpdate, modified_by: str, user_full_name: str
 ):
     db_entry = db.query(PatientMobility).filter(
-        PatientMobility.PatientID == patient_id,
+        PatientMobility.MobilityID == mobility_id,
         PatientMobility.IsDeleted == False,
     ).first()
 
     if not db_entry:
-        raise HTTPException(status_code=404, detail=f"Mobility entry with ID {patient_id} not found.")
+        raise HTTPException(status_code=404, detail=f"Mobility entry with ID {mobility_id} not found.")
 
     original_data_dict = serialize_data(mobility_data.model_dump())
 
@@ -101,6 +109,8 @@ def update_mobility_entry(
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
+        user_full_name=user_full_name,
+        message="Updated mobility mapping entry",
         table="PatientMobility",
         entity_id=db_entry.MobilityID,
         original_data=original_data_dict,
@@ -109,14 +119,14 @@ def update_mobility_entry(
     return db_entry
 
 # Soft delete a mobility entry
-def delete_mobility_entry(db: Session, patient_id: int, modified_by: str):
+def delete_mobility_entry(db: Session, mobility_id: int, modified_by: str, user_full_name: str):
     db_entry = db.query(PatientMobility).filter(
-        PatientMobility.PatientID == patient_id,
+        PatientMobility.MobilityID == mobility_id,
         PatientMobility.IsDeleted == False,
     ).first()
 
     if not db_entry:
-        raise HTTPException(status_code=404, detail=f"Mobility entry with ID {patient_id} not found.")
+        raise HTTPException(status_code=404, detail=f"Mobility entry with ID {mobility_id} not found.")
 
     try:
         original_data_dict = {
@@ -134,6 +144,8 @@ def delete_mobility_entry(db: Session, patient_id: int, modified_by: str):
     log_crud_action(
         action=ActionType.DELETE,
         user=modified_by,
+        user_full_name=user_full_name,
+        message="Deleted mobility mapping entry",
         table="PatientMobility",
         entity_id=db_entry.MobilityID,
         original_data=original_data_dict,

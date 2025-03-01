@@ -53,16 +53,7 @@ def create_patient_highlight(
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
-    logger.info(
-        "Creating new patient highlight",
-        extra={
-            "user": user_id,
-            "table": "PatientHighlight",
-            "action": "create",
-            "user_full_name": user_full_name
-        }
-    )
-    return create_highlight(db, highlight_data, user_id)
+    return create_highlight(db, highlight_data, user_id, user_full_name)
 
 @router.put("/update_highlight/{highlight_id}", response_model=PatientHighlight, description="Update an existing highlight.")
 def update_patient_highlight(
@@ -75,17 +66,8 @@ def update_patient_highlight(
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
-    logger.info(
-        "Updating patient highlight",
-        extra={
-            "user": user_id,
-            "table": "PatientHighlight",
-            "action": "update",
-            "user_full_name": user_full_name,
-            "entity_id": highlight_id
-        }
-    )
-    return update_highlight(db, highlight_id, highlight_data, user_id)
+    
+    return update_highlight(db, highlight_id, highlight_data, user_id, user_full_name)
 
 @router.delete("/delete_highlight/{highlight_id}", response_model=PatientHighlight, description="Soft delete a highlight by ID.")
 def delete_patient_highlight(
@@ -97,14 +79,5 @@ def delete_patient_highlight(
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
-    logger.info(
-        "Deleting patient highlight",
-        extra={
-            "user": user_id,
-            "table": "PatientHighlight",
-            "action": "delete",
-            "user_full_name": user_full_name,
-            "entity_id": highlight_id
-        }
-    )
-    return delete_highlight(db, highlight_id, user_id)
+    
+    return delete_highlight(db, highlight_id, user_id, user_full_name)

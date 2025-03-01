@@ -26,7 +26,7 @@ def create_education_type(db: Session, education_type: PatientEducationListTypeC
 
 
 def update_education_type(
-    db: Session, education_type_id: int, education_type: PatientEducationListTypeUpdate, modified_by: int
+    db: Session, education_type_id: int, education_type: PatientEducationListTypeUpdate, modified_by: str
 ):
     db_education_type = (
         db.query(PatientEducationList)
@@ -50,7 +50,7 @@ def update_education_type(
     return None
 
 
-def delete_education_type(db: Session, education_type_id: int, modified_by: int):
+def delete_education_type(db: Session, education_type_id: int, modified_by: str):
     db_education_type = (
         db.query(PatientEducationList)
         .filter(PatientEducationList.Id == education_type_id)

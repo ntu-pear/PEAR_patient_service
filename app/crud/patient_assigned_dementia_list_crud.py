@@ -22,7 +22,7 @@ def get_dementia_list_entry_by_id(db: Session, dementia_list_id: int):
     ).first()
 
 # Create a new dementia list entry
-def create_dementia_list_entry(db: Session, dementia_list_data: PatientAssignedDementiaListCreate, created_by: str):
+def create_dementia_list_entry(db: Session, dementia_list_data: PatientAssignedDementiaListCreate, created_by: str, user_full_name:str):
     new_entry = PatientAssignedDementiaList(
         **dementia_list_data.model_dump(),
         CreatedDate=datetime.utcnow(),
@@ -38,6 +38,8 @@ def create_dementia_list_entry(db: Session, dementia_list_data: PatientAssignedD
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
+        user_full_name=user_full_name,
+        message="Created patient assigned dementia",
         table="PatientAssignedDementiaList",
         entity_id=new_entry.DementiaTypeListId,
         original_data=None,
@@ -47,7 +49,7 @@ def create_dementia_list_entry(db: Session, dementia_list_data: PatientAssignedD
 
 # Update a dementia list entry
 def update_dementia_list_entry(
-    db: Session, dementia_list_id: int, dementia_list_data: PatientAssignedDementiaListUpdate, modified_by: str
+    db: Session, dementia_list_id: int, dementia_list_data: PatientAssignedDementiaListUpdate, modified_by: str, user_full_name:str
 ):
     db_entry = db.query(PatientAssignedDementiaList).filter(
         PatientAssignedDementiaList.DementiaTypeListId == dementia_list_id,
@@ -76,6 +78,8 @@ def update_dementia_list_entry(
         log_crud_action(
             action=ActionType.UPDATE,
             user=modified_by,
+            user_full_name=user_full_name,
+            message="Updated patient assigned dementia",
             table="PatientAssignedDementiaList",
             entity_id=dementia_list_id,
             original_data=original_data_dict,
@@ -85,7 +89,7 @@ def update_dementia_list_entry(
     return None
 
 # Soft delete a dementia list entry (set isDeleted to '1')
-def delete_dementia_list_entry(db: Session, dementia_list_id: int, modified_by: str):
+def delete_dementia_list_entry(db: Session, dementia_list_id: int, modified_by: str, user_full_name:str):
     db_entry = db.query(PatientAssignedDementiaList).filter(
         PatientAssignedDementiaList.DementiaTypeListId == dementia_list_id,
         PatientAssignedDementiaList.IsDeleted == "0",
@@ -109,6 +113,8 @@ def delete_dementia_list_entry(db: Session, dementia_list_id: int, modified_by: 
         log_crud_action(
             action=ActionType.DELETE,
             user=modified_by,
+            user_full_name=user_full_name,
+            message="Deleted patient assigned dementia",
             table="PatientAssignedDementiaList",
             entity_id=dementia_list_id,
             original_data=original_data_dict,

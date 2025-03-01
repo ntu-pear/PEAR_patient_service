@@ -21,7 +21,7 @@ def test_create_religion_type(
 ):
     """Test case for creating a religion type."""
     # Arrange
-    created_by = 1
+    created_by = "1"
 
     # Act
     result = create_religion_type(db_session_mock, religion_type_create, created_by)
@@ -77,7 +77,7 @@ def test_get_religion_type_by_id(db_session_mock):
 def test_update_religion_type(db_session_mock):
     """Test case for updating a religion type."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     religion_type_update = PatientReligionListTypeUpdate(Value="Christian", IsDeleted="0")
     mock_religion_type = PatientReligionList(
         Id=1,
@@ -108,7 +108,7 @@ def test_update_religion_type(db_session_mock):
 def test_delete_religion_type(db_session_mock):
     """Test case for deleting (soft-deleting) a religion type."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     mock_religion_type = PatientReligionList(
         Id=1,
         Value="Atheist",

@@ -120,7 +120,7 @@ def test_create_dementia_list_entry(db_session_mock):
     mock_input = PatientAssignedDementiaListCreate(Value="Alzheimer's")
 
     # Act
-    created_entry = create_dementia_list_entry(db_session_mock, mock_input, created_by=1)
+    created_entry = create_dementia_list_entry(db_session_mock, mock_input, created_by=1, user_full_name="TEST_NAME")
 
     # Assert
     db_session_mock.add.assert_called_once_with(created_entry)
@@ -147,6 +147,7 @@ def test_update_dementia_list_entry(mock_patient_assigned_dementia_list, db_sess
         mock_entry.DementiaTypeListId,
         mock_input,
         modified_by="1",
+        user_full_name="TEST_NAME"
     )
 
     # Assert: Validate the updated fields
@@ -169,6 +170,7 @@ def test_delete_dementia_list_entry(mock_patient_assigned_dementia_list, db_sess
         db_session_mock,
         mock_entry.DementiaTypeListId,
         modified_by="1",
+        user_full_name="TEST_NAME"
     )
 
     # Assert: Verify the entry is marked as deleted

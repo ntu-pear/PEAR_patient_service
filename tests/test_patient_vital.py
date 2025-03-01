@@ -84,8 +84,12 @@ def test_create_patient_vital(
     )
 
     # Act
-    result = create_vital(db_session_mock, vital_create)
-
+    result = create_vital(
+        db_session_mock,
+        vital_create,
+        created_by="test_user",       # <--- FIX
+        user_full_name="Test User"    # <--- FIX
+    )
     # Assert
     db_session_mock.add.assert_called_once()
     db_session_mock.commit.assert_called_once()
@@ -108,8 +112,13 @@ def test_update_patient_vital(mock_patient_vital, db_session_mock, vital_update)
     )  # Mocking existing vital
 
     # Act
-    result = update_vital(db_session_mock, patient_vital_id, vital_update)
-
+    result = update_vital(
+        db_session_mock,
+        patient_vital_id,
+        vital_update,
+        modified_by="test_user",       # <--- FIX
+        user_full_name="Test User"     # <--- FIX
+    )
     # Assert
     db_session_mock.commit.assert_called_once()
     assert result.PatientId == vital_update.PatientId
@@ -135,8 +144,12 @@ def test_delete_patient_vital(mock_patient_vital, db_session_mock):
     )  # Mocking existing vital
 
     # Act
-    result = delete_vital(db_session_mock, patient_vital_id)
-
+    result = delete_vital(
+        db_session_mock,
+        patient_vital_id,
+        modified_by="test_user",       # <--- FIX
+        user_full_name="Test User"     # <--- FIX
+    )
     # Assert
     db_session_mock.commit.assert_called_once()
     assert result.IsDeleted == "1"

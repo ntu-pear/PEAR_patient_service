@@ -7,6 +7,26 @@ from app.crud.patient_highlight_crud import (
     update_highlight,
     delete_highlight,
 )
+from app.models.patient_patient_guardian_model import PatientPatientGuardian
+from app.models.patient_allergy_mapping_model import PatientAllergyMapping
+from app.models.allergy_type_model import AllergyType
+from app.models.allergy_reaction_type_model import AllergyReactionType
+from app.models.patient_patient_guardian_model import PatientPatientGuardian
+from app.models.patient_doctor_note_model import PatientDoctorNote
+from app.models.patient_photo_model import PatientPhoto
+from app.models.patient_photo_list_model import PatientPhotoList
+from app.models.patient_model import Patient
+from app.models.patient_assigned_dementia_list_model import PatientAssignedDementiaList
+from app.models.patient_assigned_dementia_mapping_model import PatientAssignedDementiaMapping
+from app.models.patient_mobility_list_model import PatientMobilityList
+from app.models.patient_mobility_mapping_model import PatientMobility
+from app.models.patient_prescription_model import PatientPrescription
+from app.models.patient_social_history_model import PatientSocialHistory
+from app.models.patient_vital_model import PatientVital
+from app.models.patient_highlight_model import PatientHighlight
+from app.models.patient_guardian_relationship_mapping_model import (
+    PatientGuardianRelationshipMapping,
+)
 from app.schemas.patient_highlight import PatientHighlightCreate, PatientHighlightUpdate
 from app.models.patient_highlight_model import PatientHighlight
 from datetime import datetime
@@ -91,7 +111,7 @@ def test_create_highlight(db_session_mock, patient_highlight_create):
     created_by = "1"
 
     # Act
-    result = create_highlight(db_session_mock, patient_highlight_create, created_by)
+    result = create_highlight(db_session_mock, patient_highlight_create, created_by, "USER")
 
     # Assert
     db_session_mock.add.assert_called_once_with(result)
@@ -125,7 +145,7 @@ def test_update_highlight(db_session_mock, patient_highlight_update):
 
     # Act
     result = update_highlight(
-        db_session_mock, mock_highlight.Id, patient_highlight_update, modified_by
+        db_session_mock, mock_highlight.Id, patient_highlight_update, modified_by, "USER"
     )
 
     # Assert
@@ -157,7 +177,7 @@ def test_delete_highlight(db_session_mock):
     )
 
     # Act
-    result = delete_highlight(db_session_mock, mock_highlight.Id, modified_by)
+    result = delete_highlight(db_session_mock, mock_highlight.Id, modified_by, "USER")
 
     # Assert
     db_session_mock.commit.assert_called_once()

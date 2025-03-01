@@ -26,7 +26,7 @@ def create_religion_type(db: Session, religion_type: PatientReligionListTypeCrea
 
 
 def update_religion_type(
-    db: Session, religion_type_id: int, religion_type: PatientReligionListTypeUpdate, modified_by: int
+    db: Session, religion_type_id: int, religion_type: PatientReligionListTypeUpdate, modified_by: str
 ):
     db_religion_type = (
         db.query(PatientReligionList)
@@ -50,7 +50,7 @@ def update_religion_type(
     return None
 
 
-def delete_religion_type(db: Session, religion_type_id: int, modified_by: int):
+def delete_religion_type(db: Session, religion_type_id: int, modified_by: str):
     db_religion_type = (
         db.query(PatientReligionList)
         .filter(PatientReligionList.Id == religion_type_id)

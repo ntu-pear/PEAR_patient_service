@@ -26,7 +26,7 @@ def create_occupation_type(db: Session, occupation_type: PatientOccupationListTy
 
 
 def update_occupation_type(
-    db: Session, occupation_type_id: int, occupation_type: PatientOccupationListTypeUpdate, modified_by: int
+    db: Session, occupation_type_id: int, occupation_type: PatientOccupationListTypeUpdate, modified_by: str
 ):
     db_occupation_type = (
         db.query(PatientOccupationList)
@@ -50,7 +50,7 @@ def update_occupation_type(
     return None
 
 
-def delete_occupation_type(db: Session, occupation_type_id: int, modified_by: int):
+def delete_occupation_type(db: Session, occupation_type_id: int, modified_by: str):
     db_occupation_type = (
         db.query(PatientOccupationList)
         .filter(PatientOccupationList.Id == occupation_type_id)
