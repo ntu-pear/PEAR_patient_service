@@ -11,6 +11,23 @@ from app.schemas.patient_social_history import (
     PatientSocialHistoryCreate,
     PatientSocialHistoryUpdate,
 )
+from app.models.patient_model import Patient
+from app.models.patient_allergy_mapping_model import PatientAllergyMapping
+from app.models.allergy_type_model import AllergyType
+from app.models.allergy_reaction_type_model import AllergyReactionType
+from app.models.patient_patient_guardian_model import PatientPatientGuardian
+from app.models.patient_doctor_note_model import PatientDoctorNote
+from app.models.patient_photo_model import PatientPhoto
+from app.models.patient_photo_list_model import PatientPhotoList
+from app.models.patient_model import Patient
+from app.models.patient_assigned_dementia_list_model import PatientAssignedDementiaList
+from app.models.patient_assigned_dementia_mapping_model import PatientAssignedDementiaMapping
+from app.models.patient_mobility_list_model import PatientMobilityList
+from app.models.patient_mobility_mapping_model import PatientMobility
+from app.models.patient_prescription_model import PatientPrescription
+from app.models.patient_social_history_model import PatientSocialHistory
+from app.models.patient_vital_model import PatientVital
+from app.models.patient_highlight_model import PatientHighlight
 from app.models.patient_social_history_model import PatientSocialHistory
 from app.models.patient_list_diet_model import PatientDietList
 from app.models.patient_list_education_model import PatientEducationList
@@ -18,6 +35,9 @@ from app.models.patient_list_livewith_model import PatientLiveWithList
 from app.models.patient_list_occupation_model import PatientOccupationList
 from app.models.patient_list_pet_model import PatientPetList
 from app.models.patient_list_religion_model import PatientReligionList
+from app.models.patient_guardian_relationship_mapping_model import PatientGuardianRelationshipMapping
+
+
 from tests.utils.mock_db import get_db_session_mock
 
 def test_get_patient_social_history(db_session_mock, mock_patient_social_history, mock_list_entries):
@@ -84,7 +104,7 @@ def test_create_patient_social_history(db_session_mock, patient_social_history_c
     ]
 
     # Act
-    result = create_patient_social_history(db_session_mock, patient_social_history_create, created_by)
+    result = create_patient_social_history(db_session_mock, patient_social_history_create, created_by, "USER")
 
     # Assert
     db_session_mock.add.assert_called_once()
@@ -120,7 +140,7 @@ def test_create_patient_social_history_invalid_list_type(db_session_mock, patien
 
     # Act
     with pytest.raises(HTTPException) as exc_info:
-        create_patient_social_history(db_session_mock, patient_social_history_create, created_by)
+        create_patient_social_history(db_session_mock, patient_social_history_create, created_by, "USER")
 
     # Assert
     assert exc_info.value.status_code == 400
@@ -177,7 +197,7 @@ def test_update_patient_social_history(db_session_mock, patient_social_history_u
     ]
 
     # Act
-    result = update_patient_social_history(db_session_mock, patient_id, patient_social_history_update, modified_by)
+    result = update_patient_social_history(db_session_mock, patient_id, patient_social_history_update, modified_by,"USER")
 
     # Assert
     db_session_mock.commit.assert_called_once()
@@ -219,7 +239,7 @@ def test_delete_patient_social_history(db_session_mock):
     db_session_mock.query.return_value.filter.return_value.first.return_value = mock_social_history
 
     # Act
-    result = delete_patient_social_history(db_session_mock, social_history_id, modified_by)
+    result = delete_patient_social_history(db_session_mock, social_history_id, modified_by, "USER")
 
     # Assert
     db_session_mock.commit.assert_called_once()

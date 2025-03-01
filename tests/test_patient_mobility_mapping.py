@@ -56,7 +56,7 @@ def test_get_mobility_entries_by_id(db_session_mock, mock_mobility_entry):
 def test_delete_mobility_entry(db_session_mock, mock_mobility_entry):
     entry_id = 1
     db_session_mock.query().filter().first.return_value = mock_mobility_entry
-    result = delete_mobility_entry(db_session_mock, entry_id, modified_by=1)
+    result = delete_mobility_entry(db_session_mock, entry_id, modified_by=1, user_full_name="USER")
     db_session_mock.commit.assert_called_once()
     assert result == mock_mobility_entry
 

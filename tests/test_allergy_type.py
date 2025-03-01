@@ -32,6 +32,7 @@ from tests.utils.mock_db import get_db_session_mock
 
 
 # Mocking the relevant models
+USER_FULL_NAME = "TEST_NAME"
 
 def test_create_allergy_type(
     db_session_mock,
@@ -42,7 +43,7 @@ def test_create_allergy_type(
     created_by = "1"
 
     # Act
-    result = create_allergy_type(db_session_mock, allergy_type_create, created_by)
+    result = create_allergy_type(db_session_mock, allergy_type_create, created_by, USER_FULL_NAME)
 
     # Assert
     db_session_mock.add.assert_called_once_with(result)
@@ -118,6 +119,7 @@ def test_update_allergy_type(db_session_mock):
         mock_allergy_type.AllergyTypeID,
         allergy_type_update,
         modified_by,
+        USER_FULL_NAME
     )
 
     # Assert
@@ -146,7 +148,7 @@ def test_delete_allergy_type(db_session_mock):
 
     # Act
     result = delete_allergy_type(
-        db_session_mock, mock_allergy_type.AllergyTypeID, modified_by
+        db_session_mock, mock_allergy_type.AllergyTypeID, modified_by, USER_FULL_NAME
     )
 
     # Assert

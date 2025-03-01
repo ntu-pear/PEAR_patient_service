@@ -40,7 +40,7 @@ def test_create_highlight_type(db_session_mock):
     highlight_type_create = HighlightTypeCreate(Value="newPrescription", IsDeleted="0")
 
     # Act
-    result = create_highlight_type(db_session_mock, highlight_type_create, created_by)
+    result = create_highlight_type(db_session_mock, highlight_type_create, created_by, "USER")
 
     # Assert
     db_session_mock.add.assert_called_once_with(result)
@@ -119,6 +119,7 @@ def test_update_highlight_type(db_session_mock):
         mock_highlight_type.HighlightTypeID,
         highlight_type_update,
         modified_by,
+        "USER"
     )
 
     # Assert
@@ -148,7 +149,7 @@ def test_delete_highlight_type(db_session_mock):
 
     # Act
     result = delete_highlight_type(
-        db_session_mock, mock_highlight_type.HighlightTypeID, modified_by
+        db_session_mock, mock_highlight_type.HighlightTypeID, modified_by, "USER"
     )
 
     # Assert

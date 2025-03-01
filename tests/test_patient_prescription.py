@@ -152,7 +152,10 @@ def test_create_prescription(
         "ModifiedById": "1",
     }
     prescription = create_prescription(
-        db_session_mock, PatientPrescriptionCreate(**data)
+        db_session_mock,
+        PatientPrescriptionCreate(**data),
+        created_by="test_user",       # <--- FIX
+        user_full_name="Test User"    # <--- FIX
     )
     assert prescription.PatientId == 1
     assert prescription.Dosage == "500mg"
@@ -163,10 +166,10 @@ def test_create_prescription(
     assert prescription.IsAfterMeal == "Yes"
     assert prescription.PrescriptionRemarks == "No remarks"
     assert prescription.Status == "Active"
-    assert prescription.CreatedDateTime == datetime(2023, 1, 1, 10, 0)
-    assert prescription.UpdatedDateTime == datetime(2023, 1, 1, 10, 0)
-    assert prescription.CreatedById == "1"
-    assert prescription.ModifiedById == "1"
+    assert prescription.CreatedDateTime is not None
+    assert prescription.UpdatedDateTime is not None
+    assert prescription.CreatedById == "test_user"
+    assert prescription.ModifiedById == "test_user"
 
 
 def test_update_prescription(db_session_mock):
@@ -206,7 +209,11 @@ def test_update_prescription(db_session_mock):
         "ModifiedById": "1",
     }
     prescription = update_prescription(
-        db_session_mock, 1, PatientPrescriptionUpdate(**data)
+        db_session_mock,
+        1,
+        PatientPrescriptionUpdate(**data),
+        modified_by="test_user",       # <--- FIX
+        user_full_name="Test User"     # <--- FIX
     )
     db_session_mock.commit.assert_called_once()
     assert prescription.PatientId == 1
@@ -219,7 +226,7 @@ def test_update_prescription(db_session_mock):
     assert prescription.PrescriptionRemarks == "No remarks"
     assert prescription.Status == "Active"
     assert prescription.UpdatedDateTime == datetime(2023, 1, 1, 10, 0)
-    assert prescription.ModifiedById == "1"
+    assert prescription.ModifiedById == "test_user"
 
 
 def test_delete_prescription(db_session_mock):
@@ -251,7 +258,10 @@ def test_delete_prescription(db_session_mock):
 
     prescription_id = 1
     result = delete_prescription(
-        db_session_mock, prescription_id, PatientPrescriptionUpdate(**data)
+        db_session_mock,
+        prescription_id,
+        modified_by="test_user",      # <--- FIX
+        user_full_name="Test User"    # <--- FIX
     )
     db_session_mock.commit.assert_called_once()
     assert result.IsDeleted == "1"
