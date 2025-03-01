@@ -24,14 +24,14 @@ def get_education_type(education_type_id: int, db: Session = Depends(get_db)):
 @router.post("/create_education_type", response_model=PatientEducationListTypeCreate, description="Create a new education type.")
 def create_education_type(education_type: PatientEducationListTypeCreate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
-    user_id = 1
+    user_id = "1"
     
     return crud_education_type.create_education_type(db, education_type, user_id)
 
 @router.put("/update_education_type/{education_type_id}", response_model=PatientEducationListTypeUpdate, description="Update an education type by ID.")
 def update_education_type(education_type_id: int, education_type: PatientEducationListTypeUpdate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
-    user_id = 1
+    user_id = "1"
 
     db_education_type = crud_education_type.update_education_type(db, education_type_id, education_type, user_id)
     if not db_education_type:
@@ -41,7 +41,7 @@ def update_education_type(education_type_id: int, education_type: PatientEducati
 @router.delete("/delete_education_type/{education_type_id}", response_model=PatientEducationListType, description = "Soft delete an education type by marking it as active '0'")
 def delete_education_type(education_type_id: int, db: Session = Depends(get_db)):  
     #TODO: change user_id to current user
-    user_id = 1
+    user_id = "1"
 
     db_education_type = crud_education_type.delete_education_type(db, education_type_id ,user_id)
     if not db_education_type:

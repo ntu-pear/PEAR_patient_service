@@ -21,7 +21,7 @@ def test_create_diet_type(
 ):
     """Test case for creating a diet type."""
     # Arrange
-    created_by = 1
+    created_by = "1"
 
     # Act
     result = create_diet_type(db_session_mock, diet_type_create, created_by)
@@ -80,7 +80,7 @@ def test_get_diet_type_by_id(db_session_mock):
 def test_update_diet_type(db_session_mock):
     """Test case for updating a diet type."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     diet_type_update = PatientDietListTypeUpdate(Value="Diabetes II", IsDeleted="0")
     mock_diet_type = PatientDietList(
         Id=1,
@@ -113,7 +113,7 @@ def test_update_diet_type(db_session_mock):
 def test_delete_diet_type(db_session_mock):
     """Test case for deleting (soft-deleting) a diet type."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     mock_diet_type = PatientDietList(
         Id=1,
         Value="Diabetes",

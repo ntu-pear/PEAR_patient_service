@@ -10,5 +10,5 @@ class PatientEducationList(Base):
     Value = Column(String(255))
     CreatedDateTime = Column(DateTime, nullable=False, default=datetime.now)
     UpdatedDateTime = Column(DateTime, nullable=False, default=datetime.now)
-    CreatedById = Column(Integer, nullable=False, default=1)  
-    ModifiedById = Column(Integer, nullable=False, default=1)
+    CreatedById = Column(String, nullable=False, default=1)
+    ModifiedById = Column(String, nullable=False, default=1)

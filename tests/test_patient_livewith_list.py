@@ -21,7 +21,7 @@ def test_create_livewith_type(
 ):
     """Test case for creating a livewith type."""
     # Arrange
-    created_by = 1
+    created_by = "1"
 
     # Act
     result = create_livewith_type(db_session_mock, livewith_type_create, created_by)
@@ -77,7 +77,7 @@ def test_get_livewith_type_by_id(db_session_mock):
 def test_update_livewith_type(db_session_mock):
     """Test case for updating a livewith type."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     livewith_type_update = PatientLiveWithListTypeUpdate(Value="Siblings", IsDeleted="0")
     mock_livewith_type = PatientLiveWithList(
         Id=1,
@@ -108,7 +108,7 @@ def test_update_livewith_type(db_session_mock):
 def test_delete_livewith_type(db_session_mock):
     """Test case for deleting (soft-deleting) a livewith type."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     mock_livewith_type = PatientLiveWithList(
         Id=1,
         Value="Alone",

@@ -272,6 +272,7 @@ def create_patient_social_history(db: Session, social_data: PatientSocialHistory
     return new_record
 
 
+
 def update_patient_social_history(db: Session, patient_id: int, social_data: PatientSocialHistoryUpdate, modified_by: str, user_full_name: str):
     """
     Update an existing patient social history record after validating list references.
@@ -357,6 +358,7 @@ def update_patient_social_history(db: Session, patient_id: int, social_data: Pat
     )
 
     return record
+
 
 
 def delete_patient_social_history(db: Session, patient_id: int, modified_by: str, user_full_name: str):

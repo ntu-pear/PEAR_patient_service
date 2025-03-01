@@ -21,7 +21,7 @@ def test_create_education_type(
 ):
     """Test case for creating an education type."""
     # Arrange
-    created_by = 1
+    created_by = "1"
 
     # Act
     result = create_education_type(db_session_mock, education_type_create, created_by)
@@ -77,7 +77,7 @@ def test_get_education_type_by_id(db_session_mock):
 def test_update_education_type(db_session_mock):
     """Test case for updating an education type."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     education_type_update = PatientEducationListTypeUpdate(Value="Junior College", IsDeleted="0",)
     mock_education_type = PatientEducationList(
         Id=1,
@@ -108,7 +108,7 @@ def test_update_education_type(db_session_mock):
 def test_delete_education_type(db_session_mock):
     """Test case for deleting (soft-deleting) an education type."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     mock_education_type = PatientEducationList(
         Id=1,
         Value="Primary or lower",

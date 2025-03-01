@@ -21,7 +21,7 @@ def test_create_pet_type(
 ):
     """Test case for creating a pet type."""
     # Arrange
-    created_by = 1
+    created_by = "1"
 
     # Act
     result = create_pet_type(db_session_mock, pet_type_create, created_by)
@@ -77,7 +77,7 @@ def test_get_pet_type_by_id(db_session_mock):
 def test_update_pet_type(db_session_mock):
     """Test case for updating a pet type."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     pet_type_update = PatientPetListTypeUpdate(Value="Parrot", IsDeleted="0")
     mock_pet_type = PatientPetList(
         Id=1,
@@ -108,7 +108,7 @@ def test_update_pet_type(db_session_mock):
 def test_delete_pet_type(db_session_mock):
     """Test case for deleting (soft-deleting) a pet type."""
     # Arrange
-    modified_by = 2
+    modified_by = "2"
     mock_pet_type = PatientPetList(
         Id=1,
         Value="Bird",

@@ -24,14 +24,14 @@ def get_diet_type(diet_type_id: int, db: Session = Depends(get_db)):
 @router.post("/create_diet_type", response_model=PatientDietListTypeCreate, description="Create a new diet type.")
 def create_diet_type(diet_type: PatientDietListTypeCreate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
-    user_id = 1
+    user_id = "1"
     
     return crud_diet_type.create_diet_type(db, diet_type, user_id)
 
 @router.put("/update_diet_type/{diet_type_id}", response_model=PatientDietListTypeUpdate, description="Update a diet type by ID.")
 def update_diet_type(diet_type_id: int, diet_type: PatientDietListTypeUpdate, db: Session = Depends(get_db)): 
     #TODO: change user_id to current user
-    user_id = 1
+    user_id = "1"
 
     db_diet_type = crud_diet_type.update_diet_type(db, diet_type_id, diet_type, user_id)
     if not db_diet_type:
@@ -41,7 +41,7 @@ def update_diet_type(diet_type_id: int, diet_type: PatientDietListTypeUpdate, db
 @router.delete("/delete_diet_type/{diet_type_id}", response_model=PatientDietListType, description = "Soft delete a diet type by marking it as active '0'")
 def delete_diet_type(diet_type_id: int, db: Session = Depends(get_db)):  
     #TODO: change user_id to current user
-    user_id = 1
+    user_id = "1"
 
     db_diet_type = crud_diet_type.delete_diet_type(db, diet_type_id ,user_id)
     if not db_diet_type:
