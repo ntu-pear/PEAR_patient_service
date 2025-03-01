@@ -236,7 +236,7 @@ def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFil
         user_full_name=user_full_name,
         message="Updated Patient Photo",
         table="Patient",
-        entity_id=original_data_dict.id,
+        entity_id=db_patient.id,
         original_data=original_data_dict,
         updated_data=updated_data_dict,
     )
@@ -267,7 +267,7 @@ def delete_patient(db: Session, patient_id: int, user: str, user_full_name: str)
         user_full_name=user_full_name,
         message="Deleted Patient",
         table="Patient",
-        entity_id=new_assignment.id,
+        entity_id=db_patient.id,
         original_data=original_data_dict,
         updated_data= None,
     )
