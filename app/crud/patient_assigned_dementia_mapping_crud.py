@@ -145,7 +145,7 @@ def create_assigned_dementia(
         CreatedById=created_by,
         ModifiedById=created_by,
     )
-    updated_data_dict = serialize_data(dementia_data.model_dump())
+    updated_data_dict = serialize_data(new_assignment.model_dump())
     db.add(new_assignment)
     db.commit()
     db.refresh(new_assignment)
@@ -156,7 +156,7 @@ def create_assigned_dementia(
         user_full_name=user_full_name,
         message="Created patient assigned dementia mapping",
         table="PatientAssignedDementiaMapping",
-        entity_id=new_assignment.id,
+        entity_id=None,
         original_data=None,
         updated_data=updated_data_dict,
     )
@@ -253,7 +253,7 @@ def delete_assigned_dementia(db: Session, dementia_id: int, modified_by: str, us
         user=modified_by,
         user_full_name=user_full_name,
         message="Deleted patient assigned dementia mapping",
-        table="PatientAssignedDementiaMapping",
+        table="Patient Assigned Dementia Mapping",
         entity_id=dementia_id,
         original_data=original_data_dict,
         updated_data=None,

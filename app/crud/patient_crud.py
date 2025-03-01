@@ -181,7 +181,7 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
 
     updated_data_dict = serialize_data(patient.model_dump())
     log_crud_action(
-        action=ActionType.CREATE,
+        action=ActionType.UPDATE,
         user=user,
         user_full_name=user_full_name,
         message="Updated Patient",
@@ -231,7 +231,7 @@ def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFil
     except Exception:
         updated_data_dict = "{}"
     log_crud_action(
-        action=ActionType.CREATE,
+        action=ActionType.UPDATE,
         user=user,
         user_full_name=user_full_name,
         message="Updated Patient Photo",
@@ -262,7 +262,7 @@ def delete_patient(db: Session, patient_id: int, user: str, user_full_name: str)
     db.commit()
 
     log_crud_action(
-        action=ActionType.CREATE,
+        action=ActionType.DELETE,
         user=user,
         user_full_name=user_full_name,
         message="Deleted Patient",

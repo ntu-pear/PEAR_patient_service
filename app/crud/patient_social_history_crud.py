@@ -15,6 +15,8 @@ from ..schemas.patient_social_history import (
     PatientSocialHistoryCreate,
     PatientSocialHistoryUpdate,
 )
+from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
+
 
 def get_all_social_histories(db: Session):
     """
@@ -193,7 +195,7 @@ def get_patient_social_history(db: Session, patient_id: int):
     }
     
 
-def create_patient_social_history(db: Session, social_data: PatientSocialHistoryCreate, created_by: int):
+def create_patient_social_history(db: Session, social_data: PatientSocialHistoryCreate, created_by: str, user_full_name: str):
     """
     Create a new patient social history record. Validates that all referenced list records are active.
     """
@@ -226,7 +228,7 @@ def create_patient_social_history(db: Session, social_data: PatientSocialHistory
 
     # Optional: Check if the patient already has a social history record if your business logic requires uniqueness.
     existing = db.query(PatientSocialHistory).filter(PatientSocialHistory.patientId == social_data.patientId, PatientSocialHistory.isDeleted == "0").first()
-    if existing:
+    if not existing:
         raise HTTPException(status_code=400, detail=f"Patient with id {PatientSocialHistory.patientId} does not exist.")
 
     new_record = PatientSocialHistory(
@@ -254,10 +256,23 @@ def create_patient_social_history(db: Session, social_data: PatientSocialHistory
     db.add(new_record)
     db.commit()
     db.refresh(new_record)
+
+    updated_data_dict = serialize_data(new_record.model_dump())
+    log_crud_action(
+        action=ActionType.CREATE,
+        user=created_by,
+        user_full_name=user_full_name,
+        message="Created Patient Social history",
+        table="Patient Social history",
+        entity_id=None,
+        original_data=None,
+        updated_data= updated_data_dict,
+    )
+
     return new_record
 
 
-def update_patient_social_history(db: Session, patient_id: int, social_data: PatientSocialHistoryUpdate, modified_by: int):
+def update_patient_social_history(db: Session, patient_id: int, social_data: PatientSocialHistoryUpdate, modified_by: str, user_full_name: str):
     """
     Update an existing patient social history record after validating list references.
     """
@@ -268,7 +283,14 @@ def update_patient_social_history(db: Session, patient_id: int, social_data: Pat
     )
     if not record:
         raise HTTPException(status_code=404, detail=f"Social history record id {social_data.id} for patient with id {patient_id} not found.")
-
+    try:
+        original_data_dict = {
+            k: serialize_data(v)
+            for k, v in record.__dict__.items()
+            if not k.startswith("_")
+        }
+    except Exception:
+        original_data_dict = "{}"
     # Validate list records if updated
     diet = db.query(PatientDietList).filter(PatientDietList.Id == social_data.dietListId).first()
     if not diet or diet.IsDeleted != "0":
@@ -314,10 +336,30 @@ def update_patient_social_history(db: Session, patient_id: int, social_data: Pat
 
     db.commit()
     db.refresh(record)
+
+    try:
+        updated_data_dict = {
+            k: serialize_data(v)
+            for k, v in record.__dict__.items()
+            if not k.startswith("_")
+        }
+    except Exception:
+        updated_data_dict = "{}"
+    log_crud_action(
+        action=ActionType.UPDATE,
+        user=modified_by,
+        user_full_name=user_full_name,
+        message="Updated Patient Social History",
+        table="Patient Social History",
+        entity_id=record.id,
+        original_data=original_data_dict,
+        updated_data=updated_data_dict,
+    )
+
     return record
 
 
-def delete_patient_social_history(db: Session, patient_id: int, modified_by: int):
+def delete_patient_social_history(db: Session, patient_id: int, modified_by: str, user_full_name: str):
     """
     Soft delete a social history record by setting isDeleted to "1".
     """
@@ -331,4 +373,24 @@ def delete_patient_social_history(db: Session, patient_id: int, modified_by: int
 
     db.commit()
     db.refresh(record)
+
+    try:
+        original_data_dict = {
+            k: serialize_data(v)
+            for k, v in record.__dict__.items()
+            if not k.startswith("_")
+        }
+    except Exception:
+        original_data_dict = "{}"
+
+    log_crud_action(
+        action=ActionType.DELETE,
+        user=modified_by,
+        user_full_name=user_full_name,
+        message="Deleted Patient Social History",
+        table="Patient Social History",
+        entity_id=record.id,
+        original_data=original_data_dict,
+        updated_data= None,
+    )
     return record
