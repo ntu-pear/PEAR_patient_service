@@ -59,13 +59,23 @@ def update_patient_profile_picture(patient_id: int, request: Request, require_au
     patient = Patient.model_validate(db_patient)
     return SingleResponse(data=patient)
 
-
 @router.delete("/patients/delete/{patient_id}", response_model=SingleResponse[Patient])
 def delete_patient(patient_id: int, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
     db_patient = crud_patient.delete_patient(db, patient_id, user_id, user_full_name)
+    if db_patient is None:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    patient = Patient.model_validate(db_patient)
+    return SingleResponse(data=patient)
+
+@router.delete("/patients/update/{patient_id}/update_patient_profile_picture", response_model=SingleResponse[Patient])
+def delete_patient_profile_picture(patient_id: int, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
+    payload = extract_jwt_payload(request, require_auth)
+    user_id = get_user_id(payload) or "anonymous"
+    user_full_name = get_full_name(payload) or "Anonymous User"
+    db_patient = crud_patient.delete_patient_profile_picture(db, patient_id, user_id, user_full_name)
     if db_patient is None:
         raise HTTPException(status_code=404, detail="Patient not found")
     patient = Patient.model_validate(db_patient)
