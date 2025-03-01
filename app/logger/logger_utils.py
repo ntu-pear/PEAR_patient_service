@@ -9,9 +9,17 @@ class ActionType(Enum):
     UPDATE = "update"
     DELETE = "delete"
 
+EXCLUDED_KEYS = {"CreatedById", "ModifiedById", "ModifiedDate", "CreatedDate", "IsDeleted", "isDeleted"}
+
+def filter_data(data: dict) -> dict:
+    """Removes unwanted keys from the given dictionary."""
+    return {k: v for k, v in data.items() if k not in EXCLUDED_KEYS} if data else {}
+
 def log_crud_action(
     action: ActionType,
     user: str,
+    user_full_name: str,
+    message: str,
     table: str,
     entity_id: Optional[int] = None,
     original_data: Optional[dict] = None,
@@ -20,19 +28,23 @@ def log_crud_action(
 
     if action == ActionType.CREATE:
         original_data = None
-        entity_id = None  # Entity ID is not applicable for create
     elif action == ActionType.DELETE:
         updated_data = None
         
     log_data = {
-        "entity_id": entity_id,
-        "original_data": original_data,
-        "updated_data": updated_data,
-    }
+    "entity_id": entity_id,
+    "original_data": filter_data(original_data),
+    "updated_data": filter_data(updated_data),
+}
 
-    log_data = {key: value for key, value in log_data.items() if value is not None}
-    log_message = json.dumps(log_data)
-    logger.info(log_message, extra={"table": table, "user": user, "action": action.value})
+    extra = {
+        "table": table,
+        "user": user,
+        "action": action.value,
+        "user_full_name": user_full_name,
+        "log_text": message,
+    }
+    logger.info(json.dumps(log_data), extra=extra)
 
 def serialize_data(data):
     if isinstance(data, datetime):

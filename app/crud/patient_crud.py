@@ -8,6 +8,7 @@ from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 import math
 from fastapi import HTTPException, UploadFile
 
+
 # To Change
 user = "1"
 SYSTEM_USER_ID  = "1"
@@ -56,7 +57,7 @@ def get_patients(db: Session, mask: bool = True, pageNo: int = 0, pageSize: int 
     return db_patients, totalRecords, totalPages
 
 
-def create_patient(db: Session, patient: PatientCreate):
+def create_patient(db: Session, patient: PatientCreate, user: str, user_full_name: str):
     """ Create a new patient while explicitly avoiding OUTPUT inserted.id """
 
     # Check NRIC uniqueness
@@ -121,10 +122,29 @@ def create_patient(db: Session, patient: PatientCreate):
     # Retrieve the newly inserted patient using NRIC
     new_patient = db.query(Patient).filter(Patient.nric == patient.nric).first()
 
+    try:
+        patient_data_dict = {
+            k: serialize_data(v)
+            for k, v in new_patient.__dict__.items()
+            if not k.startswith("_")
+        }
+    except Exception:
+        patient_data_dict = "{}"
+
+    log_crud_action(
+            action=ActionType.CREATE,
+            user=user,
+            user_full_name=user_full_name,
+            message="Created Patient",
+            table="Patient",
+            entity_id=new_patient.id,
+            original_data=None,
+            updated_data=patient_data_dict,
+        )
     return new_patient
 
 
-def update_patient(db: Session, patient_id: int, patient: PatientUpdate):
+def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: str, user_full_name: str):
     db_patient = db.query(Patient).filter(Patient.id == patient_id, Patient.isDeleted == "0").first()
     if not db_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
@@ -159,14 +179,35 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate):
     db.commit()
     db.refresh(db_patient)
 
+    updated_data_dict = serialize_data(patient.model_dump())
+    log_crud_action(
+        action=ActionType.UPDATE,
+        user=user,
+        user_full_name=user_full_name,
+        message="Updated Patient",
+        table="Patient",
+        entity_id=db_patient.id,
+        original_data=original_data_dict,
+        updated_data=updated_data_dict,
+    )
+
     return db_patient
 
 
-def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFile):
+def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFile, user: str, user_full_name: str):
     """ Update only the patient's profile picture """
     db_patient = db.query(Patient).filter(Patient.id == patient_id, Patient.isDeleted == "0").first()
     if not db_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
+    
+    try:
+        original_data_dict = {
+            k: serialize_data(v)
+            for k, v in db_patient.__dict__.items()
+            if not k.startswith("_")
+        }
+    except Exception:
+        original_data_dict = "{}"
 
     # Upload new profile picture to Cloudinary
     profile_picture_url = upload_photo_to_cloudinary(file)
@@ -181,10 +222,29 @@ def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFil
     db.commit()
     db.refresh(db_patient)
 
+    try:
+        updated_data_dict = {
+            k: serialize_data(v)
+            for k, v in db_patient.__dict__.items()
+            if not k.startswith("_")
+        }
+    except Exception:
+        updated_data_dict = "{}"
+    log_crud_action(
+        action=ActionType.UPDATE,
+        user=user,
+        user_full_name=user_full_name,
+        message="Updated Patient Photo",
+        table="Patient",
+        entity_id=db_patient.id,
+        original_data=original_data_dict,
+        updated_data=updated_data_dict,
+    )
+
     return db_patient
 
 
-def delete_patient(db: Session, patient_id: int):
+def delete_patient(db: Session, patient_id: int, user: str, user_full_name: str):
     db_patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if not db_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
@@ -200,5 +260,16 @@ def delete_patient(db: Session, patient_id: int):
 
     setattr(db_patient, "isDeleted", "1")
     db.commit()
+
+    log_crud_action(
+        action=ActionType.DELETE,
+        user=user,
+        user_full_name=user_full_name,
+        message="Deleted Patient",
+        table="Patient",
+        entity_id=db_patient.id,
+        original_data=original_data_dict,
+        updated_data= None,
+    )
 
     return db_patient

@@ -17,7 +17,7 @@ def db_session_mock():
 
 from app.crud.patient_mobility_mapping_crud import (
     get_all_mobility_entries,
-    get_mobility_entries_by_id,
+    get_mobility_entry_by_mobility_id,
     create_mobility_entry,
     update_mobility_entry,
     delete_mobility_entry,
@@ -33,11 +33,11 @@ def test_get_all_mobility_entries(db_session_mock, mock_mobility_entries):
     result = get_all_mobility_entries(db_session_mock)
     assert result == mock_mobility_entries
 
-def test_get_mobility_entries_by_id(db_session_mock, mock_mobility_entries):
+def test_get_mobility_entries_by_id(db_session_mock, mock_mobility_entry):
     entry_id = 1
-    db_session_mock.query().filter().all.return_value = mock_mobility_entries
-    result = get_mobility_entries_by_id(db_session_mock, entry_id)
-    assert result == mock_mobility_entries
+    db_session_mock.query().filter().first.return_value = mock_mobility_entry
+    result = get_mobility_entry_by_mobility_id(db_session_mock, entry_id)
+    assert result == mock_mobility_entry
 
 # def test_create_mobility_entry(db_session_mock, mobility_create_data):
 #     result = create_mobility_entry(db_session_mock, mobility_create_data, created_by=1)
@@ -56,7 +56,7 @@ def test_get_mobility_entries_by_id(db_session_mock, mock_mobility_entries):
 def test_delete_mobility_entry(db_session_mock, mock_mobility_entry):
     entry_id = 1
     db_session_mock.query().filter().first.return_value = mock_mobility_entry
-    result = delete_mobility_entry(db_session_mock, entry_id, modified_by=1)
+    result = delete_mobility_entry(db_session_mock, entry_id, modified_by=1, user_full_name="USER")
     db_session_mock.commit.assert_called_once()
     assert result == mock_mobility_entry
 

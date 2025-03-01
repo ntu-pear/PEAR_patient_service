@@ -5,7 +5,7 @@ metadata:
   labels:
     app: patient-service-dev
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: patient-service-dev

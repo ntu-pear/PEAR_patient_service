@@ -15,7 +15,7 @@ def get_allergy_type_by_id(db: Session, allergy_type_id: int):
         .first()
     )
 
-def create_allergy_type(db: Session, allergy_type: AllergyTypeCreate, created_by: str):
+def create_allergy_type(db: Session, allergy_type: AllergyTypeCreate, created_by: str, user_full_name:str):
     db_allergy_type = AllergyType(
         **allergy_type.model_dump(), CreatedById=created_by, ModifiedById=created_by
     )
@@ -28,6 +28,8 @@ def create_allergy_type(db: Session, allergy_type: AllergyTypeCreate, created_by
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
+        user_full_name=user_full_name,
+        message="Created allergy type",
         table="AllergyType",
         entity_id=db_allergy_type.AllergyTypeID,
         original_data=None,
@@ -37,7 +39,7 @@ def create_allergy_type(db: Session, allergy_type: AllergyTypeCreate, created_by
 
 
 def update_allergy_type(
-    db: Session, allergy_type_id: int, allergy_type: AllergyTypeUpdate, modified_by: str
+    db: Session, allergy_type_id: int, allergy_type: AllergyTypeUpdate, modified_by: str, user_full_name: str
 ):
     db_allergy_type = (
         db.query(AllergyType)
@@ -67,6 +69,8 @@ def update_allergy_type(
         log_crud_action(
             action=ActionType.UPDATE,
             user=modified_by,
+            user_full_name=user_full_name,
+            message="Updated allergy type",
             table="AllergyType",
             entity_id=allergy_type_id,
             original_data=original_data_dict,
@@ -76,7 +80,7 @@ def update_allergy_type(
     return None
 
 
-def delete_allergy_type(db: Session, allergy_type_id: int, modified_by: str):
+def delete_allergy_type(db: Session, allergy_type_id: int, modified_by: str, user_full_name:str):
     db_allergy_type = (
         db.query(AllergyType)
         .filter(AllergyType.AllergyTypeID == allergy_type_id)
@@ -99,6 +103,8 @@ def delete_allergy_type(db: Session, allergy_type_id: int, modified_by: str):
         log_crud_action(
             action=ActionType.DELETE,
             user=modified_by,
+            user_full_name=user_full_name,
+            message="Deleted allergy type",
             table="AllergyType",
             entity_id=allergy_type_id,
             original_data=original_data_dict,

@@ -8,7 +8,7 @@ class PatientDoctorNote(Base):
 
     id = Column(Integer, primary_key=True, index=True) 
     patientId = Column(Integer, ForeignKey('PATIENT.id')) 
-    doctorId = Column(Integer)  
+    doctorId = Column(String(255))  
     doctorRemarks = Column(String(255))
     isDeleted = Column(String(1), default="0", nullable=False)
 

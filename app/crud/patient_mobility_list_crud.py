@@ -37,7 +37,7 @@ def get_mobility_list_entry_by_id(db: Session, mobility_list_id: int):
     return entry
 
 # Create a new mobility list entry
-def create_mobility_list_entry(db: Session, mobility_list_data: PatientMobilityListCreate, created_by: str):
+def create_mobility_list_entry(db: Session, mobility_list_data: PatientMobilityListCreate, created_by: str, user_full_name: str):
     new_entry = PatientMobilityList(
         **mobility_list_data.model_dump(exclude={"CreatedDateTime", "ModifiedDateTime", "CreatedById", "ModifiedById"}),  # Corrected set syntax
         CreatedDateTime=datetime.utcnow(),
@@ -53,6 +53,8 @@ def create_mobility_list_entry(db: Session, mobility_list_data: PatientMobilityL
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
+        user_full_name=user_full_name,
+        message="Created mobility list entry",
         table="PatientMobilityList",
         entity_id=new_entry.MobilityListId,
         original_data=None,
@@ -62,7 +64,7 @@ def create_mobility_list_entry(db: Session, mobility_list_data: PatientMobilityL
 
 # Update a mobility list entry
 def update_mobility_list_entry(
-    db: Session, mobility_list_id: int, mobility_list_data: PatientMobilityListUpdate, modified_by: str
+    db: Session, mobility_list_id: int, mobility_list_data: PatientMobilityListUpdate, modified_by: str, user_full_name: str
 ):
     # Query the database for the entry to update
     db_entry = db.query(PatientMobilityList).filter(
@@ -100,6 +102,8 @@ def update_mobility_list_entry(
         log_crud_action(
             action=ActionType.UPDATE,
             user=modified_by,
+            user_full_name=user_full_name,
+            message="Updated mobility list entry",
             table="PatientMobilityList",
             entity_id=mobility_list_id,
             original_data=original_data_dict,
@@ -115,7 +119,7 @@ def update_mobility_list_entry(
 
 # Soft delete a mobility list entry (set IsDeleted to '1')
 
-def delete_mobility_list_entry(db: Session, mobility_list_id: int, modified_by: str):
+def delete_mobility_list_entry(db: Session, mobility_list_id: int, modified_by: str, user_full_name: str):
     # Query for the entry to be deleted
     db_entry = db.query(PatientMobilityList).filter(
         PatientMobilityList.MobilityListId == mobility_list_id,
@@ -148,6 +152,8 @@ def delete_mobility_list_entry(db: Session, mobility_list_id: int, modified_by: 
     log_crud_action(
         action=ActionType.DELETE,
         user=modified_by,
+        user_full_name=user_full_name,
+        message="Deleted mobility list entry",
         table="PatientMobilityList",
         entity_id=mobility_list_id,
         original_data=original_data_dict,
