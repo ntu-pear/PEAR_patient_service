@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..schemas.patient_mobility_mapping import (
@@ -7,36 +7,58 @@ from ..schemas.patient_mobility_mapping import (
     PatientMobilityResponse,
 )
 from ..crud import patient_mobility_mapping_crud
+from ..auth.jwt_utils import extract_jwt_payload, get_user_id, get_full_name
+from ..logger.logger_utils import logger
 
 router = APIRouter()
 
 @router.get("/MobilityMapping/List", response_model=list[PatientMobilityResponse])
-def get_all_mobility_entries(db: Session = Depends(get_db)):
+def get_all_mobility_entries(request: Request, db: Session = Depends(get_db), require_auth: bool = True):
+    _ = extract_jwt_payload(request, require_auth)
+
     return patient_mobility_mapping_crud.get_all_mobility_entries(db)
 
 @router.get("/MobilityMapping/List/{patient_id}", response_model=list[PatientMobilityResponse])
-def get_mobility_entry(patient_id: int, db: Session = Depends(get_db)):
-    return patient_mobility_mapping_crud.get_mobility_entries_by_id(db, patient_id)
+def get_mobility_entries_by_patient_id(request: Request, patient_id: int, db: Session = Depends(get_db), require_auth: bool = True):
+    _ = extract_jwt_payload(request, require_auth)
+    
+    return patient_mobility_mapping_crud.get_mobility_entries_by_patient_id(db, patient_id)
+
+@router.get("/MobilityMapping/List/{mobility_id}", response_model=list[PatientMobilityResponse])
+def get_mobility_entry_by_mobility_id(request: Request, mobility_id: int, db: Session = Depends(get_db), require_auth: bool = True):
+    _ = extract_jwt_payload(request, require_auth)
+    return patient_mobility_mapping_crud.get_mobility_entry_by_mobility_id(db, mobility_id)
 
 @router.post("/MobilityMapping/List", response_model=PatientMobilityResponse)
 def create_mobility_entry(
-    mobility_data: PatientMobilityCreate, db: Session = Depends(get_db)
+    request: Request, mobility_data: PatientMobilityCreate, db: Session = Depends(get_db), require_auth: bool = True
 ):
-    # Replace `1` with the current user's ID if available
-    return patient_mobility_mapping_crud.create_mobility_entry(db, mobility_data, created_by="1")
+    payload = extract_jwt_payload(request, require_auth)
+    user_id = get_user_id(payload) or "anonymous"
+    user_full_name = get_full_name(payload) or "Anonymous User"
+    
+    return patient_mobility_mapping_crud.create_mobility_entry(db, mobility_data, user_id, user_full_name)
 
-@router.put("MobilityMapping/List/{patient_id}", response_model=PatientMobilityResponse)
+@router.put("MobilityMapping/List/{mobility_id}", response_model=PatientMobilityResponse)
 def update_mobility_entry(
-    patient_id: int,
+    request: Request,
+    mobility_id: int,
     mobility_data: PatientMobilityUpdate,
     db: Session = Depends(get_db),
+    require_auth: bool = True
 ):
-    # Replace `1` with the current user's ID if available
+    payload = extract_jwt_payload(request, require_auth)
+    user_id = get_user_id(payload) or "anonymous"
+    user_full_name = get_full_name(payload) or "Anonymous User"
+
     return patient_mobility_mapping_crud.update_mobility_entry(
-        db, patient_id, mobility_data, modified_by="1"
+        db, mobility_id, mobility_data, user_id, user_full_name
     )
 
-@router.delete("/MobilityMapping/List/{patient_id}", response_model=PatientMobilityResponse)
-def delete_mobility_entry(patient_id: int, db: Session = Depends(get_db)):
-    # Replace `1` with the current user's ID if available
-    return patient_mobility_mapping_crud.delete_mobility_entry(db, patient_id, modified_by="1")
+@router.delete("/MobilityMapping/List/{mobility_id}", response_model=PatientMobilityResponse)
+def delete_mobility_entry(request: Request, mobility_id: int, db: Session = Depends(get_db), require_auth: bool = True):
+    payload = extract_jwt_payload(request, require_auth)
+    user_id = get_user_id(payload) or "anonymous"
+    user_full_name = get_full_name(payload) or "Anonymous User"
+
+    return patient_mobility_mapping_crud.delete_mobility_entry(db, mobility_id, user_id, user_full_name)

@@ -6,7 +6,7 @@ from typing import Optional
 class PatientDoctorNoteBase(BaseModel):
     isDeleted: str = "0"
     patientId: int
-    doctorId: int
+    doctorId: str
     doctorRemarks: Optional[str] = None
 
 
