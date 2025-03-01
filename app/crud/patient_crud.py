@@ -273,3 +273,47 @@ def delete_patient(db: Session, patient_id: int, user: str, user_full_name: str)
     )
 
     return db_patient
+
+def delete_patient_profile_picture(db: Session, patient_id: int, user: str, user_full_name: str):
+    """ Remove the patient's profile picture by setting it to an empty string """
+    db_patient = db.query(Patient).filter(Patient.id == patient_id, Patient.isDeleted == "0").first()
+    if not db_patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    try:
+        original_data_dict = {
+            k: serialize_data(v)
+            for k, v in db_patient.__dict__.items()
+            if not k.startswith("_")
+        }
+    except Exception:
+        original_data_dict = "{}"
+
+    # Set profile picture to empty string
+    db_patient.profilePicture = ""
+    db_patient.modifiedDate = datetime.utcnow()
+    db_patient.ModifiedById = SYSTEM_USER_ID
+    db.commit()
+    db.refresh(db_patient)
+
+    try:
+        updated_data_dict = {
+            k: serialize_data(v)
+            for k, v in db_patient.__dict__.items()
+            if not k.startswith("_")
+        }
+    except Exception:
+        updated_data_dict = "{}"
+
+    log_crud_action(
+        action=ActionType.UPDATE,
+        user=user,
+        user_full_name=user_full_name,
+        message="Deleted Patient Photo",
+        table="Patient",
+        entity_id=db_patient.id,
+        original_data=original_data_dict,
+        updated_data=updated_data_dict,
+    )
+
+    return db_patient
