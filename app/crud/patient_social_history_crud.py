@@ -228,7 +228,7 @@ def create_patient_social_history(db: Session, social_data: PatientSocialHistory
 
     # Optional: Check if the patient already has a social history record if your business logic requires uniqueness.
     existing = db.query(PatientSocialHistory).filter(PatientSocialHistory.patientId == social_data.patientId, PatientSocialHistory.isDeleted == "0").first()
-    if not existing:
+    if existing:
         raise HTTPException(status_code=400, detail=f"Patient with id {PatientSocialHistory.patientId} does not exist.")
 
     new_record = PatientSocialHistory(
@@ -257,7 +257,7 @@ def create_patient_social_history(db: Session, social_data: PatientSocialHistory
     db.commit()
     db.refresh(new_record)
 
-    updated_data_dict = serialize_data(new_record.model_dump())
+    updated_data_dict = serialize_data(social_data.model_dump())
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
