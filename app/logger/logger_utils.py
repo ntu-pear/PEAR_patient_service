@@ -28,7 +28,6 @@ def log_crud_action(
 
     if action == ActionType.CREATE:
         original_data = None
-        entity_id = None  # Entity ID is not applicable for create
     elif action == ActionType.DELETE:
         updated_data = None
         
