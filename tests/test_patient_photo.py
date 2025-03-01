@@ -95,8 +95,8 @@ def test_create_patient_allergy(db_session_mock):
             AlbumCategoryListID = 1,
             PatientID = patient_id,
             IsDeleted = 0,
-            CreatedDateTime = datetime.utcnow(),
-            UpdatedDateTime = datetime.utcnow(),
+            CreatedDateTime = datetime.now(),
+            UpdatedDateTime = datetime.now(),
             CreatedById = createdby,
             ModifiedById = createdby,
         )
