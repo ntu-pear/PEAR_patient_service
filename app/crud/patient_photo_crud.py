@@ -18,9 +18,11 @@ def upload_photo_to_cloudinary(file):
 
 def create_patient_photo(db: Session, file, photo_data: PatientPhotoCreate):
     """ Create a new patient photo record with system-generated defaults """
-    
+
+    photo_url = ""
+    if file is not None:
     # Upload photo to Cloudinary
-    photo_url = upload_photo_to_cloudinary(file)
+        photo_url = upload_photo_to_cloudinary(file)
 
     # Create the PatientPhoto object with default system values
     db_photo = PatientPhoto(
@@ -76,12 +78,14 @@ def update_patient_photo(db: Session, patient_id: int, file, update_data: Patien
 
     if not db_photo:
         return None  # No photo found for this patient
+    
+    new_photo_url = ""
+    if file is not None:
+        # Upload new photo to Cloudinary
+        new_photo_url = upload_photo_to_cloudinary(file)
 
-    # Upload new photo to Cloudinary
-    new_photo_url = upload_photo_to_cloudinary(file)
-
-    # Update only provided fields
-    db_photo.PhotoPath = new_photo_url  # Replace the path with the latest photo
+        # Update only provided fields
+        db_photo.PhotoPath = new_photo_url  # Replace the path with the latest photo
 
     try: 
         original_data_dict = {
