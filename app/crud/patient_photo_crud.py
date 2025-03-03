@@ -19,10 +19,8 @@ def upload_photo_to_cloudinary(file):
 def create_patient_photo(db: Session, file, photo_data: PatientPhotoCreate):
     """ Create a new patient photo record with system-generated defaults """
 
-    photo_url = ""
-    if file is not None:
     # Upload photo to Cloudinary
-        photo_url = upload_photo_to_cloudinary(file)
+    photo_url = upload_photo_to_cloudinary(file)
 
     # Create the PatientPhoto object with default system values
     db_photo = PatientPhoto(
