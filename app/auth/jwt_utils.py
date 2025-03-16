@@ -108,3 +108,7 @@ def get_user_id(payload: Optional[JWTPayload]) -> Optional[str]:
 def get_full_name(payload: Optional[JWTPayload]) -> Optional[str]:
     """Extract fullName from JWTPayload model."""
     return payload.fullName if payload else None
+
+def get_role_name(payload: Optional[JWTPayload]) -> Optional[str]:
+    """Extract roleName from JWTPayload model."""
+    return payload.roleName if payload else None

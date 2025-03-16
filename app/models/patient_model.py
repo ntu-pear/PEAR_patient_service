@@ -22,7 +22,7 @@ class Patient(Base):
     isApproved = Column(String(1))
     preferredName = Column(String(255))
     preferredLanguageId = Column(
-        Integer, ForeignKey("PATIENT_LIST_LANGUAGE.id")
+        Integer
     )  # Changed to Integer
     updateBit = Column(String(1), default="1", nullable=False)
     autoGame = Column(String(1), default="0", nullable=False)
@@ -60,6 +60,7 @@ class Patient(Base):
     vitals = relationship("PatientVital", back_populates="patient")
     attendances = relationship("PatientAttendance", back_populates="patient")
     highlights = relationship("PatientHighlight", back_populates="patient")
+    privacy = relationship("PatientPrivacyLevel", back_populates="patient")
 
     # Ensure other models follow similar changes for consistency
     @property
