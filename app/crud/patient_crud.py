@@ -212,9 +212,6 @@ def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFil
     # Upload new profile picture to Cloudinary
     profile_picture_url = upload_photo_to_cloudinary(file)
 
-    # # Log original data
-    # original_data_dict = {"profilePicture": db_patient.profilePicture}
-
     # Update patient profile picture
     db_patient.profilePicture = profile_picture_url
     db_patient.modifiedDate = datetime.utcnow()
