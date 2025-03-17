@@ -100,12 +100,33 @@ def get_assigned_dementias(db: Session, patient_id: int, pageNo: int = 0, pageSi
 
     return assignments, totalRecords, totalPages
 def get_assigned_dementia_by_dementia_id(db: Session, dementia_id: int):
-    result = db.query(PatientAssignedDementiaMapping).filter(
+    result = db.query(
+        PatientAssignedDementiaMapping,
+        PatientAssignedDementiaList.Value.label("DementiaTypeValue")  # Include DementiaTypeValue
+    ).join(
+        PatientAssignedDementiaList,
+        PatientAssignedDementiaMapping.DementiaTypeListId == PatientAssignedDementiaList.DementiaTypeListId
+    ).filter(
         PatientAssignedDementiaMapping.DementiaTypeListId == dementia_id,
         PatientAssignedDementiaMapping.IsDeleted == "0"
-    ).first()  # Get a single record
+    ).first()
 
-    return result  # Returns None if not found
+    if not result:
+        return None
+
+    # Convert the result into a dictionary including DementiaTypeValue
+    assigned_dementia, dementia_type_value = result
+    return {
+        "id": assigned_dementia.id,
+        "PatientId": assigned_dementia.PatientId,
+        "DementiaTypeListId": assigned_dementia.DementiaTypeListId,
+        "IsDeleted": assigned_dementia.IsDeleted,
+        "CreatedDate": assigned_dementia.CreatedDate,
+        "ModifiedDate": assigned_dementia.ModifiedDate,
+        "CreatedById": assigned_dementia.CreatedById,
+        "ModifiedById": assigned_dementia.ModifiedById,
+        "DementiaTypeValue": dementia_type_value  # Ensure field is present
+    }
 
 # Create a new dementia assignment
 def create_assigned_dementia(
