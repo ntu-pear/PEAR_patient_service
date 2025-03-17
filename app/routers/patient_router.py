@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request, Query
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..crud import patient_crud as crud_patient
@@ -9,6 +9,7 @@ from ..schemas.patient import (
     PatientUpdate
 )
 from ..auth.jwt_utils import extract_jwt_payload, get_user_id, get_full_name
+from typing import Optional
 
 router = APIRouter()
 
@@ -22,9 +23,17 @@ def read_patient(patient_id: int, request: Request, require_auth: bool = True, d
     return SingleResponse(data = patient)
 
 @router.get("/patients/", response_model=PaginatedResponse[Patient])
-def read_patients(request: Request, require_auth: bool = True, mask: bool = True, pageNo: int = 0, pageSize: int = 10, db: Session = Depends(get_db)):
+def read_patients(
+    request: Request,
+    name: str = Query("", description="Filter patients by name (non-exact match)"),
+    require_auth: bool = Query(True, description="Require authentication"),
+    mask: bool = Query(True, description="Mask sensitive data"),
+    pageNo: int = Query(0, description="Page number (starting from 0)"),
+    pageSize: int = Query(10, description="Number of records per page"),
+    db: Session = Depends(get_db),
+):
     _ = extract_jwt_payload(request, require_auth)
-    db_patients, totalRecords, totalPages = crud_patient.get_patients(db=db, pageNo=pageNo, pageSize=pageSize, mask=mask)
+    db_patients, totalRecords, totalPages = crud_patient.get_patients(db=db, pageNo=pageNo, pageSize=pageSize, mask=mask, name=name)
     patients = [Patient.model_validate(patient) for patient in db_patients]
     return PaginatedResponse(data=patients, pageNo=pageNo, pageSize=pageSize, totalRecords= totalRecords, totalPages=totalPages)
 
