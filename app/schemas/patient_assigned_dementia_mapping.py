@@ -30,7 +30,8 @@ class PatientAssignedDementia(PatientAssignedDementiaBase):
     ModifiedDate: datetime = Field(..., description="Timestamp when the record was last modified.")
     CreatedById: str = Field(json_schema_extra={"example": "1"})
     ModifiedById: str = Field(json_schema_extra={"example": "1"})
-
+    DementiaTypeValue: Optional[str]
+    
 class PatientAssignedDementiaCreateResp(BaseModel):
     id: int
     IsDeleted: str
@@ -40,5 +41,6 @@ class PatientAssignedDementiaCreateResp(BaseModel):
     ModifiedDate: datetime
     CreatedById: str = Field(json_schema_extra={"example": "1"})
     ModifiedById: str = Field(json_schema_extra={"example": "1"})
+    
 
     model_config = {"from_attributes": True}  

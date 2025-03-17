@@ -8,7 +8,7 @@ from app.crud.patient_assigned_dementia_mapping_crud import (
     update_assigned_dementia,
     delete_assigned_dementia,
 )
-from app.schemas.patient_assigned_dementia_mapping import PatientAssignedDementiaCreate, PatientAssignedDementiaUpdate
+from app.schemas.patient_assigned_dementia_mapping import PatientAssignedDementiaCreate, PatientAssignedDementiaUpdate, PatientAssignedDementia
 from app.models.patient_assigned_dementia_mapping_model import PatientAssignedDementiaMapping
 
 
@@ -61,95 +61,6 @@ def get_mock_assigned_dementias():
         ),
     ]
 
-
-# Test creating an assigned dementia record
-# @mock.patch("app.models.patient_guardian_relationship_mapping_model.PatientGuardianRelationshipMapping")
-# @mock.patch("app.models.patient_patient_guardian_model.PatientPatientGuardian")
-# @mock.patch("app.models.allergy_reaction_type_model.AllergyReactionType")
-# @mock.patch("app.models.allergy_type_model.AllergyType")
-# @mock.patch("app.models.patient_social_history_model.PatientSocialHistory")
-# @mock.patch("app.models.patient_highlight_model.PatientHighlight")
-# @mock.patch("app.models.patient_vital_model.PatientVital")
-# @mock.patch("app.models.patient_prescription_model.PatientPrescription")
-# @mock.patch("app.models.patient_mobility_list_model.PatientMobilityList")  # Mock PatientMobilityList
-# @mock.patch("app.models.patient_mobility_mapping_model.PatientMobility")  # Mock PatientMobility
-# @mock.patch("app.models.patient_photo_model.PatientPhoto")
-# @mock.patch("app.models.patient_photo_list_model.PatientPhotoList")
-# @mock.patch("app.models.patient_doctor_note_model.PatientDoctorNote")
-# @mock.patch("app.models.patient_allergy_mapping_model.PatientAllergyMapping")
-# @mock.patch("app.models.patient_assigned_dementia_list_model.PatientAssignedDementiaList")
-# @mock.patch("app.models.patient_assigned_dementia_mapping_model.PatientAssignedDementiaMapping")
-# def test_create_assigned_dementia(
-#     mock_patient_assigned_dementia_mapping,
-#     mock_patient_assigned_dementia_list,
-#     mock_allergy_reaction_type,
-#     mock_patient_guardian_relationship_mapping,
-#     mock_patient_patient_guardian,
-#     mock_allergy_type,
-#     mock_patient_social_history,
-#     mock_patient_highlight,
-#     mock_patient_vital,
-#     mock_patient_prescription,
-#     mock_patient_mobility,
-#     mock_patient_mobility_list,
-#     mock_patient_photo,
-#     mock_patient_photo_list,
-#     mock_patient_doctor_note,
-#     mock_patient_allergy_mapping,
-#     db_session_mock,
-#     patient_assigned_dementia_create,
-# ):
-#     """Test case for creating an assigned dementia record."""
-#     # Mock valid dementia type
-#     dementia_type_mock = MagicMock()
-#     db_session_mock.query.return_value.filter.return_value.first.side_effect = [
-#         dementia_type_mock,  # First query for dementia type existence
-#         None,  # Second query for checking existing assignment
-#     ]
-
-#     # Explicitly set attributes for the mocked PatientAssignedDementiaMapping instance
-#     mock_instance = PatientAssignedDementiaMapping(
-#         PatientId=patient_assigned_dementia_create.PatientId,
-#         DementiaTypeListId=patient_assigned_dementia_create.DementiaTypeListId,
-#         IsDeleted=patient_assigned_dementia_create.IsDeleted,
-#         CreatedById=patient_assigned_dementia_create.CreatedById,
-#         ModifiedById=patient_assigned_dementia_create.ModifiedById,
-#     )
-#     db_session_mock.add.side_effect = lambda x: setattr(x, "id", 1)  # Simulate setting a database-generated ID
-
-#     # Mock the PatientAssignedDementiaMapping model creation to return the mock instance
-#     mock_patient_assigned_dementia_mapping.return_value = mock_instance
-
-#     # Act
-#     created_by = "1"
-#     result = create_assigned_dementia(
-#         db_session_mock, patient_assigned_dementia_create, created_by, user_full_name="TEST_NAME"
-#     )
-
-#     # Validate the object added to the database
-#     added_instance = db_session_mock.add.call_args[0][0]
-#     assert isinstance(added_instance, PatientAssignedDementiaMapping)
-#     assert added_instance.PatientId == patient_assigned_dementia_create.PatientId
-#     assert added_instance.DementiaTypeListId == patient_assigned_dementia_create.DementiaTypeListId
-#     assert added_instance.IsDeleted == patient_assigned_dementia_create.IsDeleted
-#     assert added_instance.CreatedById == patient_assigned_dementia_create.CreatedById
-#     assert added_instance.ModifiedById == patient_assigned_dementia_create.ModifiedById
-
-#     # Assert database interaction
-#     db_session_mock.commit.assert_called_once()
-#     db_session_mock.refresh.assert_called_once_with(added_instance)
-
-#     # Print for debugging purposes
-#     print("Created Object:", added_instance)
-#     print("Attributes:")
-#     print(f"PatientId: {added_instance.PatientId}")
-#     print(f"DementiaTypeListId: {added_instance.DementiaTypeListId}")
-#     print(f"IsDeleted: {added_instance.IsDeleted}")
-#     print(f"CreatedById: {added_instance.CreatedById}")
-#     print(f"ModifiedById: {added_instance.ModifiedById}")
-
-
-
 @mock.patch("app.models.patient_assigned_dementia_mapping_model.PatientAssignedDementiaMapping")
 @mock.patch("app.models.patient_assigned_dementia_list_model.PatientAssignedDementiaList")
 def test_get_all_assigned_dementias(
@@ -157,50 +68,50 @@ def test_get_all_assigned_dementias(
     mock_patient_assigned_dementia_list,
     db_session_mock,
 ):
-    """Test case for retrieving all dementia assignments."""
-    # Mock data to simulate query results
+    """Test retrieving all dementia assignments with pagination."""
+    
+    # ✅ Mock `count()` to simulate total records
+    db_session_mock.query.return_value.join.return_value.filter.return_value.count.return_value = 2
+
+    # ✅ Mock query results with Pydantic model instances instead of dictionaries
     mock_results = [
-        MagicMock(
+        PatientAssignedDementia(
             id=1,
             PatientId=101,
             DementiaTypeListId=1,
             IsDeleted="0",
             CreatedDate="2025-01-01",
             ModifiedDate="2025-01-02",
-            CreatedById=1,
-            ModifiedById=2,
+            CreatedById="1",
+            ModifiedById="2",
             DementiaTypeValue="Alzheimer's",
         ),
-        MagicMock(
+        PatientAssignedDementia(
             id=2,
             PatientId=102,
             DementiaTypeListId=2,
             IsDeleted="0",
             CreatedDate="2025-01-03",
             ModifiedDate="2025-01-04",
-            CreatedById=1,
-            ModifiedById=3,
+            CreatedById="1",
+            ModifiedById="3",
             DementiaTypeValue="Vascular Dementia",
         ),
     ]
 
-    # Mock the query behavior
-    db_session_mock.query.return_value.join.return_value.filter.return_value.all.return_value = mock_results
+    # ✅ Mock `.all()`
+    db_session_mock.query.return_value.join.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_results
 
-    # Act: Call the function with the mocked session
-    result = get_all_assigned_dementias(db_session_mock)
+    # 🔹 Act: Call function
+    result, totalRecords, totalPages = get_all_assigned_dementias(db_session_mock, pageNo=0, pageSize=2)
 
-    # Assert: Verify the length of the returned data
-    assert len(result) == 2
+    # 🔹 Assertions
+    assert len(result) == 2  # ✅ Ensure 2 records returned
+    assert totalRecords == 2  # ✅ Ensure correct count
+    assert totalPages == 1  # ✅ Ensure correct pages
 
-    # Assert: Verify the data matches the mocked results
-    assert result[0]["PatientId"] == 101
-    assert result[0]["DementiaTypeValue"] == "Alzheimer's"
-    assert result[1]["PatientId"] == 102
-    assert result[1]["DementiaTypeValue"] == "Vascular Dementia"
-
-    # Debug: Print the result for verification
-    print("Test Result:")
+    # # Debugging
+    print("Returned Data:")
     for item in result:
         print(item)
 
@@ -211,54 +122,60 @@ def test_get_assigned_dementias(
     mock_patient_assigned_dementia_list,
     db_session_mock,
 ):
-    """Test case for retrieving dementia assignments for a specific patient."""
-    # Arrange: Mock data to simulate query results
+    """Test case for retrieving dementia assignments for a specific patient with pagination."""
+
+    # ✅ Mock `count()` to return total records
+    db_session_mock.query.return_value.join.return_value.filter.return_value.count.return_value = 2
+
+    # ✅ Mock `all()` to return a list of `PatientAssignedDementia` objects
     mock_results = [
-        MagicMock(
+        PatientAssignedDementia(
             id=1,
             PatientId=101,
             DementiaTypeListId=1,
             IsDeleted="0",
             CreatedDate="2025-01-01",
             ModifiedDate="2025-01-02",
-            CreatedById=1,
-            ModifiedById=2,
+            CreatedById="1",
+            ModifiedById="2",
             DementiaTypeValue="Alzheimer's",
         ),
-        MagicMock(
+        PatientAssignedDementia(
             id=2,
             PatientId=101,
             DementiaTypeListId=2,
             IsDeleted="0",
             CreatedDate="2025-01-03",
             ModifiedDate="2025-01-04",
-            CreatedById=1,
-            ModifiedById=3,
+            CreatedById="1",
+            ModifiedById="3",
             DementiaTypeValue="Vascular Dementia",
         ),
     ]
 
-    # Mock query behavior
-    db_session_mock.query.return_value.join.return_value.filter.return_value.all.return_value = mock_results
+    # Mock `.all()`
+    db_session_mock.query.return_value.join.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_results
 
-    # Act: Call the function with the mocked session and patient ID
+    # 🔹 Act: Call the function with the mocked session and patient ID
     patient_id = 101
-    result = get_assigned_dementias(db_session_mock, patient_id)
+    result, totalRecords, totalPages = get_assigned_dementias(db_session_mock, patient_id, pageNo=0, pageSize=2)
 
-    # Assert: Verify the length of the returned data
-    assert len(result) == len(mock_results)
+    # 🔹 Assertions
+    assert len(result) == 2  #  Ensure 2 records returned
+    assert totalRecords == 2  # Ensure correct count
+    assert totalPages == 1  # Ensure correct pages
 
-    # Assert: Verify the data matches the mocked results
-    for i, mock_dementia in enumerate(mock_results):
-        assert result[i]["id"] == mock_dementia.id
-        assert result[i]["PatientId"] == mock_dementia.PatientId
-        assert result[i]["DementiaTypeListId"] == mock_dementia.DementiaTypeListId
-        assert result[i]["DementiaTypeValue"] == mock_dementia.DementiaTypeValue
+    # Fix attribute access: Use `.PatientId` since result is now a model instance
+    assert result[0].PatientId == 101
+    assert result[0].DementiaTypeValue == "Alzheimer's"
+    assert result[1].PatientId == 101
+    assert result[1].DementiaTypeValue == "Vascular Dementia"
 
-    # Debug: Print the result for verification
-    print("Test Result:")
+    # Debugging
+    print("Returned Data:")
     for item in result:
         print(item)
+
 
 # Test for updating a dementia assignment
 @mock.patch("app.models.patient_assigned_dementia_mapping_model.PatientAssignedDementiaMapping")
