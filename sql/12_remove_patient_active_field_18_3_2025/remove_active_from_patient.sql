@@ -1,0 +1,2 @@
+ALTER TABLE [dbo].[PATIENT]
+DROP COLUMN [Active];

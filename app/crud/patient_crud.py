@@ -7,12 +7,7 @@ from datetime import datetime
 from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 import math
 from fastapi import HTTPException, UploadFile
-
-
-# To Change
-user = "1"
-SYSTEM_USER_ID  = "1"
-
+from typing import Optional
 
 def upload_photo_to_cloudinary(file: UploadFile):
     """ Upload photo to Cloudinary and return the URL """
@@ -34,16 +29,18 @@ def get_patient(db: Session, patient_id: int, mask: bool = True):
     return db_patient
 
 
-def get_patients(db: Session, mask: bool = True, pageNo: int = 0, pageSize: int = 10):
+def get_patients(db: Session, mask: bool = True, pageNo: int = 0, pageSize: int = 10,name: Optional[str] = None,isActive: Optional[str] = None):
     offset = pageNo * pageSize
-    db_patients = (
-        db.query(Patient)
-        .filter(Patient.isDeleted == "0")
-        .order_by(Patient.name.asc())
-        .offset(offset)
-        .limit(pageSize)
-        .all()
-    )
+    query = db.query(Patient).filter(Patient.isDeleted == "0")
+
+    # Apply name filter if provided (non-exact, case-insensitive match)
+    if name:
+        query = query.filter(Patient.name.ilike(f"%{name}%"))
+
+    # Apply exact match for isActive (only accepts "0" or "1")
+    if isActive in ["0", "1"]:
+        query = query.filter(Patient.isActive == isActive)
+
     totalRecords = (
         db.query(func.count())
         .select_from(Patient)
@@ -51,6 +48,9 @@ def get_patients(db: Session, mask: bool = True, pageNo: int = 0, pageSize: int 
         .scalar()
     )
     totalPages = math.ceil(totalRecords / pageSize)
+
+    db_patients = query.order_by(Patient.name.asc()).offset(offset).limit(pageSize).all()
+
     if db_patients and mask:
         for db_patient in db_patients:
             db_patient.nric = db_patient.mask_nric
@@ -71,13 +71,13 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
 
     query = text("""
         INSERT INTO [PATIENT] (
-            active, name, nric, address, [tempAddress], [homeNo], [handphoneNo], gender, 
+            name, nric, address, [tempAddress], [homeNo], [handphoneNo], gender, 
             [dateOfBirth], [isApproved], [preferredName], [preferredLanguageId], [updateBit], 
             [autoGame], [startDate], [endDate], [isActive], [isRespiteCare], [privacyLevel], 
             [terminationReason], [inActiveReason], [inActiveDate], [profilePicture], [createdDate], 
             [modifiedDate], [CreatedById], [ModifiedById], [isDeleted]
         ) VALUES (
-            :active, :name, :nric, :address, :tempAddress, :homeNo, :handphoneNo, :gender, 
+            :name, :nric, :address, :tempAddress, :homeNo, :handphoneNo, :gender, 
             :dateOfBirth, :isApproved, :preferredName, :preferredLanguageId, :updateBit, 
             :autoGame, :startDate, :endDate, :isActive, :isRespiteCare, :privacyLevel, 
             :terminationReason, :inActiveReason, :inActiveDate, :profilePicture, :createdDate, 
@@ -86,7 +86,6 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
     """)
 
     params = {
-        "active": patient.active,
         "name": patient.name,
         "nric": patient.nric,
         "address": patient.address,
@@ -194,7 +193,7 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
     return db_patient
 
 
-def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFile, user: str, user_full_name: str):
+def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFile, user_id: str, user_full_name: str):
     """ Update only the patient's profile picture """
     db_patient = db.query(Patient).filter(Patient.id == patient_id, Patient.isDeleted == "0").first()
     if not db_patient:
@@ -215,7 +214,7 @@ def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFil
     # Update patient profile picture
     db_patient.profilePicture = profile_picture_url
     db_patient.modifiedDate = datetime.utcnow()
-    db_patient.ModifiedById = SYSTEM_USER_ID
+    db_patient.ModifiedById = user_id
     db.commit()
     db.refresh(db_patient)
 
@@ -229,7 +228,7 @@ def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFil
         updated_data_dict = "{}"
     log_crud_action(
         action=ActionType.UPDATE,
-        user=user,
+        user=user_id,
         user_full_name=user_full_name,
         message="Updated Patient Photo",
         table="Patient",
@@ -241,7 +240,7 @@ def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFil
     return db_patient
 
 
-def delete_patient(db: Session, patient_id: int, user: str, user_full_name: str):
+def delete_patient(db: Session, patient_id: int, user_id: str, user_full_name: str):
     db_patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if not db_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
@@ -260,7 +259,7 @@ def delete_patient(db: Session, patient_id: int, user: str, user_full_name: str)
 
     log_crud_action(
         action=ActionType.DELETE,
-        user=user,
+        user=user_id,
         user_full_name=user_full_name,
         message="Deleted Patient",
         table="Patient",
@@ -271,7 +270,7 @@ def delete_patient(db: Session, patient_id: int, user: str, user_full_name: str)
 
     return db_patient
 
-def delete_patient_profile_picture(db: Session, patient_id: int, user: str, user_full_name: str):
+def delete_patient_profile_picture(db: Session, patient_id: int, user_id: str, user_full_name: str):
     """ Remove the patient's profile picture by setting it to an empty string """
     db_patient = db.query(Patient).filter(Patient.id == patient_id, Patient.isDeleted == "0").first()
     if not db_patient:
@@ -289,7 +288,7 @@ def delete_patient_profile_picture(db: Session, patient_id: int, user: str, user
     # Set profile picture to empty string
     db_patient.profilePicture = ""
     db_patient.modifiedDate = datetime.utcnow()
-    db_patient.ModifiedById = SYSTEM_USER_ID
+    db_patient.ModifiedById = user_id
     db.commit()
     db.refresh(db_patient)
 
@@ -304,7 +303,7 @@ def delete_patient_profile_picture(db: Session, patient_id: int, user: str, user
 
     log_crud_action(
         action=ActionType.UPDATE,
-        user=user,
+        user=user_id,
         user_full_name=user_full_name,
         message="Deleted Patient Photo",
         table="Patient",
