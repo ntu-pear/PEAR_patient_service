@@ -71,13 +71,13 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
 
     query = text("""
         INSERT INTO [PATIENT] (
-            active, name, nric, address, [tempAddress], [homeNo], [handphoneNo], gender, 
+            name, nric, address, [tempAddress], [homeNo], [handphoneNo], gender, 
             [dateOfBirth], [isApproved], [preferredName], [preferredLanguageId], [updateBit], 
             [autoGame], [startDate], [endDate], [isActive], [isRespiteCare], [privacyLevel], 
             [terminationReason], [inActiveReason], [inActiveDate], [profilePicture], [createdDate], 
             [modifiedDate], [CreatedById], [ModifiedById], [isDeleted]
         ) VALUES (
-            :active, :name, :nric, :address, :tempAddress, :homeNo, :handphoneNo, :gender, 
+            :name, :nric, :address, :tempAddress, :homeNo, :handphoneNo, :gender, 
             :dateOfBirth, :isApproved, :preferredName, :preferredLanguageId, :updateBit, 
             :autoGame, :startDate, :endDate, :isActive, :isRespiteCare, :privacyLevel, 
             :terminationReason, :inActiveReason, :inActiveDate, :profilePicture, :createdDate, 
@@ -86,7 +86,6 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
     """)
 
     params = {
-        "active": patient.active,
         "name": patient.name,
         "nric": patient.nric,
         "address": patient.address,
