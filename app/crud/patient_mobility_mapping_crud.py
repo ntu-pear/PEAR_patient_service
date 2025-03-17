@@ -20,7 +20,7 @@ def get_all_mobility_entries(db: Session, pageNo: int = 0, pageSize: int = 100):
     totalPages = math.ceil(totalRecords / pageSize)
 
     db_entries = (
-        query.order_by(PatientMobility.PatientID.desc())
+        query.order_by(PatientMobility.MobilityID.desc())
              .offset(offset)
              .limit(pageSize)
              .all()
@@ -44,7 +44,7 @@ def get_mobility_entries_by_patient_id(db: Session, patient_id: int, pageNo: int
     totalPages = math.ceil(totalRecords / pageSize)
 
     db_entries = (
-        query.order_by(PatientMobility.MobilityID)
+        query.order_by(PatientMobility.MobilityID.desc())
              .offset(offset)
              .limit(pageSize)
              .all()
@@ -105,9 +105,7 @@ def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, cre
     return new_entry
 
 # Update an existing mobility entry
-def update_mobility_entry(
-    db: Session, mobility_id: int, mobility_data: PatientMobilityUpdate, modified_by: str, user_full_name: str
-):
+def update_mobility_entry(db: Session, mobility_id: int, mobility_data: PatientMobilityUpdate, modified_by: str, user_full_name: str):
     db_entry = db.query(PatientMobility).filter(
         PatientMobility.MobilityID == mobility_id,
         PatientMobility.IsDeleted == False,

@@ -37,7 +37,7 @@ def get_all_assigned_dementias(db: Session, pageNo: int = 0, pageSize: int = 10)
     totalRecords = query.count()
     totalPages = math.ceil(totalRecords / pageSize)
 
-    results = query.order_by(PatientAssignedDementiaMapping.id).offset(offset).limit(pageSize).all()
+    results = query.order_by(PatientAssignedDementiaMapping.id.desc()).offset(offset).limit(pageSize).all()
 
     assignments = [
         {
@@ -81,9 +81,9 @@ def get_assigned_dementias(db: Session, patient_id: int, pageNo: int = 0, pageSi
     totalRecords = query.count()
     totalPages = math.ceil(totalRecords / pageSize)
 
-    results = query.order_by(PatientAssignedDementiaMapping.id).offset(offset).limit(pageSize).all()
+    results = query.order_by(PatientAssignedDementiaMapping.id.desc()).offset(offset).limit(pageSize).all()
 
-    # ✅ Convert dictionary results into Pydantic model instances
+    # Convert dictionary results into Pydantic model instances
     assignments = [
         PatientAssignedDementia(
             id=r.id,

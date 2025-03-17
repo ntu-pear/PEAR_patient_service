@@ -18,7 +18,7 @@ def get_prescriptions(db: Session, pageNo: int = 0, pageSize: int = 10):
     totalPages = math.ceil(totalRecords / pageSize)
 
     db_prescriptions = (
-        query.order_by(PatientPrescription.PatientId.desc())
+        query.order_by(PatientPrescription.Id.desc())
              .offset(offset)
              .limit(pageSize)
              .all()
