@@ -39,7 +39,7 @@ def get_vital_list(db: Session, patient_id: int, pageNo: int = 0, pageSize: int 
     totalPages = math.ceil(totalRecords / pageSize)
 
     vitals = (
-        query.order_by(PatientVital.PatientId.desc())
+        query.order_by(PatientVital.Id.desc())
              .offset(offset)
              .limit(pageSize)
              .all()

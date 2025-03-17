@@ -40,7 +40,7 @@ def get_all_allergies(db: Session, pageNo: int = 0, pageSize: int = 10):
     totalRecords = query.count()
     totalPages = math.ceil(totalRecords / pageSize)
 
-    results = query.order_by(PatientAllergyMapping.Patient_AllergyID).offset(offset).limit(pageSize).all()
+    results = query.order_by(PatientAllergyMapping.Patient_AllergyID.desc()).offset(offset).limit(pageSize).all()
 
     patient_allergies = []
     for result in results:
