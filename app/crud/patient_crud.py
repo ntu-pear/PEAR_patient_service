@@ -39,7 +39,7 @@ def get_patients(db: Session, mask: bool = True, pageNo: int = 0, pageSize: int 
     db_patients = (
         db.query(Patient)
         .filter(Patient.isDeleted == "0")
-        .order_by(Patient.id)
+        .order_by(Patient.name.asc())
         .offset(offset)
         .limit(pageSize)
         .all()
