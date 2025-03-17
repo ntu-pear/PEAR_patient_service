@@ -70,10 +70,10 @@ def test_get_all_assigned_dementias(
 ):
     """Test retrieving all dementia assignments with pagination."""
     
-    # ✅ Mock `count()` to simulate total records
+    # Mock `count()` to simulate total records
     db_session_mock.query.return_value.join.return_value.filter.return_value.count.return_value = 2
 
-    # ✅ Mock query results with Pydantic model instances instead of dictionaries
+    # Mock query results with Pydantic model instances instead of dictionaries
     mock_results = [
         PatientAssignedDementia(
             id=1,
@@ -99,16 +99,16 @@ def test_get_all_assigned_dementias(
         ),
     ]
 
-    # ✅ Mock `.all()`
+    # Mock `.all()`
     db_session_mock.query.return_value.join.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_results
 
     # 🔹 Act: Call function
     result, totalRecords, totalPages = get_all_assigned_dementias(db_session_mock, pageNo=0, pageSize=2)
 
     # 🔹 Assertions
-    assert len(result) == 2  # ✅ Ensure 2 records returned
-    assert totalRecords == 2  # ✅ Ensure correct count
-    assert totalPages == 1  # ✅ Ensure correct pages
+    assert len(result) == 2  # Ensure 2 records returned
+    assert totalRecords == 2  # Ensure correct count
+    assert totalPages == 1  # Ensure correct pages
 
     # # Debugging
     print("Returned Data:")
@@ -124,10 +124,10 @@ def test_get_assigned_dementias(
 ):
     """Test case for retrieving dementia assignments for a specific patient with pagination."""
 
-    # ✅ Mock `count()` to return total records
+    # Mock `count()` to return total records
     db_session_mock.query.return_value.join.return_value.filter.return_value.count.return_value = 2
 
-    # ✅ Mock `all()` to return a list of `PatientAssignedDementia` objects
+    # Mock `all()` to return a list of `PatientAssignedDementia` objects
     mock_results = [
         PatientAssignedDementia(
             id=1,
