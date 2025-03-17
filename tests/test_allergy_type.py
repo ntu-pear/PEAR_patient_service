@@ -55,17 +55,34 @@ def test_create_allergy_type(
 
 
 def test_get_all_allergy_types(db_session_mock):
-    """Test case for retrieving all allergy types."""
-    # Arrange
-    db_session_mock.query.return_value.filter.return_value.all.return_value = get_mock_allergy_types()
+    """Test case for retrieving all allergy types with pagination."""
 
-    # Act
-    result = get_all_allergy_types(db_session_mock)
+    # Arrange: Mock `count()` to return total records
+    db_session_mock.query.return_value.filter.return_value.count.return_value = 2
 
-    # Assert
-    assert len(result) == 2
+    # Arrange: Mock paginated results
+    mock_results = [
+        AllergyType(AllergyTypeID=1, Value="Corn", IsDeleted="0"),
+        AllergyType(AllergyTypeID=2, Value="Wheat", IsDeleted="0"),
+    ]
+
+    # Mock `.all()` with pagination
+    db_session_mock.query.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_results
+
+    # Act: Call function with pagination
+    result, totalRecords, totalPages = get_all_allergy_types(db_session_mock, pageNo=0, pageSize=2)
+
+    # Assert: Ensure pagination results are correct
+    assert len(result) == 2  # Ensure 2 records returned
+    assert totalRecords == 2  # Ensure correct total count
+    assert totalPages == 1  # Ensure correct total pages
     assert result[0].Value == "Corn"
     assert result[1].Value == "Wheat"
+
+    # Debugging
+    print("Returned Data:")
+    for item in result:
+        print(item)
 
 
 def test_get_allergy_type_by_id(db_session_mock):

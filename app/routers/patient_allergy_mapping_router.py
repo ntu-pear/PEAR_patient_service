@@ -1,39 +1,67 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..crud import patient_allergy_mapping_crud
 from ..schemas.patient_allergy_mapping import PatientAllergy, PatientAllergyCreate, PatientAllergyCreateResp, PatientAllergyUpdateReq
 from ..auth.jwt_utils import extract_jwt_payload, get_user_id, get_full_name
+from ..schemas.response import PaginatedResponse
 
 router = APIRouter()
 
-@router.get("/get_all_patient_allergies", response_model=list[PatientAllergy], description="Get all patient allergies.")
+@router.get(
+    "/get_all_patient_allergies",
+    response_model=PaginatedResponse[PatientAllergy],
+    description="Get paginated patient allergies."
+)
 def get_all_patient_allergies(
     request: Request,
     db: Session = Depends(get_db),
-    require_auth: bool = True  # Default to True
+    pageNo: int = Query(0, description="Page number (starting from 0)"),
+    pageSize: int = Query(10, description="Number of records per page"),
+    require_auth: bool = True
 ):
     _ = extract_jwt_payload(request, require_auth)
-    # No logging for this read operation
-    result = patient_allergy_mapping_crud.get_all_allergies(db)
-    if not result:
-        raise HTTPException(status_code=404, detail="No allergies found")
-    return result
 
-@router.get("/get_patient_allergy/{patient_id}", response_model=list[PatientAllergy], description="Get patient allergies by patient ID.")
+    allergies, totalRecords, totalPages = patient_allergy_mapping_crud.get_all_allergies(db, pageNo, pageSize)
+
+    if not allergies:
+        raise HTTPException(status_code=404, detail="No allergies found")
+
+    return PaginatedResponse(
+        data=allergies,
+        pageNo=pageNo,
+        pageSize=pageSize,
+        totalRecords=totalRecords,
+        totalPages=totalPages
+    )
+
+@router.get(
+    "/get_patient_allergy/{patient_id}",
+    response_model=PaginatedResponse[PatientAllergy],
+    description="Get paginated patient allergies by patient ID."
+)
 def get_patient_allergy(
     request: Request,
     patient_id: int,
     db: Session = Depends(get_db),
-    require_auth: bool = True  # Default to True
+    pageNo: int = Query(0, description="Page number (starting from 0)"),
+    pageSize: int = Query(10, description="Number of records per page"),
+    require_auth: bool = True
 ):
     _ = extract_jwt_payload(request, require_auth)
-    # No logging for this read operation
-    result = patient_allergy_mapping_crud.get_patient_allergies(db, patient_id)
-    if not result:
-        raise HTTPException(status_code=404, detail="No allergies found for this patient")
-    return result
 
+    allergies, totalRecords, totalPages = patient_allergy_mapping_crud.get_patient_allergies(db, patient_id, pageNo, pageSize)
+
+    if not allergies:
+        raise HTTPException(status_code=404, detail="No allergies found for this patient")
+
+    return PaginatedResponse(
+        data=allergies,
+        pageNo=pageNo,
+        pageSize=pageSize,
+        totalRecords=totalRecords,
+        totalPages=totalPages
+    )
 @router.post("/create_patient_allergy", response_model=PatientAllergyCreateResp, description="Create a new patient allergy record.")
 def create_patient_allergy(
     request: Request,

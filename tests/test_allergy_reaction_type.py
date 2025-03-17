@@ -50,19 +50,36 @@ def test_create_reaction_type(
     assert result.IsDeleted == "0"
     assert result.CreatedById == created_by
 
+
 def test_get_all_reaction_types(db_session_mock):
-    """Test case for getting all allergy reaction types."""
-    
-    # Arrange
-    db_session_mock.query.return_value.filter.return_value.all.return_value = get_mock_allergy_reaction_types() 
+    """Test case for getting all allergy reaction types with pagination."""
 
-    # Act
-    result = get_all_reaction_types(db_session_mock)
+    # Arrange: Mock count() to return total records
+    db_session_mock.query.return_value.filter.return_value.count.return_value = 2
 
-    # Assert
-    assert len(result) == 2
+    # Arrange: Mock paginated results
+    mock_results = [
+        AllergyReactionType(AllergyReactionTypeID=1, Value="Rashes", IsDeleted="0"),
+        AllergyReactionType(AllergyReactionTypeID=2, Value="Sneezing", IsDeleted="0"),
+    ]
+
+    # Mock `.all()`
+    db_session_mock.query.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_results
+
+    # Act: Call function with pagination
+    result, totalRecords, totalPages = get_all_reaction_types(db_session_mock, pageNo=0, pageSize=2)
+
+    # Assert: Ensure pagination results are correct
+    assert len(result) == 2  # Ensure 2 records returned
+    assert totalRecords == 2  # Ensure correct total count
+    assert totalPages == 1  # Ensure correct total pages
     assert result[0].Value == "Rashes"
     assert result[1].Value == "Sneezing"
+
+    # Debugging
+    print("Returned Data:")
+    for item in result:
+        print(item)
 
 def test_get_reaction_type_by_id(db_session_mock):
     """Test case for retrieving an allergy reaction type by ID."""
