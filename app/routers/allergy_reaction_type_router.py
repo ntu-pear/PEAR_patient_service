@@ -1,5 +1,5 @@
 # app/routers/allergy_reaction_type_router.py
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Query, HTTPException, Request
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..crud import allergy_reaction_type_crud as crud_reaction_type
@@ -8,21 +8,34 @@ from ..schemas.allergy_reaction_type import (
     AllergyReactionTypeCreate,
     AllergyReactionTypeUpdate
 )
+from ..schemas.response import PaginatedResponse
 from ..auth.jwt_utils import extract_jwt_payload, get_user_id, get_full_name
 from ..logger.logger_utils import logger
 
 router = APIRouter()
 
-@router.get("/get_allergy_reaction_types", response_model=list[AllergyReactionType], description="Get all allergy reaction types.")
+@router.get("/get_allergy_reaction_types", response_model=PaginatedResponse[AllergyReactionType], description="Get all paginated allergy reaction types.")
 def get_allergy_reaction_types(
     request: Request,
     db: Session = Depends(get_db),
+    pageNo: int = Query(0, description="Page number (starting from 0)"),
+    pageSize: int = Query(10, description="Number of records per page"),
     require_auth: bool = True  
 ):
     _ = extract_jwt_payload(request, require_auth)
-    # No logging for this read operation
 
-    return crud_reaction_type.get_all_reaction_types(db)
+    reaction_types, totalRecords, totalPages = crud_reaction_type.get_all_reaction_types(db, pageNo, pageSize)
+
+    if not reaction_types:
+        raise HTTPException(status_code=404, detail="No allergy reaction types found")
+
+    return PaginatedResponse(
+        data=reaction_types,
+        pageNo=pageNo,
+        pageSize=pageSize,
+        totalRecords=totalRecords,
+        totalPages=totalPages
+    )
 
 @router.get("/get_allergy_reaction_type/{allergy_reaction_type_id}", response_model=AllergyReactionType, description="Get allergy reaction type by ID.")
 def get_allergy_reaction_type(

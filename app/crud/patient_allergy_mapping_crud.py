@@ -1,3 +1,4 @@
+import math
 from fastapi import HTTPException
 from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 from sqlalchemy.orm import Session
@@ -11,48 +12,43 @@ from ..models.allergy_reaction_type_model import AllergyReactionType
 from datetime import datetime
 
 
-def get_all_allergies(db: Session):
-    results = (
-        db.query(
-            PatientAllergyMapping.Patient_AllergyID,
-            PatientAllergyMapping.PatientID,
-            PatientAllergyMapping.AllergyRemarks,
-            AllergyType.Value.label("AllergyTypeValue"),
-            AllergyType.IsDeleted.label("AllergyTypeIsDeleted"),
-            AllergyReactionType.Value.label("AllergyReactionTypeValue"),
-            AllergyReactionType.IsDeleted.label("AllergyReactionTypeIsDeleted"),
-            PatientAllergyMapping.CreatedDateTime,
-            PatientAllergyMapping.UpdatedDateTime,
-            PatientAllergyMapping.CreatedById,
-            PatientAllergyMapping.ModifiedById,
-            PatientAllergyMapping.IsDeleted,
-        )
-        .join(
-            AllergyType,
-            PatientAllergyMapping.AllergyTypeID == AllergyType.AllergyTypeID,
-        )
-        .join(
-            AllergyReactionType,
-            PatientAllergyMapping.AllergyReactionTypeID
-            == AllergyReactionType.AllergyReactionTypeID,
-        )
-        .all()
+def get_all_allergies(db: Session, pageNo: int = 0, pageSize: int = 10):
+    offset = pageNo * pageSize
+    query = db.query(
+        PatientAllergyMapping.Patient_AllergyID,
+        PatientAllergyMapping.PatientID,
+        PatientAllergyMapping.AllergyRemarks,
+        AllergyType.Value.label("AllergyTypeValue"),
+        AllergyType.IsDeleted.label("AllergyTypeIsDeleted"),
+        AllergyReactionType.Value.label("AllergyReactionTypeValue"),
+        AllergyReactionType.IsDeleted.label("AllergyReactionTypeIsDeleted"),
+        PatientAllergyMapping.CreatedDateTime,
+        PatientAllergyMapping.UpdatedDateTime,
+        PatientAllergyMapping.CreatedById,
+        PatientAllergyMapping.ModifiedById,
+        PatientAllergyMapping.IsDeleted,
+    ).join(
+        AllergyType,
+        PatientAllergyMapping.AllergyTypeID == AllergyType.AllergyTypeID,
+    ).join(
+        AllergyReactionType,
+        PatientAllergyMapping.AllergyReactionTypeID == AllergyReactionType.AllergyReactionTypeID,
+    ).filter(
+        PatientAllergyMapping.IsDeleted == "0"
     )
 
-    print(results)
-    
-    # Filter soft deleted entries
+    totalRecords = query.count()
+    totalPages = math.ceil(totalRecords / pageSize)
+
+    results = query.order_by(PatientAllergyMapping.Patient_AllergyID).offset(offset).limit(pageSize).all()
+
     patient_allergies = []
     for result in results:
         allergy_type_value = (
-            result.AllergyTypeValue
-            if result.AllergyTypeIsDeleted == "0"
-            else "No allergy type"
+            result.AllergyTypeValue if result.AllergyTypeIsDeleted == "0" else "No allergy type"
         )
         allergy_reaction_value = (
-            result.AllergyReactionTypeValue
-            if result.AllergyReactionTypeIsDeleted == "0"
-            else "No allergy reaction"
+            result.AllergyReactionTypeValue if result.AllergyReactionTypeIsDeleted == "0" else "No allergy reaction"
         )
 
         patient_allergies.append(
@@ -70,50 +66,46 @@ def get_all_allergies(db: Session):
             }
         )
 
-    return patient_allergies
+    return patient_allergies, totalRecords, totalPages
 
-
-def get_patient_allergies(db: Session, patient_id: int):
-    results = (
-        db.query(
-            PatientAllergyMapping.Patient_AllergyID,
-            PatientAllergyMapping.PatientID,
-            PatientAllergyMapping.AllergyRemarks,
-            AllergyType.Value.label("AllergyTypeValue"),
-            AllergyType.IsDeleted.label("AllergyTypeIsDeleted"),
-            AllergyReactionType.Value.label("AllergyReactionTypeValue"),
-            AllergyReactionType.IsDeleted.label("AllergyReactionTypeIsDeleted"),
-            PatientAllergyMapping.CreatedDateTime,
-            PatientAllergyMapping.UpdatedDateTime,
-            PatientAllergyMapping.CreatedById,
-            PatientAllergyMapping.ModifiedById,
-            PatientAllergyMapping.IsDeleted,
-        )
-        .join(
-            AllergyType,
-            PatientAllergyMapping.AllergyTypeID == AllergyType.AllergyTypeID,
-        )
-        .join(
-            AllergyReactionType,
-            PatientAllergyMapping.AllergyReactionTypeID
-            == AllergyReactionType.AllergyReactionTypeID,
-        )
-        .filter(PatientAllergyMapping.PatientID == patient_id)
-        .all()
+def get_patient_allergies(db: Session, patient_id: int, pageNo: int = 0, pageSize: int = 10):
+    offset = pageNo * pageSize
+    query = db.query(
+        PatientAllergyMapping.Patient_AllergyID,
+        PatientAllergyMapping.PatientID,
+        PatientAllergyMapping.AllergyRemarks,
+        AllergyType.Value.label("AllergyTypeValue"),
+        AllergyType.IsDeleted.label("AllergyTypeIsDeleted"),
+        AllergyReactionType.Value.label("AllergyReactionTypeValue"),
+        AllergyReactionType.IsDeleted.label("AllergyReactionTypeIsDeleted"),
+        PatientAllergyMapping.CreatedDateTime,
+        PatientAllergyMapping.UpdatedDateTime,
+        PatientAllergyMapping.CreatedById,
+        PatientAllergyMapping.ModifiedById,
+        PatientAllergyMapping.IsDeleted,
+    ).join(
+        AllergyType,
+        PatientAllergyMapping.AllergyTypeID == AllergyType.AllergyTypeID,
+    ).join(
+        AllergyReactionType,
+        PatientAllergyMapping.AllergyReactionTypeID == AllergyReactionType.AllergyReactionTypeID,
+    ).filter(
+        PatientAllergyMapping.PatientID == patient_id,
+        PatientAllergyMapping.IsDeleted == "0"
     )
 
-    # Filter soft deleted entries
+    totalRecords = query.count()
+    totalPages = math.ceil(totalRecords / pageSize)
+
+    results = query.order_by(PatientAllergyMapping.Patient_AllergyID).offset(offset).limit(pageSize).all()
+
     patient_allergies = []
     for result in results:
         allergy_type_value = (
-            result.AllergyTypeValue
-            if result.AllergyTypeIsDeleted == "0"
-            else "No allergy type"
+            result.AllergyTypeValue if result.AllergyTypeIsDeleted == "0" else "No allergy type"
         )
         allergy_reaction_value = (
-            result.AllergyReactionTypeValue
-            if result.AllergyReactionTypeIsDeleted == "0"
-            else "No allergy reaction"
+            result.AllergyReactionTypeValue if result.AllergyReactionTypeIsDeleted == "0" else "No allergy reaction"
         )
 
         patient_allergies.append(
@@ -131,8 +123,7 @@ def get_patient_allergies(db: Session, patient_id: int):
             }
         )
 
-    return patient_allergies
-
+    return patient_allergies, totalRecords, totalPages
 
 def create_patient_allergy(
     db: Session, allergy_data: PatientAllergyCreate, created_by: str, user_full_name:str

@@ -1,11 +1,21 @@
+import math
+
 from sqlalchemy.orm import Session
 from ..models.allergy_type_model import AllergyType
 from ..schemas.allergy_type import AllergyTypeCreate, AllergyTypeUpdate
 from datetime import datetime
 from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 
-def get_all_allergy_types(db: Session):
-    return db.query(AllergyType).filter(AllergyType.IsDeleted == "0").all()
+def get_all_allergy_types(db: Session, pageNo: int = 0, pageSize: int = 10):
+    offset = pageNo * pageSize
+    query = db.query(AllergyType).filter(AllergyType.IsDeleted == "0")
+
+    totalRecords = query.count()
+    totalPages = math.ceil(totalRecords / pageSize)
+
+    results = query.order_by(AllergyType.AllergyTypeID).offset(offset).limit(pageSize).all()
+
+    return results, totalRecords, totalPages
 
 
 def get_allergy_type_by_id(db: Session, allergy_type_id: int):

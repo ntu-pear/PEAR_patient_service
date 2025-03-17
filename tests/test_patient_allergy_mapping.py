@@ -37,9 +37,13 @@ USER_FULL_NAME = "TEST_NAME"
 
 
 def test_get_all_allergies(db_session_mock):
-    """Test case for retrieving all patient allergies."""
-    # Arrange
-    mock_data = [
+    """Test case for retrieving all patient allergies with pagination."""
+
+    # Mock `count()` to simulate total records
+    db_session_mock.query.return_value.join.return_value.join.return_value.filter.return_value.count.return_value = 2
+
+    # Mock query results
+    mock_results = [
         MagicMock(
             Patient_AllergyID=1,
             PatientID=1,
@@ -48,8 +52,8 @@ def test_get_all_allergies(db_session_mock):
             AllergyTypeIsDeleted="0",
             AllergyReactionTypeValue="Rashes",
             AllergyReactionTypeIsDeleted="0",
-            CreatedDateTime=datetime.now(),
-            UpdatedDateTime=datetime.now(),
+            CreatedDateTime="2025-01-01",
+            UpdatedDateTime="2025-01-02",
             CreatedById="1",
             ModifiedById="1",
         ),
@@ -61,29 +65,42 @@ def test_get_all_allergies(db_session_mock):
             AllergyTypeIsDeleted="0",
             AllergyReactionTypeValue="Sneezing",
             AllergyReactionTypeIsDeleted="0",
-            CreatedDateTime=datetime.now(),
-            UpdatedDateTime=datetime.now(),
+            CreatedDateTime="2025-01-03",
+            UpdatedDateTime="2025-01-04",
             CreatedById="1",
             ModifiedById="1",
         ),
     ]
-    db_session_mock.query.return_value.join.return_value.join.return_value.all.return_value = mock_data
 
-    # Act
-    result = get_all_allergies(db_session_mock)
+    # Mock `.all()`
+    db_session_mock.query.return_value.join.return_value.join.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_results
 
-    # Assert
-    assert len(result) == 2
+    # 🔹 Act: Call function
+    result, totalRecords, totalPages = get_all_allergies(db_session_mock, pageNo=0, pageSize=2)
+
+    # 🔹 Assertions
+    assert len(result) == 2  # Ensure 2 records returned
+    assert totalRecords == 2  # Ensure correct count
+    assert totalPages == 1  # Ensure correct pages
     assert result[0]["AllergyTypeValue"] == "Corn"
     assert result[1]["AllergyReactionTypeValue"] == "Sneezing"
 
+    # Debugging
+    print("Returned Data:")
+    for item in result:
+        print(item)
 
 
 def test_get_patient_allergies(db_session_mock):
-    """Test case for retrieving allergies for a specific patient."""
-    # Arrange
+    """Test case for retrieving allergies for a specific patient with pagination."""
+
     patient_id = 1
-    mock_data = [
+
+    # Mock `count()` to return total records
+    db_session_mock.query.return_value.join.return_value.join.return_value.filter.return_value.count.return_value = 1
+
+    # Mock query results
+    mock_results = [
         MagicMock(
             Patient_AllergyID=1,
             PatientID=patient_id,
@@ -92,21 +109,30 @@ def test_get_patient_allergies(db_session_mock):
             AllergyTypeIsDeleted="0",
             AllergyReactionTypeValue="Rashes",
             AllergyReactionTypeIsDeleted="0",
-            CreatedDateTime=datetime.now(),
-            UpdatedDateTime=datetime.now(),
+            CreatedDateTime="2025-01-01",
+            UpdatedDateTime="2025-01-02",
             CreatedById="1",
             ModifiedById="1",
         )
     ]
-    db_session_mock.query.return_value.join.return_value.join.return_value.filter.return_value.all.return_value = mock_data
 
-    # Act
-    result = get_patient_allergies(db_session_mock, patient_id)
+    # Mock `.all()`
+    db_session_mock.query.return_value.join.return_value.join.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_results
 
-    # Assert
-    assert len(result) == 1
+    # 🔹 Act: Call the function
+    result, totalRecords, totalPages = get_patient_allergies(db_session_mock, patient_id, pageNo=0, pageSize=2)
+
+    # 🔹 Assertions
+    assert len(result) == 1  # Ensure 1 record returned
+    assert totalRecords == 1  # Ensure correct count
+    assert totalPages == 1  # Ensure correct pages
     assert result[0]["PatientID"] == patient_id
     assert result[0]["AllergyTypeValue"] == "Corn"
+
+    # Debugging
+    print("Returned Data:")
+    for item in result:
+        print(item)
 
 
 def test_create_patient_allergy(db_session_mock, patient_allergy_create):

@@ -1,3 +1,4 @@
+import math
 from sqlalchemy.orm import Session
 from ..models.allergy_reaction_type_model import AllergyReactionType
 from ..schemas.allergy_reaction_type import (
@@ -7,8 +8,20 @@ from ..schemas.allergy_reaction_type import (
 from datetime import datetime
 from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 
-def get_all_reaction_types(db: Session):
-    return db.query(AllergyReactionType).filter(AllergyReactionType.IsDeleted == "0").all()
+def get_all_reaction_types(db: Session, pageNo: int = 0, pageSize: int = 10):
+    offset = pageNo * pageSize
+    query = db.query(
+        AllergyReactionType
+    ).filter(
+        AllergyReactionType.IsDeleted == "0"
+    )
+
+    totalRecords = query.count()
+    totalPages = math.ceil(totalRecords / pageSize)
+
+    results = query.order_by(AllergyReactionType.AllergyReactionTypeID).offset(offset).limit(pageSize).all()
+
+    return results, totalRecords, totalPages
 
 
 def get_reaction_type_by_id(db: Session, allergy_reaction_type_id: int):
