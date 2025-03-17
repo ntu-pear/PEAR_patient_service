@@ -25,7 +25,7 @@ def read_patient(patient_id: int, request: Request, require_auth: bool = True, d
 @router.get("/patients/", response_model=PaginatedResponse[Patient])
 def read_patients(
     request: Request,
-    name: str = Query("", description="Filter patients by name (non-exact match)"),
+    name: Optional[str] = Query(None, description="Filter patients by name (non-exact match)", include_in_schema=True),
     require_auth: bool = Query(True, description="Require authentication"),
     mask: bool = Query(True, description="Mask sensitive data"),
     pageNo: int = Query(0, description="Page number (starting from 0)"),
