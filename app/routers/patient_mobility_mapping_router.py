@@ -79,7 +79,7 @@ def get_mobility_entry_by_mobility_id(request: Request, mobility_id: int, db: Se
     else:
         return []  # Return an empty list if no results
     
-@router.post("/MobilityMapping/List", response_model=PatientMobilityResponse)
+@router.post("/MobilityMapping/List/add", response_model=PatientMobilityResponse)
 def create_mobility_entry(
     request: Request, mobility_data: PatientMobilityCreate, db: Session = Depends(get_db), require_auth: bool = True
 ):
@@ -89,7 +89,7 @@ def create_mobility_entry(
     
     return patient_mobility_mapping_crud.create_mobility_entry(db, mobility_data, user_id, user_full_name)
 
-@router.put("/MobilityMapping/List/{mobility_id}", response_model=PatientMobilityResponse)
+@router.put("/MobilityMapping/List/update/{mobility_id}", response_model=PatientMobilityResponse)
 def update_mobility_entry(
     request: Request,
     mobility_id: int,
@@ -105,7 +105,7 @@ def update_mobility_entry(
         db, mobility_id, mobility_data, user_id, user_full_name
     )
 
-@router.delete("/MobilityMapping/List/{mobility_id}", response_model=PatientMobilityResponse)
+@router.delete("/MobilityMapping/List/delete/{mobility_id}", response_model=PatientMobilityResponse)
 def delete_mobility_entry(request: Request, mobility_id: int, db: Session = Depends(get_db), require_auth: bool = True):
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
