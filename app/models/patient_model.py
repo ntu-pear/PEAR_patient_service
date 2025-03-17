@@ -22,7 +22,7 @@ class Patient(Base):
     isApproved = Column(String(1))
     preferredName = Column(String(255))
     preferredLanguageId = Column(
-        Integer
+        Integer, ForeignKey("PATIENT_LIST_LANGUAGE.id")
     )  # Changed to Integer
     updateBit = Column(String(1), default="1", nullable=False)
     autoGame = Column(String(1), default="0", nullable=False)

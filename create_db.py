@@ -13,9 +13,7 @@ username = os.getenv("DB_USERNAME")
 password = os.getenv("DB_PASSWORD")
 
 # Construct the connection string
-#connection_string = f'DRIVER={driver};SERVER={server};DATABASE={database};UID={username};PWD={password}'
-#local
-connection_string = (f"DRIVER={{{driver}}};"f"SERVER={server};"f"DATABASE={database};"f"Trusted_Connection=yes;")
+connection_string = f'DRIVER={driver};SERVER={server};DATABASE={database};UID={username};PWD={password}'
 
 # SQL command to create the database (change the db name if required)
 create_db_query = "IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'FYP') CREATE DATABASE FYP;"
