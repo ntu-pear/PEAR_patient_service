@@ -26,6 +26,7 @@ def read_patient(patient_id: int, request: Request, require_auth: bool = True, d
 def read_patients(
     request: Request,
     name: Optional[str] = Query(None, description="Filter patients by name (non-exact match)", include_in_schema=True),
+    isActive: Optional[str] = Query(None, description="Filter patients by isActive (0 or 1)", include_in_schema=True),
     require_auth: bool = Query(True, description="Require authentication"),
     mask: bool = Query(True, description="Mask sensitive data"),
     pageNo: int = Query(0, description="Page number (starting from 0)"),
@@ -33,7 +34,7 @@ def read_patients(
     db: Session = Depends(get_db),
 ):
     _ = extract_jwt_payload(request, require_auth)
-    db_patients, totalRecords, totalPages = crud_patient.get_patients(db=db, pageNo=pageNo, pageSize=pageSize, mask=mask, name=name)
+    db_patients, totalRecords, totalPages = crud_patient.get_patients(db=db, pageNo=pageNo, pageSize=pageSize, mask=mask, name=name, isActive = isActive)
     patients = [Patient.model_validate(patient) for patient in db_patients]
     return PaginatedResponse(data=patients, pageNo=pageNo, pageSize=pageSize, totalRecords= totalRecords, totalPages=totalPages)
 

@@ -29,13 +29,17 @@ def get_patient(db: Session, patient_id: int, mask: bool = True):
     return db_patient
 
 
-def get_patients(db: Session, mask: bool = True, pageNo: int = 0, pageSize: int = 10,name: Optional[str] = None):
+def get_patients(db: Session, mask: bool = True, pageNo: int = 0, pageSize: int = 10,name: Optional[str] = None,isActive: Optional[str] = None):
     offset = pageNo * pageSize
     query = db.query(Patient).filter(Patient.isDeleted == "0")
 
     # Apply name filter if provided (non-exact, case-insensitive match)
     if name:
         query = query.filter(Patient.name.ilike(f"%{name}%"))
+
+    # Apply exact match for isActive (only accepts "0" or "1")
+    if isActive in ["0", "1"]:
+        query = query.filter(Patient.isActive == isActive)
 
     totalRecords = (
         db.query(func.count())
