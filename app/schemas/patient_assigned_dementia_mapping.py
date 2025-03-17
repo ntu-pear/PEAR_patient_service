@@ -40,4 +40,5 @@ class PatientAssignedDementiaCreateResp(BaseModel):
     ModifiedDate: datetime
     CreatedById: str = Field(json_schema_extra={"example": "1"})
     ModifiedById: str = Field(json_schema_extra={"example": "1"})
-    model_config = {"from_attributes": True}
+
+    model_config = {"from_attributes": True}  

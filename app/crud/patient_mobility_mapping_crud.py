@@ -1,3 +1,4 @@
+import math
 from app.models.patient_mobility_list_model import PatientMobilityList
 from app.models.patient_model import Patient
 from sqlalchemy.orm import Session
@@ -12,8 +13,19 @@ from ..schemas.patient_mobility_mapping import (
 from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 
 # Get all mobility entries
-def get_all_mobility_entries(db: Session):
-    return db.query(PatientMobility).filter(PatientMobility.IsDeleted == False).all()
+def get_all_mobility_entries(db: Session, pageNo: int = 0, pageSize: int = 100):
+    offset = pageNo * pageSize
+    query = db.query(PatientMobility).filter(PatientMobility.IsDeleted == False)
+    totalRecords = query.count()
+    totalPages = math.ceil(totalRecords / pageSize)
+
+    db_entries = (
+        query.order_by(PatientMobility.PatientID.desc())
+             .offset(offset)
+             .limit(pageSize)
+             .all()
+    )
+    return db_entries, totalRecords, totalPages
 
 def get_mobility_entry_by_mobility_id(db: Session, mobility_id: int):
     db_entry =  db.query(PatientMobility).filter(PatientMobility.IsDeleted == False, PatientMobility.MobilityID == mobility_id).first()
@@ -22,16 +34,26 @@ def get_mobility_entry_by_mobility_id(db: Session, mobility_id: int):
     return db_entry
 
 # Get mobility entries by Patient ID
-def get_mobility_entries_by_patient_id(db: Session, patient_id: int):
-    entries = db.query(PatientMobility).filter(
+def get_mobility_entries_by_patient_id(db: Session, patient_id: int, pageNo: int = 0, pageSize: int = 10):
+    offset = pageNo * pageSize
+    query = db.query(PatientMobility).filter(
         PatientMobility.PatientID == patient_id,
         PatientMobility.IsDeleted == False
-    ).all()
+    )
+    totalRecords = query.count()
+    totalPages = math.ceil(totalRecords / pageSize)
 
-    if not entries:
+    db_entries = (
+        query.order_by(PatientMobility.MobilityID)
+             .offset(offset)
+             .limit(pageSize)
+             .all()
+    )
+    
+    if not db_entries:
         raise HTTPException(status_code=404, detail=f"No mobility entries found for Patient ID {patient_id}.")
 
-    return entries
+    return db_entries, totalRecords, totalPages
 
 # Create a new mobility entry
 def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, created_by: str, user_full_name: str):
