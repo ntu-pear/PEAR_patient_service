@@ -75,8 +75,8 @@ def test_get_patient_social_history(db_session_mock, mock_patient_social_history
     assert result["occupationValue"] == "Accountant"
     assert result["petValue"] == "Bird"
     assert result["religionValue"] == "Atheist"
-    assert result["createdById"] == 1
-    assert result["modifiedById"] == 1
+    assert result["createdById"] == '1'
+    assert result["modifiedById"] == '1'
 
     # Ensure the query was executed properly
     db_session_mock.query.assert_called_once()
@@ -174,8 +174,8 @@ def test_update_patient_social_history(db_session_mock, patient_social_history_u
         isDeleted="0",
         createdDate=current_time,
         modifiedDate=current_time,
-        createdById=1,
-        modifiedById=1
+        createdById='1',
+        modifiedById='1'
     )
 
     # Mock reference data for validation
@@ -233,8 +233,8 @@ def test_delete_patient_social_history(db_session_mock):
         isDeleted="0",
         createdDate=current_time,
         modifiedDate=current_time,
-        createdById=1,
-        modifiedById=1
+        createdById='1',
+        modifiedById='1'
     )
     db_session_mock.query.return_value.filter.return_value.first.return_value = mock_social_history
 
@@ -274,8 +274,8 @@ def mock_patient_social_history():
         isDeleted="0",
         createdDate=datetime.now(),
         modifiedDate=datetime.now(),
-        createdById=1,
-        modifiedById=1
+        createdById='1',
+        modifiedById='1'
     )
 
 @pytest.fixture
@@ -312,8 +312,8 @@ def patient_social_history_create():
         isDeleted="0",
         createdDate=current_time,
         modifiedDate=current_time,
-        createdById=1,
-        modifiedById=1
+        createdById='1',
+        modifiedById='1'
     )
 
 @pytest.fixture
@@ -338,6 +338,6 @@ def patient_social_history_update():
         religionListId=2,  # Buddhist
         isDeleted="0",
         modifiedDate=current_time,
-        modifiedById=2
+        modifiedById='2'
     )
 

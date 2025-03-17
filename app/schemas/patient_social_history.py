@@ -22,8 +22,8 @@ class PatientSocialHistoryBase(BaseModel):
 class PatientSocialHistoryCreate(PatientSocialHistoryBase):
     createdDate: datetime
     modifiedDate: datetime
-    createdById: int
-    modifiedById: int
+    createdById: str
+    modifiedById: str
 
 class PatientSocialHistoryUpdate(PatientSocialHistoryBase):
     id: int
@@ -32,8 +32,8 @@ class PatientSocialHistory(PatientSocialHistoryBase):
     id: int
     createdDate: datetime
     modifiedDate: datetime
-    createdById: int
-    modifiedById: int
+    createdById: str
+    modifiedById: str
 
     model_config = {"from_attributes": True}
 
@@ -47,5 +47,5 @@ class PatientSocialHistoryDecode(PatientSocialHistoryBase):
     religionValue: str
     createdDate: datetime
     modifiedDate: datetime
-    createdById: int
-    modifiedById: int
+    createdById: str
+    modifiedById: str
