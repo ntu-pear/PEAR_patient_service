@@ -5,6 +5,7 @@ clear_mappers()
 
 from app.models import (
     allergy_reaction_type_model,
+    allergy_type_model,
     patient_allergy_mapping_model,  # Import all models to ensure they are registered
     patient_allocation_model,
     patient_attendance_model,
@@ -32,6 +33,8 @@ from app.models import (
     patient_patient_guardian_model,
     patient_assigned_dementia_list_model,
     patient_assigned_dementia_mapping_model,
+    patient_privacy_level_model,
+    social_history_sensitive_mapping_model
 )
 
 # Create all tables in the database using the engine

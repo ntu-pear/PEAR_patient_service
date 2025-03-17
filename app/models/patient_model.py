@@ -60,6 +60,7 @@ class Patient(Base):
     vitals = relationship("PatientVital", back_populates="patient")
     attendances = relationship("PatientAttendance", back_populates="patient")
     highlights = relationship("PatientHighlight", back_populates="patient")
+    privacy = relationship("PatientPrivacyLevel", back_populates="patient")
 
     # Ensure other models follow similar changes for consistency
     @property

@@ -1,6 +1,6 @@
 SET IDENTITY_INSERT patient_service_dev.dbo.PATIENT ON;
 INSERT INTO patient_service_dev.dbo.PATIENT
-(id, active, name, nric, address, tempAddress, homeNo, handphoneNo, gender, dateOfBirth, guardianId, isApproved, preferredName, preferredLanguageId, updateBit, autoGame, startDate, endDate, isActive , isRespiteCare , terminationReason, inActiveReason , inActiveDate, profilePicture, createdDate, modifiedDate, createdById, modifiedById, privacyLevel)
+(id, active, name, nric, address, tempAddress, homeNo, handphoneNo, gender, dateOfBirth, isApproved, preferredName, preferredLanguageId, updateBit, autoGame, startDate, endDate, isActive , isRespiteCare , terminationReason, inActiveReason , inActiveDate, profilePicture, createdDate, modifiedDate, createdById, modifiedById, privacyLevel, isDeleted)
 VALUES
 (
 1,  -- id (was PatientID)
@@ -13,7 +13,6 @@ VALUES
 '88888808',  -- handphoneNo
 'F', --gender
 '2001-01-01 00:00:00.000',  -- dateOfBirth (using a valid minimum date)
-NULL,  -- guardianId (no corresponding data)
 '1',  -- isApproved (assuming similar to active)
 'ALICEE',  -- preferredName
 3,  -- preferredLanguageId (was PreferredLanguageListID)
@@ -31,7 +30,8 @@ NULL,  -- inActiveDate (no corresponding data)
 '2024-01-01 00:00:00.000',  -- modifiedDate (set to a specific date and time)
 1,  -- createdById (assuming this to be 1)
 1,   -- modifiedById (assuming this to be 1)
-1 -- privacyLevel
+1, -- privacyLevel
+0 -- isDeleted
 ),
 
 
@@ -46,7 +46,6 @@ NULL,  -- tempAddress
 '90908563',  -- handphoneNo
 'F', --gender
 '1980-02-02 00:00:00.000',  -- dateOfBirth (using a valid minimum date)
-NULL,  -- guardianId (no corresponding data)
 '1',  -- isApproved (assuming similar to active)
 'YY',  -- preferredName
 2,  -- preferredLanguageId (was PreferredLanguageListID)
@@ -64,7 +63,8 @@ NULL,  -- inActiveDate (no corresponding data)
 '2021-01-01 00:00:00.000',  -- modifiedDate (set to a specific date and time)
 1,  -- createdById (assuming this to be 1)
 1,   -- modifiedById (assuming this to be 1)
-1 -- privacyLevel
+1, -- privacyLevel
+0 -- isDeleted
 ),
 
 
@@ -79,7 +79,6 @@ NULL,  -- tempAddress
 '67489859',  -- handphoneNo
 'M', --gender
 '1980-03-03 00:00:00.000',  -- dateOfBirth (using a valid minimum date)
-NULL,  -- guardianId (no corresponding data)
 '1',  -- isApproved (assuming similar to active)
 'Jon',  -- preferredName
 3,  -- preferredLanguageId (was PreferredLanguageListID)
@@ -97,7 +96,8 @@ NULL,  -- inActiveDate (no corresponding data)
 '2021-01-01 00:00:00.000',  -- modifiedDate (set to a specific date and time)
 1,  -- createdById (assuming this to be 1)
 1,   -- modifiedById (assuming this to be 1)
-1 -- privacyLevel
+1, -- privacyLevel
+0 -- isDeleted
 ),
 
 
@@ -112,7 +112,6 @@ NULL,  -- inActiveDate (no corresponding data)
 '98123144',  -- handphoneNo
 'M', --gender
 '1980-04-04 00:00:00.000',  -- dateOfBirth (using a valid minimum date)
-NULL,  -- guardianId (no corresponding data)
 '0',  -- isApproved (assuming similar to active)
 'Bi',  -- preferredName
 4,  -- preferredLanguageId (was PreferredLanguageListID)
@@ -130,7 +129,8 @@ NULL,  -- inActiveDate (no corresponding data)
 '2021-01-01 00:00:00.000',  -- modifiedDate (set to a specific date and time)
 1,  -- createdById (assuming this to be 1)
 1,   -- modifiedById (assuming this to be 1)
-1 -- privacyLevel
+1, -- privacyLevel
+0 -- isDeleted
 ),
 
 
@@ -145,7 +145,6 @@ NULL,  -- tempAddress
 '92222811',  -- handphoneNo
 'F', --gender
 '1980-05-05 00:00:00.000',  -- dateOfBirth (using a valid minimum date)
-NULL,  -- guardianId (no corresponding data)
 '1',  -- isApproved (assuming similar to active)
 'Jeline',  -- preferredName
 5,  -- preferredLanguageId (was PreferredLanguageListID)
@@ -163,9 +162,8 @@ NULL,  -- inActiveDate (no corresponding data)
 '2021-01-01 00:00:00.000',  -- modifiedDate (set to a specific date and time)
 1,  -- createdById (assuming this to be 1)
 1,   -- modifiedById (assuming this to be 1)
-1 -- privacyLevel
+1, -- privacyLevel
+0 -- isDeleted
 )
 ;
 SET IDENTITY_INSERT patient_service_dev.dbo.PATIENT OFF;
-
-ALTER TABLE patient_service_dev.dbo.PATIENT ADD CONSTRAINT PATIENT_PATIENT_LIST_LANGUAGE_FK FOREIGN KEY (preferredLanguageId) REFERENCES patient_service_dev.dbo.PATIENT_LIST_LANGUAGE(id);
