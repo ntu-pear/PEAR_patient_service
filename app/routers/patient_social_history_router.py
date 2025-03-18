@@ -32,13 +32,13 @@ def create_social_history(social_history: PatientSocialHistoryCreate, request: R
     
     is_supervisor = role_name == "SUPERVISOR"
     valid_primary_guardian = role_name == "GUARDIAN" and user_id == crud_patient_allocation.get_guardian_id_by_patient(db, social_history.patientId)
-    if not is_supervisor or not valid_primary_guardian:
+    if not is_supervisor and not valid_primary_guardian:
         raise HTTPException(status_code=404, detail="User is not authorised")
     
     return crud_social_history.create_patient_social_history(db, social_history, user_id, user_full_name)
 
 @router.put("/SocialHistory/update", response_model=PatientSocialHistoryUpdate)
-def update_social_history(patient_id: int, social_history: PatientSocialHistoryUpdate, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
+def update_social_history(social_history: PatientSocialHistoryUpdate, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
@@ -47,17 +47,17 @@ def update_social_history(patient_id: int, social_history: PatientSocialHistoryU
     
     is_supervisor = role_name == "SUPERVISOR"
     valid_primary_guardian = role_name == "GUARDIAN" and user_id == crud_patient_allocation.get_guardian_id_by_patient(db, social_history.patientId)
-    if not is_supervisor or not valid_primary_guardian:
+    if not is_supervisor and not valid_primary_guardian:
         raise HTTPException(status_code=404, detail="User is not authorised")
     
-    db_social_history = crud_social_history.update_patient_social_history(db, patient_id, social_history, user_id, user_full_name)
+    db_social_history = crud_social_history.update_patient_social_history(db, social_history, user_id, user_full_name)
     if not db_social_history:
         raise HTTPException(status_code=404, detail="Social history not found")
     
     return db_social_history
 
 @router.put("/SocialHistory/delete", response_model=PatientSocialHistory)
-def delete_social_history(patient_id: int, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
+def delete_social_history(patient_id: int, social_history: PatientSocialHistoryDecode, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
     """
     Perform a soft delete on the social history record by changing 'isDeleted' from '0' to '1'.
     """
@@ -68,7 +68,7 @@ def delete_social_history(patient_id: int, request: Request, require_auth: bool 
     
     is_supervisor = role_name == "SUPERVISOR"
     valid_primary_guardian = role_name == "GUARDIAN" and user_id == crud_patient_allocation.get_guardian_id_by_patient(db, social_history.patientId)
-    if not is_supervisor or not valid_primary_guardian:
+    if not is_supervisor and not valid_primary_guardian:
         raise HTTPException(status_code=404, detail="User is not authorised")
     
     return crud_social_history.delete_patient_social_history(db, patient_id, user_id, user_full_name)

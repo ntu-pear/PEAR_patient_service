@@ -4,7 +4,7 @@ from ..models.social_history_sensitive_mapping_model import SocialHistorySensiti
 from ..schemas.social_history_sensitive_mapping import SocialHistorySensitiveCreate, SocialHistorySensitiveUpdate
 
 def get_all_social_history(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(SocialHistorySensitiveMapping).order_by(SocialHistorySensitiveMapping.socialHistoryItem).offset(skip).limit(limit).all()
+    return db.query(SocialHistorySensitiveMapping).order_by(SocialHistorySensitiveMapping.id).offset(skip).limit(limit).all()
 
 def get_all_sensitive_social_history(db: Session):
     return db.query(SocialHistorySensitiveMapping).filter(SocialHistorySensitiveMapping.isSensitive == True).all()
@@ -12,8 +12,8 @@ def get_all_sensitive_social_history(db: Session):
 def get_all_non_sensitive_social_history(db: Session):
     return db.query(SocialHistorySensitiveMapping).filter(SocialHistorySensitiveMapping.isSensitive == False).all()
 
-def create_sensitive_mapping(db: Session, social_history_item: str, social_history: SocialHistorySensitiveCreate, created_by: str):
-    db_sensitive_mapping = SocialHistorySensitiveMapping(**social_history.model_dump(),socialHistoryItem=social_history_item,createdById=created_by,modifiedById=created_by)
+def create_sensitive_mapping(db: Session, social_history: SocialHistorySensitiveCreate, created_by: str):
+    db_sensitive_mapping = SocialHistorySensitiveMapping(**social_history.model_dump(),createdById=created_by,modifiedById=created_by)
     db.add(db_sensitive_mapping)
     db.commit()
     db.refresh(db_sensitive_mapping)

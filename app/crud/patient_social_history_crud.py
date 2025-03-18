@@ -273,17 +273,17 @@ def create_patient_social_history(db: Session, social_data: PatientSocialHistory
 
 
 
-def update_patient_social_history(db: Session, patient_id: int, social_data: PatientSocialHistoryUpdate, modified_by: str, user_full_name: str):
+def update_patient_social_history(db: Session, social_data: PatientSocialHistoryUpdate, modified_by: str, user_full_name: str):
     """
     Update an existing patient social history record after validating list references.
     """
     record = (
         db.query(PatientSocialHistory)
-        .filter(PatientSocialHistory.id == social_data.id, PatientSocialHistory.patientId == patient_id)
+        .filter(PatientSocialHistory.id == social_data.id, PatientSocialHistory.patientId == social_data.patientId)
         .first()
     )
     if not record:
-        raise HTTPException(status_code=404, detail=f"Social history record id {social_data.id} for patient with id {patient_id} not found.")
+        raise HTTPException(status_code=404, detail=f"Social history record id {social_data.id} for patient with id {social_data.patientId} not found.")
     try:
         original_data_dict = {
             k: serialize_data(v)
