@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
+from app.crud.patient_privacy_level_crud import get_privacy_level_by_patient
+from app.crud.social_history_sensitive_mapping_crud import get_all_sensitive_social_history
 from ..database import get_db
 from ..crud import patient_social_history_crud as crud_social_history
 from ..crud import patient_allocation_crud as crud_patient_allocation
@@ -10,18 +12,45 @@ from ..schemas.patient_social_history import (
     PatientSocialHistoryDecode
 )
 from ..auth.jwt_utils import extract_jwt_payload, get_user_id, get_full_name, get_role_name
+from httpx import AsyncClient
 
 
 router = APIRouter()
 
 @router.get("/SocialHistory", response_model=PatientSocialHistoryDecode, description="Get social history records by Patient ID.")
-def get_social_history(patient_id: int, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
-    _ = extract_jwt_payload(request, require_auth)
+async def get_social_history(patient_id: int, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
+    #testing on ntu
+    url = "http://10.96.188.171:5173/"
+    #testing on local
+    #url = "http://127.0.0.1:8000"
+    payload = extract_jwt_payload(request, require_auth)
+    role_name = get_role_name(payload)
+    
+    async with AsyncClient() as client:
+        response = await client.get(f"{url}/api/v1/roles/{role_name}")
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code, detail="Error calling external API")
+    
+    db_user_privacy_level = response.json()
+    db_patient_privacy_level = get_privacy_level_by_patient(db, patient_id)
+    patient_social_history = crud_social_history.get_patient_social_history(db, patient_id)
+    
+    patient_privacy_level = db_patient_privacy_level.privacyLevelSensitive
+    user_privacy_level = db_user_privacy_level.get("privacyLevelSensitive")
 
-    db_social_history = crud_social_history.get_patient_social_history(db, patient_id)
-    if not db_social_history:
-        raise HTTPException(status_code=404, detail="Social history not found")
-    return db_social_history
+    if user_privacy_level >= patient_privacy_level.value:
+        return patient_social_history
+
+    sensitive_fields = {item.socialHistoryItem for item in get_all_sensitive_social_history(db)}
+    
+    masked_history = {}
+    for key, value in patient_social_history.items():
+        if key in sensitive_fields:
+            masked_history[key] = -1  
+        else:
+            masked_history[key] = value
+
+    return masked_history
 
 @router.post("/SocialHistory/add", response_model=PatientSocialHistoryCreate)
 def create_social_history(social_history: PatientSocialHistoryCreate, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
