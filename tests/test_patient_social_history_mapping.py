@@ -197,7 +197,7 @@ def test_update_patient_social_history(db_session_mock, patient_social_history_u
     ]
 
     # Act
-    result = update_patient_social_history(db_session_mock, patient_id, patient_social_history_update, modified_by,"USER")
+    result = update_patient_social_history(db_session_mock, patient_social_history_update, modified_by,"USER")
 
     # Assert
     db_session_mock.commit.assert_called_once()

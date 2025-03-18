@@ -35,7 +35,7 @@ def create_new_privacy_level_setting(request: Request, patient_id: str, privacy_
     is_supervisor = role_name == "SUPERVISOR"
     valid_primary_guardian = role_name == "GUARDIAN" and user_id == get_guardian_id_by_patient(db, patient_id)
 
-    if not is_supervisor or not valid_primary_guardian:
+    if not is_supervisor and not valid_primary_guardian:
         raise HTTPException(status_code=404, detail="User is not authorised")
     
     return create_patient_privacy_level(db=db, patient_id=patient_id, patient_privacy_level=privacy_level_setting, created_by=1)
@@ -48,7 +48,7 @@ def update_existing_privacy_level_setting(request: Request, patient_id: str, pri
     
     is_supervisor = role_name == "SUPERVISOR"
     valid_primary_guardian = role_name == "GUARDIAN" and user_id == get_guardian_id_by_patient(db, patient_id)
-    if not is_supervisor or not valid_primary_guardian:
+    if not is_supervisor and not valid_primary_guardian:
         raise HTTPException(status_code=404, detail="User is not authorised")
     
     db_privacy_setting = update_patient_privacy_level(db=db, patient_id=patient_id, patient_privacy_level=privacy_level_setting, modified_by=1)
@@ -65,7 +65,7 @@ def delete_existing_privacy_level_setting(request: Request, patient_id: str, db:
     
     is_supervisor = role_name == "SUPERVISOR"
     valid_primary_guardian = role_name == "GUARDIAN" and user_id == get_guardian_id_by_patient(db, patient_id)
-    if not is_supervisor or not valid_primary_guardian:
+    if not is_supervisor and not valid_primary_guardian:
         raise HTTPException(status_code=404, detail="User is not authorised")
     
     db_privacy_setting = delete_patient_privacy_level(db=db, patient_id=patient_id)

@@ -6,8 +6,8 @@ class SocialHistorySensitiveBase(BaseModel):
     socialHistoryItem: str
     isSensitive: bool
 
-class SocialHistorySensitiveCreate(BaseModel):
-    isSensitive: bool
+class SocialHistorySensitiveCreate(SocialHistorySensitiveBase):
+    pass
 
 class SocialHistorySensitiveUpdate(SocialHistorySensitiveBase):
     pass
