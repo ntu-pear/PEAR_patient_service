@@ -9,7 +9,7 @@ class ActionType(Enum):
     UPDATE = "update"
     DELETE = "delete"
 
-EXCLUDED_KEYS = {"CreatedById", "ModifiedById", "ModifiedDate", "CreatedDate", "IsDeleted", "isDeleted"}
+EXCLUDED_KEYS = {"CreatedById", "ModifiedById", "ModifiedDate", "CreatedDate", "IsDeleted", "isDeleted", "createdDate", "modifiedDate"}
 
 def filter_data(data: dict) -> dict:
     """Removes unwanted keys from the given dictionary."""
