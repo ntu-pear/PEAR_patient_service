@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from httpx import AsyncClient
 from ..schemas.patient_privacy_level import PatientPrivacyLevelCreate, PatientPrivacyLevelUpdate, PatientPrivacyLevel
 from ..schemas.patient_social_history import PatientSocialHistoryBase
 from ..crud.patient_privacy_level_crud import get_privacy_level_by_patient, get_privacy_levels_by_patient, create_patient_privacy_level, update_patient_privacy_level, delete_patient_privacy_level
@@ -72,35 +71,3 @@ def delete_existing_privacy_level_setting(request: Request, patient_id: str, db:
     if db_privacy_setting is None:
         raise HTTPException(status_code=404, detail="Privacy setting not found")
     return db_privacy_setting
-
-@router.get("/privacy_settings/evaluate", response_model=PatientSocialHistoryBase)
-async def evaluate_privacy_level(request: Request, patient_id: str, db: Session = Depends(get_db), require_auth: bool = True):
-    url = "http://127.0.0.1:8000"
-    payload = extract_jwt_payload(request, require_auth)
-    role_name = get_role_name(payload)
-    
-    async with AsyncClient() as client:
-        response = await client.get(f"{url}/api/v1/roles/{role_name}")
-        if response.status_code != 200:
-            raise HTTPException(status_code=response.status_code, detail="Error calling external API")
-    
-    db_user_privacy_level = response.json()
-    db_patient_privacy_level = get_privacy_level_by_patient(db, patient_id)
-    patient_social_history = get_patient_social_history(db, patient_id)
-    
-    patient_privacy_level = db_patient_privacy_level.privacyLevelSensitive
-    user_privacy_level = db_user_privacy_level.get("privacyLevelSensitive")
-
-    if user_privacy_level >= patient_privacy_level.value:
-        return patient_social_history
-
-    sensitive_fields = {item.socialHistoryItem for item in get_all_sensitive_social_history(db)}
-    
-    masked_history = {}
-    for key, value in patient_social_history.items():
-        if key in sensitive_fields:
-            masked_history[key] = -1  
-        else:
-            masked_history[key] = value
-
-    return masked_history
