@@ -19,6 +19,7 @@ class PatientMobilityResponse(BaseModel):
     MobilityID: int
     PatientID: int
     MobilityListId: int
+    MobilityRemarks: str
     IsRecovered: bool
     IsDeleted: bool
     CreatedDateTime: datetime
@@ -26,5 +27,5 @@ class PatientMobilityResponse(BaseModel):
     CreatedById: str
     ModifiedById: str
 
-    model_config = {"from_attributes": True}  # ✅ Enables ORM mode for SQLAlchemy models
+    model_config = {"from_attributes": True}  # Enables ORM mode for SQLAlchemy models
 
