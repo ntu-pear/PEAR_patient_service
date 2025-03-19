@@ -20,7 +20,7 @@ router = APIRouter()
 @router.get("/SocialHistory", response_model=PatientSocialHistoryDecode, description="Get social history records by Patient ID.")
 async def get_social_history(patient_id: int, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
     #testing on ntu
-    url = "http://10.96.188.171:5678"
+    url = "http://192.168.188.171:5678"
     #testing on local
     #url = "http://127.0.0.1:8000"
     payload = extract_jwt_payload(request, require_auth)
