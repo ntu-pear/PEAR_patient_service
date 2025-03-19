@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: patient-service
-        image: host.minikube.internal:5000/patient_service_dev  # Replace with your Docker image
+        image: host.minikube.internal:5000/patient_service_dev:latest  # Replace with your Docker image
         ports:
         - containerPort: 8000
         env:
