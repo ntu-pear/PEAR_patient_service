@@ -1,4 +1,5 @@
 # app/auth/jwt_utils.py
+import time
 from fastapi import HTTPException, status, Request
 import base64
 import json
@@ -11,6 +12,7 @@ from ..logger.logger_utils import logger
 class JWTPayload(BaseModel):
     userId: str
     fullName: str
+    email: str
     roleName: str
     sessionId: str
 
@@ -47,6 +49,26 @@ def extract_jwt_payload(request: Request, require_auth: bool = True) -> Optional
         
         # Parse JSON payload
         payload_data = json.loads(decoded_payload)
+
+        # Check expiration time
+        exp = payload_data.get("exp")
+        if exp is None:
+            if require_auth:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token: no expiration time in Jwt payload"
+                )
+            return None
+
+        current_time = int(time.time())  # Current Unix timestamp
+        if exp < current_time:
+            error_msg = f"Token has expired: exp={exp}, current_time={current_time}"
+            if require_auth:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=error_msg
+                )
+            return None
 
         # User service wrapped it in a "sub" field
         sub = payload_data.get("sub")
