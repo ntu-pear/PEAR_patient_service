@@ -7,6 +7,16 @@ from .patient_assigned_dementia_list_model import PatientAssignedDementiaList
 from .patient_assigned_dementia_mapping_model import PatientAssignedDementiaMapping
 from .patient_guardian_relationship_mapping_model import PatientGuardianRelationshipMapping
 from .patient_privacy_level_model import PatientPrivacyLevel
+from .patient_patient_guardian_model import PatientPatientGuardian
+from .patient_allergy_mapping_model import PatientAllergyMapping
+from .patient_doctor_note_model import PatientDoctorNote
+from .patient_photo_model import PatientPhoto
+from .patient_photo_list_model import PatientPhotoList
+from .patient_mobility_mapping_model import PatientMobility
+from .patient_mobility_list_model import PatientMobilityList
+from .patient_prescription_model import PatientPrescription
+from .patient_vital_model import PatientVital
+from .patient_highlight_model import PatientHighlight
 from .patient_social_history_model import PatientSocialHistory
 from .patient_list_livewith_model import PatientLiveWithList
 from .patient_list_religion_model import PatientReligionList
@@ -15,4 +25,6 @@ from .patient_list_pet_model import PatientPetList
 from .patient_list_diet_model import PatientDietList
 from .patient_list_education_model import PatientEducationList
 from .social_history_sensitive_mapping_model import SocialHistorySensitiveMapping
+from .allergy_type_model import AllergyType
+from .allergy_reaction_type_model import AllergyReactionType
 # Import other models as needed
