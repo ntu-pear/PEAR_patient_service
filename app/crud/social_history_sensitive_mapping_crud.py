@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from ..models.social_history_sensitive_mapping_model import SocialHistorySensitiveMapping
 from ..schemas.social_history_sensitive_mapping import SocialHistorySensitiveCreate, SocialHistorySensitiveUpdate
 
-def get_all_social_history(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(SocialHistorySensitiveMapping).order_by(SocialHistorySensitiveMapping.id).offset(skip).limit(limit).all()
+def get_all_social_history(db: Session):
+    return db.query(SocialHistorySensitiveMapping).order_by(SocialHistorySensitiveMapping.id).all()
 
 def get_all_sensitive_social_history(db: Session):
     return db.query(SocialHistorySensitiveMapping).filter(SocialHistorySensitiveMapping.isSensitive == True).all()
