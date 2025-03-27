@@ -42,12 +42,17 @@ async def get_social_history(patient_id: int, request: Request, require_auth: bo
         return patient_social_history
 
     sensitive_fields = {item.socialHistoryItem for item in get_all_sensitive_social_history(db)}
-    
+
+    list_id_fields = {key for key in patient_social_history.keys() if key.endswith("ListId")}
+    value_fields = {key.replace("ListId", "Value") for key in list_id_fields}
+
     masked_history = {}
     for key, value in patient_social_history.items():
         if key in sensitive_fields:
             masked_history[key] = -1  
-        else:
+        elif key in value_fields and masked_history[key.replace("Value", "ListId")] == -1:
+            masked_history[key] = "-"
+        else:   
             masked_history[key] = value
 
     return masked_history
