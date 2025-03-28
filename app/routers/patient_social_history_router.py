@@ -27,7 +27,7 @@ async def get_social_history(patient_id: int, request: Request, require_auth: bo
     role_name = get_role_name(payload)
     
     async with AsyncClient() as client:
-        response = await client.get(f"{url}/api/v1/roles/{role_name}")
+        response = await client.get(f"{url}/api/v1/roles/name/{role_name}")
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code, detail="Error calling external API")
     
