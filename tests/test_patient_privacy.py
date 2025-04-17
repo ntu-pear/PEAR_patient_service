@@ -23,7 +23,7 @@ def test_get_privacy_level_by_patient(db_session_mock, Read_Privacy_Level):
     
     assert result.patientId == Read_Privacy_Level.patientId
     assert result.active == Read_Privacy_Level.active
-    assert result.privacyLevelSensitive == Read_Privacy_Level.privacyLevelSensitive
+    assert result.accessLevelSensitive == Read_Privacy_Level.accessLevelSensitive
     
 def test_get_privacy_levels_by_patient(db_session_mock, Read_Privacy_Levels):
     """Test case for retrieving all privacy level settings by User"""
@@ -36,9 +36,9 @@ def test_get_privacy_levels_by_patient(db_session_mock, Read_Privacy_Levels):
     # Assert
     assert len(result) == len(Read_Privacy_Levels)
     assert result[0].patientId == Read_Privacy_Levels[0].patientId
-    assert result[0].privacyLevelSensitive == Read_Privacy_Levels[0].privacyLevelSensitive
+    assert result[0].accessLevelSensitive == Read_Privacy_Levels[0].accessLevelSensitive
     assert result[1].patientId == Read_Privacy_Levels[1].patientId
-    assert result[1].privacyLevelSensitive == Read_Privacy_Levels[1].privacyLevelSensitive
+    assert result[1].accessLevelSensitive == Read_Privacy_Levels[1].accessLevelSensitive
     
 def test_create_patient_privacy_level(db_session_mock, Create_Privacy_Level):
     """Test Case for creating Privacy Level"""
@@ -55,7 +55,7 @@ def test_create_patient_privacy_level(db_session_mock, Create_Privacy_Level):
 
     assert result.patientId == 1
     assert result.active == 1
-    assert result.privacyLevelSensitive == PrivacyStatus.LOW
+    assert result.accessLevelSensitive == PrivacyStatus.LOW
     
 def test_update_patient_privacy_level(db_session_mock, Read_Privacy_Level, Update_Privacy_Level):
     """Test Case for updating Privacy Level"""
@@ -74,7 +74,7 @@ def test_update_patient_privacy_level(db_session_mock, Read_Privacy_Level, Updat
     db_session_mock.refresh.assert_called_once_with(result)
 
     assert result.active == 1
-    assert result.privacyLevelSensitive == PrivacyStatus.LOW
+    assert result.accessLevelSensitive == PrivacyStatus.LOW
     
 def test_delete_patient_privacy_level(db_session_mock, Read_Privacy_Level):
     """Test case for deleting Privacy Level."""
@@ -99,7 +99,7 @@ def Read_Privacy_Level():
     return PatientPrivacyLevel(
         patientId=1,
         active=1,
-        privacyLevelSensitive=1,
+        accessLevelSensitive=1,
         createdById="1",
         modifiedById="1",
         createdDate=datetime.now(),
@@ -113,7 +113,7 @@ def Read_Privacy_Levels():
         PatientPrivacyLevel(
             patientId=1,
             active=1,
-            privacyLevelSensitive=1,
+            accessLevelSensitive=1,
             createdDate=datetime.now(),
             modifiedDate=datetime.now(),
             createdById="1",
@@ -122,7 +122,7 @@ def Read_Privacy_Levels():
         PatientPrivacyLevel(
             patientId=2,
             active=1,
-            privacyLevelSensitive=2,
+            accessLevelSensitive=2,
             createdDate=datetime.now(),
             modifiedDate=datetime.now(),
             createdById="1",
@@ -135,7 +135,7 @@ def Create_Privacy_Level():
     """Fixture to provide a mock PatientPrivacyLevelCreate Object."""
     return PatientPrivacyLevelCreate(
         active=1,
-        privacyLevelSensitive=1
+        accessLevelSensitive=1
     )
 
 @pytest.fixture
@@ -143,5 +143,5 @@ def Update_Privacy_Level():
     """Fixture to provide a mock PatientPrivacyLevelUpdate Object."""
     return PatientPrivacyLevelUpdate(
         active=1,
-        privacyLevelSensitive=1
+        accessLevelSensitive=1
     )
