@@ -35,8 +35,8 @@ async def get_social_history(patient_id: int, request: Request, require_auth: bo
     db_patient_privacy_level = get_privacy_level_by_patient(db, patient_id)
     patient_social_history = crud_social_history.get_patient_social_history(db, patient_id)
     
-    patient_privacy_level = db_patient_privacy_level.privacyLevelSensitive
-    user_privacy_level = db_user_privacy_level.get("privacyLevelSensitive")
+    patient_privacy_level = db_patient_privacy_level.accessLevelSensitive
+    user_privacy_level = db_user_privacy_level.get("accessLevelSensitive")
 
     if user_privacy_level >= patient_privacy_level.value:
         return patient_social_history

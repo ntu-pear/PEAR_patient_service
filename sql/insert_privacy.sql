@@ -1,10 +1,10 @@
 INSERT INTO patient_service_dev.dbo.PRIVACY_LEVEL_SETTING
-(patientId, active, privacyLevelSensitive, createdDate, modifiedDate, createdById, modifiedById)
+(patientId, active, accessLevelSensitive, createdDate, modifiedDate, createdById, modifiedById)
 VALUES
 (
 1, -- patientId
 1, -- active
-'LOW', -- privacyLevelSensitive
+'LOW', -- accessLevelSensitive
 '2001-01-01 00:00:00.000',  -- createdDate (using a valid minimum date)
 '2024-01-01 00:00:00.000',  -- modifiedDate (set to a specific date and time)
 1,  -- createdById (assuming this to be 1)
@@ -14,7 +14,7 @@ VALUES
 (
 2, -- patientId
 1, -- active
-'LOW', -- privacyLevelSensitive
+'LOW', -- accessLevelSensitive
 '2001-01-01 00:00:00.000',  -- createdDate (using a valid minimum date)
 '2024-01-01 00:00:00.000',  -- modifiedDate (set to a specific date and time)
 1,  -- createdById (assuming this to be 1)
@@ -24,7 +24,7 @@ VALUES
 (
 3, -- patientId
 1, -- active
-'MEDIUM', -- privacyLevelSensitive
+'MEDIUM', -- accessLevelSensitive
 '2001-01-01 00:00:00.000',  -- createdDate (using a valid minimum date)
 '2024-01-01 00:00:00.000',  -- modifiedDate (set to a specific date and time)
 1,  -- createdById (assuming this to be 1)
@@ -34,7 +34,7 @@ VALUES
 (
 4, -- patientId
 1, -- active
-'HIGH', -- privacyLevelSensitive
+'HIGH', -- accessLevelSensitive
 '2001-01-01 00:00:00.000',  -- createdDate (using a valid minimum date)
 '2024-01-01 00:00:00.000',  -- modifiedDate (set to a specific date and time)
 1,  -- createdById (assuming this to be 1)

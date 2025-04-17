@@ -4,7 +4,7 @@ from typing import Optional
 from app.models.patient_privacy_level_model import PrivacyStatus
 
 class PatientPrivacyLevelBase(BaseModel):
-    privacyLevelSensitive: Optional[PrivacyStatus] = None
+    accessLevelSensitive: Optional[PrivacyStatus] = None
 
 class PatientPrivacyLevelCreate(PatientPrivacyLevelBase):
     active: Optional[bool] = None

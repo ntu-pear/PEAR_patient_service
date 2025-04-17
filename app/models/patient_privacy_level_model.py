@@ -16,7 +16,7 @@ class PatientPrivacyLevel(Base):
 
     patientId = Column(Integer, ForeignKey('PATIENT.id'), primary_key=True)
     active = Column(Boolean, default=True, nullable=False)
-    privacyLevelSensitive = Column(SqlEnum(PrivacyStatus), nullable=False)
+    accessLevelSensitive = Column(SqlEnum(PrivacyStatus), nullable=False)
     createdDate = Column(DateTime, server_default=func.now(), nullable=False)
     modifiedDate = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
     createdById = Column(String(255), nullable=True)
