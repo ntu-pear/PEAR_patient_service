@@ -11,7 +11,7 @@ DROP TABLE [dbo].PATIENT_LIST_RELIGION
 -- PATIENT_LIST_DIET
 INSERT INTO [dbo].[PATIENT_LIST_DIET] (IsDeleted, Value, CreatedDateTime, UpdatedDateTime, CreatedById, ModifiedById)
 VALUES
-    ('0', 'Not to Tell', GETDATE(), GETDATE(), "1", "1"),
+    ('0', 'Not Available', GETDATE(), GETDATE(), "1", "1"),
     ('0', 'Diabetic', GETDATE(), GETDATE(), "1", "1"),
     ('0', 'Halal', GETDATE(), GETDATE(), "1", "1"),
     ('0', 'Vegan', GETDATE(), GETDATE(), "1", "1"),
@@ -28,7 +28,7 @@ VALUES
 -- PATIENT_LIST_EDUCATION
 INSERT INTO [dbo].[PATIENT_LIST_EDUCATION] (IsDeleted, Value, CreatedDateTime, UpdatedDateTime, CreatedById, ModifiedById)
 VALUES
-    ('0', 'Not to Tell', GETDATE(), GETDATE(), "1", "1"),
+    ('0', 'Not Available', GETDATE(), GETDATE(), "1", "1"),
     ('0', 'Primary or lower', GETDATE(), GETDATE(), "1", "1"),
     ('0', 'Secondary', GETDATE(), GETDATE(), "1", "1"),
     ('0', 'Diploma', GETDATE(), GETDATE(), "1", "1"),
@@ -42,7 +42,7 @@ VALUES
 -- PATIENT_LIST_LIVEWITH
 INSERT INTO [dbo].[PATIENT_LIST_LIVEWITH] (IsDeleted, Value, CreatedDateTime, UpdatedDateTime, CreatedById, ModifiedById)
 VALUES
-    ('0', 'Not to Tell', GETDATE(), GETDATE(), "1", "1"),
+    ('0', 'Not Available', GETDATE(), GETDATE(), "1", "1"),
     ('0', 'Alone', GETDATE(), GETDATE(), "1", "1"),
     ('0', 'Children', GETDATE(), GETDATE(), "1", "1"),
     ('0', 'Friend', GETDATE(), GETDATE(), "1", "1"),
@@ -54,7 +54,7 @@ VALUES
 -- PATIENT_LIST_OCCUPATION
 INSERT INTO [dbo].[PATIENT_LIST_OCCUPATION] (IsDeleted, Value, CreatedDateTime, UpdatedDateTime, CreatedById, ModifiedById)
 VALUES
-    ('0', 'Not to Tell', GETDATE(), GETDATE(), "1", "1"),
+    ('0', 'Not Available', GETDATE(), GETDATE(), "1", "1"),
     ('0', 'Accountant', GETDATE(), GETDATE(), "1", "1"),
     ('0', 'Business owner', GETDATE(), GETDATE(), "1", "1"),
     ('0', 'Chef/Cook', GETDATE(), GETDATE(), "1", "1"),
@@ -96,7 +96,7 @@ VALUES
 -- PATIENT_LIST_PET
 INSERT INTO [dbo].[PATIENT_LIST_PET] (IsDeleted, Value, CreatedDateTime, UpdatedDateTime, CreatedById, ModifiedById)
 VALUES
-    ('0', 'Not to Tell', GETDATE(), GETDATE(), "1", "1"),
+    ('0', 'Not Available', GETDATE(), GETDATE(), "1", "1"),
     ('0', 'Bird', GETDATE(), GETDATE(), "1", "1"),
     ('0', 'Cat', GETDATE(), GETDATE(), "1", "1"),
     ('0', 'Dog', GETDATE(), GETDATE(), "1", "1"),
@@ -111,7 +111,7 @@ VALUES
 -- PATIENT_LIST_RELIGION
 INSERT INTO [dbo].[PATIENT_LIST_RELIGION] (IsDeleted, Value, CreatedDateTime, UpdatedDateTime, CreatedById, ModifiedById)
 VALUES
-    ('0', 'Not to Tell', GETDATE(), GETDATE(), "1", "1"),
+    ('0', 'Not Available', GETDATE(), GETDATE(), "1", "1"),
     ('0', 'Atheist', GETDATE(), GETDATE(), "1", "1"),
     ('0', 'Buddhist', GETDATE(), GETDATE(), "1", "1"),
     ('0', 'Catholic', GETDATE(), GETDATE(), "1", "1"),
