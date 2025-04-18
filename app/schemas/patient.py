@@ -6,7 +6,6 @@ import re
 class PatientBase(BaseModel):
     name: str  # VARCHAR (255) -> str
     nric: str  # VARCHAR (9) -> str
-    active: Optional[str] =  Field(default=0, json_schema_extra={"example": "0"})
     address: Optional[str] = None  # VARCHAR (255) -> Optional[str]
     tempAddress: Optional[str] = None  # VARCHAR (255) -> Optional[str]
     homeNo: Optional[str] = None  # VARCHAR (32) -> Optional[str]

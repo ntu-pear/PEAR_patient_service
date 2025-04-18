@@ -1,3 +1,4 @@
+import math
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from datetime import datetime
@@ -6,100 +7,126 @@ from ..models.patient_assigned_dementia_mapping_model import (
 )
 from ..models.patient_assigned_dementia_list_model import PatientAssignedDementiaList
 from ..schemas.patient_assigned_dementia_mapping import (
+    PatientAssignedDementia,
+    PatientAssignedDementiaCreateResp,
     PatientAssignedDementiaCreate,
     PatientAssignedDementiaUpdate,
 )
 from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 
-
-# Get all dementia assignments across all patients
-def get_all_assigned_dementias(db: Session):
-    results = (
-        db.query(
-            PatientAssignedDementiaMapping.id,
-            PatientAssignedDementiaMapping.PatientId,
-            PatientAssignedDementiaMapping.DementiaTypeListId,  # Include this field
-            PatientAssignedDementiaMapping.IsDeleted,
-            PatientAssignedDementiaMapping.CreatedDate,
-            PatientAssignedDementiaMapping.ModifiedDate,
-            PatientAssignedDementiaMapping.CreatedById,
-            PatientAssignedDementiaMapping.ModifiedById,
-            PatientAssignedDementiaList.Value.label("DementiaTypeValue"),
-        )
-        .join(
-            PatientAssignedDementiaList,
-            PatientAssignedDementiaMapping.DementiaTypeListId
-            == PatientAssignedDementiaList.DementiaTypeListId,
-        )
-        .filter(
-            PatientAssignedDementiaMapping.IsDeleted == "0"
-        )  # Filter only not deleted
-        .all()
+# Get all dementia assignments with pagination
+def get_all_assigned_dementias(db: Session, pageNo: int = 0, pageSize: int = 10):
+    offset = pageNo * pageSize
+    query = db.query(
+        PatientAssignedDementiaMapping.id,
+        PatientAssignedDementiaMapping.PatientId,
+        PatientAssignedDementiaMapping.DementiaTypeListId,
+        PatientAssignedDementiaMapping.IsDeleted,
+        PatientAssignedDementiaMapping.CreatedDate,
+        PatientAssignedDementiaMapping.ModifiedDate,
+        PatientAssignedDementiaMapping.CreatedById,
+        PatientAssignedDementiaMapping.ModifiedById,
+        PatientAssignedDementiaList.Value.label("DementiaTypeValue"),
+    ).join(
+        PatientAssignedDementiaList,
+        PatientAssignedDementiaMapping.DementiaTypeListId == PatientAssignedDementiaList.DementiaTypeListId
+    ).filter(
+        PatientAssignedDementiaMapping.IsDeleted == "0"
     )
 
-    dementia_assignments = []
-    for result in results:
-        dementia_assignments.append(
-            {
-                "id": result.id,
-                "PatientId": result.PatientId,
-                "DementiaTypeListId": result.DementiaTypeListId,  # Add this field
-                "IsDeleted": result.IsDeleted,
-                "CreatedDate": result.CreatedDate,
-                "ModifiedDate": result.ModifiedDate,
-                "CreatedById": result.CreatedById,
-                "ModifiedById": result.ModifiedById,
-                "DementiaTypeValue": result.DementiaTypeValue,
-            }
-        )
+    totalRecords = query.count()
+    totalPages = math.ceil(totalRecords / pageSize)
 
-    return dementia_assignments
+    results = query.order_by(PatientAssignedDementiaMapping.id.desc()).offset(offset).limit(pageSize).all()
+
+    assignments = [
+        {
+            "id": r.id,
+            "PatientId": r.PatientId,
+            "DementiaTypeListId": r.DementiaTypeListId,
+            "IsDeleted": r.IsDeleted,
+            "CreatedDate": r.CreatedDate,
+            "ModifiedDate": r.ModifiedDate,
+            "CreatedById": r.CreatedById,
+            "ModifiedById": r.ModifiedById,
+            "DementiaTypeValue": r.DementiaTypeValue,
+        }
+        for r in results
+    ]
+
+    return assignments, totalRecords, totalPages
 
 
-# Get all dementia assignments for a patient
-def get_assigned_dementias(db: Session, patient_id: int):
-    results = (
-        db.query(
-            PatientAssignedDementiaMapping.id,
-            PatientAssignedDementiaMapping.PatientId,
-            PatientAssignedDementiaMapping.DementiaTypeListId,  # Include this field
-            PatientAssignedDementiaMapping.IsDeleted,
-            PatientAssignedDementiaMapping.CreatedDate,
-            PatientAssignedDementiaMapping.ModifiedDate,
-            PatientAssignedDementiaMapping.CreatedById,
-            PatientAssignedDementiaMapping.ModifiedById,
-            PatientAssignedDementiaList.Value.label("DementiaTypeValue"),
-        )
-        .join(
-            PatientAssignedDementiaList,
-            PatientAssignedDementiaMapping.DementiaTypeListId
-            == PatientAssignedDementiaList.DementiaTypeListId,
-        )
-        .filter(
-            PatientAssignedDementiaMapping.PatientId == patient_id,
-            PatientAssignedDementiaMapping.IsDeleted == "0",
-        )
-        .all()
+# Get all dementia assignments for a patient with pagination
+def get_assigned_dementias(db: Session, patient_id: int, pageNo: int = 0, pageSize: int = 10):
+    offset = pageNo * pageSize
+    query = db.query(
+        PatientAssignedDementiaMapping.id,
+        PatientAssignedDementiaMapping.PatientId,
+        PatientAssignedDementiaMapping.DementiaTypeListId,
+        PatientAssignedDementiaMapping.IsDeleted,
+        PatientAssignedDementiaMapping.CreatedDate,
+        PatientAssignedDementiaMapping.ModifiedDate,
+        PatientAssignedDementiaMapping.CreatedById,
+        PatientAssignedDementiaMapping.ModifiedById,
+        PatientAssignedDementiaList.Value.label("DementiaTypeValue"),
+    ).join(
+        PatientAssignedDementiaList,
+        PatientAssignedDementiaMapping.DementiaTypeListId == PatientAssignedDementiaList.DementiaTypeListId
+    ).filter(
+        PatientAssignedDementiaMapping.PatientId == patient_id,
+        PatientAssignedDementiaMapping.IsDeleted == "0"
     )
 
-    dementia_assignments = []
-    for result in results:
-        dementia_assignments.append(
-            {
-                "id": result.id,
-                "PatientId": result.PatientId,
-                "DementiaTypeListId": result.DementiaTypeListId,  # Add this field
-                "IsDeleted": result.IsDeleted,
-                "CreatedDate": result.CreatedDate,
-                "ModifiedDate": result.ModifiedDate,
-                "CreatedById": result.CreatedById,
-                "ModifiedById": result.ModifiedById,
-                "DementiaTypeValue": result.DementiaTypeValue,
-            }
-        )
+    totalRecords = query.count()
+    totalPages = math.ceil(totalRecords / pageSize)
 
-    return dementia_assignments
+    results = query.order_by(PatientAssignedDementiaMapping.id.desc()).offset(offset).limit(pageSize).all()
 
+    # Convert dictionary results into Pydantic model instances
+    assignments = [
+        PatientAssignedDementia(
+            id=r.id,
+            PatientId=r.PatientId,
+            DementiaTypeListId=r.DementiaTypeListId,
+            IsDeleted=r.IsDeleted,
+            CreatedDate=r.CreatedDate,
+            ModifiedDate=r.ModifiedDate,
+            CreatedById=r.CreatedById,
+            ModifiedById=r.ModifiedById,
+            DementiaTypeValue=r.DementiaTypeValue
+        ) for r in results
+    ]
+
+    return assignments, totalRecords, totalPages
+def get_assigned_dementia_by_dementia_id(db: Session, dementia_id: int):
+    result = db.query(
+        PatientAssignedDementiaMapping,
+        PatientAssignedDementiaList.Value.label("DementiaTypeValue")  # Include DementiaTypeValue
+    ).join(
+        PatientAssignedDementiaList,
+        PatientAssignedDementiaMapping.DementiaTypeListId == PatientAssignedDementiaList.DementiaTypeListId
+    ).filter(
+        PatientAssignedDementiaMapping.DementiaTypeListId == dementia_id,
+        PatientAssignedDementiaMapping.IsDeleted == "0"
+    ).first()
+
+    if not result:
+        return None
+
+    # Convert the result into a dictionary including DementiaTypeValue
+    assigned_dementia, dementia_type_value = result
+    return {
+        "id": assigned_dementia.id,
+        "PatientId": assigned_dementia.PatientId,
+        "DementiaTypeListId": assigned_dementia.DementiaTypeListId,
+        "IsDeleted": assigned_dementia.IsDeleted,
+        "CreatedDate": assigned_dementia.CreatedDate,
+        "ModifiedDate": assigned_dementia.ModifiedDate,
+        "CreatedById": assigned_dementia.CreatedById,
+        "ModifiedById": assigned_dementia.ModifiedById,
+        "DementiaTypeValue": dementia_type_value  # Ensure field is present
+    }
 
 # Create a new dementia assignment
 def create_assigned_dementia(
@@ -145,7 +172,7 @@ def create_assigned_dementia(
         CreatedById=created_by,
         ModifiedById=created_by,
     )
-    updated_data_dict = serialize_data(new_assignment.model_dump())
+    updated_data_dict = serialize_data({k: v for k, v in vars(new_assignment).items() if not k.startswith("_")})
     db.add(new_assignment)
     db.commit()
     db.refresh(new_assignment)
@@ -182,6 +209,22 @@ def update_assigned_dementia(
 
     if not db_assignment:
         raise HTTPException(status_code=404, detail="Dementia assignment not found")
+
+    # Validate that the new DementiaTypeListId exists in PATIENT_ASSIGNED_DEMENTIA_LIST
+    if dementia_data.DementiaTypeListId is not None:
+        dementia_type_exists = (
+            db.query(PatientAssignedDementiaList)
+            .filter(
+                PatientAssignedDementiaList.DementiaTypeListId == dementia_data.DementiaTypeListId,
+                PatientAssignedDementiaList.IsDeleted == "0",
+            )
+            .first()
+        )
+        if not dementia_type_exists:
+            raise HTTPException(
+                status_code=400,
+                detail=f"DementiaTypeListId {dementia_data.DementiaTypeListId} does not exist or has been deleted."
+            )
 
     try:
         original_data_dict = {

@@ -28,7 +28,7 @@ def get_mobility_list_by_id(request: Request, mobility_list_id: int, db: Session
     return mobility_list
 
 # Create a new mobility list entry
-@router.post("/Mobility/List", response_model=schemas_mobility_list.PatientMobilityList)
+@router.post("/Mobility/List/add", response_model=schemas_mobility_list.PatientMobilityList)
 def create_mobility_list_entry(request: Request, mobility_list: schemas_mobility_list.PatientMobilityListCreate, db: Session = Depends(get_db), require_auth: bool = True):
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
@@ -37,7 +37,7 @@ def create_mobility_list_entry(request: Request, mobility_list: schemas_mobility
     return crud_mobility_list.create_mobility_list_entry(db, mobility_list, user_id, user_full_name)  # Replace 1 with dynamic user ID if needed
 
 # Update a mobility list entry
-@router.put("/Mobility/List/{mobility_list_id}", response_model=schemas_mobility_list.PatientMobilityList)
+@router.put("/Mobility/List/update/{mobility_list_id}", response_model=schemas_mobility_list.PatientMobilityList)
 def update_mobility_list_entry(request: Request, mobility_list_id: int, mobility_list: schemas_mobility_list.PatientMobilityListUpdate, db: Session = Depends(get_db), require_auth: bool = True):
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"

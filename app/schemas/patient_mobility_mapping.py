@@ -15,15 +15,17 @@ class PatientMobilityUpdate(BaseModel):
     MobilityRemarks: Optional[str]
     IsRecovered: Optional[bool]
 
-class PatientMobilityResponse(PatientMobilityBase):
+class PatientMobilityResponse(BaseModel):
     MobilityID: int
-    IsDeleted: int
+    PatientID: int
+    MobilityListId: int
+    MobilityRemarks: str
+    IsRecovered: bool
+    IsDeleted: bool
     CreatedDateTime: datetime
     ModifiedDateTime: datetime
     CreatedById: str
     ModifiedById: str
 
-    class ConfigDict:
-        # Don't use orm_mode = True anymore. Deprecated.
-        # orm_mode = True 
-        model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True}  # Enables ORM mode for SQLAlchemy models
+

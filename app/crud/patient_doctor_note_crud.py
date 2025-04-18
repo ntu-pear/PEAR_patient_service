@@ -9,7 +9,7 @@ import math
 
 def get_doctor_notes_by_patient(db: Session, patient_id: int, pageNo: int = 0, pageSize: int = 10):
     offset = pageNo * pageSize
-    db_doctor_note = db.query(PatientDoctorNote).filter(PatientDoctorNote.patientId == patient_id, PatientDoctorNote.isDeleted == '0').order_by(PatientDoctorNote.patientId).offset(offset).limit(pageSize).all()
+    db_doctor_note = db.query(PatientDoctorNote).filter(PatientDoctorNote.patientId == patient_id, PatientDoctorNote.isDeleted == '0').order_by(PatientDoctorNote.id.desc()).offset(offset).limit(pageSize).all()
     totalRecords = db.query(func.count()).select_from(PatientDoctorNote).filter(PatientDoctorNote.patientId == patient_id,PatientDoctorNote.isDeleted == '0').scalar()
     totalPages = math.ceil(totalRecords/pageSize)
     return db_doctor_note, totalRecords, totalPages

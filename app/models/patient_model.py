@@ -8,7 +8,6 @@ class Patient(Base):
     __tablename__ = "PATIENT"
 
     id = Column(Integer, primary_key=True, index=True)  # Changed to Integer
-    active = Column(String(1), default="Y", nullable=False)
     name = Column(String(255), nullable=False)
     nric = Column(
         String(9), nullable=False

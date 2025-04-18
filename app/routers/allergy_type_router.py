@@ -1,5 +1,5 @@
 # app/routers/allergy_type_router.py
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Query, HTTPException, Request
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..crud import allergy_type_crud as crud_allergy_type
@@ -8,20 +8,34 @@ from ..schemas.allergy_type import (
     AllergyTypeCreate,
     AllergyTypeUpdate
 )
+from ..schemas.response import PaginatedResponse
 from ..auth.jwt_utils import extract_jwt_payload, get_user_id, get_full_name
 from ..logger.logger_utils import logger
 
 router = APIRouter()
 
-@router.get("/get_allergy_types", response_model=list[AllergyType], description="Get all allergy types.")
+@router.get("/get_allergy_types", response_model=PaginatedResponse[AllergyType], description="Get all paginated allergy types.")
 def get_allergy_types(
     request: Request,
     db: Session = Depends(get_db),
-    require_auth: bool = True  
+    pageNo: int = Query(0, description="Page number (starting from 0)"),
+    pageSize: int = Query(10, description="Number of records per page"),
+    require_auth: bool = True
 ):
     _ = extract_jwt_payload(request, require_auth)
-    # No logging for this read operation
-    return crud_allergy_type.get_all_allergy_types(db)
+
+    allergy_types, totalRecords, totalPages = crud_allergy_type.get_all_allergy_types(db, pageNo, pageSize)
+
+    if not allergy_types:
+        raise HTTPException(status_code=404, detail="No allergy types found")
+
+    return PaginatedResponse(
+        data=allergy_types,
+        pageNo=pageNo,
+        pageSize=pageSize,
+        totalRecords=totalRecords,
+        totalPages=totalPages
+    )
 
 @router.get("/get_allergy_type/{allergy_type_id}", response_model=AllergyType, description="Get allergy type by ID.")
 def get_allergy_type(
