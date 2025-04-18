@@ -4,11 +4,7 @@ from logging.handlers import TimedRotatingFileHandler
 import os
 import json
 
-# Uncomment this for Localtesting
-# LOG_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../..", "logs"))
-
-# This is for production logs mounting
-LOG_DIR = "/app/logs"
+LOG_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../..", "logs"))
 os.makedirs(LOG_DIR, exist_ok=True)
 
 today = datetime.now().strftime("%Y-%m-%d")

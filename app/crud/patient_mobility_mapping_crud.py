@@ -13,7 +13,7 @@ from ..schemas.patient_mobility_mapping import (
 from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 
 # Get all mobility entries
-def get_all_mobility_entries(db: Session, pageNo: int = 0, pageSize: int = 10):
+def get_all_mobility_entries(db: Session, pageNo: int = 0, pageSize: int = 100):
     offset = pageNo * pageSize
     query = db.query(PatientMobility).filter(PatientMobility.IsDeleted == False)
     totalRecords = query.count()
