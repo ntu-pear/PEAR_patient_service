@@ -114,7 +114,9 @@ def update_mobility_entry(db: Session, mobility_id: int, mobility_data: PatientM
     if not db_entry:
         raise HTTPException(status_code=404, detail=f"Mobility entry with ID {mobility_id} not found.")
 
-    original_data_dict = serialize_data(mobility_data.model_dump())
+    original_data_dict = {
+        k: serialize_data(v) for k, v in db_entry.__dict__.items() if not k.startswith("_")
+    }
 
     for key, value in mobility_data.model_dump(exclude_unset=True).items():
         setattr(db_entry, key, value)
@@ -125,7 +127,9 @@ def update_mobility_entry(db: Session, mobility_id: int, mobility_data: PatientM
     db.commit()
     db.refresh(db_entry)
 
-    updated_data_dict = serialize_data(mobility_data.model_dump())
+    updated_data_dict = {
+        k: serialize_data(v) for k, v in db_entry.__dict__.items() if not k.startswith("_")
+    }
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
@@ -160,6 +164,7 @@ def delete_mobility_entry(db: Session, mobility_id: int, modified_by: str, user_
     db_entry.ModifiedById = modified_by
 
     db.commit()
+    db.refresh(db_entry)
 
     log_crud_action(
         action=ActionType.DELETE,
