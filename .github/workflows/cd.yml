@@ -9,7 +9,7 @@ on:
 jobs:
   deploy-staging:
     if: github.ref == 'refs/heads/staging'
-    uses: ./.github/workflows/deploy-reusable.yaml
+    uses: ./.github/workflows/base-cd.yaml
     with:
       environment: 'staging'
       runner-label: 'patient_staging'  #'patient_staging' is used for staging
@@ -31,7 +31,7 @@ jobs:
 
   deploy-prod:
     if: github.ref == 'refs/heads/main'
-    uses: ./.github/workflows/deploy-reusable.yaml
+    uses: ./.github/workflows/base-cd.yaml
     with:
       environment: 'prod'
       runner-label: 'patient'   # 'patient' tag is used for production
