@@ -1,0 +1,116 @@
+name: Deploy Service
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      runner-label:
+        required: true
+        type: string
+      kube-deployment-file:
+        required: false
+        type: string
+        default: ./k8s/deployment-dev.yaml
+      dockerfile:
+        required: false
+        type: string
+        default: Dockerfile.dev
+      docker-image-name:
+        required: false
+        type: string
+        default: patient_service_dev
+      docker-image-tag:
+        required: false
+        type: string
+        default: latest
+
+    secrets:
+      DB_SERVER:
+        required: true
+      DB_DATABASE:
+        required: true
+      DB_DATABASE_PORT:
+        required: true
+      DB_USERNAME:
+        required: true
+      DB_PASSWORD:
+        required: true
+      DB_DRIVER:
+        required: true
+      CLOUDINARY_CLOUD_NAME:
+        required: true
+      CLOUDINARY_API_KEY:
+        required: true
+      CLOUDINARY_API_SECRET:
+        required: true
+      WEB_FE_ORIGIN:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ${{ inputs.runner-label }}
+    env:
+      DB_SERVER: ${{ secrets.DB_SERVER }}
+      DB_DATABASE: ${{ secrets.DB_DATABASE }}
+      DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
+      DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_DRIVER: ${{ secrets.DB_DRIVER }}
+      CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+      CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+      CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+      WEB_FE_ORIGIN: ${{ secrets.WEB_FE_ORIGIN }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Print working directory
+        run: |
+          pwd
+          ls -la
+          git status
+
+      - name: Create .env file from GitHub Secrets
+        run: |
+          echo "DB_SERVER=${{ secrets.DB_SERVER }}" >> .env
+          echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> .env
+          echo "DB_DATABASE_PORT=${{ secrets.DB_DATABASE_PORT }}" >> .env
+          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          if [ ! -z "${{ secrets.DB_DRIVER }}" ]; then echo "DB_DRIVER=${{ secrets.DB_DRIVER }}" >> .env; fi
+          echo "CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}" >> .env
+          echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" >> .env
+          echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" >> .env
+          echo "WEB_FE_ORIGIN=${{ secrets.WEB_FE_ORIGIN }}" >> .env
+
+      - name: Delete old deployment
+        run: |
+          echo "Deleting old deployment..."
+          kubectl delete deployment.apps/${{ inputs.docker-image-name }} service/${{ inputs.docker-image-name }} || true
+
+      - name: Delete old docker images
+        run: |
+          docker rmi ${{ inputs.docker-image-name }} || true
+          docker rmi localhost:5000/${{ inputs.docker-image-name }} || true
+
+      - name: Build Docker image
+        run: |
+          echo "Building Docker image..."
+          docker build --no-cache -f ${{ inputs.dockerfile }} -t ${{ inputs.docker-image-name }} .
+
+      - name: Tag Docker image
+        run: |
+          echo "Tagging Docker image..."
+          docker tag ${{ inputs.docker-image-name }}:${{ inputs.docker-image-tag }} localhost:5000/${{ inputs.docker-image-name }}:${{ inputs.docker-image-tag }}
+
+      - name: Push Docker image to local registry
+        run: |
+          echo "Pushing Docker image to localhost:5000..."
+          docker push localhost:5000/${{ inputs.docker-image-name }}:${{ inputs.docker-image-tag }}
+
+      - name: Deploying to Kubernetes
+        run: |
+          echo "Deploying..."
+          kubectl apply -f '${{ inputs.kube-deployment-file }}'
