@@ -51,10 +51,7 @@ spec:
               key: DB_USERNAME_DEV
 
         - name: DB_PASSWORD_DEV
-          valueFrom: 
-            secretKeyRef:
-              name: fyp-secret
-              key: DB_PASSWORD_DEV
+          value: "Fyppear@1"
 
         volumeMounts:
         - name: log-volume
