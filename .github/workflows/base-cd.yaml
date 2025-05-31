@@ -10,9 +10,8 @@ on:
         required: true
         type: string
       kube-deployment-file:
-        required: false
+        required: true
         type: string
-        default: ./k8s/deployment-dev.yaml
       dockerfile:
         required: false
         type: string

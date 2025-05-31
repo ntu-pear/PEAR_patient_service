@@ -2,8 +2,12 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: fyp-config
-  namespace: fyp-dev
 data:
   DB_DRIVER: "ODBC Driver 17 for SQL Server"
   DB_SERVER: "sa,1433"
   DB_NAME: "fyp"
+
+  DB_SERVER_PROD: "192.168.188.172"       # For Production server 
+  DB_SERVER_STG: "192.168.188.180"        # For Staging server
+  DB_DATABASE_DEV: "patient_service_dev"
+  DB_DATABASE_PORT: "1433"

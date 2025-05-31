@@ -13,7 +13,7 @@ jobs:
     with:
       environment: 'staging'
       runner-label: 'patient_staging'  #'patient_staging' is used for staging
-      kube-deployment-file: './k8s/deployment-dev.yaml'
+      kube-deployment-file: './k8s/deployment-stg.yaml'
       dockerfile: 'Dockerfile.dev'
       docker-image-name: 'patient_service_dev'
       docker-image-tag: 'latest'
@@ -35,7 +35,7 @@ jobs:
     with:
       environment: 'prod'
       runner-label: 'patient'   # 'patient' tag is used for production
-      kube-deployment-file: './k8s/deployment-dev.yaml'
+      kube-deployment-file: './k8s/deployment-prod.yaml'
       dockerfile: 'Dockerfile.dev'
       docker-image-name: 'patient_service_dev'
       docker-image-tag: 'latest'
