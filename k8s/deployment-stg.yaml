@@ -24,7 +24,7 @@ spec:
           valueFrom: 
             configMapKeyRef:
               name: fyp-config
-              key: DB_DRIVER_DEV
+              key: DB_DRIVER
               
         - name: DB_SERVER_DEV    # Connect to the staging server
           valueFrom: 
