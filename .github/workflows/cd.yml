@@ -14,6 +14,7 @@ jobs:
       environment: 'staging'
       runner-label: 'patient_staging'  #'patient_staging' is used for staging
       kube-deployment-file: './k8s/deployment-stg.yaml'
+      filebeat-daemonset-file: './k8s/filebeat-daemonset.yaml'      # Staging (newer) servers have Logstash and ES Db on different server
       dockerfile: 'Dockerfile.dev'
       docker-image-name: 'patient_service_dev'
       docker-image-tag: 'latest'
