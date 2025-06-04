@@ -12,6 +12,9 @@ on:
       kube-deployment-file:
         required: true
         type: string
+      filebeat-daemonset-file:
+        required: false
+        type: string
       dockerfile:
         required: false
         type: string
@@ -115,7 +118,16 @@ jobs:
           echo "Pushing Docker image to localhost:5000..."
           docker push localhost:5000/${{ inputs.docker-image-name }}:${{ inputs.docker-image-tag }}
 
-      - name: Deploying to Kubernetes
+      - name: Deploying Patient Service to Kubernetes
         run: |
           echo "Deploying..."
           kubectl apply -f '${{ inputs.kube-deployment-file }}'
+
+
+      - name: Deploy filebeat DaemonSet to Kubernetes
+        if: ${{ inputs.filebeat-daemonset-file != '' }}
+        run: |
+          echo "Deploying filebeat DaemonSet..."
+          kubectl apply -f '${{ inputs.filebeat-daemonset-file }}'
+          
+    
