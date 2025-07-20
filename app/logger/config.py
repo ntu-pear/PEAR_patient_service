@@ -8,7 +8,7 @@ LOG_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../..", "logs
 os.makedirs(LOG_DIR, exist_ok=True)
 
 today = datetime.now().strftime("%Y-%m-%d")
-log_file = f"{LOG_DIR}/app_{today}.log"
+log_file = f"{LOG_DIR}/patient_{today}.log"
 
 log_format = '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "user": "%(user)s", "user_full_name": "%(user_full_name)s", "table": "%(table)s", "action": "%(action)s", "log_text": "%(log_text)s", "message": %(message)s}'
 date_format = "%Y-%m-%dT%H:%M:%S"
