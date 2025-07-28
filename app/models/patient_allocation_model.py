@@ -8,6 +8,7 @@ class PatientAllocation(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     active = Column(String(1), default='Y', nullable=False)
+    isDeleted = Column(String(1), default='0', nullable=False)
     patientId = Column(Integer, ForeignKey('PATIENT.id'))
     doctorId = Column(Integer, nullable=False)
     gameTherapistId = Column(Integer, nullable=False)
