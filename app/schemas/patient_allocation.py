@@ -5,14 +5,15 @@ from datetime import datetime
 class PatientAllocationBase(BaseModel):
     active: str = Field("Y", pattern="^[YN]$", description="Active status: Y for active, N for inactive", json_schema_extra={"example": "Y"})
     patientId: int = Field(..., gt=0, description="ID of the patient being allocated")
-    doctorId: int = Field(..., gt=0, description="ID of the primary doctor assigned to the patient")
-    gameTherapistId: int = Field(..., gt=0, description="ID of the game therapist assigned to the patient")
-    supervisorId: int = Field(..., gt=0, description="ID of the supervisor overseeing the patient's care")
-    caregiverId: int = Field(..., gt=0, description="ID of the primary caregiver assigned to the patient")
     guardianId: int = Field(..., gt=0, description="ID of the primary guardian for the patient")
     tempDoctorId: Optional[int] = Field(None, gt=0, description="ID of the temporary doctor (if any)")
     tempCaregiverId: Optional[int] = Field(None, gt=0, description="ID of the temporary caregiver (if any)")
     guardian2Id: Optional[int] = Field(None, gt=0, description="ID of the secondary guardian (if any)")
+
+    doctorId: str = Field(..., description="ID of the primary doctor assigned to the patient")
+    gameTherapistId: str = Field(..., description="ID of the game therapist assigned to the patient")
+    supervisorId: str = Field(..., description="ID of the supervisor overseeing the patient's care")
+    caregiverId: str = Field(..., description="ID of the primary caregiver assigned to the patient")
 
 class PatientAllocationCreate(PatientAllocationBase):
     createdDate: datetime = Field(default_factory=datetime.now)
