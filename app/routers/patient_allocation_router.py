@@ -63,7 +63,7 @@ def create_allocation(
     user_id = get_user_id(payload) or "anonymous"
     role_name = get_role_name(payload)
     user_full_name = get_full_name(payload) or "Anonymous User"
-    print(f"Creating allocation for user: {user_id}, role: {role_name}")
+    
     # Only supervisors can create allocations
     if role_name != "SUPERVISOR":
         raise HTTPException(status_code=403, detail="Only supervisors can create allocations")

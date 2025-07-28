@@ -92,7 +92,7 @@ def delete_allocation(db: Session, allocation_id: int, user_id: str):
         if db_allocation.active != "Y":
             raise ValueError("Allocation is already inactive")
             
-        db_allocation.isDeleted = True
+        db_allocation.isDeleted = "1"
         db_allocation.modifiedDate = datetime.now()
         db_allocation.ModifiedById = user_id
         db.commit()

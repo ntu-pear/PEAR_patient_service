@@ -3,7 +3,7 @@ from typing import Optional
 from datetime import datetime
 
 class PatientAllocationBase(BaseModel):
-    active: str = Field("Y", pattern="^[YN]$", description="Active status: Y for active, N for inactive",json_schema_extra={"example": "Y"})
+    active: str = Field("Y", pattern="^[YN]$", description="Active status: Y for active, N for inactive", json_schema_extra={"example": "Y"})
     patientId: int = Field(..., gt=0, description="ID of the patient being allocated")
     doctorId: int = Field(..., gt=0, description="ID of the primary doctor assigned to the patient")
     gameTherapistId: int = Field(..., gt=0, description="ID of the game therapist assigned to the patient")
