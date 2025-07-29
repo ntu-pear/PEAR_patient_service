@@ -96,27 +96,27 @@ jobs:
       - name: Delete old deployment
         run: |
           echo "Deleting old deployment..."
-          kubectl delete deployment.apps/${{ inputs.docker-image-name }} service/${{ inputs.docker-image-name }} || true
+          kubectl delete deployment.apps/patient-service-dev service/patient-service-dev
 
       - name: Delete old docker images
         run: |
-          docker rmi ${{ inputs.docker-image-name }} || true
-          docker rmi localhost:5000/${{ inputs.docker-image-name }} || true
+          docker rmi patient_service_dev
+          docker rmi localhost:5000/patient_service_dev
 
       - name: Build Docker image
         run: |
           echo "Building Docker image..."
-          docker build --no-cache -f ${{ inputs.dockerfile }} -t ${{ inputs.docker-image-name }} .
+          docker build --no-cache -f Dockerfile.dev -t patient_service_dev .
 
       - name: Tag Docker image
         run: |
           echo "Tagging Docker image..."
-          docker tag ${{ inputs.docker-image-name }}:${{ inputs.docker-image-tag }} localhost:5000/${{ inputs.docker-image-name }}:${{ inputs.docker-image-tag }}
+          docker tag patient_service_dev:latest localhost:5000/patient_service_dev:latest
 
       - name: Push Docker image to local registry
         run: |
           echo "Pushing Docker image to localhost:5000..."
-          docker push localhost:5000/${{ inputs.docker-image-name }}:${{ inputs.docker-image-tag }}
+          docker push localhost:5000/patient_service_dev:latest
 
       - name: Deploying Patient Service to Kubernetes
         run: |
