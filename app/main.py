@@ -40,6 +40,7 @@ from app.routers import (
     allergy_reaction_type_router,
     allergy_type_router,
     patient_allergy_mapping_router,
+    patient_allocation_router,
     patient_doctor_note_router,
     patient_guardian_router,
     patient_highlight_router,
@@ -131,7 +132,9 @@ API_VERSION_PREFIX = "/api/v1"
 app.include_router(
     patient_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patients"]
 )
-
+app.include_router(
+    patient_allocation_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Patient Allocation"]
+)
 app.include_router(
     allergy_type_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Allergy Types"]
 )
@@ -256,3 +259,5 @@ app.include_router(
 def read_root():
     logger.info("Root endpoint accessed")
     return {"message": "Welcome to the Patient API"}
+
+
