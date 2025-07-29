@@ -8,15 +8,19 @@ class PatientAllocation(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     active = Column(String(1), default='Y', nullable=False)
+    isDeleted = Column(String(1), default='0', nullable=False)
     patientId = Column(Integer, ForeignKey('PATIENT.id'))
-    doctorId = Column(Integer, nullable=False)
-    gameTherapistId = Column(Integer, nullable=False)
-    supervisorId = Column(Integer, nullable=False)
-    caregiverId = Column(Integer, nullable=False)
     guardianId = Column(Integer, ForeignKey('PATIENT_GUARDIAN.id'), nullable=False)
-    tempDoctorId = Column(Integer)
-    tempCaregiverId = Column(Integer)
     guardian2Id = Column(Integer, ForeignKey('PATIENT_GUARDIAN.id'))
+    # External DB, uses String for IDs
+    doctorId = Column(String, nullable=False)
+    gameTherapistId = Column(String, nullable=False)
+    supervisorId = Column(String, nullable=False)
+    caregiverId = Column(String, nullable=False)
+    
+    tempDoctorId = Column(String)
+    tempCaregiverId = Column(String)
+    
 
     createdDate = Column(DateTime, nullable=False, default=datetime.now)
     modifiedDate = Column(DateTime, nullable=False, default=datetime.now)
