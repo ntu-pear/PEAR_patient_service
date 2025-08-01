@@ -7,7 +7,13 @@ from datetime import datetime
 from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 import math
 from fastapi import HTTPException, UploadFile
-from typing import Optional
+from typing import Optional, Dict, Any
+import logging
+
+# Import the messaging publisher
+from ..messaging import get_patient_publisher
+
+logger = logging.getLogger(__name__)
 
 def upload_photo_to_cloudinary(file: UploadFile):
     """ Upload photo to Cloudinary and return the URL """
@@ -57,8 +63,28 @@ def get_patients(db: Session, mask: bool = True, pageNo: int = 0, pageSize: int 
     return db_patients, totalRecords, totalPages
 
 
+def _patient_to_dict(patient) -> Dict[str, Any]:
+    """Convert patient model to dictionary for messaging"""
+    try:
+        if hasattr(patient, '__dict__'):
+            patient_dict = {}
+            for key, value in patient.__dict__.items():
+                if not key.startswith('_'):
+                    # Convert datetime objects to ISO format strings
+                    if hasattr(value, 'isoformat'):
+                        patient_dict[key] = value.isoformat()
+                    else:
+                        patient_dict[key] = value
+            return patient_dict
+        else:
+            return {}
+    except Exception as e:
+        logger.error(f"Error converting patient to dict: {str(e)}")
+        return {}
+
+
 def create_patient(db: Session, patient: PatientCreate, user: str, user_full_name: str):
-    """ Create a new patient while explicitly avoiding OUTPUT inserted.id """
+    """ Create a new patient with message queue publishing """
 
     # Check NRIC uniqueness
     existing_patient = (
@@ -130,32 +156,53 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
     except Exception:
         patient_data_dict = "{}"
 
+    # Log the action
     log_crud_action(
-            action=ActionType.CREATE,
-            user=user,
-            user_full_name=user_full_name,
-            message="Created Patient",
-            table="Patient",
-            entity_id=new_patient.id,
-            original_data=None,
-            updated_data=patient_data_dict,
+        action=ActionType.CREATE,
+        user=user,
+        user_full_name=user_full_name,
+        message="Created Patient",
+        table="Patient",
+        entity_id=new_patient.id,
+        original_data=None,
+        updated_data=patient_data_dict,
+    )
+
+    # Publish patient creation event to message queue
+    try:
+        publisher = get_patient_publisher()
+        patient_dict = _patient_to_dict(new_patient)
+        success = publisher.publish_patient_created(
+            patient_id=new_patient.id,
+            patient_data=patient_dict,
+            created_by=user
         )
+        if not success:
+            logger.warning(f"Failed to publish PATIENT_CREATED event for patient {new_patient.id}")
+    except Exception as e:
+        logger.error(f"Error publishing patient creation event: {str(e)}")
+        # Don't fail the operation if messaging fails
+
     return new_patient
 
 
 def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: str, user_full_name: str):
+    """Update patient with message queue publishing"""
     db_patient = db.query(Patient).filter(Patient.id == patient_id, Patient.isDeleted == "0").first()
     if not db_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 
+    # Capture original data for change tracking
     try:
         original_data_dict = {
             k: serialize_data(v)
             for k, v in db_patient.__dict__.items()
             if not k.startswith("_")
         }
+        original_patient_dict = _patient_to_dict(db_patient)
     except Exception:
         original_data_dict = "{}"
+        original_patient_dict = {}
 
     # Check NRIC uniqueness
     existing_patient = (
@@ -170,7 +217,22 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
     if existing_patient:
         raise HTTPException(status_code=400, detail="NRIC must be unique for active records")
 
-    for key, value in patient.model_dump().items():
+    # Track changes for messaging
+    changes = {}
+    patient_update_dict = patient.model_dump()
+    
+    for key, new_value in patient_update_dict.items():
+        if hasattr(db_patient, key):
+            old_value = getattr(db_patient, key)
+            # Convert values to comparable formats
+            if old_value != new_value:
+                changes[key] = {
+                    'old': serialize_data(old_value),
+                    'new': serialize_data(new_value)
+                }
+
+    # Apply updates
+    for key, value in patient_update_dict.items():
         setattr(db_patient, key, value)
     db_patient.modifiedDate = datetime.utcnow()
     db_patient.ModifiedById = user
@@ -178,6 +240,7 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
     db.commit()
     db.refresh(db_patient)
 
+    # Log the action
     updated_data_dict = serialize_data(patient.model_dump())
     log_crud_action(
         action=ActionType.UPDATE,
@@ -189,6 +252,26 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
         original_data=original_data_dict,
         updated_data=updated_data_dict,
     )
+
+    # Publish patient update event to message queue
+    try:
+        publisher = get_patient_publisher()
+        new_patient_dict = _patient_to_dict(db_patient)
+        
+        # Only publish if there were actual changes
+        if changes:
+            success = publisher.publish_patient_updated(
+                patient_id=db_patient.id,
+                old_data=original_patient_dict,
+                new_data=new_patient_dict,
+                changes=changes,
+                modified_by=user
+            )
+            if not success:
+                logger.warning(f"Failed to publish PATIENT_UPDATED event for patient {db_patient.id}")
+    except Exception as e:
+        logger.error(f"Error publishing patient update event: {str(e)}")
+        # Don't fail the operation if messaging fails
 
     return db_patient
 
@@ -241,22 +324,31 @@ def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFil
 
 
 def delete_patient(db: Session, patient_id: int, user_id: str, user_full_name: str):
+    """Soft delete patient with message queue publishing"""
     db_patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if not db_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 
+    # Capture original data before deletion
     try:
         original_data_dict = {
             k: serialize_data(v)
             for k, v in db_patient.__dict__.items()
             if not k.startswith("_")
         }
+        patient_dict = _patient_to_dict(db_patient)
     except Exception:
         original_data_dict = "{}"
+        patient_dict = {}
 
+    # Perform soft delete
     setattr(db_patient, "isDeleted", "1")
+    db_patient.modifiedDate = datetime.utcnow()
+    db_patient.ModifiedById = user_id
     db.commit()
+    db.refresh(db_patient)
 
+    # Log the action
     log_crud_action(
         action=ActionType.DELETE,
         user=user_id,
@@ -265,8 +357,22 @@ def delete_patient(db: Session, patient_id: int, user_id: str, user_full_name: s
         table="Patient",
         entity_id=db_patient.id,
         original_data=original_data_dict,
-        updated_data= None,
+        updated_data=None,
     )
+
+    # Publish patient deletion event to message queue
+    try:
+        publisher = get_patient_publisher()
+        success = publisher.publish_patient_deleted(
+            patient_id=db_patient.id,
+            patient_data=patient_dict,
+            deleted_by=user_id
+        )
+        if not success:
+            logger.warning(f"Failed to publish PATIENT_DELETED event for patient {db_patient.id}")
+    except Exception as e:
+        logger.error(f"Error publishing patient deletion event: {str(e)}")
+        # Don't fail the operation if messaging fails
 
     return db_patient
 
