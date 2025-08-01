@@ -54,6 +54,31 @@ spec:
         - name: DB_PASSWORD_DEV
           value: "Fyppear@1"
 
+        - name: RABBITMQ_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: fyp-config
+              key: RABBITMQ_HOST_PROD
+
+        - name: RABBITMQ_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: fyp-config
+              key: RABBITMQ_PORT
+
+        - name: RABBITMQ_USER
+          valueFrom:
+            secretKeyRef:
+              name: fyp-secret
+              key: RABBITMQ_USER
+
+        - name: RABBITMQ_PASS
+          valueFrom:
+            secretKeyRef:
+              name: fyp-secret
+              key: RABBITMQ_PASS
+
+
         volumeMounts:
         - name: log-volume
           mountPath: /app/logs  # Path inside the container
