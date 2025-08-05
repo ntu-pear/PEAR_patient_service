@@ -23,6 +23,7 @@ class RabbitMQClient:
         self.port = int(os.getenv('RABBITMQ_PORT'))
         self.username = os.getenv('RABBITMQ_USER')
         self.password = os.getenv('RABBITMQ_PASS')
+        self.virtual_host = os.getenv('RABBITMQ_VIRTUAL_HOST')
         
         self.connection = None
         self.channel = None
@@ -36,6 +37,7 @@ class RabbitMQClient:
                 parameters = pika.ConnectionParameters(
                     host=self.host,
                     port=self.port,
+                    virtual_host=self.virtual_host,  # Added virtual host parameter
                     credentials=credentials,
                     heartbeat=600,
                     blocked_connection_timeout=300
@@ -45,7 +47,7 @@ class RabbitMQClient:
                 self.channel = self.connection.channel()
                 self.is_connected = True
                 
-                logger.info(f"{self.service_name} connected to RabbitMQ at {self.host}:{self.port}")
+                logger.info(f"{self.service_name} connected to RabbitMQ at {self.host}:{self.port}/{self.virtual_host}")
                 return True
                 
             except Exception as e:

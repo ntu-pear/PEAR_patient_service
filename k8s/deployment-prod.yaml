@@ -76,6 +76,9 @@ spec:
             secretKeyRef:
               name: fyp-secret
               key: RABBITMQ_PASS
+        
+        - name: RABBITMQ_VIRTUAL_HOST
+          value: "vhost"
 
         volumeMounts:
         - name: log-volume
