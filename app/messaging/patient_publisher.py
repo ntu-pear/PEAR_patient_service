@@ -2,7 +2,7 @@ import logging
 from typing import Dict, Any
 from datetime import datetime
 
-from .rabbitmq_client import RabbitMQClient
+from .producer_manager import get_producer_manager
 
 logger = logging.getLogger(__name__)
 
@@ -10,22 +10,15 @@ class PatientPublisher:
     """Publisher for Patient Service events"""
     
     def __init__(self):
-        self.client = RabbitMQClient("patient-service")
+        self.manager = get_producer_manager()
         self.exchange = 'patient.updates'
         
-        # Ensure connection and exchange setup
+        # Declare the exchange
         try:
-            self.client.connect()
-            if self.client.is_connected:
-                # Declare the exchange (idempotent operation)
-                self.client.channel.exchange_declare(
-                    exchange=self.exchange, 
-                    exchange_type='topic',
-                    durable=True
-                )
-                logger.info(f"Patient publisher initialized successfully")
+            self.manager.declare_exchange(self.exchange, 'topic')
+            logger.info("Patient publisher initialized")
         except Exception as e:
-            logger.error(f"Failed to initialize PatientPublisher: {str(e)}")
+            logger.error(f"Failed to initialize patient publisher: {str(e)}")
     
     def publish_patient_created(self, patient_id: int, patient_data: Dict[str, Any], 
                               created_by: str) -> bool:
@@ -39,7 +32,7 @@ class PatientPublisher:
         }
         
         routing_key = f"patient.created.{patient_id}"
-        success = self.client.publish(self.exchange, routing_key, message)
+        success = self.manager.publish(self.exchange, routing_key, message)
         
         if success:
             logger.info(f"Published PATIENT_CREATED event for patient {patient_id}")
@@ -63,7 +56,7 @@ class PatientPublisher:
         }
         
         routing_key = f"patient.updated.{patient_id}"
-        success = self.client.publish(self.exchange, routing_key, message)
+        success = self.manager.publish(self.exchange, routing_key, message)
         
         if success:
             logger.info(f"Published PATIENT_UPDATED event for patient {patient_id}")
@@ -84,7 +77,7 @@ class PatientPublisher:
         }
         
         routing_key = f"patient.deleted.{patient_id}"
-        success = self.client.publish(self.exchange, routing_key, message)
+        success = self.manager.publish(self.exchange, routing_key, message)
         
         if success:
             logger.info(f"Published PATIENT_DELETED event for patient {patient_id}")
@@ -93,33 +86,14 @@ class PatientPublisher:
             
         return success
     
-    def _patient_to_dict(self, patient) -> Dict[str, Any]:
-        """Convert patient model to dictionary for messaging"""
-        try:
-            # Convert patient object to dictionary
-            if hasattr(patient, '__dict__'):
-                patient_dict = {}
-                for key, value in patient.__dict__.items():
-                    if not key.startswith('_'):
-                        # Convert datetime objects to ISO format strings
-                        if hasattr(value, 'isoformat'):
-                            patient_dict[key] = value.isoformat()
-                        else:
-                            patient_dict[key] = value
-                return patient_dict
-            else:
-                return {}
-        except Exception as e:
-            logger.error(f"Error converting patient to dict: {str(e)}")
-            return {}
-    
     def close(self):
-        """Close the RabbitMQ connection"""
-        if self.client:
-            self.client.close()
+        """Close is handled by the producer manager"""
+        # No need to close individual publishers
+        # The producer manager handles the connection
+        pass
 
 
-# Singleton instance for use across the application
+# Singleton instance
 _patient_publisher = None
 
 def get_patient_publisher() -> PatientPublisher:

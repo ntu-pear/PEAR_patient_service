@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
 
 class RabbitMQClient:
     """
@@ -39,7 +38,7 @@ class RabbitMQClient:
                     port=self.port,
                     virtual_host=self.virtual_host,
                     credentials=credentials,
-                    heartbeat=600,
+                    heartbeat=30,
                     blocked_connection_timeout=300
                 )
                 
