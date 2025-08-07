@@ -25,28 +25,36 @@ def log_crud_action(
     original_data: Optional[dict] = None,
     updated_data: Optional[dict] = None,
 ):
-
+    """
+    Log CRUD actions in format compatible with Elasticsearch log service
+    """
     if action == ActionType.CREATE:
         original_data = None
     elif action == ActionType.DELETE:
         updated_data = None
         
-    log_data = {
-    "entity_id": entity_id,
-    "original_data": filter_data(original_data),
-    "updated_data": filter_data(updated_data),
-}
+    # Create the message object that the log service expects
+    log_message = {
+        "entity_id": entity_id,
+        "original_data": filter_data(original_data),
+        "updated_data": filter_data(updated_data),
+    }
 
+    # Create extra fields for the conditional formatter
     extra = {
         "table": table,
         "user": user,
-        "action": action.value,
+        "action": action.value,  # This maps to "method" in log service
         "user_full_name": user_full_name,
         "log_text": message,
     }
-    logger.info(json.dumps(log_data), extra=extra)
+    
+    # IMPORTANT: Pass the message object, not a JSON string
+    # The conditional formatter will handle the JSON serialization
+    logger.info(log_message, extra=extra)
 
 def serialize_data(data):
+    """Serialize datetime and other objects for JSON compatibility"""
     if isinstance(data, datetime):
         return data.isoformat()
     elif isinstance(data, dict):
