@@ -49,6 +49,14 @@ on:
         required: true
       WEB_FE_ORIGIN:
         required: true
+      RABBITMQ_HOST:
+        required: true
+      RABBITMQ_PORT:
+        required: true
+      RABBITMQ_USER:
+        required: true
+      RABBITMQ_PASS:
+        required: true
 
 jobs:
   deploy:
@@ -64,6 +72,10 @@ jobs:
       CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
       CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
       WEB_FE_ORIGIN: ${{ secrets.WEB_FE_ORIGIN }}
+      RABBITMQ_HOST: ${{ secrets.RABBITMQ_HOST }}
+      RABBITMQ_PORT: ${{ secrets.RABBITMQ_PORT }}
+      RABBITMQ_USER: ${{ secrets.RABBITMQ_USER }}
+      RABBITMQ_PASS: ${{ secrets.RABBITMQ_PASS }}
 
     steps:
       - uses: actions/checkout@v4
@@ -86,6 +98,10 @@ jobs:
           echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" >> .env
           echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" >> .env
           echo "WEB_FE_ORIGIN=${{ secrets.WEB_FE_ORIGIN }}" >> .env
+          echo "RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}" >> .env
+          echo "RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}" >> .env
+          echo "RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}" >> .env
+          echo "RABBITMQ_PASS=${{ secrets.RABBITMQ_PASS }}" >> .env
       
       - name: Apply Kubernetes ConfigMap
         run: |

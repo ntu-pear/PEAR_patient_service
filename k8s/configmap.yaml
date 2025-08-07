@@ -11,3 +11,6 @@ data:
   DB_SERVER_STG: "192.168.188.180"        # For Staging server
   DB_DATABASE_DEV: "patient_service_dev"
   DB_DATABASE_PORT: "1433"
+  RABBITMQ_HOST_PROD: "192.168.188.184"   # To be deployed and this value to change 
+  RABBITMQ_HOST_STG: "192.168.188.184"
+  RABBITMQ_PORT: "5672"
