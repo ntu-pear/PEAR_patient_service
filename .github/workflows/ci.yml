@@ -14,12 +14,11 @@ jobs:
     runs-on: patient_staging_test
     env: 
       # Only include whats needed by the actions runner
-      RABBITMQ_IMAGE_REPOSITORY: ${{ secrets.RABBITMQ_IMAGE_REPOSITORY }}
       RABBITMQ_CLUSTER_FORMATION_PEER_DISCOVERY_BACKEND: "classic_config"  # override K8 pear discovery since integration does not need it
       
     services:
       rabbitmq:
-        image: ${{ secrets.RABBITMQ_IMAGE_REPOSITORY }}/rabbitmq_service_dev:latest
+        image: 192.168.188.184:5000/rabbitmq_service_dev:latest
         ports:
           - 5672:5672    # AMQP port for test scripts to connect
         # options: >        # Optional: Wait for RabbitMQ to be ready before running tests
