@@ -19,7 +19,7 @@ jobs:
       
     services:
       rabbitmq:
-        image: $RABBITMQ_IMAGE_REPOSITORY/rabbitmq_service_dev:latest
+        image: ${{ env.RABBITMQ_IMAGE_REPOSITORY }}/rabbitmq_service_dev:latest
         ports:
           - 5672:5672    # AMQP port for test scripts to connect
 #
