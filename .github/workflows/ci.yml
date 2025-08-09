@@ -13,13 +13,14 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     env: 
+      # Only include whats needed by the actions runner
       RABBITMQ_IMAGE_REPOSITORY: ${{ secrets.RABBITMQ_IMAGE_REPOSITORY }}
-      
-    services:
-      rabbitmq:
-        image: $RABBITMQ_IMAGE_REPOSITORY/rabbitmq_service_dev:latest
-        ports:
-          - 5672:5672    # AMQP port for test scripts to connect
+
+    #services:
+    #  rabbitmq:
+    #    image: $RABBITMQ_IMAGE_REPOSITORY/rabbitmq_service_dev:latest
+    #    ports:
+    #      - 5672:5672    # AMQP port for test scripts to connect
 #
         # options: >        # Optional: Wait for RabbitMQ to be ready before running tests
         #   --health-cmd="rabbitmq-diagnostics -q ping"
@@ -39,7 +40,13 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      # Needed because load_dotenv() looks for a .env file
+      - name: Test env var
+        run: |
+          echo $RABBITMQ_IMAGE_REPOSITORY
+
+
+      # Only include whats needed by the application
+      # Need to pipe in .env as load_dotenv() looks for a .env file
       - name: Create .env file from GitHub Secrets
         run: |
           echo "DB_SERVER_DEV=${{ secrets.DB_SERVER_DEV }}" >> .env
