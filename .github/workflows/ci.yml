@@ -19,7 +19,7 @@ jobs:
       
     services:
       rabbitmq:
-        image: 10.96.188.184:5000/rabbitmq_service_dev:latest
+        image: 192.168.188.184:5000/rabbitmq_service_dev:latest
         ports:
           - 5672:5672    # AMQP port for test scripts to connect
         
