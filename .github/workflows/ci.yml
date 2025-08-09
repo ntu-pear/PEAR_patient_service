@@ -1,8 +1,8 @@
 name: CI
 
 on:
-  #push:
-  #  branches: ['**']
+  # push:
+  #   branches: ['**']
   pull_request:
     branches: ['**']
 
@@ -22,10 +22,15 @@ jobs:
         image: ${{ env.RABBITMQ_IMAGE_REPOSITORY }}/rabbitmq_service_dev:latest
         ports:
           - 5672:5672    # AMQP port for test scripts to connect
-
+        # options: >        # Optional: Wait for RabbitMQ to be ready before running tests
+        #   --health-cmd="rabbitmq-diagnostics -q ping"
+        #   --health-interval=10s
+        #   --health-timeout=5s
+        #   --health-retries=6
 
     steps:
       - uses: actions/checkout@v4
+      
       - name: Set up Python 3.9.19
         uses: actions/setup-python@v3
         with:
@@ -38,12 +43,10 @@ jobs:
 
       - name: Test env var
         run: |
-          echo $RABBITMQ_IMAGE_REPOSITORY
+          echo "$RABBITMQ_IMAGE_REPOSITORY"
           cat /etc/docker/daemon.json
 
-
       # Only include whats needed by the application
-      # Need to pipe in .env as load_dotenv() looks for a .env file
       - name: Create .env file from GitHub Secrets
         run: |
           echo "DB_SERVER_DEV=${{ secrets.DB_SERVER_DEV }}" >> .env
@@ -60,13 +63,13 @@ jobs:
           echo "RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}" >> .env
           echo "RABBITMQ_VIRTUAL_HOST=${{ secrets.RABBITMQ_VIRTUAL_HOST }}" >> .env
 
-     #- name: Wait for RabbitMQ to be ready
-     #  run: |
-     #    for i in {1..10}; do
-     #      nc -z localhost 5672 && echo "RabbitMQ is up" && break
-     #      echo "Waiting for RabbitMQ..."
-     #      sleep 5
-     #    done
+      # - name: Wait for RabbitMQ to be ready
+      #   run: |
+      #     for i in {1..10}; do
+      #       nc -z localhost 5672 && echo "RabbitMQ is up" && break
+      #       echo "Waiting for RabbitMQ..."
+      #       sleep 5
+      #     done
 
       - name: Test with pytest
         run: |
