@@ -45,9 +45,9 @@ jobs:
         with:
           python-version: '3.9.19'
 
-     #- name: Test env var
-     #  run: |
-     #    echo $RABBITMQ_IMAGE_REPOSITORY
+      - name: Test env var
+        run: |
+          echo $RABBITMQ_IMAGE_REPOSITORY
 
       - name: Install dependencies
         run: |
