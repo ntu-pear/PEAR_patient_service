@@ -11,16 +11,16 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: patient_staging_test
     env: 
       # Only include whats needed by the actions runner
       RABBITMQ_IMAGE_REPOSITORY: ${{ secrets.RABBITMQ_IMAGE_REPOSITORY }}
 
-    #services:
-    #  rabbitmq:
-    #    image: 192.168.188.184:5000/rabbitmq_service_dev:latest
-    #    ports:
-    #      - 5672:5672    # AMQP port for test scripts to connect
+    services:
+      rabbitmq:
+        image: 192.168.188.184:5000/rabbitmq_service_dev:latest
+        ports:
+          - 5672:5672    # AMQP port for test scripts to connect
 #
         # options: >        # Optional: Wait for RabbitMQ to be ready before running tests
         #   --health-cmd="rabbitmq-diagnostics -q ping"
