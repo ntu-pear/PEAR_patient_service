@@ -28,7 +28,7 @@ jobs:
 
     services:
       rabbitmq:
-        image: ${ RABBITMQ_MESSAGE_REPOSITORY }/pear_message_queue:latest
+        image: $RABBITMQ_MESSAGE_REPOSITORY/pear_message_queue:latest
         ports:
           - 5672:5672    # AMQP port for test scripts to connect
 
