@@ -45,9 +45,18 @@ jobs:
         with:
           python-version: '3.9.19'
 
-      - name: Test env var
+      - name: Create .env file from GitHub Secrets
         run: |
-          echo $RABBITMQ_IMAGE_REPOSITORY
+          echo "DB_SERVER_DEV=${{ secrets.DB_SERVER_DEV }}" >> .env
+          echo "DB_DATABASE_DEV=${{ secrets.DB_DATABASE_DEV }}" >> .env
+          echo "DB_DATABASE_PORT=${{ secrets.DB_DATABASE_PORT }}" >> .env
+          echo "DB_USERNAME_DEV=${{ secrets.DB_USERNAME_DEV }}" >> .env
+          echo "DB_PASSWORD_DEV=${{ secrets.DB_PASSWORD_DEV }}" >> .env
+          echo "DB_DRIVER_DEV=${{ secrets.DB_DRIVER_DEV }}" >> .env
+          echo "CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}" >> .env
+          echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" >> .env
+          echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" >> .env
+          echo "WEB_FE_ORIGIN=${{ secrets.WEB_FE_ORIGIN }}" >> .env
 
       - name: Install dependencies
         run: |
