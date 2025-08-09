@@ -1,42 +1,52 @@
-import pika
-import time
+import pytest
+from app.messaging.patient_publisher import PatientPublisher
 
-RABBITMQ_HOST = "localhost"
-EXCHANGE = "patient.updates"
-ROUTING_KEY = "patient.created"
-QUEUE = "patient.created"
+@pytest.fixture(scope="module")
+def publisher():
+    # Initialize the PatientPublisher using existing app logic
+    return PatientPublisher()
 
-def test_publish_and_consume_patient_message():
-    # Connect to RabbitMQ
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host=RABBITMQ_HOST)
-    )
-    channel = connection.channel()
+def test_publish_patient_created(publisher):
+    patient_id = 456
+    patient_data = {
+        'id': patient_id,
+        'name': 'Jane Smith',
+        'nric': 'S7654321B',
+        'isActive': '1',
+        'startDate': '2024-01-01T00:00:00',
+        'preferredName': 'Janey'
+    }
+    created_by = "patient_integration_test"
+    result = publisher.publish_patient_created(patient_id, patient_data, created_by)
+    assert result is True
 
-    # Declare exchange and queue (idempotent)
-    channel.exchange_declare(exchange=EXCHANGE, exchange_type="topic", durable=True)
-    channel.queue_declare(queue=QUEUE, durable=True)
-    channel.queue_bind(queue=QUEUE, exchange=EXCHANGE, routing_key=ROUTING_KEY)
+def test_publish_patient_updated(publisher):
+    patient_id = 456
+    old_data = {
+        'id': patient_id,
+        'name': 'Jane Smith',
+        'nric': 'S7654321B',
+        'isActive': '1',
+        'startDate': '2024-01-01T00:00:00',
+        'preferredName': 'Janey'
+    }
+    new_data = old_data.copy()
+    new_data['preferredName'] = 'Jane'
+    changes = {'preferredName': {'old': 'Janey', 'new': 'Jane'}}
+    modified_by = "patient_integration_test"
+    result = publisher.publish_patient_updated(patient_id, old_data, new_data, changes, modified_by)
+    assert result is True
 
-    # Publish a test message
-    message_body = '{"patient_id": 123, "name": "Test Patient"}'
-    channel.basic_publish(
-        exchange=EXCHANGE,
-        routing_key=ROUTING_KEY,
-        body=message_body,
-        properties=pika.BasicProperties(content_type="application/json")
-    )
-    print("Published test message.")
-
-    # Try to consume the message
-    method_frame, header_frame, body = channel.basic_get(queue=QUEUE, auto_ack=True)
-    assert body is not None, "No message received from queue!"
-    assert body.decode() == message_body, f"Received: {body.decode()}"
-
-    print(f"Consumed message: {body.decode()}")
-
-    # Clean up
-    connection.close()
-
-if __name__ == "__main__":
-    test_publish_and_consume_patient_message()
+def test_publish_patient_deleted(publisher):
+    patient_id = 456
+    patient_data = {
+        'id': patient_id,
+        'name': 'Jane Smith',
+        'nric': 'S7654321B',
+        'isActive': '1',
+        'startDate': '2024-01-01T00:00:00',
+        'preferredName': 'Jane'
+    }
+    deleted_by = "patient_integration_test"
+    result = publisher.publish_patient_deleted(patient_id, patient_data, deleted_by)
+    assert result is True
