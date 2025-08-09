@@ -13,19 +13,6 @@ jobs:
   build:
     runs-on: ubuntu-24.04
 
-    env:
-      DB_SERVER_DEV: ${{ secrets.DB_SERVER_DEV }}
-      DB_DATABASE_DEV: ${{ secrets.DB_DATABASE_DEV }}
-      DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
-      DB_USERNAME_DEV: ${{ secrets.DB_USERNAME_DEV }}
-      DB_PASSWORD_DEV: ${{ secrets.DB_PASSWORD_DEV }}
-      CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
-      CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
-      CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
-      WEB_FE_ORIGIN: ${{ secrets.WEB_FE_ORIGIN }}
-      RABBITMQ_IMAGE_REPOSITORY: ${{ secrets.RABBITMQ_IMAGE_REPOSITORY }}
-
-
     #services:
     #  rabbitmq:
     #    image: $RABBITMQ_IMAGE_REPOSITORY/rabbitmq_service_dev:latest
@@ -50,6 +37,7 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
+      # Needed because load_dotenv() looks for a .env file
       - name: Create .env file from GitHub Secrets
         run: |
           echo "DB_SERVER_DEV=${{ secrets.DB_SERVER_DEV }}" >> .env
