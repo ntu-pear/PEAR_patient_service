@@ -1,8 +1,8 @@
 name: CI
 
 on:
-  push:
-    branches: ['**']
+  #push:
+  #  branches: ['**']
   pull_request:
     branches: ['**']
 
@@ -23,14 +23,14 @@ jobs:
       CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
       CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
       WEB_FE_ORIGIN: ${{ secrets.WEB_FE_ORIGIN }}
-      RABBITMQ_MESSAGE_REPOSITORY: ${{ secrets.RABBITMQ_MESSAGE_REPOSITORY }}
+      RABBITMQ_IMAGE_REPOSITORY: ${{ secrets.RABBITMQ_IMAGE_REPOSITORY }}
 
 
-    #services:
-    #  rabbitmq:
-    #    image: $RABBITMQ_MESSAGE_REPOSITORY/rabbitmq_service_dev:latest
-    #    ports:
-    #      - 5672:5672    # AMQP port for test scripts to connect
+    services:
+      rabbitmq:
+        image: $RABBITMQ_IMAGE_REPOSITORY/rabbitmq_service_dev:latest
+        ports:
+          - 5672:5672    # AMQP port for test scripts to connect
 #
     #    # options: >        # Optional: Wait for RabbitMQ to be ready before running tests
     #    #   --health-cmd="rabbitmq-diagnostics -q ping"
@@ -44,10 +44,11 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: '3.9.19'
-    
-      - name: Test env var
-        run: |
-          echo $RABBITMQ_MESSAGE_REPOSITORY
+
+     #- name: Test env var
+     #  run: |
+     #    echo $RABBITMQ_IMAGE_REPOSITORY
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
