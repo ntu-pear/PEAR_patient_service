@@ -1,22 +1,21 @@
-name: CD
+name: CD_test_pr
 
 on:
-  push:
-    branches:
-      - main
+  pull_request:
+    branches: 
       - staging
 
 jobs:
-  deploy-staging:
-    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
+  deploy-staging-test-pr:
+    if: github.ref == 'refs/heads/staging' && github.event_name == 'pull_request'
     uses: ./.github/workflows/base-cd.yaml
     with:
       environment: 'staging'
-      runner-label: 'patient_staging'  #'patient_staging' is used for staging
+      runner-label: 'patient_staging_test'  #'patient_staging' is used for staging
       kube-deployment-file: './k8s/deployment-stg.yaml'
       filebeat-daemonset-file: './k8s/filebeat-daemonset.yaml'      # Staging (newer) servers have Logstash and ES Db on different server
       dockerfile: 'Dockerfile.dev'
-      docker-image-name: 'patient_service_dev'
+      docker-image-name: 'patient_service_TEST'
       docker-image-tag: 'latest'
     secrets:
       DB_SERVER: ${{ secrets.DB_SERVER_STAGING }} # Staging sever DB
@@ -30,24 +29,24 @@ jobs:
       CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
       WEB_FE_ORIGIN: ${{ secrets.WEB_FE_ORIGIN }}
 
-  deploy-prod:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    uses: ./.github/workflows/base-cd.yaml
-    with:
-      environment: 'prod'
-      runner-label: 'patient'   # 'patient' tag is used for production
-      kube-deployment-file: './k8s/deployment-prod.yaml'
-      dockerfile: 'Dockerfile.dev'
-      docker-image-name: 'patient_service_dev'
-      docker-image-tag: 'latest'
-    secrets:
-      DB_SERVER: ${{ secrets.DB_SERVER_DEV }}
-      DB_DATABASE: ${{ secrets.DB_DATABASE_DEV }}
-      DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
-      DB_USERNAME: ${{ secrets.DB_USERNAME_DEV }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD_DEV }}
-      DB_DRIVER: ${{ secrets.DB_DRIVER_DEV }}
-      CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
-      CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
-      CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
-      WEB_FE_ORIGIN: ${{ secrets.WEB_FE_ORIGIN }}
+  #deploy-prod:
+  #  if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  #  uses: ./.github/workflows/base-cd.yaml
+  #  with:
+  #    environment: 'prod'
+  #    runner-label: 'patient'   # 'patient' tag is used for production
+  #    kube-deployment-file: './k8s/deployment-prod.yaml'
+  #    dockerfile: 'Dockerfile.dev'
+  #    docker-image-name: 'patient_service_dev'
+  #    docker-image-tag: 'latest'
+  #  secrets:
+  #    DB_SERVER: ${{ secrets.DB_SERVER_DEV }}
+  #    DB_DATABASE: ${{ secrets.DB_DATABASE_DEV }}
+  #    DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
+  #    DB_USERNAME: ${{ secrets.DB_USERNAME_DEV }}
+  #    DB_PASSWORD: ${{ secrets.DB_PASSWORD_DEV }}
+  #    DB_DRIVER: ${{ secrets.DB_DRIVER_DEV }}
+  #    CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+  #    CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+  #    CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+  #    WEB_FE_ORIGIN: ${{ secrets.WEB_FE_ORIGIN }}
