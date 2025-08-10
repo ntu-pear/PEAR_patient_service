@@ -56,32 +56,37 @@ jobs:
 
       - name: Start RabbitMQ container
         run: |
-          # Create config file
+          # Create config directory with proper permissions
           mkdir -p rabbitmq-config
           echo "cluster_formation.peer_discovery_backend = classic_config" > rabbitmq-config/rabbitmq.conf
-          echo "vm_memory_high_watermark.relative = 0.6" >> rabbitmq-config/rabbitmq.conf
           
-          # Start container with memory limits
+          # Create data directory for volume mount
+          mkdir -p rabbitmq-data
+          chmod 777 rabbitmq-data  # Temporary permission for CI
+          
+          # Start container with explicit permissions
           docker run -d \
             --name rabbitmq \
             --memory="800m" \
-            --memory-swap="1g" \
+            -e RABBITMQ_ERLANG_COOKIE="TESTCOOKIE" \
             -e RABBITMQ_DEFAULT_USER=testuser \
             -e RABBITMQ_DEFAULT_PASS=testpassword \
             -v $(pwd)/rabbitmq-config:/etc/rabbitmq \
+            -v $(pwd)/rabbitmq-data:/var/lib/rabbitmq \
             -p 5672:5672 \
             192.168.188.184:5000/rabbitmq_service_dev:latest
           
-          # Wait with longer timeout and retries
-          for i in {1..5}; do
-            if docker exec rabbitmq rabbitmqctl wait --pid 1 --timeout 60; then
+          # Wait with health check
+          for i in {1..10}; do
+            if docker exec rabbitmq rabbitmq-diagnostics -q ping; then
+              echo "RabbitMQ is up!"
               break
             else
-              echo "Retry $i/5..."
+              echo "Waiting for RabbitMQ ($i/10)..."
               sleep 5
             fi
           done
-
+          
 
       # Verification steps
       - name: Verify RabbitMQ
