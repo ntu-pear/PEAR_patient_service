@@ -21,7 +21,6 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      # Create .env file with ALL required variables
       - name: Create .env file
         run: |
           cat <<EOF > .env
@@ -50,9 +49,7 @@ jobs:
           RABBITMQ_DEFAULT_USER=testuser
           RABBITMQ_DEFAULT_PASS=testpassword
           EOF
-          
-          # Verify .env was created
-          cat .env | grep -v 'PASSWORD' # Print non-sensitive vars for debugging
+          grep -v 'PASSWORD' .env
 
       - name: Start RabbitMQ
         run: |
@@ -85,11 +82,6 @@ jobs:
           chown rabbitmq:rabbitmq /var/lib/rabbitmq/.erlang.cookie
           chmod 600 /var/lib/rabbitmq/.erlang.cookie
           
-          # Verify cookie was set
-          echo "Cookie content:"
-          cat /var/lib/rabbitmq/.erlang.cookie
-          echo "Cookie permissions:"
-          ls -la /var/lib/rabbitmq/.erlang.cookie
           
           # Start RabbitMQ
           exec docker-entrypoint.sh rabbitmq-server
@@ -111,32 +103,21 @@ jobs:
             -p 15672:15672 \
             192.168.188.184:5000/rabbitmq_service_dev:latest
           
-          # Show container logs in background
-          docker logs -f rabbitmq &
-          
-          # Wait for RabbitMQ to be fully ready
+          echo "Waiting for RabbitMQ to start..."
           for i in {1..30}; do
-            # First check if container is running
             if ! docker ps | grep -q rabbitmq; then
-              echo "RabbitMQ container crashed! Logs:"
+              echo "RabbitMQ container crashed!"
               docker logs rabbitmq
               exit 1
             fi
-            
-            # Then check if fully ready
             if docker exec rabbitmq rabbitmq-diagnostics -q ping >/dev/null 2>&1 && \
                docker exec rabbitmq rabbitmqctl await_startup >/dev/null 2>&1; then
               echo "RabbitMQ is fully ready!"
-              
-              # Verify by listing users
               docker exec rabbitmq rabbitmqctl list_users
               break
             fi
-            
-            echo "Waiting for RabbitMQ to start... ($i/30)"
             sleep 2
           done
-          
           if [ $i -eq 30 ]; then
             echo "RabbitMQ failed to start within 60 seconds"
             docker logs rabbitmq
@@ -149,41 +130,16 @@ jobs:
           nc -vz localhost 5672
           docker exec rabbitmq rabbitmqctl status
 
-      
-
       - name: Run tests
         run: |
-          # Install pytest-cov only if you want coverage reporting
-          # pip install pytest-cov
-          
-          # Clean pytest execution with proper output capture
           PYTHONUNBUFFERED=1 pytest -v \
             --durations=10 \
             --capture=no \
             --disable-warnings \
             --junitxml=test-results.xml
-          
-          # Explicit cleanup of any resources
-          python -c "
-          import sys, os
-          if 'pytest' in sys.modules:
-              from pytest import Session
-              session = next((v for v in globals().values() 
-                           if isinstance(v, Session)), None)
-              if session:
-                  session.exitstatus = 0
-                  session.shouldstop = True
-          # Additional cleanup for common test artifacts
-          for conn in ['rabbitmq', 'database']:
-              try:
-                  __import__(f'tests.conftest').cleanup(conn)
-              except:
-                  pass
-          "
 
       - name: Cleanup
         if: always()
         run: |
-          # Graceful container cleanup
           docker stop rabbitmq || true
           docker rm rabbitmq || true
