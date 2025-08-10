@@ -3,8 +3,15 @@ from app.messaging.patient_publisher import PatientPublisher
 
 @pytest.fixture(scope="module")
 def publisher():
-    # Initialize the PatientPublisher using existing app logic
-    return PatientPublisher()
+    # Setup
+    pub = PatientPublisher()
+    yield pub
+    # Teardown: close RabbitMQ connection if available
+    try:
+        if hasattr(pub, "connection") and pub.connection:
+            pub.connection.close()
+    except Exception as e:
+        print(f"Warning: Failed to close publisher connection: {e}")
 
 def test_publish_patient_created(publisher):
     patient_id = 456
