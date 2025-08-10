@@ -61,7 +61,7 @@ jobs:
           cat << EOF > rabbitmq-config/rabbitmq.conf
           # Disable cluster peer discovery
           cluster_formation.peer_discovery_backend = classic_config
-          cluster_formation.classic_config.nodes.1 = rabbit@localhost
+
           
           # Enable management plugin
           management.tcp.port = 15672
