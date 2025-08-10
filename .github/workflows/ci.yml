@@ -14,10 +14,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Create rabbitmq.conf for classic mode
-        run: echo "cluster_formation.peer_discovery_backend = classic_config" > rabbitmq.conf # Required to override before RabbitMQ service starts
+        run: echo "cluster_formation.peer_discovery_backend = classic_config" > rabbitmq.conf
 
       - name: Upload config as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: rabbitmq-conf
           path: rabbitmq.conf
@@ -40,7 +40,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Download rabbitmq.conf artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: rabbitmq-conf
 
