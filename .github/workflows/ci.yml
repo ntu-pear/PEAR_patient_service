@@ -4,45 +4,26 @@ on:
   pull_request:
     branches: ['**']
 
-permissions:
-  contents: read
-
 jobs:
-  pre_check:
+  test:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Create rabbitmq.conf for classic mode
-        run: echo "cluster_formation.peer_discovery_backend = classic_config" > rabbitmq.conf
-
-      - name: Upload config as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: rabbitmq-conf
-          path: rabbitmq.conf
-
-  build:
-    needs: pre_check
-    runs-on: patient_staging_test
-    env: 
-      RABBITMQ_IMAGE_REPOSITORY: ${{ secrets.RABBITMQ_IMAGE_REPOSITORY }}
-      
     services:
       rabbitmq:
         image: 192.168.188.184:5000/rabbitmq_service_dev:latest
         ports:
-          - 5672:5672    # AMQP port for test scripts to connect
-        volumes:
-          - ${{ github.workspace }}/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf # Override peer discovery k8 clustering
+          - 5672:5672
+        env:
+          RABBITMQ_DEFAULT_USER: testuser
+          RABBITMQ_DEFAULT_PASS: testpassword
+        options: >-
+          --health-cmd="rabbitmqctl status"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Download rabbitmq.conf artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: rabbitmq-conf
 
       - name: Set up Python 3.9.19
         uses: actions/setup-python@v3
@@ -54,11 +35,13 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Test env var
-        run: |
-          echo "$RABBITMQ_IMAGE_REPOSITORY"
-          cat /etc/docker/daemon.json
 
+      - name: Copy rabbitmq.conf into service container
+        run: |
+          docker cp ./rabbitmq.conf $(docker ps -qf "ancestor=192.168.188.184:5000/rabbitmq_service_dev:latest"):/etc/rabbitmq/rabbitmq.conf
+          docker restart $(docker ps -qf "ancestor=192.168.188.184:5000/rabbitmq_service_dev:latest")
+
+      
       # Only include whats needed by the application
       - name: Create .env file from GitHub Secrets
         run: |
@@ -72,11 +55,12 @@ jobs:
           echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" >> .env
           echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" >> .env
           echo "WEB_FE_ORIGIN=${{ secrets.WEB_FE_ORIGIN }}" >> .env
-          echo "RABBITMQ_HOST=localhost" >> .env                            # For integration test
-          echo "RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}" >> .env
-          echo "RABBITMQ_VIRTUAL_HOST=${{ secrets.RABBITMQ_VIRTUAL_HOST }}" >> .env
-          echo "RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}" >> .env
-          echo "RABBITMQ_PASS=${{ secrets.RABBITMQ_PASS }}" >> .env
+
+          echo "RABBITMQ_HOST=rabbitmq" >> $GITHUB_ENV
+          echo "RABBITMQ_PORT=5672" >> $GITHUB_ENV
+          echo "RABBITMQ_USER=testuser" >> $GITHUB_ENV
+          echo "RABBITMQ_PASS=testpassword" >> $GITHUB_ENV
+          echo "RABBITMQ_VIRTUAL_HOST=/" >> $GITHUB_ENV
 
       - name: Check RabbitMQ service logs
         run: |
@@ -95,4 +79,3 @@ jobs:
         run: |
           pytest
 
-          
