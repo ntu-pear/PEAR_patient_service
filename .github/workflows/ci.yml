@@ -8,27 +8,10 @@ jobs:
   test:
     runs-on: patient_staging_test
       
-    services:
-      rabbitmq:
-        image: 192.168.188.184:5000/rabbitmq_service_dev:latest
-        ports:
-          - 5672:5672    # AMQP port for test scripts to connect
-        
-        env:
-          # Only include whats needed by the actions runner
-          RABBITMQ_DEFAULT_USER: testuser
-          RABBITMQ_DEFAULT_PASS: testpassword
-          RABBITMQ_CLUSTER_FORMATION_PEER_DISCOVERY_BACKEND: "classic_config" # override K8 pear discovery since integration does not need it
-        options: >-
-          --health-cmd "rabbitmq-diagnostics -q ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python 3.9.19
+      
+      - name: Set up Python 3.9
         uses: actions/setup-python@v3
         with:
           python-version: '3.9.19'
@@ -38,50 +21,69 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-
-      #- name: Copy rabbitmq.conf into service container
-      #  run: |
-      #    docker cp ./rabbitmq.conf $(docker ps -qf "ancestor=192.168.188.184:5000/rabbitmq_service_dev:latest"):/etc/rabbitmq/rabbitmq.conf
-      #    docker restart $(docker ps -qf "ancestor=192.168.188.184:5000/rabbitmq_service_dev:latest")
-
-      
-      # Only include whats needed by the application
-      - name: Create .env file from GitHub Secrets
+      # Create .env file with ALL required variables
+      - name: Create .env file
         run: |
-          echo "DB_SERVER_DEV=${{ secrets.DB_SERVER_DEV }}" >> .env
-          echo "DB_DATABASE_DEV=${{ secrets.DB_DATABASE_DEV }}" >> .env
-          echo "DB_DATABASE_PORT=${{ secrets.DB_DATABASE_PORT }}" >> .env
-          echo "DB_USERNAME_DEV=${{ secrets.DB_USERNAME_DEV }}" >> .env
-          echo "DB_PASSWORD_DEV=${{ secrets.DB_PASSWORD_DEV }}" >> .env
-          echo "DB_DRIVER_DEV=${{ secrets.DB_DRIVER_DEV }}" >> .env
-          echo "CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}" >> .env
-          echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" >> .env
-          echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" >> .env
-          echo "WEB_FE_ORIGIN=${{ secrets.WEB_FE_ORIGIN }}" >> .env
+          cat <<EOF > .env
+          # Database
+          DB_SERVER_DEV=${{ secrets.DB_SERVER_DEV }}
+          DB_DATABASE_DEV=${{ secrets.DB_DATABASE_DEV }}
+          DB_DATABASE_PORT=${{ secrets.DB_DATABASE_PORT }}
+          DB_USERNAME_DEV=${{ secrets.DB_USERNAME_DEV }}
+          DB_PASSWORD_DEV=${{ secrets.DB_PASSWORD_DEV }}
+          DB_DRIVER_DEV=${{ secrets.DB_DRIVER_DEV }}
+          
+          # Cloudinary
+          CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
+          
+          # Web
+          WEB_FE_ORIGIN=${{ secrets.WEB_FE_ORIGIN }}
+          
+          # RabbitMQ
+          RABBITMQ_HOST=localhost
+          RABBITMQ_PORT=5672
+          RABBITMQ_USER=testuser
+          RABBITMQ_PASS=testpassword
+          RABBITMQ_VIRTUAL_HOST=/
+          RABBITMQ_DEFAULT_USER=testuser
+          RABBITMQ_DEFAULT_PASS=testpassword
+          EOF
+          
+          # Verify .env was created
+          cat .env | grep -v 'PASSWORD' # Print non-sensitive vars for debugging
+          
+      # Start RabbitMQ container manually (replacing service block)
+      - name: Start RabbitMQ container
+        run: |
+          echo "cluster_formation.peer_discovery_backend = classic_config" > rabbitmq.conf
+          docker run -d \
+            --name rabbitmq \
+            -e RABBITMQ_DEFAULT_USER=testuser \
+            -e RABBITMQ_DEFAULT_PASS=testpassword \
+            -v $(pwd)/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf \
+            -p 5672:5672 \
+            192.168.188.184:5000/rabbitmq_service_dev:latest
+          docker exec rabbitmq rabbitmqctl wait --pid 1 --timeout 30
 
-          echo "RABBITMQ_HOST=localhost" >> .env
-          echo "RABBITMQ_PORT=5672" >> .env
-          echo "RABBITMQ_USER=testuser" >> .env
-          echo "RABBITMQ_PASS=testpassword" >> .env
-          echo "RABBITMQ_VIRTUAL_HOST=/" >> .env
-          echo "RABBITMQ_DEFAULT_USER=testuser" >> .env
-          echo "RABBITMQ_DEFAULT_PASS=testpassword" >> .env
 
-
-      - name: Check RabbitMQ service logs
+      # Verification steps
+      - name: Verify RabbitMQ
         run: |
           docker ps -a
-          docker logs $(docker ps -q --filter "ancestor=192.168.188.184:5000/rabbitmq_service_dev:latest")
-
-      - name: Test RabbitMQ port
-        run: |
+          docker logs rabbitmq
           nc -vz localhost 5672
+          docker exec rabbitmq rabbitmqctl status
 
-      - name: Check RabbitMQ status
+      # Run tests with all environment variables available
+      - name: Run pytest
         run: |
-          rabbitmqctl status || echo "rabbitmqctl not found"
+          pytest -v
 
-      - name: Test with pytest
+      # Cleanup
+      - name: Clean up containers
+        if: always()
         run: |
-          pytest
-
+          docker stop rabbitmq || true
+          docker rm rabbitmq || true
