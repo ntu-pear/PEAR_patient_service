@@ -86,27 +86,24 @@ jobs:
             192.168.188.184:5000/rabbitmq_service_dev:latest \
             rabbitmq-server
           
-          # Wait using TCP connection check
+          # Wait for RabbitMQ to be fully ready
           for i in {1..30}; do
-            if nc -z localhost 5672; then
-              echo "RabbitMQ is ready!"
+            if docker exec rabbitmq rabbitmqctl await_startup; then
+              echo "RabbitMQ is fully ready!"
               break
             fi
-            echo "Waiting for RabbitMQ to start... ($i/30)"
+            echo "Waiting for RabbitMQ to fully initialize... ($i/30)"
             sleep 2
           done
           
           # Verify status
-          docker logs rabbitmq | tail -50
-          
+          docker exec rabbitmq rabbitmqctl status
 
-      # Verification steps
       - name: Verify RabbitMQ
         run: |
           docker ps -a
-          docker logs rabbitmq
+          docker logs rabbitmq | tail -50
           nc -vz localhost 5672
-          docker exec rabbitmq rabbitmqctl status
 
       # Run tests with all environment variables available
       - name: Run pytest
