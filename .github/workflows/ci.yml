@@ -75,6 +75,19 @@ jobs:
       #       sleep 5
       #     done
 
+      - name: Check RabbitMQ service logs
+        run: |
+          docker ps -a
+          docker logs $(docker ps -q --filter "ancestor=192.168.188.184:5000/rabbitmq_service_dev:latest")
+
+      - name: Test RabbitMQ port
+        run: |
+          nc -vz localhost 5672
+
+      - name: Check RabbitMQ status
+        run: |
+          rabbitmqctl status || echo "rabbitmqctl not found"
+
       - name: Test with pytest
         run: |
           pytest
