@@ -1,21 +1,13 @@
 import pytest
+import threading
 import sys
+import time
+
 from app.messaging.patient_publisher import PatientPublisher
 
 @pytest.fixture(scope="module")
 def publisher():
-    pub = PatientPublisher()
-    yield pub
-    try:
-        if hasattr(pub, "channel") and pub.channel.is_open:
-            pub.channel.close()
-    except Exception as e:
-        print(f"Warning: Failed to close channel: {e}")
-    try:
-        if hasattr(pub, "connection") and pub.connection.is_open:
-            pub.connection.close()
-    except Exception as e:
-        print(f"Warning: Failed to close connection: {e}")
+    return PatientPublisher()
 
 def test_publish_patient_created(publisher):
     patient_id = 456
@@ -32,5 +24,12 @@ def test_publish_patient_created(publisher):
     assert result is True
 
 def teardown_module(module):
-    """Force exit after tests to prevent hanging in CI."""
-    sys.exit(0)
+    # Give any async cleanup a moment
+    time.sleep(0.5)
+
+    print("\n=== DEBUG: Active non-daemon threads ===")
+    for t in threading.enumerate():
+        if t.is_alive() and not t.daemon:
+            print(f"Thread: {t.name} | {t}")
+    print("========================================\n")
+    sys.stdout.flush()
