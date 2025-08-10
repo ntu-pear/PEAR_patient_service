@@ -56,23 +56,40 @@ jobs:
 
       - name: Start RabbitMQ
         run: |
-
           # Create configuration directory and file
           mkdir -p rabbitmq-config
           cat << EOF > rabbitmq-config/rabbitmq.conf
           # Disable cluster peer discovery
           cluster_formation.peer_discovery_backend = classic_config
+          cluster_formation.classic_config.nodes.1 = rabbit@localhost
           
-          # Create a custom entrypoint script
+          # Enable management plugin
+          management.tcp.port = 15672
+          management.tcp.ip = 0.0.0.0
+          
+          # Log to stdout
+          log.console = true
+          log.console.level = info
+          EOF
+
+          # Create a custom entrypoint script to handle cookie permissions
           cat << 'EOF' > rabbitmq-entrypoint.sh
           #!/bin/bash
           set -e
           
-          # Fix cookie permissions
+          # Ensure directory exists
           mkdir -p /var/lib/rabbitmq
+          
+          # Set Erlang cookie with proper permissions
           echo "TESTCOOKIE123" > /var/lib/rabbitmq/.erlang.cookie
           chown rabbitmq:rabbitmq /var/lib/rabbitmq/.erlang.cookie
           chmod 600 /var/lib/rabbitmq/.erlang.cookie
+          
+          # Verify cookie was set
+          echo "Cookie content:"
+          cat /var/lib/rabbitmq/.erlang.cookie
+          echo "Cookie permissions:"
+          ls -la /var/lib/rabbitmq/.erlang.cookie
           
           # Start RabbitMQ
           exec docker-entrypoint.sh rabbitmq-server
@@ -80,39 +97,44 @@ jobs:
           
           chmod +x rabbitmq-entrypoint.sh
           
-          # Start container with more verbose logging
+          # Start container with configuration
           docker run -d \
             --name rabbitmq \
             --memory="800m" \
             -e RABBITMQ_ERLANG_COOKIE="TESTCOOKIE123" \
             -e RABBITMQ_DEFAULT_USER=testuser \
             -e RABBITMQ_DEFAULT_PASS=testpassword \
-            -e RABBITMQ_LOGS="-" \
-            -e RABBITMQ_SASL_LOGS="-" \
+            -v $(pwd)/rabbitmq-config:/etc/rabbitmq \
             -v $(pwd)/rabbitmq-entrypoint.sh:/usr/local/bin/custom-entrypoint \
             --entrypoint /usr/local/bin/custom-entrypoint \
             -p 5672:5672 \
+            -p 15672:15672 \
             192.168.188.184:5000/rabbitmq_service_dev:latest
           
-          # Show container logs immediately
+          # Show container logs in background
           docker logs -f rabbitmq &
           
-          # Wait for RabbitMQ to be ready
+          # Wait for RabbitMQ to be fully ready
           for i in {1..30}; do
-            if docker exec rabbitmq rabbitmq-diagnostics -q ping >/dev/null 2>&1; then
-              echo "RabbitMQ is ready!"
-              docker exec rabbitmq rabbitmqctl status
-              break
-            fi
-            echo "Waiting for RabbitMQ to start... ($i/30)"
-            sleep 2
-            
-            # Check if container is still running
+            # First check if container is running
             if ! docker ps | grep -q rabbitmq; then
               echo "RabbitMQ container crashed! Logs:"
               docker logs rabbitmq
               exit 1
             fi
+            
+            # Then check if fully ready
+            if docker exec rabbitmq rabbitmq-diagnostics -q ping >/dev/null 2>&1 && \
+               docker exec rabbitmq rabbitmqctl await_startup >/dev/null 2>&1; then
+              echo "RabbitMQ is fully ready!"
+              
+              # Verify by listing users
+              docker exec rabbitmq rabbitmqctl list_users
+              break
+            fi
+            
+            echo "Waiting for RabbitMQ to start... ($i/30)"
+            sleep 2
           done
           
           if [ $i -eq 30 ]; then
@@ -121,19 +143,16 @@ jobs:
             exit 1
           fi
 
-      #- name: Verify RabbitMQ
-      #  run: |
-      #    docker ps -a
-      #    nc -vz localhost 5672
-      #    docker exec rabbitmq rabbitmqctl list_users
+      - name: Verify RabbitMQ
+        run: |
+          docker ps -a
+          nc -vz localhost 5672
+          docker exec rabbitmq rabbitmqctl status
 
-      # Run tests with all environment variables available
-      
       - name: Run pytest
         run: |
           pytest -v
 
-      # Cleanup
       - name: Clean up containers
         if: always()
         run: |
