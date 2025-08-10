@@ -7,22 +7,36 @@ on:
 jobs:
   test:
     runs-on: patient_staging_test
-
+    env: 
+      # Only include whats needed by the actions runner
+      RABBITMQ_IMAGE_REPOSITORY: ${{ secrets.RABBITMQ_IMAGE_REPOSITORY }}
+      RABBITMQ_CLUSTER_FORMATION_PEER_DISCOVERY_BACKEND: "classic_config"  # override K8 pear discovery since integration does not need it
+      
     services:
       rabbitmq:
         image: 192.168.188.184:5000/rabbitmq_service_dev:latest
         ports:
-          - 5672:5672
+          - 5672:5672    # AMQP port for test scripts to connect
+        
         env:
           RABBITMQ_DEFAULT_USER: testuser
           RABBITMQ_DEFAULT_PASS: testpassword
-          RABBITMQ_CLUSTER_FORMATION_PEER_DISCOVERY_BACKEND: "classic_config"  # override K8 pear discovery since integration does not need it
-      
-        options: >-
-          --health-cmd="rabbitmqctl status"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+          
+
+    #services:
+    #  rabbitmq:
+    #    image: 192.168.188.184:5000/rabbitmq_service_dev:latest
+    #    ports:
+    #      - 5672:5672
+    #    env:
+    #      RABBITMQ_DEFAULT_USER: testuser
+    #      RABBITMQ_DEFAULT_PASS: testpassword
+    #  
+    #    options: >-
+    #      --health-cmd="rabbitmqctl status"
+    #      --health-interval=10s
+    #      --health-timeout=5s
+    #      --health-retries=5
 
     steps:
       - uses: actions/checkout@v4
