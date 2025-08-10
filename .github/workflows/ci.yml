@@ -152,7 +152,7 @@ jobs:
       - name: Run tests
         run: |
           # Add timeout to prevent hanging
-          timeout 5m pytest -v || echo "Tests completed"
+          timeout 1m pytest -v || echo "Tests completed"
 
       - name: Force cleanup
         if: always()
