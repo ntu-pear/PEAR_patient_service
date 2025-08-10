@@ -130,13 +130,31 @@ jobs:
           nc -vz localhost 5672
           docker exec rabbitmq rabbitmqctl status
 
-      - name: Run tests
+      - name: Run tests with timeout and debug on hang
         run: |
-          PYTHONUNBUFFERED=1 pytest -v \
+          # Run pytest with timeout of 120 seconds, so it doesn't hang forever
+          timeout 120s pytest -v \
             --durations=10 \
             --capture=no \
             --disable-warnings \
             --junitxml=test-results.xml
+          TEST_EXIT_CODE=$?
+
+          echo "===== TESTS FINISHED WITH EXIT CODE $TEST_EXIT_CODE ====="
+          echo "--- Running docker ps ---"
+          docker ps -a
+
+          echo "--- Showing RabbitMQ logs (last 100 lines) ---"
+          docker logs --tail 100 rabbitmq || echo "No rabbitmq logs found"
+
+          echo "--- Running processes on runner ---"
+          ps aux | head -40
+
+          echo "--- Open files (lsof) ---"
+          lsof -nP | head -40 || echo "lsof not available"
+
+          # Exit with test exit code so failures are caught
+          exit $TEST_EXIT_CODE
 
       - name: Cleanup
         if: always()
