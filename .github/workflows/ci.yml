@@ -7,10 +7,6 @@ on:
 jobs:
   test:
     runs-on: patient_staging_test
-    env: 
-      # Only include whats needed by the actions runner
-      RABBITMQ_IMAGE_REPOSITORY: ${{ secrets.RABBITMQ_IMAGE_REPOSITORY }}
-      RABBITMQ_CLUSTER_FORMATION_PEER_DISCOVERY_BACKEND: "classic_config"  # override K8 pear discovery since integration does not need it
       
     services:
       rabbitmq:
@@ -19,24 +15,11 @@ jobs:
           - 5672:5672    # AMQP port for test scripts to connect
         
         env:
+          # Only include whats needed by the actions runner
           RABBITMQ_DEFAULT_USER: testuser
           RABBITMQ_DEFAULT_PASS: testpassword
-          
+          RABBITMQ_CLUSTER_FORMATION_PEER_DISCOVERY_BACKEND: "classic_config" # override K8 pear discovery since integration does not need it
 
-    #services:
-    #  rabbitmq:
-    #    image: 192.168.188.184:5000/rabbitmq_service_dev:latest
-    #    ports:
-    #      - 5672:5672
-    #    env:
-    #      RABBITMQ_DEFAULT_USER: testuser
-    #      RABBITMQ_DEFAULT_PASS: testpassword
-    #  
-    #    options: >-
-    #      --health-cmd="rabbitmqctl status"
-    #      --health-interval=10s
-    #      --health-timeout=5s
-    #      --health-retries=5
 
     steps:
       - uses: actions/checkout@v4
@@ -52,10 +35,10 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
 
-      - name: Copy rabbitmq.conf into service container
-        run: |
-          docker cp ./rabbitmq.conf $(docker ps -qf "ancestor=192.168.188.184:5000/rabbitmq_service_dev:latest"):/etc/rabbitmq/rabbitmq.conf
-          docker restart $(docker ps -qf "ancestor=192.168.188.184:5000/rabbitmq_service_dev:latest")
+      #- name: Copy rabbitmq.conf into service container
+      #  run: |
+      #    docker cp ./rabbitmq.conf $(docker ps -qf "ancestor=192.168.188.184:5000/rabbitmq_service_dev:latest"):/etc/rabbitmq/rabbitmq.conf
+      #    docker restart $(docker ps -qf "ancestor=192.168.188.184:5000/rabbitmq_service_dev:latest")
 
       
       # Only include whats needed by the application
@@ -71,12 +54,13 @@ jobs:
           echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" >> .env
           echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" >> .env
           echo "WEB_FE_ORIGIN=${{ secrets.WEB_FE_ORIGIN }}" >> .env
+          
+          echo "RABBITMQ_HOST=rabbitmq" >> .env
+          echo "RABBITMQ_PORT=5672" >> .env
+          echo "RABBITMQ_USER=testuser" >> .env
+          echo "RABBITMQ_PASS=testpassword" >> .env
+          echo "RABBITMQ_VIRTUAL_HOST=/" >> .env
 
-          echo "RABBITMQ_HOST=rabbitmq" >> $GITHUB_ENV
-          echo "RABBITMQ_PORT=5672" >> $GITHUB_ENV
-          echo "RABBITMQ_USER=testuser" >> $GITHUB_ENV
-          echo "RABBITMQ_PASS=testpassword" >> $GITHUB_ENV
-          echo "RABBITMQ_VIRTUAL_HOST=/" >> $GITHUB_ENV
 
       - name: Check RabbitMQ service logs
         run: |
