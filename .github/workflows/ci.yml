@@ -16,6 +16,8 @@ jobs:
         env:
           RABBITMQ_DEFAULT_USER: testuser
           RABBITMQ_DEFAULT_PASS: testpassword
+          RABBITMQ_CLUSTER_FORMATION_PEER_DISCOVERY_BACKEND: "classic_config"  # override K8 pear discovery since integration does not need it
+      
         options: >-
           --health-cmd="rabbitmqctl status"
           --health-interval=10s
