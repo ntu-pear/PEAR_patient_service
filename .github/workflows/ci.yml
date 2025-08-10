@@ -153,31 +153,37 @@ jobs:
 
       - name: Run tests
         run: |
-          # Run pytest with proper cleanup handling
+          # Install pytest-cov only if you want coverage reporting
+          # pip install pytest-cov
+          
+          # Clean pytest execution with proper output capture
           PYTHONUNBUFFERED=1 pytest -v \
             --durations=10 \
             --capture=no \
             --disable-warnings \
-            --junitxml=test-results.xml \
-            --cov=./ \
-            --cov-report=xml
-            
-          # Explicitly close any remaining connections
+            --junitxml=test-results.xml
+          
+          # Explicit cleanup of any resources
           python -c "
-          import sys
+          import sys, os
           if 'pytest' in sys.modules:
               from pytest import Session
-              session = next((v for v in globals().values() if isinstance(v, Session)), None)
+              session = next((v for v in globals().values() 
+                           if isinstance(v, Session)), None)
               if session:
                   session.exitstatus = 0
                   session.shouldstop = True
+          # Additional cleanup for common test artifacts
+          for conn in ['rabbitmq', 'database']:
+              try:
+                  __import__(f'tests.conftest').cleanup(conn)
+              except:
+                  pass
           "
 
       - name: Cleanup
         if: always()
         run: |
-          # Force stop any remaining processes
+          # Graceful container cleanup
           docker stop rabbitmq || true
           docker rm rabbitmq || true
-          pkill -f pytest || true
-          pkill -f python || true
