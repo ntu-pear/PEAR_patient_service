@@ -56,6 +56,13 @@ jobs:
 
       - name: Start RabbitMQ
         run: |
+
+          # Create configuration directory and file
+          mkdir -p rabbitmq-config
+          cat << EOF > rabbitmq-config/rabbitmq.conf
+          # Disable cluster peer discovery
+          cluster_formation.peer_discovery_backend = classic_config
+            
           # Create a custom entrypoint script
           cat << 'EOF' > rabbitmq-entrypoint.sh
           #!/bin/bash
