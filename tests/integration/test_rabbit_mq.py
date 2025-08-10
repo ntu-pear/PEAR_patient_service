@@ -1,10 +1,14 @@
 import pytest
 from app.messaging.patient_publisher import PatientPublisher
+from app.messaging.producer_manager import stop_producer_manager
 
 @pytest.fixture(scope="module")
 def publisher():
-    # Initialize the PatientPublisher using existing app logic
-    return PatientPublisher()
+    publisher_instance = PatientPublisher()
+    yield publisher_instance
+    # Cleanup after all tests in module finish
+    publisher_instance.close()
+    stop_producer_manager()  # stop the producer manager and join the thread
 
 def test_publish_patient_created(publisher):
     patient_id = 456
