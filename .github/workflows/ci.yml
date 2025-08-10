@@ -54,72 +54,81 @@ jobs:
           # Verify .env was created
           cat .env | grep -v 'PASSWORD' # Print non-sensitive vars for debugging
 
-      - name: Start RabbitMQ
+      - name: Start RabbitMQ with proper configuration
         run: |
 
-          # Create configuration directory and file
-          mkdir -p rabbitmq-config
-          cat << EOF > rabbitmq-config/rabbitmq.conf
-          # Disable cluster peer discovery
-          cluster_formation.peer_discovery_backend = classic_config
+            # Create configuration directory and file
+            mkdir -p rabbitmq-config
+            cat << EOF > rabbitmq-config/rabbitmq.conf
+            # Disable cluster peer discovery
+            cluster_formation.peer_discovery_backend = classic_config
             
-          # Create a custom entrypoint script
-          cat << 'EOF' > rabbitmq-entrypoint.sh
-          #!/bin/bash
-          set -e
-          
-          # Fix cookie permissions
-          mkdir -p /var/lib/rabbitmq
-          echo "TESTCOOKIE123" > /var/lib/rabbitmq/.erlang.cookie
-          chown rabbitmq:rabbitmq /var/lib/rabbitmq/.erlang.cookie
-          chmod 600 /var/lib/rabbitmq/.erlang.cookie
-          
-          # Start RabbitMQ
-          exec docker-entrypoint.sh rabbitmq-server
-          EOF
-          
-          chmod +x rabbitmq-entrypoint.sh
-          
-          # Start container with more verbose logging
-          docker run -d \
-            --name rabbitmq \
-            --memory="800m" \
-            -e RABBITMQ_ERLANG_COOKIE="TESTCOOKIE123" \
-            -e RABBITMQ_DEFAULT_USER=testuser \
-            -e RABBITMQ_DEFAULT_PASS=testpassword \
-            -e RABBITMQ_LOGS="-" \
-            -e RABBITMQ_SASL_LOGS="-" \
-            -v $(pwd)/rabbitmq-entrypoint.sh:/usr/local/bin/custom-entrypoint \
-            --entrypoint /usr/local/bin/custom-entrypoint \
-            -p 5672:5672 \
-            192.168.188.184:5000/rabbitmq_service_dev:latest
-          
-          # Show container logs immediately
-          docker logs -f rabbitmq &
-          
-          # Wait for RabbitMQ to be ready
-          for i in {1..30}; do
-            if docker exec rabbitmq rabbitmq-diagnostics -q ping >/dev/null 2>&1; then
-              echo "RabbitMQ is ready!"
-              docker exec rabbitmq rabbitmqctl status
-              break
-            fi
-            echo "Waiting for RabbitMQ to start... ($i/30)"
-            sleep 2
+            # Enable management plugin
+            management.tcp.port = 15672
+            management.tcp.ip = 0.0.0.0
             
-            # Check if container is still running
-            if ! docker ps | grep -q rabbitmq; then
-              echo "RabbitMQ container crashed! Logs:"
+            # Log to stdout
+            log.console = true
+            log.console.level = info
+            EOF
+
+            # Create custom entrypoint script
+            cat << 'EOF' > rabbitmq-entrypoint.sh
+            #!/bin/bash
+            set -e
+            
+            # Ensure cookie permissions
+            mkdir -p /var/lib/rabbitmq
+            echo "TESTCOOKIE123" > /var/lib/rabbitmq/.erlang.cookie
+            chown rabbitmq:rabbitmq /var/lib/rabbitmq/.erlang.cookie
+            chmod 600 /var/lib/rabbitmq/.erlang.cookie
+            
+            # Start RabbitMQ server
+            exec docker-entrypoint.sh rabbitmq-server
+            EOF
+            
+            chmod +x rabbitmq-entrypoint.sh
+            
+            # Start container with configuration mounted
+            docker run -d \
+              --name rabbitmq \
+              --memory="800m" \
+              -e RABBITMQ_ERLANG_COOKIE="TESTCOOKIE123" \
+              -e RABBITMQ_DEFAULT_USER=testuser \
+              -e RABBITMQ_DEFAULT_PASS=testpassword \
+              -v $(pwd)/rabbitmq-config:/etc/rabbitmq \
+              -v $(pwd)/rabbitmq-entrypoint.sh:/usr/local/bin/custom-entrypoint \
+              --entrypoint /usr/local/bin/custom-entrypoint \
+              -p 5672:5672 \
+              -p 15672:15672 \
+              192.168.188.184:5000/rabbitmq_service_dev:latest
+            
+            # Stream logs in background
+            docker logs -f rabbitmq &
+            
+            # Wait for RabbitMQ to be ready
+            for i in {1..30}; do
+              if docker exec rabbitmq rabbitmq-diagnostics -q ping >/dev/null 2>&1; then
+                echo "RabbitMQ is ready!"
+                docker exec rabbitmq rabbitmqctl status
+                break
+              fi
+              echo "Waiting for RabbitMQ to start... ($i/30)"
+              sleep 2
+              
+              # Check if container crashed
+              if ! docker ps | grep -q rabbitmq; then
+                echo "RabbitMQ container crashed! Logs:"
+                docker logs rabbitmq
+                exit 1
+              fi
+            done
+            
+            if [ $i -eq 30 ]; then
+              echo "RabbitMQ failed to start within 60 seconds"
               docker logs rabbitmq
               exit 1
             fi
-          done
-          
-          if [ $i -eq 30 ]; then
-            echo "RabbitMQ failed to start within 60 seconds"
-            docker logs rabbitmq
-            exit 1
-          fi
 
       - name: Verify RabbitMQ
         run: |
