@@ -19,7 +19,11 @@ jobs:
           RABBITMQ_DEFAULT_USER: testuser
           RABBITMQ_DEFAULT_PASS: testpassword
           RABBITMQ_CLUSTER_FORMATION_PEER_DISCOVERY_BACKEND: "classic_config" # override K8 pear discovery since integration does not need it
-
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - uses: actions/checkout@v4
@@ -54,12 +58,14 @@ jobs:
           echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" >> .env
           echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" >> .env
           echo "WEB_FE_ORIGIN=${{ secrets.WEB_FE_ORIGIN }}" >> .env
-          
-          echo "RABBITMQ_HOST=rabbitmq" >> .env
+
+          echo "RABBITMQ_HOST=localhost" >> .env
           echo "RABBITMQ_PORT=5672" >> .env
           echo "RABBITMQ_USER=testuser" >> .env
           echo "RABBITMQ_PASS=testpassword" >> .env
           echo "RABBITMQ_VIRTUAL_HOST=/" >> .env
+          echo "RABBITMQ_DEFAULT_USER=testuser" >> .env
+          echo "RABBITMQ_DEFAULT_PASS=testpassword" >> .env
 
 
       - name: Check RabbitMQ service logs
