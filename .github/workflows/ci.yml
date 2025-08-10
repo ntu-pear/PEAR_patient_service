@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  # push:
-  #   branches: ['**']
   pull_request:
     branches: ['**']
 
@@ -10,29 +8,42 @@ permissions:
   contents: read
 
 jobs:
+  pre_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create rabbitmq.conf for classic mode
+        run: echo "cluster_formation.peer_discovery_backend = classic_config" > rabbitmq.conf # Required to override before RabbitMQ service starts
+
+      - name: Upload config as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: rabbitmq-conf
+          path: rabbitmq.conf
+
   build:
+    needs: pre_check
     runs-on: patient_staging_test
     env: 
-      # Only include whats needed by the actions runner
       RABBITMQ_IMAGE_REPOSITORY: ${{ secrets.RABBITMQ_IMAGE_REPOSITORY }}
-      RABBITMQ_CLUSTER_FORMATION_PEER_DISCOVERY_BACKEND: "classic_config"  # override K8 pear discovery since integration does not need it
       
     services:
       rabbitmq:
         image: 192.168.188.184:5000/rabbitmq_service_dev:latest
         ports:
           - 5672:5672    # AMQP port for test scripts to connect
-        
-        
-        # options: >        # Optional: Wait for RabbitMQ to be ready before running tests
-        #   --health-cmd="rabbitmq-diagnostics -q ping"
-        #   --health-interval=10s
-        #   --health-timeout=5s
-        #   --health-retries=6
+        volumes:
+          - ${{ github.workspace }}/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf # Override peer discovery k8 clustering
 
     steps:
       - uses: actions/checkout@v4
       
+      - name: Download rabbitmq.conf artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: rabbitmq-conf
+
       - name: Set up Python 3.9.19
         uses: actions/setup-python@v3
         with:
@@ -66,14 +77,6 @@ jobs:
           echo "RABBITMQ_VIRTUAL_HOST=${{ secrets.RABBITMQ_VIRTUAL_HOST }}" >> .env
           echo "RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}" >> .env
           echo "RABBITMQ_PASS=${{ secrets.RABBITMQ_PASS }}" >> .env
-
-      # - name: Wait for RabbitMQ to be ready
-      #   run: |
-      #     for i in {1..10}; do
-      #       nc -z localhost 5672 && echo "RabbitMQ is up" && break
-      #       echo "Waiting for RabbitMQ..."
-      #       sleep 5
-      #     done
 
       - name: Check RabbitMQ service logs
         run: |
