@@ -53,7 +53,7 @@ jobs:
           
           # Verify .env was created
           cat .env | grep -v 'PASSWORD' # Print non-sensitive vars for debugging
-          
+
       # Start RabbitMQ container manually (replacing service block)
       - name: Start RabbitMQ container
         run: |
@@ -87,3 +87,4 @@ jobs:
         run: |
           docker stop rabbitmq || true
           docker rm rabbitmq || true
+          
