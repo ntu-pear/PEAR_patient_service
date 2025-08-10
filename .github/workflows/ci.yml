@@ -128,6 +128,9 @@ jobs:
                docker exec rabbitmq rabbitmqctl await_startup >/dev/null 2>&1; then
               echo "RabbitMQ is fully ready!"
               
+              # Verify by listing users
+              docker exec rabbitmq rabbitmqctl list_users
+              break
             fi
             
             echo "Waiting for RabbitMQ to start... ($i/30)"
@@ -145,6 +148,8 @@ jobs:
           docker ps -a
           nc -vz localhost 5672
           docker exec rabbitmq rabbitmqctl status
+
+      
 
       - name: Run tests
         run: |
@@ -168,7 +173,7 @@ jobs:
                   session.shouldstop = True
           "
 
-      - name: Force cleanup
+      - name: Cleanup
         if: always()
         run: |
           # Force stop any remaining processes
