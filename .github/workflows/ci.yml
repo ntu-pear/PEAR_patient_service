@@ -54,18 +54,33 @@ jobs:
           # Verify .env was created
           cat .env | grep -v 'PASSWORD' # Print non-sensitive vars for debugging
 
-      # Start RabbitMQ container manually (replacing service block)
       - name: Start RabbitMQ container
         run: |
-          echo "cluster_formation.peer_discovery_backend = classic_config" > rabbitmq.conf
+          # Create config file
+          mkdir -p rabbitmq-config
+          echo "cluster_formation.peer_discovery_backend = classic_config" > rabbitmq-config/rabbitmq.conf
+          echo "vm_memory_high_watermark.relative = 0.6" >> rabbitmq-config/rabbitmq.conf
+          
+          # Start container with memory limits
           docker run -d \
             --name rabbitmq \
+            --memory="800m" \
+            --memory-swap="1g" \
             -e RABBITMQ_DEFAULT_USER=testuser \
             -e RABBITMQ_DEFAULT_PASS=testpassword \
-            -v $(pwd)/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf \
+            -v $(pwd)/rabbitmq-config:/etc/rabbitmq \
             -p 5672:5672 \
             192.168.188.184:5000/rabbitmq_service_dev:latest
-          docker exec rabbitmq rabbitmqctl wait --pid 1 --timeout 30
+          
+          # Wait with longer timeout and retries
+          for i in {1..5}; do
+            if docker exec rabbitmq rabbitmqctl wait --pid 1 --timeout 60; then
+              break
+            else
+              echo "Retry $i/5..."
+              sleep 5
+            fi
+          done
 
 
       # Verification steps
@@ -87,4 +102,3 @@ jobs:
         run: |
           docker stop rabbitmq || true
           docker rm rabbitmq || true
-          
