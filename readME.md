@@ -1,4 +1,4 @@
-# PEAR Patient Service Testing
+# PEAR Patient Service
 
 ## Overview
 
