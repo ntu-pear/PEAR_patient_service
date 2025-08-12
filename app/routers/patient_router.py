@@ -1,32 +1,44 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request, Query
-from sqlalchemy.orm import Session
-from ..database import get_db
-from ..crud import patient_crud as crud_patient
-from ..schemas.response import SingleResponse, PaginatedResponse
-from ..schemas.patient import (
-    Patient,
-    PatientCreate,
-    PatientUpdate
-)
-from ..auth.jwt_utils import extract_jwt_payload, get_user_id, get_full_name
 from typing import Optional
+
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
+from sqlalchemy.orm import Session
+
+from ..auth.jwt_utils import extract_jwt_payload, get_full_name, get_user_id
+from ..crud import patient_crud as crud_patient
+from ..database import get_db
+from ..schemas.patient import Patient, PatientCreate, PatientUpdate
+from ..schemas.response import PaginatedResponse, SingleResponse
 
 router = APIRouter()
 
+
 @router.get("/patients/{patient_id}", response_model=SingleResponse[Patient])
-def read_patient(patient_id: int, request: Request, require_auth: bool = True, db: Session = Depends(get_db), mask: bool = True):
+def read_patient(
+    patient_id: int,
+    request: Request,
+    require_auth: bool = True,
+    db: Session = Depends(get_db),
+    mask: bool = True,
+):
     _ = extract_jwt_payload(request, require_auth)
     db_patient = crud_patient.get_patient(db=db, patient_id=patient_id, mask=mask)
     if db_patient is None:
         raise HTTPException(status_code=404, detail="Patient not found")
     patient = Patient.model_validate(db_patient)
-    return SingleResponse(data = patient)
+    return SingleResponse(data=patient)
+
 
 @router.get("/patients/", response_model=PaginatedResponse[Patient])
 def read_patients(
     request: Request,
-    name: Optional[str] = Query(None, description="Filter patients by name (non-exact match)", include_in_schema=True),
-    isActive: Optional[str] = Query(None, description="Filter patients by isActive (0 or 1)", include_in_schema=True),
+    name: Optional[str] = Query(
+        None,
+        description="Filter patients by name (non-exact match)",
+        include_in_schema=True,
+    ),
+    isActive: Optional[str] = Query(
+        None, description="Filter patients by isActive (0 or 1)", include_in_schema=True
+    ),
     require_auth: bool = Query(True, description="Require authentication"),
     mask: bool = Query(True, description="Mask sensitive data"),
     pageNo: int = Query(0, description="Page number (starting from 0)"),
@@ -34,12 +46,26 @@ def read_patients(
     db: Session = Depends(get_db),
 ):
     _ = extract_jwt_payload(request, require_auth)
-    db_patients, totalRecords, totalPages = crud_patient.get_patients(db=db, pageNo=pageNo, pageSize=pageSize, mask=mask, name=name, isActive = isActive)
+    db_patients, totalRecords, totalPages = crud_patient.get_patients(
+        db=db, pageNo=pageNo, pageSize=pageSize, mask=mask, name=name, isActive=isActive
+    )
     patients = [Patient.model_validate(patient) for patient in db_patients]
-    return PaginatedResponse(data=patients, pageNo=pageNo, pageSize=pageSize, totalRecords= totalRecords, totalPages=totalPages)
+    return PaginatedResponse(
+        data=patients,
+        pageNo=pageNo,
+        pageSize=pageSize,
+        totalRecords=totalRecords,
+        totalPages=totalPages,
+    )
+
 
 @router.post("/patients/add", response_model=SingleResponse[Patient])
-def create_patient(patient: PatientCreate, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
+def create_patient(
+    patient: PatientCreate,
+    request: Request,
+    require_auth: bool = True,
+    db: Session = Depends(get_db),
+):
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
@@ -47,30 +73,57 @@ def create_patient(patient: PatientCreate, request: Request, require_auth: bool 
     patient = Patient.model_validate(db_patient)
     return SingleResponse(data=patient)
 
+
 @router.put("/patients/update/{patient_id}", response_model=SingleResponse[Patient])
-def update_patient(patient_id: int, patient: PatientUpdate, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
+def update_patient(
+    patient_id: int,
+    patient: PatientUpdate,
+    request: Request,
+    require_auth: bool = True,
+    db: Session = Depends(get_db),
+):
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
-    db_patient = crud_patient.update_patient(db, patient_id, patient, user_id, user_full_name)
+    db_patient = crud_patient.update_patient(
+        db, patient_id, patient, user_id, user_full_name
+    )
     if db_patient is None:
         raise HTTPException(status_code=404, detail="Patient not found")
     patient = Patient.model_validate(db_patient)
     return SingleResponse(data=patient)
 
-@router.put("/patients/update/{patient_id}/update_patient_profile_picture", response_model=SingleResponse[Patient])
-def update_patient_profile_picture(patient_id: int, request: Request, require_auth: bool = True, file: UploadFile = File(...), db: Session = Depends(get_db)):
+
+@router.put(
+    "/patients/update/{patient_id}/update_patient_profile_picture",
+    response_model=SingleResponse[Patient],
+)
+def update_patient_profile_picture(
+    patient_id: int,
+    request: Request,
+    require_auth: bool = True,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
-    db_patient = crud_patient.update_patient_profile_picture(db, patient_id, file, user_id, user_full_name)
+    db_patient = crud_patient.update_patient_profile_picture(
+        db, patient_id, file, user_id, user_full_name
+    )
     if db_patient is None:
         raise HTTPException(status_code=404, detail="Patient not found")
     patient = Patient.model_validate(db_patient)
     return SingleResponse(data=patient)
+
 
 @router.delete("/patients/delete/{patient_id}", response_model=SingleResponse[Patient])
-def delete_patient(patient_id: int, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
+def delete_patient(
+    patient_id: int,
+    request: Request,
+    require_auth: bool = True,
+    db: Session = Depends(get_db),
+):
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
@@ -80,12 +133,48 @@ def delete_patient(patient_id: int, request: Request, require_auth: bool = True,
     patient = Patient.model_validate(db_patient)
     return SingleResponse(data=patient)
 
-@router.delete("/patients/update/{patient_id}/update_patient_profile_picture", response_model=SingleResponse[Patient])
-def delete_patient_profile_picture(patient_id: int, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
+
+@router.delete(
+    "/patients/update/{patient_id}/update_patient_profile_picture",
+    response_model=SingleResponse[Patient],
+)
+def delete_patient_profile_picture(
+    patient_id: int,
+    request: Request,
+    require_auth: bool = True,
+    db: Session = Depends(get_db),
+):
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
-    db_patient = crud_patient.delete_patient_profile_picture(db, patient_id, user_id, user_full_name)
+    db_patient = crud_patient.delete_patient_profile_picture(
+        db, patient_id, user_id, user_full_name
+    )
+    if db_patient is None:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    patient = Patient.model_validate(db_patient)
+    return SingleResponse(data=patient)
+
+
+""" Routing for hard deletion of patient data"""
+
+
+@router.delete(
+    "/patients/delete/{patient_id}/hard_delete_patient",
+    response_model=SingleResponse[Patient],
+)
+def hard_delete_patient_profile(
+    patient_id: int,
+    request: Request,
+    require_auth: bool = True,
+    db: Session = Depends(get_db),
+):
+    payload = extract_jwt_payload(request, require_auth)
+    user_id = get_user_id(payload) or "anonymous"
+    user_full_name = get_full_name(payload) or "Anonymous User"
+    db_patient = crud_patient.hard_delete_patient(
+        db, patient_id, user_id, user_full_name
+    )
     if db_patient is None:
         raise HTTPException(status_code=404, detail="Patient not found")
     patient = Patient.model_validate(db_patient)
