@@ -132,7 +132,7 @@ jobs:
 
       - name: Run tests with timeout
         run: |
-          timeout 120s pytest -v \
+          timeout 120s python -m pytest -v \
             --durations=10 \
             --capture=no \
             --disable-warnings \
