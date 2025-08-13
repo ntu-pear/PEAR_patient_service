@@ -7,17 +7,6 @@ on:
 jobs:
   test:
     runs-on: patient_staging_test
-    
-   #env:
-   #  DB_SERVER_DEV: ${{ secrets.DB_SERVER_DEV }}
-   #  DB_DATABASE_DEV: ${{ secrets.DB_DATABASE_DEV }}
-   #  DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
-   #  DB_USERNAME_DEV: ${{ secrets.DB_USERNAME_DEV }}
-   #  DB_PASSWORD_DEV: ${{ secrets.DB_PASSWORD_DEV }}
-   #  CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
-   #  CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
-   #  CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
-   #  WEB_FE_ORIGIN: ${{ secrets.WEB_FE_ORIGIN }}
 
     steps:
       - uses: actions/checkout@v4
@@ -63,79 +52,79 @@ jobs:
           EOF
           grep -v 'PASSWORD' .env
 
-      #- name: Start RabbitMQ
-      #  run: |
-      #    # Create configuration directory and file
-      #    mkdir -p rabbitmq-config
-      #    cat << EOF > rabbitmq-config/rabbitmq.conf
-      #    # Disable cluster peer discovery
-      #    cluster_formation.peer_discovery_backend = classic_config
-#
-      #    
-      #    # Enable management plugin
-      #    management.tcp.port = 15672
-      #    management.tcp.ip = 0.0.0.0
-      #    
-      #    # Log to stdout
-      #    log.console = true
-      #    log.console.level = info
-      #    EOF
-#
-      #    # Create a custom entrypoint script to handle cookie permissions
-      #    cat << 'EOF' > rabbitmq-entrypoint.sh
-      #    #!/bin/bash
-      #    set -e
-      #    
-      #    # Ensure directory exists
-      #    mkdir -p /var/lib/rabbitmq
-      #    
-      #    # Set Erlang cookie with proper permissions
-      #    echo "TESTCOOKIE123" > /var/lib/rabbitmq/.erlang.cookie
-      #    chown rabbitmq:rabbitmq /var/lib/rabbitmq/.erlang.cookie
-      #    chmod 600 /var/lib/rabbitmq/.erlang.cookie
-      #    
-      #    
-      #    # Start RabbitMQ
-      #    exec docker-entrypoint.sh rabbitmq-server
-      #    EOF
-      #    
-      #    chmod +x rabbitmq-entrypoint.sh
-      #    
-      #    # Start container with configuration
-      #    docker run -d \
-      #      --name rabbitmq \
-      #      --memory="800m" \
-      #      -e RABBITMQ_ERLANG_COOKIE="TESTCOOKIE123" \
-      #      -e RABBITMQ_DEFAULT_USER=testuser \
-      #      -e RABBITMQ_DEFAULT_PASS=testpassword \
-      #      -v $(pwd)/rabbitmq-config:/etc/rabbitmq \
-      #      -v $(pwd)/rabbitmq-entrypoint.sh:/usr/local/bin/custom-entrypoint \
-      #      --entrypoint /usr/local/bin/custom-entrypoint \
-      #      -p 5672:5672 \
-      #      -p 15672:15672 \
-      #      192.168.188.184:5000/rabbitmq_service_dev:latest
-      #    
-      #    echo "Waiting for RabbitMQ to start..."
-      #    for i in {1..30}; do
-      #      if ! docker ps | grep -q rabbitmq; then
-      #        echo "RabbitMQ container crashed!"
-      #        docker logs rabbitmq
-      #        exit 1
-      #      fi
-      #      if docker exec rabbitmq rabbitmq-diagnostics -q ping >/dev/null 2>&1 && \
-      #         docker exec rabbitmq rabbitmqctl await_startup >/dev/null 2>&1; then
-      #        echo "RabbitMQ is fully ready!"
-      #        docker exec rabbitmq rabbitmqctl list_users
-      #        break
-      #      fi
-      #      sleep 2
-      #    done
-      #    if [ $i -eq 30 ]; then
-      #      echo "RabbitMQ failed to start within 60 seconds"
-      #      docker logs rabbitmq
-      #      exit 1
-      #    fi
-#
+      - name: Start RabbitMQ
+        run: |
+          # Create configuration directory and file
+          mkdir -p rabbitmq-config
+          cat << EOF > rabbitmq-config/rabbitmq.conf
+          # Disable cluster peer discovery
+          cluster_formation.peer_discovery_backend = classic_config
+
+          
+          # Enable management plugin
+          management.tcp.port = 15672
+          management.tcp.ip = 0.0.0.0
+          
+          # Log to stdout
+          log.console = true
+          log.console.level = info
+          EOF
+
+          # Create a custom entrypoint script to handle cookie permissions
+          cat << 'EOF' > rabbitmq-entrypoint.sh
+          #!/bin/bash
+          set -e
+          
+          # Ensure directory exists
+          mkdir -p /var/lib/rabbitmq
+          
+          # Set Erlang cookie with proper permissions
+          echo "TESTCOOKIE123" > /var/lib/rabbitmq/.erlang.cookie
+          chown rabbitmq:rabbitmq /var/lib/rabbitmq/.erlang.cookie
+          chmod 600 /var/lib/rabbitmq/.erlang.cookie
+          
+          
+          # Start RabbitMQ
+          exec docker-entrypoint.sh rabbitmq-server
+          EOF
+          
+          chmod +x rabbitmq-entrypoint.sh
+          
+          # Start container with configuration
+          docker run -d \
+            --name rabbitmq \
+            --memory="800m" \
+            -e RABBITMQ_ERLANG_COOKIE="TESTCOOKIE123" \
+            -e RABBITMQ_DEFAULT_USER=testuser \
+            -e RABBITMQ_DEFAULT_PASS=testpassword \
+            -v $(pwd)/rabbitmq-config:/etc/rabbitmq \
+            -v $(pwd)/rabbitmq-entrypoint.sh:/usr/local/bin/custom-entrypoint \
+            --entrypoint /usr/local/bin/custom-entrypoint \
+            -p 5672:5672 \
+            -p 15672:15672 \
+            192.168.188.184:5000/rabbitmq_service_dev:latest
+          
+          echo "Waiting for RabbitMQ to start..."
+          for i in {1..30}; do
+            if ! docker ps | grep -q rabbitmq; then
+              echo "RabbitMQ container crashed!"
+              docker logs rabbitmq
+              exit 1
+            fi
+            if docker exec rabbitmq rabbitmq-diagnostics -q ping >/dev/null 2>&1 && \
+               docker exec rabbitmq rabbitmqctl await_startup >/dev/null 2>&1; then
+              echo "RabbitMQ is fully ready!"
+              docker exec rabbitmq rabbitmqctl list_users
+              break
+            fi
+            sleep 2
+          done
+          if [ $i -eq 30 ]; then
+            echo "RabbitMQ failed to start within 60 seconds"
+            docker logs rabbitmq
+            exit 1
+          fi
+
       #- name: Verify RabbitMQ
       #  run: |
       #    docker ps -a
