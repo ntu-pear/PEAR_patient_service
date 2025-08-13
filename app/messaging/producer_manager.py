@@ -11,11 +11,12 @@ logger = logging.getLogger(__name__)
 
 class PublishRequest:
     """Encapsulates a publish request"""
-    def __init__(self, exchange: str, routing_key: str, message: Dict[str, Any]):
+    def __init__(self, exchange: str, routing_key: str, message: Dict[str, Any], testing: bool = False):
         self.exchange = exchange
         self.routing_key = routing_key
         self.message = message
         self.timestamp = datetime.utcnow()
+        self.testing = testing                  # When pytesting, threads will be daemon to prevent pytest hanging
 
 class ProducerManager:
     """
@@ -52,7 +53,7 @@ class ProducerManager:
             return
         
         self.is_running = True
-        self.producer_thread = threading.Thread(target=self._producer_loop, daemon=True)
+        self.producer_thread = threading.Thread(target=self._producer_loop, daemon=self.testing)
         self.producer_thread.start()
         logger.info("Producer manager started")
     
@@ -222,13 +223,13 @@ class ProducerManager:
 _producer_manager = None
 _lock = threading.Lock()
 
-def get_producer_manager() -> ProducerManager:
+def get_producer_manager(*, testing: bool = False) -> ProducerManager:
     """Get or create the singleton producer manager"""
     global _producer_manager
     
     with _lock:
         if _producer_manager is None:
-            _producer_manager = ProducerManager()
+            _producer_manager = ProducerManager(testing=testing)
             _producer_manager.start_producer()
             logger.info("Created and started producer manager")
         

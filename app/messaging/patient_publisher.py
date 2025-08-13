@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 class PatientPublisher:
     """Publisher for Patient Service events"""
     
-    def __init__(self):
-        self.manager = get_producer_manager()
+    def __init__(self, testing: bool = False):
+        self.manager = get_producer_manager(testing=testing)
         self.exchange = 'patient.updates'
         
         # Declare the exchange
