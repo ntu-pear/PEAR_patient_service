@@ -7,16 +7,7 @@ on:
 jobs:
   test:
     runs-on: patient_staging_test
-    env:
-      # DRAFTING, to shift this properly after testing
-      # Secrets
-      RABBITMQ_IMAGE_REPOSITORY: ${{ secrets.RABBITMQ_IMAGE_REPOSITORY }}
-      SCHEDULER_IMAGE_REPOSITORY: "192.168.188.173:5000"
-      ACTIVITY_IMAGE_REPOSITORY: "192.168.188.186:5000"
-
-      # Var
-      SCHEDULER_IMAGE_NAME: "pear_schedule:latest"
-      ACTIVITY_IMAGE_NAME: "activity_service_dev:latest"
+    
 
     steps:
       - uses: actions/checkout@v4
@@ -66,11 +57,11 @@ jobs:
         run: |
       
           # RabbitMQ
-          docker pull ${RABBITMQ_IMAGE_REPOSITORY}/rabbitmq_service_dev:latest
+          docker pull 192.168.188.184:5000/rabbitmq_service_dev:latest
           # Activity Service
-          docker pull ${ACTIVITY_IMAGE_REPOSITORY}/${ACTIVITY_IMAGE_NAME}
+          docker pull 192.168.188.184:5000/activity_service_dev:latest
           # Scheduler Service
-          docker pull ${SCHEDULER_IMAGE_REPOSITORY}/${SCHEDULER_IMAGE_NAME}
+          docker pull 192.168.188.173:5000/pear_schedule:latest
 
       - name: Create Docker network
         run: docker network create integration-test-net || true
@@ -135,7 +126,7 @@ jobs:
             --name activity \
             --network integration-test-net \
             --env-file .env \
-            ${ACTIVITY_IMAGE_REPOSITORY}/${ACTIVITY_IMAGE_NAME}
+            192.168.188.184:5000/activity_service_dev:latest
 
       - name: Start Scheduler service
         run: |
@@ -144,7 +135,7 @@ jobs:
             --name scheduler \
             --network integration-test-net \
             --env-file .env \
-            ${SCHEDULER_IMAGE_REPOSITORY}/${SCHEDULER_IMAGE_NAME}
+            192.168.188.173:5000/pear_schedule:latest
 
       - name: Run Pytests
         run: |
