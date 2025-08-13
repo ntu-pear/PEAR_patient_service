@@ -104,7 +104,8 @@ jobs:
             -p 15672:15672 \
             192.168.188.184:5000/rabbitmq_service_dev:latest
           
-         
+
+
 
       #- name: Verify RabbitMQ
       #  run: |
