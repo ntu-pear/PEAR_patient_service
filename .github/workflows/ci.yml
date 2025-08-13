@@ -1,57 +1,154 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
 name: CI
 
 on:
-  push:
-    branches: ['**']
   pull_request:
     branches: ['**']
 
-permissions:
-  contents: read
-
 jobs:
-  build:
-    runs-on: ubuntu-24.04
-
-    env:
-      DB_SERVER_DEV: ${{ secrets.DB_SERVER_DEV }}
-      DB_DATABASE_DEV: ${{ secrets.DB_DATABASE_DEV }}
-      DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
-      DB_USERNAME_DEV: ${{ secrets.DB_USERNAME_DEV }}
-      DB_PASSWORD_DEV: ${{ secrets.DB_PASSWORD_DEV }}
-      CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
-      CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
-      CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
-      WEB_FE_ORIGIN: ${{ secrets.WEB_FE_ORIGIN }}
+  test:
+    runs-on: patient_staging_test
+    
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.9.19
+      
+      
+      - name: Set up Python 3.9
         uses: actions/setup-python@v3
         with:
           python-version: '3.9.19'
 
-      - name: Create .env file from GitHub Secrets
-        run: |
-          echo "DB_SERVER_DEV=${{ secrets.DB_SERVER_DEV }}" >> .env
-          echo "DB_DATABASE_DEV=${{ secrets.DB_DATABASE_DEV }}" >> .env
-          echo "DB_DATABASE_PORT=${{ secrets.DB_DATABASE_PORT }}" >> .env
-          echo "DB_USERNAME_DEV=${{ secrets.DB_USERNAME_DEV }}" >> .env
-          echo "DB_PASSWORD_DEV=${{ secrets.DB_PASSWORD_DEV }}" >> .env
-          echo "DB_DRIVER_DEV=${{ secrets.DB_DRIVER_DEV }}" >> .env
-          echo "CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}" >> .env
-          echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" >> .env
-          echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" >> .env
-          echo "WEB_FE_ORIGIN=${{ secrets.WEB_FE_ORIGIN }}" >> .env
-          
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Test with pytest
+      - name: Create .env file
         run: |
-          pytest
+          cat <<EOF > .env
+          # Database
+          DB_SERVER_DEV=${{ secrets.DB_SERVER_DEV }}
+          DB_DATABASE_DEV=${{ secrets.DB_DATABASE_DEV }}
+          DB_DATABASE_PORT=${{ secrets.DB_DATABASE_PORT }}
+          DB_USERNAME_DEV=${{ secrets.DB_USERNAME_DEV }}
+          DB_PASSWORD_DEV=${{ secrets.DB_PASSWORD_DEV }}
+          DB_DRIVER_DEV=${{ secrets.DB_DRIVER_DEV }}
+          
+          # Cloudinary
+          CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
+          
+          # Web
+          WEB_FE_ORIGIN=${{ secrets.WEB_FE_ORIGIN }}
+          
+          # RabbitMQ
+          RABBITMQ_HOST=localhost
+          RABBITMQ_PORT=5672
+          RABBITMQ_USER=testuser
+          RABBITMQ_PASS=testpassword
+          RABBITMQ_VIRTUAL_HOST=/
+          RABBITMQ_DEFAULT_USER=testuser
+          RABBITMQ_DEFAULT_PASS=testpassword
+          EOF
+          grep -v 'PASSWORD' .env
+      
+      - name: Pull Docker images
+        run: |
+      
+          # RabbitMQ
+          docker pull 192.168.188.184:5000/rabbitmq_service_dev:latest
+          # Activity Service
+          docker pull 192.168.188.186:5000/activity_service_dev:latest
+          # Scheduler Service
+          docker pull 192.168.188.173:5000/pear_schedule:latest
+
+      - name: Create Docker network
+        run: docker network create integration-test-net || true
+
+      - name: Start RabbitMQ
+        run: |
+        
+          # Create configuration directory and file
+          mkdir -p rabbitmq-config
+          cat << EOF > rabbitmq-config/rabbitmq.conf
+          # Disable cluster peer discovery
+          cluster_formation.peer_discovery_backend = classic_config
+
+          
+          # Enable management plugin
+          management.tcp.port = 15672
+          management.tcp.ip = 0.0.0.0
+          
+          # Log to stdout
+          log.console = true
+          log.console.level = info
+          EOF
+
+          # Create a custom entrypoint script to handle cookie permissions
+          cat << 'EOF' > rabbitmq-entrypoint.sh
+          #!/bin/bash
+          set -e
+          
+          # Ensure directory exists
+          mkdir -p /var/lib/rabbitmq
+          
+          # Set Erlang cookie with proper permissions
+          echo "TESTCOOKIE123" > /var/lib/rabbitmq/.erlang.cookie
+          chown rabbitmq:rabbitmq /var/lib/rabbitmq/.erlang.cookie
+          chmod 600 /var/lib/rabbitmq/.erlang.cookie
+          
+          
+          # Start RabbitMQ
+          exec docker-entrypoint.sh rabbitmq-server
+          EOF
+          
+          chmod +x rabbitmq-entrypoint.sh
+          
+          # Start container with configuration
+          docker run -d \
+            --name rabbitmq \
+            --memory="800m" \
+            -e RABBITMQ_ERLANG_COOKIE="TESTCOOKIE123" \
+            -e RABBITMQ_DEFAULT_USER=testuser \
+            -e RABBITMQ_DEFAULT_PASS=testpassword \
+            -v $(pwd)/rabbitmq-config:/etc/rabbitmq \
+            -v $(pwd)/rabbitmq-entrypoint.sh:/usr/local/bin/custom-entrypoint \
+            --entrypoint /usr/local/bin/custom-entrypoint \
+            -p 5672:5672 \
+            -p 15672:15672 \
+            192.168.188.184:5000/rabbitmq_service_dev:latest
+      
+      - name: Start Activity service
+        run: |
+          
+          docker run -d \
+            --name activity \
+            --network integration-test-net \
+            --env-file .env \
+            192.168.188.186:5000/activity_service_dev:latest
+
+      - name: Start Scheduler service
+        run: |
+          
+          docker run -d \
+            --name scheduler \
+            --network integration-test-net \
+            --env-file .env \
+            192.168.188.173:5000/pear_schedule:latest
+
+      - name: Run Pytests
+        run: |
+          python -m pytest
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker stop rabbitmq || true
+          docker rm rabbitmq || true
+
+          docker stop activity || true
+          docker rm activity || true
+
+          docker stop scheduler || true
+          docker rm scheduler || true
