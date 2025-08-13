@@ -104,31 +104,9 @@ jobs:
             -p 15672:15672 \
             192.168.188.184:5000/rabbitmq_service_dev:latest
           
-
-
-
-      #- name: Verify RabbitMQ
-      #  run: |
-      #    docker ps -a
-      #    nc -vz localhost 5672
-      #    docker exec rabbitmq rabbitmqctl status
-
-      - name: Run tests with timeout
+      - name: Run Pytests
         run: |
-          timeout 60s python -m pytest -v \
-            --durations=10 \
-            --capture=no \
-            --disable-warnings \
-            --junitxml=test-results.xml
-        continue-on-error: true
-
-      - name: Print test results and debug info
-        run: |
-          echo "===== TESTS FINISHED ====="
-          docker ps -a
-          docker logs --tail 100 rabbitmq || echo "No rabbitmq logs found"
-          ps aux | head -40
-          lsof -nP | head -40 || echo "lsof not available"
+          python -m pytest
 
       - name: Cleanup
         if: always()
