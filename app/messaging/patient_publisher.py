@@ -12,6 +12,7 @@ class PatientPublisher:
     def __init__(self, testing: bool = False):
         self.manager = get_producer_manager(testing=testing)
         self.exchange = 'patient.updates'
+        self.testing = testing
         
         # Declare the exchange
         try:
@@ -96,11 +97,11 @@ class PatientPublisher:
 # Singleton instance
 _patient_publisher = None
 
-def get_patient_publisher() -> PatientPublisher:
+def get_patient_publisher(testing: bool =False) -> PatientPublisher:
     """Get or create the singleton patient publisher instance"""
     global _patient_publisher
     if _patient_publisher is None:
-        _patient_publisher = PatientPublisher()
+        _patient_publisher = PatientPublisher(testing=testing)
     return _patient_publisher
 
 
@@ -116,7 +117,7 @@ if __name__ == "__main__":
     
     if sys.argv[1] == "test":
         # Test publisher
-        publisher = PatientPublisher()
+        publisher = PatientPublisher(testing=True)
         
         # Test data
         test_patient_data = {
