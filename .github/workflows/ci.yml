@@ -146,3 +146,9 @@ jobs:
         run: |
           docker stop rabbitmq || true
           docker rm rabbitmq || true
+
+          docker stop activity || true
+          docker rm activity || true
+
+          docker stop scheduler || true
+          docker rm scheduler || true
