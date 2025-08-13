@@ -85,6 +85,12 @@ def test_messaging_setup():
     except Exception as e:
         print(f"❌ Messaging setup failed: {str(e)}")
         return False
+    finally:
+        try:
+            publisher.close()
+        except Exception:
+            pass
+
 
 def test_script_initialization():
     """Test script initialization"""
