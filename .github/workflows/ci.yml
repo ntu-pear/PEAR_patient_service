@@ -104,26 +104,7 @@ jobs:
             -p 15672:15672 \
             192.168.188.184:5000/rabbitmq_service_dev:latest
           
-          echo "Waiting for RabbitMQ to start..."
-          for i in {1..30}; do
-            if ! docker ps | grep -q rabbitmq; then
-              echo "RabbitMQ container crashed!"
-              docker logs rabbitmq
-              exit 1
-            fi
-            if docker exec rabbitmq rabbitmq-diagnostics -q ping >/dev/null 2>&1 && \
-               docker exec rabbitmq rabbitmqctl await_startup >/dev/null 2>&1; then
-              echo "RabbitMQ is fully ready!"
-              docker exec rabbitmq rabbitmqctl list_users
-              break
-            fi
-            sleep 2
-          done
-          if [ $i -eq 30 ]; then
-            echo "RabbitMQ failed to start within 60 seconds"
-            docker logs rabbitmq
-            exit 1
-          fi
+         
 
       #- name: Verify RabbitMQ
       #  run: |
