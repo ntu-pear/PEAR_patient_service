@@ -126,7 +126,7 @@ jobs:
             --name activity \
             --network integration-test-net \
             --env-file .env \
-            192.168.188.184:5000/activity_service_dev:latest
+            192.168.188.186:5000/activity_service_dev:latest
 
       - name: Start Scheduler service
         run: |
