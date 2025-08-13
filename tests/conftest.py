@@ -4,6 +4,8 @@ import sys
 import traceback
 import pytest
 
+# This is a helper function to dump stack trace of threads.
+# Incase pytest hangs indefinitely during the CI process, check this stack trace for non-daemon threads.
 def dump_thread_stacks():
     for thread in threading.enumerate():
         print(f"\n--- Thread: {thread.name} --- daemon={thread.daemon}")
