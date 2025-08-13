@@ -130,8 +130,8 @@ jobs:
           ps aux | head -40
           lsof -nP | head -40 || echo "lsof not available"
 
-      #- name: Cleanup
-      #  if: always()
-      #  run: |
-      #    docker stop rabbitmq || true
-      #    docker rm rabbitmq || true
+      - name: Cleanup
+        if: always()
+        run: |
+          docker stop rabbitmq || true
+          docker rm rabbitmq || true
