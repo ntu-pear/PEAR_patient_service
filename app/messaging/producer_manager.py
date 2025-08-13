@@ -52,7 +52,7 @@ class ProducerManager:
             return
         
         self.is_running = True
-        self.producer_thread = threading.Thread(target=self._producer_loop, daemon=False)
+        self.producer_thread = threading.Thread(target=self._producer_loop, daemon=True)
         self.producer_thread.start()
         logger.info("Producer manager started")
     
