@@ -11,12 +11,12 @@ logger = logging.getLogger(__name__)
 
 class PublishRequest:
     """Encapsulates a publish request"""
-    def __init__(self, exchange: str, routing_key: str, message: Dict[str, Any], testing: bool = False):
+    def __init__(self, exchange: str, routing_key: str, message: Dict[str, Any]):
         self.exchange = exchange
         self.routing_key = routing_key
         self.message = message
         self.timestamp = datetime.utcnow()
-        self.testing = testing                  # When pytesting, threads will be daemon to prevent pytest hanging
+        
 
 class ProducerManager:
     """
@@ -24,12 +24,13 @@ class ProducerManager:
     Maintains a persistent connection and processes publish requests from a queue.
     """
     
-    def __init__(self, service_name: str = "producer-manager"):
+    def __init__(self, service_name: str = "producer-manager", testing: bool = False):
         self.client = RabbitMQClient(service_name)
         self.publish_queue = queue.Queue(maxsize=1000)
         self.is_running = False
         self.producer_thread = None
         self.exchanges = set()  # Track declared exchanges
+        self.testing = testing                  # When pytesting, threads will be daemon to prevent pytest hanging
         
     def declare_exchange(self, exchange: str, exchange_type: str = 'topic'):
         """Declare an exchange (idempotent)"""
