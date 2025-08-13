@@ -461,15 +461,11 @@ def delete_patient_profile_picture(
 
     return db_patient
 
-
-""" Hard delete patient from database, used for testing purposes only """
-
-
-def hard_delete_patient(
+#Hard delete patient from database, used for testing purposes only
+def hard_delete_patient_records_by_id(
     db: Session, patient_id: int, user_id: str, user_full_name: str
 ):
     """Hard delete patient from database"""
-
     db_patient = (
         db.query(Patient)
         .filter(Patient.id == patient_id, Patient.isDeleted == "1")
@@ -520,10 +516,10 @@ def hard_delete_patient(
         )
         if not success:
             logger.warning(
-                f"Failed to publish HARD_PATIENT_DELETED event for patient {patient_id}"
+                f"Failed to publish HARD_DELETED_PATIENT event for patient {patient_id}"
             )
     except Exception as e:
-        logger.error(f"Error publishing hard patient deletion event: {str(e)}")
+        logger.error(f"Error publishing hard deletion patient event: {str(e)}")
         # Don't fail the operation if messaging fails
 
     return patient_dict
