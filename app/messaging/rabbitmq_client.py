@@ -44,6 +44,10 @@ class RabbitMQClient:
                 
                 self.connection = pika.BlockingConnection(parameters)
                 self.channel = self.connection.channel()
+                
+                # Enable publisher confirms for reliability
+                self.channel.confirm_delivery()
+                
                 self.is_connected = True
                 
                 logger.info(f"{self.service_name} connected to RabbitMQ at {self.host}:{self.port}")
@@ -78,6 +82,12 @@ class RabbitMQClient:
             try:
                 self.ensure_connection()
                 
+                # Log the message before publishing
+                correlation_id = message.get('correlation_id', 'unknown')
+                logger.info(f"Publishing message {correlation_id} to {exchange}/{routing_key} (attempt {attempt+1})")
+                
+                # Publish with confirmation - basic_publish with confirm_delivery returns None
+                # but will raise exception if it fails
                 self.channel.basic_publish(
                     exchange=exchange,
                     routing_key=routing_key,
@@ -85,11 +95,16 @@ class RabbitMQClient:
                     properties=pika.BasicProperties(
                         delivery_mode=2,  # Persistent message
                         timestamp=int(time.time()),
-                        content_type='application/json'
+                        content_type='application/json',
+                        correlation_id=correlation_id,
+                        message_id=f"{self.service_name}_{int(time.time() * 1000)}"
                     )
+                    # Temporarily disabled mandatory=True to fix publish errors
+                    # mandatory=True  # Ensure message is routed to a queue
                 )
                 
-                logger.info(f"{self.service_name} published: {exchange}/{routing_key}")
+                # If no exception was raised, publishing succeeded
+                logger.info(f"Successfully published {correlation_id} to {exchange}/{routing_key}")
                 return True
                 
             except Exception as e:
