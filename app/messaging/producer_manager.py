@@ -16,6 +16,7 @@ class PublishRequest:
         self.routing_key = routing_key
         self.message = message
         self.timestamp = datetime.utcnow()
+        
 
 class ProducerManager:
     """
@@ -23,12 +24,13 @@ class ProducerManager:
     Maintains a persistent connection and processes publish requests from a queue.
     """
     
-    def __init__(self, service_name: str = "producer-manager"):
+    def __init__(self, service_name: str = "producer-manager", testing: bool = False):
         self.client = RabbitMQClient(service_name)
         self.publish_queue = queue.Queue(maxsize=1000)
         self.is_running = False
         self.producer_thread = None
         self.exchanges = set()  # Track declared exchanges
+        self.testing = testing                  # When pytesting, threads will be daemon to prevent pytest hanging
         
     def declare_exchange(self, exchange: str, exchange_type: str = 'topic'):
         """Declare an exchange (idempotent)"""
@@ -52,7 +54,7 @@ class ProducerManager:
             return
         
         self.is_running = True
-        self.producer_thread = threading.Thread(target=self._producer_loop, daemon=False)
+        self.producer_thread = threading.Thread(target=self._producer_loop, daemon=self.testing)
         self.producer_thread.start()
         logger.info("Producer manager started")
     
@@ -222,13 +224,13 @@ class ProducerManager:
 _producer_manager = None
 _lock = threading.Lock()
 
-def get_producer_manager() -> ProducerManager:
+def get_producer_manager(*, testing: bool = False) -> ProducerManager:
     """Get or create the singleton producer manager"""
     global _producer_manager
     
     with _lock:
         if _producer_manager is None:
-            _producer_manager = ProducerManager()
+            _producer_manager = ProducerManager(testing=testing)
             _producer_manager.start_producer()
             logger.info("Created and started producer manager")
         

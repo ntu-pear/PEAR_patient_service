@@ -41,7 +41,7 @@ def read_patients(
 @router.post("/patients/add", response_model=SingleResponse[Patient])
 def create_patient(patient: PatientCreate, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
     payload = extract_jwt_payload(request, require_auth)
-    user_id = get_user_id(payload) or "anonymous"
+    user_id = get_user_id(payload) or "1"
     user_full_name = get_full_name(payload) or "Anonymous User"
     db_patient = crud_patient.create_patient(db, patient, user_id, user_full_name)
     patient = Patient.model_validate(db_patient)
@@ -50,7 +50,7 @@ def create_patient(patient: PatientCreate, request: Request, require_auth: bool 
 @router.put("/patients/update/{patient_id}", response_model=SingleResponse[Patient])
 def update_patient(patient_id: int, patient: PatientUpdate, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
     payload = extract_jwt_payload(request, require_auth)
-    user_id = get_user_id(payload) or "anonymous"
+    user_id = get_user_id(payload) or "1"
     user_full_name = get_full_name(payload) or "Anonymous User"
     db_patient = crud_patient.update_patient(db, patient_id, patient, user_id, user_full_name)
     if db_patient is None:
@@ -61,7 +61,7 @@ def update_patient(patient_id: int, patient: PatientUpdate, request: Request, re
 @router.put("/patients/update/{patient_id}/update_patient_profile_picture", response_model=SingleResponse[Patient])
 def update_patient_profile_picture(patient_id: int, request: Request, require_auth: bool = True, file: UploadFile = File(...), db: Session = Depends(get_db)):
     payload = extract_jwt_payload(request, require_auth)
-    user_id = get_user_id(payload) or "anonymous"
+    user_id = get_user_id(payload) or "1"
     user_full_name = get_full_name(payload) or "Anonymous User"
     db_patient = crud_patient.update_patient_profile_picture(db, patient_id, file, user_id, user_full_name)
     if db_patient is None:
@@ -72,7 +72,7 @@ def update_patient_profile_picture(patient_id: int, request: Request, require_au
 @router.delete("/patients/delete/{patient_id}", response_model=SingleResponse[Patient])
 def delete_patient(patient_id: int, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
     payload = extract_jwt_payload(request, require_auth)
-    user_id = get_user_id(payload) or "anonymous"
+    user_id = get_user_id(payload) or "1"
     user_full_name = get_full_name(payload) or "Anonymous User"
     db_patient = crud_patient.delete_patient(db, patient_id, user_id, user_full_name)
     if db_patient is None:
@@ -83,7 +83,7 @@ def delete_patient(patient_id: int, request: Request, require_auth: bool = True,
 @router.delete("/patients/update/{patient_id}/update_patient_profile_picture", response_model=SingleResponse[Patient])
 def delete_patient_profile_picture(patient_id: int, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
     payload = extract_jwt_payload(request, require_auth)
-    user_id = get_user_id(payload) or "anonymous"
+    user_id = get_user_id(payload) or "1"
     user_full_name = get_full_name(payload) or "Anonymous User"
     db_patient = crud_patient.delete_patient_profile_picture(db, patient_id, user_id, user_full_name)
     if db_patient is None:

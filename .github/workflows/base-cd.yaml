@@ -1,4 +1,4 @@
-name: Deploy Service
+name: Base CD
 
 on:
   workflow_call:
