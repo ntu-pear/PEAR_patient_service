@@ -23,9 +23,10 @@ on:
       scheduler-service-image:
         required: true
         type: string
-
+    
+    # These are passed in from ci.yml
     secrets:
-      DB_SERVER_DEV:
+      DB_SERVER:
         required: true
       DB_DATABASE:
         required: true
@@ -67,7 +68,7 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-        # The "secrets.XXX" here are passed in from ci.yml
+        # The "secrets.XXX" here are mapped from whats passed in from ci.yml
       - name: Create .env file
         run: |
           cat <<EOF > .env
