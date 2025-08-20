@@ -46,8 +46,6 @@ on:
         required: true
       WEB_FE_ORIGIN:
         required: true
-      RABBITMQ_PORT:
-        required: true
       RABBITMQ_VIRTUAL_HOST:
         required: true
 
@@ -88,9 +86,9 @@ jobs:
           # Web
           WEB_FE_ORIGIN=${{ secrets.WEB_FE_ORIGIN }}
           
-          # RabbitMQ
+          # RabbitMQ local instance for Integration Test
           RABBITMQ_HOST=localhost
-          RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}
+          RABBITMQ_PORT=5672
           RABBITMQ_USER=CI_TestUser
           RABBITMQ_PASS=CI_TestPassword
           RABBITMQ_VIRTUAL_HOST=/
