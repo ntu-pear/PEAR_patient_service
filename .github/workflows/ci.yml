@@ -7,7 +7,7 @@ on:
 jobs:
   ci-staging:
     # This will be the default CI job for everything except for Main branch.
-    if: github.ref != 'refs/heads/main'
+    if: github.base_ref != 'main'
     uses: ./.github/workflows/base-ci.yml
     with:
       environment: staging
