@@ -19,7 +19,7 @@ jobs:
       docker-image-name: 'patient_service_dev'
       docker-image-tag: 'latest'
     secrets:
-      DB_SERVER: ${{ secrets.DB_SERVER_STAGING }} # Staging sever DB
+      DB_SERVER: ${{ secrets.DB_SERVER_STAGING }}
       DB_DATABASE: ${{ secrets.DB_DATABASE_DEV }}
       DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
       DB_USERNAME: ${{ secrets.DB_USERNAME_DEV }}
@@ -46,7 +46,7 @@ jobs:
       docker-image-name: 'patient_service_dev'
       docker-image-tag: 'latest'
     secrets:
-      DB_SERVER: ${{ secrets.DB_SERVER_DEV }}
+      DB_SERVER: ${{ secrets.DB_SERVER_PROD }}
       DB_DATABASE: ${{ secrets.DB_DATABASE_DEV }}
       DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
       DB_USERNAME: ${{ secrets.DB_USERNAME_DEV }}

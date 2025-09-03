@@ -1,4 +1,4 @@
-name: Deploy Service
+name: Base CD
 
 on:
   workflow_call:
@@ -27,7 +27,7 @@ on:
         required: false
         type: string
         default: latest
-
+    # These are passed in from cd.yml
     secrets:
       DB_SERVER:
         required: true
@@ -57,25 +57,12 @@ on:
         required: true
       RABBITMQ_PASS:
         required: true
+      RABBITMQ_VIRTUAL_HOST:
+        required: false
 
 jobs:
   deploy:
     runs-on: ${{ inputs.runner-label }}
-    env:
-      DB_SERVER: ${{ secrets.DB_SERVER }}
-      DB_DATABASE: ${{ secrets.DB_DATABASE }}
-      DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
-      DB_USERNAME: ${{ secrets.DB_USERNAME }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      DB_DRIVER: ${{ secrets.DB_DRIVER }}
-      CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
-      CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
-      CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
-      WEB_FE_ORIGIN: ${{ secrets.WEB_FE_ORIGIN }}
-      RABBITMQ_HOST: ${{ secrets.RABBITMQ_HOST }}
-      RABBITMQ_PORT: ${{ secrets.RABBITMQ_PORT }}
-      RABBITMQ_USER: ${{ secrets.RABBITMQ_USER }}
-      RABBITMQ_PASS: ${{ secrets.RABBITMQ_PASS }}
 
     steps:
       - uses: actions/checkout@v4
@@ -86,23 +73,41 @@ jobs:
           ls -la
           git status
 
-      - name: Create .env file from GitHub Secrets
+      - name: Create .env file from base-cd.yml
         run: |
-          echo "DB_SERVER=${{ secrets.DB_SERVER }}" >> .env
+
+          # Database
+          echo "DB_SERVER_DEV=${{ secrets.DB_SERVER }}" >> .env
           echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> .env
           echo "DB_DATABASE_PORT=${{ secrets.DB_DATABASE_PORT }}" >> .env
           echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
           if [ ! -z "${{ secrets.DB_DRIVER }}" ]; then echo "DB_DRIVER=${{ secrets.DB_DRIVER }}" >> .env; fi
+          
+          # Cloudinary
           echo "CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}" >> .env
           echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" >> .env
           echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" >> .env
+
+          # Origins
           echo "WEB_FE_ORIGIN=${{ secrets.WEB_FE_ORIGIN }}" >> .env
+
+          # RabbitMQ
           echo "RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}" >> .env
           echo "RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}" >> .env
           echo "RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}" >> .env
           echo "RABBITMQ_PASS=${{ secrets.RABBITMQ_PASS }}" >> .env
-      
+          if [ ! -z "${{ secrets.RABBITMQ_VIRTUAL_HOST }}" ]; then echo "RABBITMQ_VIRTUAL_HOST=${{ secrets.RABBITMQ_VIRTUAL_HOST }}" >> .env; fi
+
+      - name: Create Kubernetes Secret
+        run: |
+            kubectl delete secret patient-service-secret --ignore-not-found
+            kubectl create secret generic patient-service-secret \
+            --from-literal=ES_HOST="${{ secrets.ES_HOST_STAGING }}" \
+            --from-literal=ES_PORT="${{ secrets.ES_PORT }}" \
+            --from-literal=ES_USERNAME="${{ secrets.ES_USERNAME }}" \
+            --from-literal=ES_PASSWORD="${{ secrets.ES_PASSWORD_STAGING }}"
+
       - name: Apply Kubernetes ConfigMap
         run: |
           echo "Applying ConfigMap..."

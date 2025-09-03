@@ -74,7 +74,7 @@ def test_messaging_setup():
         
         from ..messaging.patient_publisher import get_patient_publisher
         
-        publisher = get_patient_publisher()
+        publisher = get_patient_publisher(testing=True)
         if publisher:
             print("✅ Patient publisher initialized successfully")
             return True

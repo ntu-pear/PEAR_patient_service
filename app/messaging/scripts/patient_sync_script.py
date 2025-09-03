@@ -71,7 +71,7 @@ class PatientSyncScript(BaseScript):
             self.func = func
             
             # Set up messaging
-            self.publisher = get_patient_publisher()
+            self.publisher = get_patient_publisher(testing=True)
             
             self.logger.info("✅ Dependencies initialized successfully")
             
