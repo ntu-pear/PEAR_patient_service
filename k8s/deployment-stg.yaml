@@ -20,14 +20,6 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
-
-        env:
-        - name: DB_DRIVER
-          valueFrom: 
-            configMapKeyRef:
-              name: fyp-config
-              key: DB_DRIVER
-              
         volumeMounts:
         - name: log-volume
           mountPath: /app/logs  # Path inside the container
