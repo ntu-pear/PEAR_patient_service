@@ -28,7 +28,7 @@ on:
     secrets:
       DB_SERVER:
         required: true
-      DB_DATABASE:
+      DB_DATABASE_DEV:
         required: true
       DB_DATABASE_PORT:
         required: true
