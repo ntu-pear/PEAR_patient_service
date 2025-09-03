@@ -76,7 +76,7 @@ jobs:
           DB_DATABASE_PORT=${{ secrets.DB_DATABASE_PORT }}
           DB_USERNAME_DEV=${{ secrets.DB_USERNAME }}
           DB_PASSWORD_DEV=${{ secrets.DB_PASSWORD }}
-          DB_DRIVER_DEV=${{ secrets.DB_DRIVER }}
+          DB_DRIVER_DEV=${{ secrets.DB_DRIVER_DEV }}
           
           # Cloudinary
           CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
