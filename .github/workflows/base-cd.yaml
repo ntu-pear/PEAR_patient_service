@@ -31,7 +31,7 @@ on:
     secrets:
       DB_SERVER:
         required: true
-      DB_DATABASE:
+      DB_DATABASE_DEV:
         required: true
       DB_DATABASE_PORT:
         required: true
@@ -78,7 +78,7 @@ jobs:
 
           # Database
           echo "DB_SERVER_DEV=${{ secrets.DB_SERVER }}" >> .env
-          echo "DB_DATABASE_DEV=${{ secrets.DB_DATABASE }}" >> .env
+          echo "DB_DATABASE_DEV=${{ secrets.DB_DATABASE_DEV }}" >> .env
           echo "DB_DATABASE_PORT=${{ secrets.DB_DATABASE_PORT }}" >> .env
           echo "DB_USERNAME_DEV=${{ secrets.DB_USERNAME }}" >> .env
           echo "DB_PASSWORD_DEV=${{ secrets.DB_PASSWORD }}" >> .env
