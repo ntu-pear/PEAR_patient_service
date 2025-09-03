@@ -39,7 +39,7 @@ on:
         required: true
       DB_PASSWORD:
         required: true
-      DB_DRIVER:
+      DB_DRIVER_DEV:
         required: true
       CLOUDINARY_CLOUD_NAME:
         required: true
@@ -82,7 +82,7 @@ jobs:
           echo "DB_DATABASE_PORT=${{ secrets.DB_DATABASE_PORT }}" >> .env
           echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          if [ ! -z "${{ secrets.DB_DRIVER }}" ]; then echo "DB_DRIVER=${{ secrets.DB_DRIVER }}" >> .env; fi
+          echo "DB_DRIVER_DEV=${{ secrets.DB_DRIVER_DEV }}" >> .env
           
           # Cloudinary
           echo "CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}" >> .env
