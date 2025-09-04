@@ -81,7 +81,7 @@ def _patient_to_dict(patient) -> Dict[str, Any]:
         logger.error(f"Error converting patient to dict: {str(e)}")
         return {}
 
-def create_patient(db: Session, patient: PatientCreate, user: str, user_full_name: str, orrelation_id: str = None):
+def create_patient(db: Session, patient: PatientCreate, user: str, user_full_name: str, correlation_id: str = None):
     """ Create a new patient with message queue publishing """
 
     # Check NRIC uniqueness
