@@ -111,10 +111,11 @@ class ProducerManager:
             )
             
             if success:
-                logger.debug(f"Published to {request.exchange}/{request.routing_key}")
+                logger.info(f"Published to {request.exchange}/{request.routing_key} - correlation: {request.message.get('correlation_id', 'unknown')}")
+                # Add delay to ensure messages are processed sequentially
+                time.sleep(0.2)  # 200ms delay between messages
             else:
-                logger.error(f"Failed to publish to {request.exchange}/{request.routing_key}")
-                
+                logger.error(f"Failed to publish to {request.exchange}/{request.routing_key} - correlation: {request.message.get('correlation_id', 'unknown')}")
         except Exception as e:
             logger.error(f"Error processing publish request: {str(e)}")
             raise
