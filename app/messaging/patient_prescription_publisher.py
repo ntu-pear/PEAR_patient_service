@@ -12,7 +12,7 @@ class PatientPrescriptionPublisher:
 
     def __init__(self, testing: bool = False):
         self.manager = get_producer_manager(testing=testing)
-        self.exchange = "patient_prescription.updates"
+        self.exchange = "patient.updates"
         self.testing = testing
 
         # Declare the exchange
@@ -37,7 +37,7 @@ class PatientPrescriptionPublisher:
             "timestamp": datetime.utcnow().isoformat(),
         }
 
-        routing_key = f"patient_prescription.created.{patient_prescription_id}"
+        routing_key = f"patient.prescription.created.{patient_prescription_id}"
         success = self.manager.publish(self.exchange, routing_key, message)
 
         if success:
@@ -52,58 +52,57 @@ class PatientPrescriptionPublisher:
         return success
 
     # TODO: Implement update and delete event publishing methods for patient prescriptions
-    def publish_patient_updated(
+    def publish_patient_prescription_updated(
         self,
-        patient_id: int,
+        patient_prescription_id: int,
         old_data: Dict[str, Any],
         new_data: Dict[str, Any],
-        changes: Dict[str, Any],
+        # changes: Dict[str, Any],
         modified_by: str,
     ) -> bool:
-        """Publish patient update event"""
+        """Publish patient prescription update event"""
         message = {
-            "event_type": "PATIENT_UPDATED",
-            "patient_id": patient_id,
+            "event_type": "PATIENT_PRESCRIPTION_UPDATED",
+            "patient_prescription_id": patient_prescription_id,
             "old_data": old_data,
             "new_data": new_data,
-            "changes": changes,
+            # "changes": changes,
             "modified_by": modified_by,
             "timestamp": datetime.utcnow().isoformat(),
         }
 
-        routing_key = f"patient.updated.{patient_id}"
+        routing_key = f"patient.prescription.updated.{patient_prescription_id}"
         success = self.manager.publish(self.exchange, routing_key, message)
 
         if success:
-            logger.info(f"Published PATIENT_UPDATED event for patient {patient_id}")
+            logger.info(f"Published PATIENT_PRESCRIPTION_UPDATED event for patient {patient_prescription_id}")
         else:
             logger.error(
-                f"Failed to publish PATIENT_UPDATED event for patient {patient_id}"
+                f"Failed to publish PATIENT_PRESCRIPTION_UPDATED event for patient {patient_prescription_id}"
             )
 
         return success
 
-    # TODO: Implement update and delete event publishing methods for patient prescriptions
-    def publish_patient_deleted(
-        self, patient_id: int, patient_data: Dict[str, Any], deleted_by: str
+    def publish_patient_prescription_deleted(
+        self, patient_prescription_id: int, patient_prescription_data: Dict[str, Any], deleted_by: str
     ) -> bool:
-        """Publish patient deletion event"""
+        """Publish patient prescription deletion event"""
         message = {
-            "event_type": "PATIENT_DELETED",
-            "patient_id": patient_id,
-            "patient_data": patient_data,
+            "event_type": "PATIENT_PRESCRIPTION_DELETED",
+            "patient_prescription_id": patient_prescription_id,
+            "patient_prescription_data": patient_prescription_data,
             "deleted_by": deleted_by,
             "timestamp": datetime.utcnow().isoformat(),
         }
 
-        routing_key = f"patient.deleted.{patient_id}"
+        routing_key = f"patient.prescription.deleted.{patient_prescription_id}"
         success = self.manager.publish(self.exchange, routing_key, message)
 
         if success:
-            logger.info(f"Published PATIENT_DELETED event for patient {patient_id}")
+            logger.info(f"Published PATIENT_PRESCRIPTION_DELETED event for patient {patient_prescription_id}")
         else:
             logger.error(
-                f"Failed to publish PATIENT_DELETED event for patient {patient_id}"
+                f"Failed to publish PATIENT_PRESCRIPTION_DELETED event for patient {patient_prescription_id}"
             )
 
         return success

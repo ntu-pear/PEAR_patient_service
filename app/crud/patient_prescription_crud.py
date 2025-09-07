@@ -1,3 +1,4 @@
+import logging
 import math
 from datetime import datetime
 
@@ -7,10 +8,9 @@ from sqlalchemy.orm import Session
 
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 
-import logging
-
 # Import the messaging publisher
 from ..messaging import get_patient_prescription_publisher
+
 logger = logging.getLogger(__name__)
 
 from ..models.patient_prescription_model import PatientPrescription
@@ -116,11 +116,10 @@ def create_prescription(
             updated_data=updated_data_dict,
         )
 
-        #  # Publish patient creation event to message queue
+        # Publish patient prescription creation event to message queue
         try:
             publisher = get_patient_prescription_publisher()
             # patient_dict = _patient_to_dict(new_patient)
-            # TODO: Decide what data to include in the event. For now, sending the updated data dict defined above.
             patient_prescription_dict = updated_data_dict
             success = publisher.publish_patient_prescription_created(
                 patient_prescription_id=new_prescription.Id,
@@ -130,7 +129,7 @@ def create_prescription(
             if not success:
                 logger.warning(f"Failed to publish PATIENT_PRESCRIPTION_CREATED event for patient {new_prescription.Id}")
         except Exception as e:
-            logger.error(f"Error publishing patient creation event: {str(e)}")
+            logger.error(f"Error publishing patient prescription creation event: {str(e)}")
             # Don't fail the operation if messaging fails
 
         return new_prescription
@@ -199,8 +198,20 @@ def update_prescription(
             updated_data=updated_data_dict,
         )
         
-        # TODO: Publish patient prescription update event to message queue 
-        
+        # Publish patient prescription update event to message queue
+        try:
+            publisher = get_patient_prescription_publisher()
+            success = publisher.publish_patient_prescription_updated(
+                patient_prescription_id=db_prescription.Id,
+                old_data=original_data_dict,
+                new_data=updated_data_dict,
+                modified_by=modified_by
+            )
+            if not success:
+                logger.warning(f"Failed to publish PATIENT_PRESCRIPTION_UPDATED event for patient {db_prescription.Id}")
+        except Exception as e:
+            logger.error(f"Error publishing patient prescription update event: {str(e)}")
+            # Don't fail the operation if messaging fails
         
         return db_prescription
     except Exception as e:
@@ -255,9 +266,20 @@ def delete_prescription(
             original_data=original_data_dict,
             updated_data=serialize_data(db_prescription),
         )
-        
-                # TODO: Publish patient prescription deletion event to message queue 
 
+         # Publish patient prescription update event to message queue
+        try:
+            publisher = get_patient_prescription_publisher()
+            success = publisher.publish_patient_prescription_deleted(
+                patient_prescription_id=db_prescription.Id,
+                patient_prescription_data=original_data_dict,
+                deleted_by=modified_by
+            )
+            if not success:
+                logger.warning(f"Failed to publish PATIENT_PRESCRIPTION_DELETED event for patient {db_prescription.Id}")
+        except Exception as e:
+            logger.error(f"Error publishing patient prescription delete event: {str(e)}")
+            # Don't fail the operation if messaging fails
         
         return db_prescription
     except Exception as e:
