@@ -70,9 +70,11 @@ jobs:
       - name: Create .env file
         run: |
           cat <<EOF > .env
+          SERVICE_NAME=${{ vars.SERVICE_NAME }} # Taken directly from GitHub settings, not ci.yml
+
           # Database
           DB_SERVER_DEV=${{ secrets.DB_SERVER }}
-          DB_DATABASE_DEV=${{ secrets.DB_DATABASE }}
+          DB_DATABASE_DEV=${{ secrets.DB_DATABASE_DEV }}
           DB_DATABASE_PORT=${{ secrets.DB_DATABASE_PORT }}
           DB_USERNAME_DEV=${{ secrets.DB_USERNAME }}
           DB_PASSWORD_DEV=${{ secrets.DB_PASSWORD }}

@@ -76,6 +76,8 @@ jobs:
       - name: Create .env file from base-cd.yml
         run: |
 
+          echo "SERVICE_NAME=${{ vars.SERVICE_NAME }}" >> .env  # Taken directly from GitHub settings, not cd.yml
+          
           # Database
           echo "DB_SERVER_DEV=${{ secrets.DB_SERVER }}" >> .env
           echo "DB_DATABASE_DEV=${{ secrets.DB_DATABASE_DEV }}" >> .env
