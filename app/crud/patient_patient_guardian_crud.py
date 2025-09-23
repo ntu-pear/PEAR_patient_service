@@ -45,6 +45,21 @@ def get_all_patient_patient_guardian_by_guardianId(db: Session, UserId: str):
     response_model = {"patient_guardian": db_patient_guardian, "patients": patients}
     return response_model
 
+def get_all_patient_patient_guardian_by_guardianNRIC(db: Session, nric: str):
+    patient_guardian_relationships =  db.query(PatientPatientGuardian).join(Patient).join(PatientGuardian).join(PatientGuardianRelationshipMapping).filter(PatientGuardian.nric == nric).all()
+    db_patient_guardian = PatientGuardianModel.from_orm(patient_guardian_relationships[0].patient_guardian)
+    patients = []
+    for row in patient_guardian_relationships:
+        patient = row.patient
+        relationship_name = row.relationship.relationshipName
+        
+        patient_with_relationship = PatientWithRelationshipModel(
+            patient=PatientModel.from_orm(patient),  # Convert ORM patient to Pydantic model
+            relationshipName=relationship_name
+        )
+        patients.append(patient_with_relationship)
+    response_model = {"patient_guardian": db_patient_guardian, "patients": patients}
+    return response_model
 
 def get_patient_patient_guardian_by_guardianId_and_patientId(db: Session, guardianId: int, patientId: int):
     return db.query(PatientPatientGuardian).filter(PatientPatientGuardian.guardianId == guardianId).filter(PatientPatientGuardian.patientId == patientId).first()

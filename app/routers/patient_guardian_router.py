@@ -28,13 +28,12 @@ def get_patient_guardian_by_guardianId(guardian_userid: str, db: Session = Depen
         raise HTTPException(status_code=404, detail="Guardian not found")
     return db_guardian
 
-
 @router.get("/Guardian/GetPatientGuardianByNRIC", response_model=PatientPatientGuardianByGuardian)
 def get_patient_guardian_by_nric(nric: str, db: Session = Depends(get_db)):
     guardian = crud_guardian.get_guardian_by_nric(db, nric)
     if not guardian:
         raise HTTPException(status_code=404, detail="Guardian not found")
-    db_guardian = crud_patient_patient_guardian.get_all_patient_patient_guardian_by_guardianId(db,guardian.guardianApplicationUserId)
+    db_guardian = crud_patient_patient_guardian.get_all_patient_patient_guardian_by_guardianNRIC(db,nric)
     if not db_guardian:
         raise HTTPException(status_code=404, detail="Error")
     return db_guardian
