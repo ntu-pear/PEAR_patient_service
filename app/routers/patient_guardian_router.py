@@ -9,7 +9,8 @@ from ..crud import (
 )
 from ..schemas.patient_patient_guardian import (
     PatientPatientGuardianByGuardian,
-    PatientPatientGuardianByPatient
+    PatientPatientGuardianByPatient,
+    PatientPatientGuardianCreate
 ) 
 
 from ..schemas.patient_guardian import (
@@ -21,8 +22,8 @@ from ..schemas.patient_guardian import (
 router = APIRouter()
 
 @router.get("/Guardian/GetPatientGuardianByGuardianId", response_model=PatientPatientGuardianByGuardian)
-def get_patient_guardian_by_guardianId(guardian_id: int, db: Session = Depends(get_db)):
-    db_guardian = crud_patient_patient_guardian.get_all_patient_patient_guardian_by_guardianId(db,guardian_id)
+def get_patient_guardian_by_guardianId(guardian_userid: str, db: Session = Depends(get_db)):
+    db_guardian = crud_patient_patient_guardian.get_all_patient_patient_guardian_by_guardianId(db,guardian_userid)
     if not db_guardian:
         raise HTTPException(status_code=404, detail="Guardian not found")
     return db_guardian
@@ -54,14 +55,18 @@ def create_patient_guardian(guardian: PatientGuardianCreate, db: Session = Depen
     db_patient = crud_patient.get_patient(db, guardian.patientId)
     if not db_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
-    db_patient_patient_guardian = {
-        "guardianId" : db_guardian.id,
-        "patientId" : guardian.patientId,
-        "relationshipId" : db_relationship_id.id,
-        "createdById": db_guardian.createdById,
-        "modifiedById": db_guardian.modifiedById
-    }
-    db_patient_patient_guardian = crud_patient_patient_guardian.create_patient_patient_guardian(db,db_patient_patient_guardian)
+    print(PatientPatientGuardianCreate.model_fields)
+    db_patient_patient_guardian = crud_patient_patient_guardian.create_patient_patient_guardian(
+    db,
+    PatientPatientGuardianCreate(
+        guardianId = db_guardian.id,
+        patientId = guardian.patientId,
+        relationshipId = db_relationship_id.id,
+        CreatedById= db_guardian.CreatedById,
+        ModifiedById= db_guardian.ModifiedById,
+        isDeleted=db_guardian.isDeleted
+    )
+)
     return guardian
 
 
@@ -80,4 +85,24 @@ def delete_patient_guardian(guardian_id: int, db: Session = Depends(get_db)):
     db_patient_patient_guardian = crud_patient_patient_guardian.delete_patient_patient_guardian_by_guardianId(db, guardian_id)
     if not db_patient_patient_guardian:
         raise HTTPException(status_code=404, detail="No patient patient guardian relationship found")
-    return db_guardian
+    relationshipName = crud_relationship.get_relationship_mapping(db, db_patient_patient_guardian.relationshipId).relationshipName
+    return PatientGuardianUpdate(
+            id=db_guardian.id,
+            active=db_guardian.active,
+            firstName=db_guardian.firstName,
+            lastName=db_guardian.lastName,
+            preferredName= db_guardian.preferredName,
+            gender=db_guardian.gender,
+            contactNo=db_guardian.contactNo,
+            nric=db_guardian.nric,
+            email=db_guardian.email,
+            dateOfBirth=db_guardian.dateOfBirth,
+            address=db_guardian.address,
+            tempAddress=db_guardian.tempAddress,
+            status=db_guardian.status,
+            isDeleted=db_guardian.isDeleted,
+            guardianApplicationUserId=db_guardian.guardianApplicationUserId,
+            modifiedDate=db_guardian.modifiedDate,
+            ModifiedById=db_guardian.ModifiedById,
+            patientId=db_patient_patient_guardian.patientId,
+            relationshipName=relationshipName)
