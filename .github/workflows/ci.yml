@@ -42,7 +42,7 @@ jobs:
       python-version: '3.9.19'
 
       rabbitmq-image: '192.168.188.184:5000/rabbitmq_service_dev:latest' 
-      activity-service-image: '192.168.188.186:5000/activity_service:latest'
+      activity-service-image: '192.168.188.186:5000/activity_service_dev:latest'
       scheduler-service-image: '192.168.188.173:5000/pear_schedule:latest'
 
     secrets:
