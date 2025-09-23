@@ -29,7 +29,7 @@ def get_all_patient_guardian_by_patientId(db: Session, patientId: int):
     response_model = {"patient": db_patient, "patient_guardians": patient_guardians}
     return response_model
 
-def get_all_patient_patient_guardian_by_guardianId(db: Session, UserId: int):
+def get_all_patient_patient_guardian_by_guardianId(db: Session, UserId: str):
     patient_guardian_relationships =  db.query(PatientPatientGuardian).join(Patient).join(PatientGuardian).join(PatientGuardianRelationshipMapping).filter(PatientGuardian.guardianApplicationUserId == UserId).all()
     db_patient_guardian = PatientGuardianModel.from_orm(patient_guardian_relationships[0].patient_guardian)
     patients = []
