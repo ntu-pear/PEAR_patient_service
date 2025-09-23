@@ -54,6 +54,7 @@ jobs:
   deploy:
     runs-on: ${{ inputs.runner-label }}
     env:
+      # These are passed in from cd.yml
       DB_SERVER: ${{ secrets.DB_SERVER }}
       DB_DATABASE: ${{ secrets.DB_DATABASE }}
       DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
@@ -76,6 +77,8 @@ jobs:
 
       - name: Create .env file from GitHub Secrets
         run: |
+          echo "SERVICE_NAME=${{ vars.SERVICE_NAME }}" >> .env  # Taken directly from GitHub settings, not cd.yml
+
           echo "DB_SERVER=${{ secrets.DB_SERVER }}" >> .env
           echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> .env
           echo "DB_DATABASE_PORT=${{ secrets.DB_DATABASE_PORT }}" >> .env
