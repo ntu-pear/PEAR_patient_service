@@ -15,6 +15,7 @@ from .patient_photo_list_model import PatientPhotoList
 from .patient_mobility_mapping_model import PatientMobility
 from .patient_mobility_list_model import PatientMobilityList
 from .patient_prescription_model import PatientPrescription
+from .patient_medication_model import PatientMedication
 from .patient_vital_model import PatientVital
 from .patient_highlight_model import PatientHighlight
 from .patient_social_history_model import PatientSocialHistory
@@ -25,6 +26,7 @@ from .patient_list_pet_model import PatientPetList
 from .patient_list_diet_model import PatientDietList
 from .patient_list_education_model import PatientEducationList
 from .social_history_sensitive_mapping_model import SocialHistorySensitiveMapping
+from .patient_prescription_list_model import PatientPrescriptionList
 from .allergy_type_model import AllergyType
 from .allergy_reaction_type_model import AllergyReactionType
 # Import other models as needed

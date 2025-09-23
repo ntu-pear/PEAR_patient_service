@@ -29,6 +29,7 @@ from app.models import (
     patient_list_religion_model,
     patient_social_history_model,
     patient_vital_model,
+    patient_medication_model,
     patient_mobility_list_model,
     patient_guardian_relationship_mapping_model,
     patient_patient_guardian_model,
@@ -62,6 +63,7 @@ from app.routers import (
     patient_assigned_dementia_list_router,
     patient_assigned_dementia_mapping_router,
     patient_list_language_router,
+    patient_medication_router,
     patient_mobility_mapping_router,
     patient_privacy_level_router,
     social_history_sensitive_mapping_router
@@ -239,6 +241,12 @@ app.include_router(
     patient_prescription_router.router,
     prefix=f"{API_VERSION_PREFIX}",
     tags=["Prescriptions"],
+)
+
+app.include_router(
+    patient_medication_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Medications"],
 )
 
 app.include_router(
