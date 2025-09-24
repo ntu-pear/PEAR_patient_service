@@ -18,17 +18,23 @@ jobs:
       dockerfile: 'Dockerfile.dev'
       docker-image-name: 'patient_service_dev'
       docker-image-tag: 'latest'
+    # These are passed in from GitHub secrets
     secrets:
-      DB_SERVER: ${{ secrets.DB_SERVER_STAGING }} # Staging sever DB
-      DB_DATABASE: ${{ secrets.DB_DATABASE_DEV }}
+      DB_SERVER: ${{ secrets.DB_SERVER_STAGING }}
+      DB_DATABASE_DEV: ${{ secrets.DB_DATABASE_DEV }}
       DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
       DB_USERNAME: ${{ secrets.DB_USERNAME_DEV }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD_DEV }}
-      DB_DRIVER: ${{ secrets.DB_DRIVER_DEV }}
+      DB_DRIVER_DEV: ${{ secrets.DB_DRIVER_DEV }}
       CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
       CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
       CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
-      WEB_FE_ORIGIN: ${{ secrets.WEB_FE_ORIGIN }}
+      WEB_FE_ORIGIN: ${{ secrets.WEB_FE_ORIGIN_STG }}
+      RABBITMQ_HOST: ${{ secrets.RABBITMQ_HOST_STG }}
+      RABBITMQ_PORT: ${{ secrets.RABBITMQ_PORT }}
+      RABBITMQ_USER: ${{ secrets.RABBITMQ_USER }}
+      RABBITMQ_PASS: ${{ secrets.RABBITMQ_PASS }}
+      RABBITMQ_VIRTUAL_HOST: ${{ secrets.RABBITMQ_VIRTUAL_HOST }}
 
   deploy-prod:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -41,13 +47,18 @@ jobs:
       docker-image-name: 'patient_service_dev'
       docker-image-tag: 'latest'
     secrets:
-      DB_SERVER: ${{ secrets.DB_SERVER_DEV }}
-      DB_DATABASE: ${{ secrets.DB_DATABASE_DEV }}
+      DB_SERVER: ${{ secrets.DB_SERVER_PROD }}
+      DB_DATABASE_DEV: ${{ secrets.DB_DATABASE_DEV }}
       DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
       DB_USERNAME: ${{ secrets.DB_USERNAME_DEV }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD_DEV }}
-      DB_DRIVER: ${{ secrets.DB_DRIVER_DEV }}
+      DB_DRIVER_DEV: ${{ secrets.DB_DRIVER_DEV }}
       CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
       CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
       CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
       WEB_FE_ORIGIN: ${{ secrets.WEB_FE_ORIGIN }}
+      RABBITMQ_HOST: ${{ secrets.RABBITMQ_HOST_PROD }}
+      RABBITMQ_PORT: ${{ secrets.RABBITMQ_PORT }}
+      RABBITMQ_USER: ${{ secrets.RABBITMQ_USER }}
+      RABBITMQ_PASS: ${{ secrets.RABBITMQ_PASS }}
+      RABBITMQ_VIRTUAL_HOST: ${{ secrets.RABBITMQ_VIRTUAL_HOST }}

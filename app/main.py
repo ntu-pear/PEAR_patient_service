@@ -39,6 +39,7 @@ from app.models import (
 from app.routers import (
     allergy_reaction_type_router,
     allergy_type_router,
+    outbox_router,
     patient_allergy_mapping_router,
     patient_allocation_router,
     patient_doctor_note_router,
@@ -65,6 +66,7 @@ from app.routers import (
     patient_privacy_level_router,
     social_history_sensitive_mapping_router
 )
+from app.services.background_processor import outbox_lifespan
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
@@ -78,6 +80,7 @@ app = FastAPI(
     description="This is the patient service api docs",
     version="1.0.0",
     servers=[],  # This removes the servers dropdown in Swagger UI
+    lifespan=outbox_lifespan, # attach outbox poller when the app starts
 )
 
 
@@ -248,6 +251,10 @@ app.include_router(
     social_history_sensitive_mapping_router.router,
     prefix=f"{API_VERSION_PREFIX}",
     tags=["Social History Sensitive Mapping"],
+)
+
+app.include_router(
+    outbox_router.router
 )
 
 # Shift Photos route to below. Photos route catches / routes which interferes with most GET ALL routes.
