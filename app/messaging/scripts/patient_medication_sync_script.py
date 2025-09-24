@@ -1,7 +1,9 @@
 import sys
 import os
 import argparse
+import logging
 from typing import List, Optional, Dict, Any
+from datetime import datetime
 
 # Add the app directory to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
@@ -9,9 +11,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirna
 
 from .base_script import BaseScript
 
-class PatientSyncScript(BaseScript):
+class PatientMedicationSyncScript(BaseScript):
     """
-    Script to emit PATIENT_CREATED events for existing patients in the database
+    Script to emit PATIENT_MEDICATION_CREATED events for existing patient medications in the database
     """
     
     def __init__(self, dry_run: bool = False, batch_size: int = 100, 
@@ -59,19 +61,19 @@ class PatientSyncScript(BaseScript):
             from sqlalchemy.orm import sessionmaker
             from sqlalchemy import create_engine, func
             from database import get_database_url
-            from app.models.patient_model import Patient
+            from app.models.patient_medication_model import PatientMedication
             
             # Import messaging dependencies  
-            from messaging.patient_publisher import get_patient_publisher
+            from messaging.patient_medication_publisher import get_patient_medication_publisher
             
             # Set up database
             engine = create_engine(get_database_url())
             self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-            self.Patient = Patient
+            self.PatientMedication = PatientMedication
             self.func = func
             
             # Set up messaging
-            self.publisher = get_patient_publisher(testing=True)
+            self.publisher = get_patient_medication_publisher(testing=True)
             
             self.logger.info("Dependencies initialized successfully")
             
@@ -80,96 +82,98 @@ class PatientSyncScript(BaseScript):
             raise
     
     def get_total_count(self) -> int:
-        """Get total number of patients in the database"""
+        """Get total number of patient medications in the database"""
         try:
             with self.SessionLocal() as db:
-                # Count active patients (not soft deleted)
-                count = db.query(self.func.count(self.Patient.id)).filter(
-                    self.Patient.isDeleted == 0
+                # Count active patient medications (not soft deleted)
+                count = db.query(self.func.count(self.PatientMedication.Id)).filter(
+                    self.PatientMedication.IsDeleted == '0'
                 ).scalar()
                 
-                self.logger.info(f"Found {count} active patients in database")
+                self.logger.info(f"Found {count} active patient medications in database")
                 return count
                 
         except Exception as e:
-            self.logger.error(f"Error getting patient count: {str(e)}")
+            self.logger.error(f"Error getting patient medication count: {str(e)}")
             raise
     
     def fetch_batch(self, offset: int, limit: int) -> List[Any]:
-        """Fetch a batch of patients from the database"""
+        """Fetch a batch of patient medications from the database"""
         try:
             with self.SessionLocal() as db:
-                patients = db.query(self.Patient).filter(
-                    self.Patient.isDeleted == 0
-                ).order_by(self.Patient.id).offset(offset).limit(limit).all()
+                medications = db.query(self.PatientMedication).filter(
+                    self.PatientMedication.IsDeleted == '0'
+                ).order_by(self.PatientMedication.Id).offset(offset).limit(limit).all()
                 
-                self.logger.debug(f"Fetched {len(patients)} patients from offset {offset}")
-                return patients
+                self.logger.debug(f"Fetched {len(medications)} patient medications from offset {offset}")
+                return medications
                 
         except Exception as e:
-            self.logger.error(f"Error fetching patient batch: {str(e)}")
+            self.logger.error(f"Error fetching patient medication batch: {str(e)}")
             raise
     
-    def process_item(self, patient) -> bool:
-        """Process a single patient - emit PATIENT_CREATED event"""
+    def process_item(self, medication) -> bool:
+        """Process a single patient medication - emit PATIENT_MEDICATION_CREATED event"""
         try:
-            patient_id = patient.id
+            medication_id = medication.Id
+            patient_id = medication.PatientId
             
-            # Check if patient already exists in target (if enabled)
-            if self.check_target and self._patient_exists_in_target(patient_id):
-                self.logger.info(f"Patient {patient_id} already exists in target - skipping")
+            # Check if medication already exists in target (if enabled)
+            if self.check_target and self._medication_exists_in_target(medication_id):
+                self.logger.info(f"Patient medication {medication_id} already exists in target - skipping")
                 return False  # Skipped, not an error
             
-            # Convert patient model to dictionary
-            patient_data = self._patient_to_dict(patient)
+            # Convert medication model to dictionary
+            medication_data = self._medication_to_dict(medication)
             
             if self.dry_run:
-                self.logger.info(f"[DRY RUN] Would emit PATIENT_CREATED for patient {patient_id} ({patient.name})")
-                self.logger.debug(f"Patient data: {patient_data}")
+                self.logger.info(f"[DRY RUN] Would emit PATIENT_MEDICATION_CREATED for medication {medication_id} (Patient: {patient_id})")
+                self.logger.debug(f"Medication data: {medication_data}")
                 return True
             
-            # Emit PATIENT_CREATED event
-            success = self.publisher.publish_patient_created(
+            # Emit PATIENT_MEDICATION_CREATED event
+            success = self.publisher.publish_patient_medication_created(
+                medication_id=medication_id,
                 patient_id=patient_id,
-                patient_data=patient_data,
+                medication_data=medication_data,
                 created_by="sync_script"
             )
             
             if success:
-                self.logger.info(f"Emitted PATIENT_CREATED event for patient {patient_id} ({patient.name})")
+                self.logger.info(f"Emitted PATIENT_MEDICATION_CREATED event for medication {medication_id} (Patient: {patient_id})")
                 return True
             else:
-                self.logger.error(f"Failed to emit PATIENT_CREATED event for patient {patient_id}")
+                self.logger.error(f"Failed to emit PATIENT_MEDICATION_CREATED event for medication {medication_id}")
                 return False
                 
         except Exception as e:
-            self.logger.error(f"Error processing patient {getattr(patient, 'id', 'unknown')}: {str(e)}")
+            self.logger.error(f"Error processing patient medication {getattr(medication, 'Id', 'unknown')}: {str(e)}")
             raise
     
-    def _patient_to_dict(self, patient) -> Dict[str, Any]:
-        """Convert patient model to dictionary for messaging"""
+    def _medication_to_dict(self, medication) -> Dict[str, Any]:
+        """Convert patient medication model to dictionary for messaging"""
         try:
-            patient_dict = {}
+            medication_dict = {}
             
-            # Get all patient attributes
-            for column in patient.__table__.columns:
-                value = getattr(patient, column.name)
+            # Get all medication attributes
+            for column in medication.__table__.columns:
+                value = getattr(medication, column.name)
                 
                 # Convert datetime objects to ISO format strings
                 if hasattr(value, 'isoformat'):
-                    patient_dict[column.name] = value.isoformat()
+                    medication_dict[column.name] = value.isoformat()
                 else:
-                    patient_dict[column.name] = value
+                    medication_dict[column.name] = value
             
-            return patient_dict
+            return medication_dict
             
         except Exception as e:
-            self.logger.error(f"Error converting patient to dict: {str(e)}")
+            self.logger.error(f"Error converting medication to dict: {str(e)}")
             return {}
     
-    def _patient_exists_in_target(self, patient_id: int) -> bool:
+    def _medication_exists_in_target(self, medication_id: int) -> bool:
         """
-        Check if patient already exists in target service
+        Check if patient medication already exists in target service
         This is optional and requires target service URL
         """
         if not self.target_service_url:
@@ -178,39 +182,43 @@ class PatientSyncScript(BaseScript):
         try:
             import requests
             
-            # Make API call to check if patient exists
+            # Make API call to check if medication exists
             response = requests.get(
-                f"{self.target_service_url}/api/patients/{patient_id}",
+                f"{self.target_service_url}/api/patient-medications/{medication_id}",
                 timeout=5
             )
             
-            # If patient exists (200 OK), skip it
+            # If medication exists (200 OK), skip it
             if response.status_code == 200:
                 return True
             elif response.status_code == 404:
                 return False
             else:
-                self.logger.warning(f"Unexpected response checking patient {patient_id}: {response.status_code}")
+                self.logger.warning(f"Unexpected response checking medication {medication_id}: {response.status_code}")
                 return False
                 
         except requests.RequestException as e:
-            self.logger.warning(f"Error checking if patient {patient_id} exists in target: {str(e)}")
+            self.logger.warning(f"Error checking if medication {medication_id} exists in target: {str(e)}")
             # If we can't check, assume it doesn't exist
             return False
     
-    def run_with_filters(self, patient_ids: Optional[List[int]] = None,
+    def run_with_filters(self, medication_ids: Optional[List[int]] = None,
+                        patient_ids: Optional[List[int]] = None,
                         created_after: Optional[str] = None,
                         created_before: Optional[str] = None):
         """
         Run script with additional filters
         
         Args:
-            patient_ids: List of specific patient IDs to process
-            created_after: Only process patients created after this date (ISO format)
-            created_before: Only process patients created before this date (ISO format)
+            medication_ids: List of specific medication IDs to process
+            patient_ids: List of specific patient IDs to filter by
+            created_after: Only process medications created after this date (ISO format)
+            created_before: Only process medications created before this date (ISO format)
         """
-        if patient_ids or created_after or created_before:
+        if medication_ids or patient_ids or created_after or created_before:
             self.logger.info("Running with custom filters:")
+            if medication_ids:
+                self.logger.info(f"  - Medication IDs: {medication_ids}")
             if patient_ids:
                 self.logger.info(f"  - Patient IDs: {patient_ids}")
             if created_after:
@@ -225,51 +233,53 @@ class PatientSyncScript(BaseScript):
         def filtered_get_total_count():
             try:
                 with self.SessionLocal() as db:
-                    query = db.query(self.func.count(self.Patient.id)).filter(
-                        self.Patient.isDeleted == 0
+                    query = db.query(self.func.count(self.PatientMedication.Id)).filter(
+                        self.PatientMedication.IsDeleted == '0'
                     )
                     
+                    if medication_ids:
+                        query = query.filter(self.PatientMedication.Id.in_(medication_ids))
+                    
                     if patient_ids:
-                        query = query.filter(self.Patient.id.in_(patient_ids))
+                        query = query.filter(self.PatientMedication.PatientId.in_(patient_ids))
                     
                     if created_after:
-                        from datetime import datetime
                         date_after = datetime.fromisoformat(created_after)
-                        query = query.filter(self.Patient.createdDate >= date_after)
+                        query = query.filter(self.PatientMedication.CreatedDateTime >= date_after)
                     
                     if created_before:
-                        from datetime import datetime
                         date_before = datetime.fromisoformat(created_before)
-                        query = query.filter(self.Patient.createdDate <= date_before)
+                        query = query.filter(self.PatientMedication.CreatedDateTime <= date_before)
                     
                     return query.scalar()
             except Exception as e:
-                self.logger.error(f"Error getting filtered patient count: {str(e)}")
+                self.logger.error(f"Error getting filtered medication count: {str(e)}")
                 raise
         
         def filtered_fetch_batch(offset: int, limit: int):
             try:
                 with self.SessionLocal() as db:
-                    query = db.query(self.Patient).filter(
-                        self.Patient.isDeleted == 0
+                    query = db.query(self.PatientMedication).filter(
+                        self.PatientMedication.IsDeleted == '0'
                     )
                     
+                    if medication_ids:
+                        query = query.filter(self.PatientMedication.Id.in_(medication_ids))
+                    
                     if patient_ids:
-                        query = query.filter(self.Patient.id.in_(patient_ids))
+                        query = query.filter(self.PatientMedication.PatientId.in_(patient_ids))
                     
                     if created_after:
-                        from datetime import datetime
                         date_after = datetime.fromisoformat(created_after)
-                        query = query.filter(self.Patient.createdDate >= date_after)
+                        query = query.filter(self.PatientMedication.CreatedDateTime >= date_after)
                     
                     if created_before:
-                        from datetime import datetime
                         date_before = datetime.fromisoformat(created_before)
-                        query = query.filter(self.Patient.createdDate <= date_before)
+                        query = query.filter(self.PatientMedication.CreatedDateTime <= date_before)
                     
-                    return query.order_by(self.Patient.id).offset(offset).limit(limit).all()
+                    return query.order_by(self.PatientMedication.Id).offset(offset).limit(limit).all()
             except Exception as e:
-                self.logger.error(f"Error fetching filtered patient batch: {str(e)}")
+                self.logger.error(f"Error fetching filtered medication batch: {str(e)}")
                 raise
         
         # Temporarily override methods
@@ -286,24 +296,35 @@ class PatientSyncScript(BaseScript):
 
 def main():
     """Main entry point for the script"""
-    parser = argparse.ArgumentParser(description='Emit PATIENT_CREATED events for existing patients')
+    parser = argparse.ArgumentParser(description='Emit PATIENT_MEDICATION_CREATED events for existing patient medications')
     
     parser.add_argument('--dry-run', action='store_true',
                        help='Run in dry-run mode (no actual events emitted)')
     parser.add_argument('--batch-size', type=int, default=100,
-                       help='Number of patients to process per batch (default: 100)')
+                       help='Number of medications to process per batch (default: 100)')
     parser.add_argument('--check-target', action='store_true',
-                       help='Check if patients already exist in target service')
+                       help='Check if medications already exist in target service')
     parser.add_argument('--target-url', type=str,
                        help='Target service URL for duplicate checking')
+    parser.add_argument('--medication-ids', type=str,
+                       help='Comma-separated list of specific medication IDs to process')
     parser.add_argument('--patient-ids', type=str,
-                       help='Comma-separated list of specific patient IDs to process')
+                       help='Comma-separated list of specific patient IDs to filter by')
     parser.add_argument('--created-after', type=str,
-                       help='Only process patients created after this date (ISO format)')
+                       help='Only process medications created after this date (ISO format)')
     parser.add_argument('--created-before', type=str,
-                       help='Only process patients created before this date (ISO format)')
+                       help='Only process medications created before this date (ISO format)')
     
     args = parser.parse_args()
+    
+    # Parse medication IDs if provided
+    medication_ids = None
+    if args.medication_ids:
+        try:
+            medication_ids = [int(mid.strip()) for mid in args.medication_ids.split(',')]
+        except ValueError:
+            print("Error: Invalid medication IDs format. Use comma-separated integers.")
+            sys.exit(1)
     
     # Parse patient IDs if provided
     patient_ids = None
@@ -316,15 +337,16 @@ def main():
     
     try:
         # Create and run the script
-        script = PatientSyncScript(
+        script = PatientMedicationSyncScript(
             dry_run=args.dry_run,
             batch_size=args.batch_size,
             check_target=args.check_target,
             target_service_url=args.target_url
         )
         
-        if patient_ids or args.created_after or args.created_before:
+        if medication_ids or patient_ids or args.created_after or args.created_before:
             script.run_with_filters(
+                medication_ids=medication_ids,
                 patient_ids=patient_ids,
                 created_after=args.created_after,
                 created_before=args.created_before
@@ -333,10 +355,10 @@ def main():
             script.run()
             
     except KeyboardInterrupt:
-        print("Script interrupted by user")
+        print("\n[WARNING] Script interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"Script failed: {str(e)}")
+        print(f"[ERROR] Script failed: {str(e)}")
         sys.exit(1)
 
 

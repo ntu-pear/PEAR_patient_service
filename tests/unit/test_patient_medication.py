@@ -263,7 +263,7 @@ def test_create_medication(db_session_mock):
         assert medication.ModifiedById == "test_user"
 
         # Verify database operations were called
-        db_session_mock.add.assert_called_once()
+        assert db_session_mock.add.call_count == 2  # Medication + Outbox Event
         db_session_mock.commit.assert_called_once()
         db_session_mock.refresh.assert_called_once()
 
