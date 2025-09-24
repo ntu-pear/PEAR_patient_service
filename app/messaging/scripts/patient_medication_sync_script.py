@@ -58,10 +58,11 @@ class PatientMedicationSyncScript(BaseScript):
             self.logger.info(f"App directory: {app_dir}")
             
             # Import database dependencies
-            from sqlalchemy.orm import sessionmaker
+            from sqlalchemy.orm import sessionmaker, joinedload
             from sqlalchemy import create_engine, func
             from database import get_database_url
             from app.models.patient_medication_model import PatientMedication
+            from app.models.patient_prescription_list_model import PatientPrescriptionList
             
             # Import messaging dependencies  
             from messaging.patient_medication_publisher import get_patient_medication_publisher
@@ -70,7 +71,9 @@ class PatientMedicationSyncScript(BaseScript):
             engine = create_engine(get_database_url())
             self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
             self.PatientMedication = PatientMedication
+            self.PatientPrescriptionList = PatientPrescriptionList
             self.func = func
+            self.joinedload = joinedload
             
             # Set up messaging
             self.publisher = get_patient_medication_publisher(testing=True)
@@ -98,14 +101,25 @@ class PatientMedicationSyncScript(BaseScript):
             raise
     
     def fetch_batch(self, offset: int, limit: int) -> List[Any]:
-        """Fetch a batch of patient medications from the database"""
+        """Fetch a batch of patient medications from the database WITH prescription names"""
         try:
             with self.SessionLocal() as db:
-                medications = db.query(self.PatientMedication).filter(
+                # IMPORTANT: Load medications WITH prescription list relationship
+                medications = db.query(self.PatientMedication).options(
+                    self.joinedload(self.PatientMedication.prescription_list)
+                ).filter(
                     self.PatientMedication.IsDeleted == '0'
                 ).order_by(self.PatientMedication.Id).offset(offset).limit(limit).all()
                 
                 self.logger.debug(f"Fetched {len(medications)} patient medications from offset {offset}")
+                
+                # Debug: Log prescription name loading
+                for med in medications:
+                    if hasattr(med, 'prescription_list') and med.prescription_list:
+                        self.logger.debug(f"Medication {med.Id}: Prescription name loaded = '{med.prescription_list.Value}'")
+                    else:
+                        self.logger.warning(f"Medication {med.Id}: No prescription name loaded")
+                
                 return medications
                 
         except Exception as e:
@@ -123,8 +137,15 @@ class PatientMedicationSyncScript(BaseScript):
                 self.logger.info(f"Patient medication {medication_id} already exists in target - skipping")
                 return False  # Skipped, not an error
             
-            # Convert medication model to dictionary
-            medication_data = self._medication_to_dict(medication)
+            # Convert medication model to dictionary WITH prescription name
+            medication_data = self._medication_to_dict_with_prescription_name(medication)
+            
+            # Debug: Log the prescription name
+            prescription_name = medication_data.get('PrescriptionName')
+            if prescription_name:
+                self.logger.info(f"Medication {medication_id}: Prescription name = '{prescription_name}'")
+            else:
+                self.logger.warning(f"Medication {medication_id}: No prescription name found!")
             
             if self.dry_run:
                 self.logger.info(f"[DRY RUN] Would emit PATIENT_MEDICATION_CREATED for medication {medication_id} (Patient: {patient_id})")
@@ -140,7 +161,7 @@ class PatientMedicationSyncScript(BaseScript):
             )
             
             if success:
-                self.logger.info(f"Emitted PATIENT_MEDICATION_CREATED event for medication {medication_id} (Patient: {patient_id})")
+                self.logger.info(f"Emitted PATIENT_MEDICATION_CREATED event for medication {medication_id} (Patient: {patient_id}) with prescription '{prescription_name}'")
                 return True
             else:
                 self.logger.error(f"Failed to emit PATIENT_MEDICATION_CREATED event for medication {medication_id}")
@@ -150,12 +171,12 @@ class PatientMedicationSyncScript(BaseScript):
             self.logger.error(f"Error processing patient medication {getattr(medication, 'Id', 'unknown')}: {str(e)}")
             raise
     
-    def _medication_to_dict(self, medication) -> Dict[str, Any]:
-        """Convert patient medication model to dictionary for messaging"""
+    def _medication_to_dict_with_prescription_name(self, medication) -> Dict[str, Any]:
+        """Convert patient medication model to dictionary for messaging, including prescription name"""
         try:
             medication_dict = {}
             
-            # Get all medication attributes
+            # Get all medication table attributes
             for column in medication.__table__.columns:
                 value = getattr(medication, column.name)
                 
@@ -165,11 +186,57 @@ class PatientMedicationSyncScript(BaseScript):
                 else:
                     medication_dict[column.name] = value
             
+            # IMPORTANT: Extract prescription name from the relationship
+            prescription_name = None
+            if hasattr(medication, 'prescription_list') and medication.prescription_list:
+                prescription_name = medication.prescription_list.Value
+                self.logger.debug(f"Extracted prescription name from relationship: '{prescription_name}'")
+            else:
+                # Fallback: Query prescription name directly if relationship not loaded
+                prescription_list_id = getattr(medication, 'PrescriptionListId', None)
+                if prescription_list_id:
+                    prescription_name = self._get_prescription_name_by_id(prescription_list_id)
+                    if prescription_name:
+                        self.logger.debug(f"Fetched prescription name by ID {prescription_list_id}: '{prescription_name}'")
+                    else:
+                        self.logger.warning(f"Could not fetch prescription name for ID {prescription_list_id}")
+                else:
+                    self.logger.warning(f"No PrescriptionListId found for medication {medication.Id}")
+            
+            # Add prescription name to the dictionary
+            medication_dict['PrescriptionName'] = prescription_name
+            
             return medication_dict
             
         except Exception as e:
             self.logger.error(f"Error converting medication to dict: {str(e)}")
+            import traceback
+            self.logger.error(f"Full traceback: {traceback.format_exc()}")
             return {}
+    
+    def _get_prescription_name_by_id(self, prescription_list_id: int) -> Optional[str]:
+        """Get prescription name by ID (fallback method)"""
+        try:
+            with self.SessionLocal() as db:
+                prescription = db.query(self.PatientPrescriptionList).filter(
+                    self.PatientPrescriptionList.Id == prescription_list_id,
+                    self.PatientPrescriptionList.IsDeleted == '0'
+                ).first()
+                
+                if prescription:
+                    return prescription.Value
+                else:
+                    self.logger.warning(f"Prescription with ID {prescription_list_id} not found")
+                    return None
+                    
+        except Exception as e:
+            self.logger.error(f"Error fetching prescription name for ID {prescription_list_id}: {str(e)}")
+            return None
+    
+    def _medication_to_dict(self, medication) -> Dict[str, Any]:
+        """Convert patient medication model to dictionary for messaging (legacy method)"""
+        # Use the enhanced method that includes prescription name
+        return self._medication_to_dict_with_prescription_name(medication)
     
     def _medication_exists_in_target(self, medication_id: int) -> bool:
         """
@@ -259,7 +326,9 @@ class PatientMedicationSyncScript(BaseScript):
         def filtered_fetch_batch(offset: int, limit: int):
             try:
                 with self.SessionLocal() as db:
-                    query = db.query(self.PatientMedication).filter(
+                    query = db.query(self.PatientMedication).options(
+                        self.joinedload(self.PatientMedication.prescription_list)  # Always load prescription names
+                    ).filter(
                         self.PatientMedication.IsDeleted == '0'
                     )
                     
