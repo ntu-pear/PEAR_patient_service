@@ -88,12 +88,10 @@ class PatientMedicationSyncScript(BaseScript):
         """Get total number of patient medications in the database"""
         try:
             with self.SessionLocal() as db:
-                # Count active patient medications (not soft deleted)
-                count = db.query(self.func.count(self.PatientMedication.Id)).filter(
-                    self.PatientMedication.IsDeleted == '0'
-                ).scalar()
+                # Count all  patient medications
+                count = db.query(self.func.count(self.PatientMedication.Id)).scalar()
                 
-                self.logger.info(f"Found {count} active patient medications in database")
+                self.logger.info(f"Found {count} patient medications in database")
                 return count
                 
         except Exception as e:
@@ -107,8 +105,6 @@ class PatientMedicationSyncScript(BaseScript):
                 # IMPORTANT: Load medications WITH prescription list relationship
                 medications = db.query(self.PatientMedication).options(
                     self.joinedload(self.PatientMedication.prescription_list)
-                ).filter(
-                    self.PatientMedication.IsDeleted == '0'
                 ).order_by(self.PatientMedication.Id).offset(offset).limit(limit).all()
                 
                 self.logger.debug(f"Fetched {len(medications)} patient medications from offset {offset}")

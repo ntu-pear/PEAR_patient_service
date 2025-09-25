@@ -83,12 +83,10 @@ class PatientSyncScript(BaseScript):
         """Get total number of patients in the database"""
         try:
             with self.SessionLocal() as db:
-                # Count active patients (not soft deleted)
-                count = db.query(self.func.count(self.Patient.id)).filter(
-                    self.Patient.isDeleted == 0
-                ).scalar()
+                # Count patients
+                count = db.query(self.func.count(self.Patient.id)).scalar()
                 
-                self.logger.info(f"Found {count} active patients in database")
+                self.logger.info(f"Found {count} patients in database")
                 return count
                 
         except Exception as e:
@@ -99,9 +97,7 @@ class PatientSyncScript(BaseScript):
         """Fetch a batch of patients from the database"""
         try:
             with self.SessionLocal() as db:
-                patients = db.query(self.Patient).filter(
-                    self.Patient.isDeleted == 0
-                ).order_by(self.Patient.id).offset(offset).limit(limit).all()
+                patients = db.query(self.Patient).order_by(self.Patient.id).offset(offset).limit(limit).all()
                 
                 self.logger.debug(f"Fetched {len(patients)} patients from offset {offset}")
                 return patients
