@@ -29,8 +29,8 @@ def get_all_patient_guardian_by_patientId(db: Session, patientId: int):
     response_model = {"patient": db_patient, "patient_guardians": patient_guardians}
     return response_model
 
-def get_all_patient_patient_guardian_by_guardianId(db: Session, guardianId: int):
-    patient_guardian_relationships =  db.query(PatientPatientGuardian).join(Patient).join(PatientGuardian).join(PatientGuardianRelationshipMapping).filter(PatientPatientGuardian.guardianId == guardianId).all()
+def get_all_patient_patient_guardian_by_guardianId(db: Session, UserId: str):
+    patient_guardian_relationships =  db.query(PatientPatientGuardian).join(Patient).join(PatientGuardian).join(PatientGuardianRelationshipMapping).filter(PatientGuardian.guardianApplicationUserId == UserId).all()
     db_patient_guardian = PatientGuardianModel.from_orm(patient_guardian_relationships[0].patient_guardian)
     patients = []
     for row in patient_guardian_relationships:
@@ -45,12 +45,27 @@ def get_all_patient_patient_guardian_by_guardianId(db: Session, guardianId: int)
     response_model = {"patient_guardian": db_patient_guardian, "patients": patients}
     return response_model
 
+def get_all_patient_patient_guardian_by_guardianNRIC(db: Session, nric: str):
+    patient_guardian_relationships =  db.query(PatientPatientGuardian).join(Patient).join(PatientGuardian).join(PatientGuardianRelationshipMapping).filter(PatientGuardian.nric == nric).all()
+    db_patient_guardian = PatientGuardianModel.from_orm(patient_guardian_relationships[0].patient_guardian)
+    patients = []
+    for row in patient_guardian_relationships:
+        patient = row.patient
+        relationship_name = row.relationship.relationshipName
+        
+        patient_with_relationship = PatientWithRelationshipModel(
+            patient=PatientModel.from_orm(patient),  # Convert ORM patient to Pydantic model
+            relationshipName=relationship_name
+        )
+        patients.append(patient_with_relationship)
+    response_model = {"patient_guardian": db_patient_guardian, "patients": patients}
+    return response_model
 
 def get_patient_patient_guardian_by_guardianId_and_patientId(db: Session, guardianId: int, patientId: int):
     return db.query(PatientPatientGuardian).filter(PatientPatientGuardian.guardianId == guardianId).filter(PatientPatientGuardian.patientId == patientId).first()
 
 def create_patient_patient_guardian(db: Session, patientPatientGuradian: PatientPatientGuardianCreate):
-    db_patient_patient_guardian = PatientPatientGuardian(**patientPatientGuradian)
+    db_patient_patient_guardian = PatientPatientGuardian(**patientPatientGuradian.model_dump())
     updated_data_dict = serialize_data(patientPatientGuradian.model_dump())
     db.add(db_patient_patient_guardian)
     db.commit()
@@ -63,6 +78,8 @@ def create_patient_patient_guardian(db: Session, patientPatientGuradian: Patient
         entity_id=db_patient_patient_guardian.id,
         original_data=None,
         updated_data=updated_data_dict,
+        user_full_name="None",
+        message="Create patient patient_guardian"
     )
     return db_patient_patient_guardian
 
@@ -90,6 +107,8 @@ def update_patient_patient_guardian(db: Session, id: int, patientPatientGuradian
             entity_id=id,
             original_data=original_data_dict,
             updated_data=updated_data_dict,
+            user_full_name="None",
+            message="Update patient patient_guardian"
         )
     return db_relationship
 
@@ -114,6 +133,8 @@ def delete_patient_patient_guardian_by_guardianId(db: Session, guardianId: int):
             entity_id=db_relationship.id,
             original_data=original_data_dict,
             updated_data=None,
+            user_full_name="None",
+            message="Delete patient patient_guardian"
         )
     return db_relationship
 
