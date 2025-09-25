@@ -24,7 +24,7 @@ class ProducerManager:
     Maintains a persistent connection and processes publish requests from a queue.
     """
     
-    def __init__(self, service_name: str = "producer-manager", testing: bool = False):
+    def __init__(self, service_name: str = "patient-service", testing: bool = False):
         self.client = RabbitMQClient(service_name)
         self.publish_queue = queue.Queue(maxsize=1000)
         self.is_running = False
@@ -112,8 +112,6 @@ class ProducerManager:
             
             if success:
                 logger.info(f"Published to {request.exchange}/{request.routing_key} - correlation: {request.message.get('correlation_id', 'unknown')}")
-                # Add delay to ensure messages are processed sequentially
-                time.sleep(0.2)  # 200ms delay between messages
             else:
                 logger.error(f"Failed to publish to {request.exchange}/{request.routing_key} - correlation: {request.message.get('correlation_id', 'unknown')}")
         except Exception as e:
@@ -210,6 +208,12 @@ class ProducerManager:
             return
         
         logger.info("Stopping producer manager...")
+
+        # Wait until the queue is empty before stopping
+        while not self.publish_queue.empty():
+            logger.info(f"Waiting for {self.publish_queue.qsize()} messages to flush...")
+            time.sleep(0.2)
+
         self.is_running = False
         
         if self.producer_thread and self.producer_thread.is_alive():

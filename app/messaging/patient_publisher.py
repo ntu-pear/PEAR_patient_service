@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Dict, Any
 from datetime import datetime
 
@@ -25,6 +26,7 @@ class PatientPublisher:
                               created_by: str) -> bool:
         """Publish patient creation event"""
         message = {
+            'correlation_id': str(uuid.uuid4()),
             'event_type': 'PATIENT_CREATED',
             'patient_id': patient_id,
             'patient_data': patient_data,
@@ -47,6 +49,7 @@ class PatientPublisher:
                               modified_by: str) -> bool:
         """Publish patient update event"""
         message = {
+            'correlation_id': str(uuid.uuid4()),
             'event_type': 'PATIENT_UPDATED',
             'patient_id': patient_id,
             'old_data': old_data,
@@ -70,6 +73,7 @@ class PatientPublisher:
                               deleted_by: str) -> bool:
         """Publish patient deletion event"""
         message = {
+            'correlation_id': str(uuid.uuid4()),
             'event_type': 'PATIENT_DELETED',
             'patient_id': patient_id,
             'patient_data': patient_data,
