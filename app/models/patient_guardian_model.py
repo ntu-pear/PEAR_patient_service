@@ -20,7 +20,7 @@ class PatientGuardian(Base):
     tempAddress = Column(String(255))
     status = Column(String(255), nullable=False)
     isDeleted = Column(String(1), nullable=False, default="0")
-    guardianApplicationUserId = Column(String(255))
+    guardianApplicationUserId = Column(Integer)
 
     createdDate = Column(DateTime, nullable=False,  default=datetime.now)
     modifiedDate = Column(DateTime, nullable=False,  default=datetime.now)
