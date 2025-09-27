@@ -35,14 +35,14 @@ async def get_health(request: Request, require_auth: bool = True):
             "status": "healthy" if is_healthy else "unhealthy",
             "outbox": outbox_stats,
             "processor": processor_stats,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now().isoformat()
         }
     except Exception as e:
         logger.error(f"Health check error: {str(e)}")
         return {
             "status": "error",
             "error": str(e),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now().isoformat()
         }
 
 
@@ -189,7 +189,7 @@ async def cleanup_old_events(
         
         db = SessionLocal()
         try:
-            cutoff_date = datetime.utcnow() - timedelta(days=days)
+            cutoff_date = datetime.now() - timedelta(days=days)
             
             # Delete old published events
             deleted_events = db.query(OutboxEvent).filter(

@@ -31,7 +31,7 @@ class PatientPublisher:
             'patient_id': patient_id,
             'patient_data': patient_data,
             'created_by': created_by,
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.now().isoformat()
         }
         
         routing_key = f"patient.created.{patient_id}"
@@ -56,7 +56,7 @@ class PatientPublisher:
             'new_data': new_data,
             'changes': changes,
             'modified_by': modified_by,
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.now().isoformat()
         }
         
         routing_key = f"patient.updated.{patient_id}"
@@ -78,7 +78,7 @@ class PatientPublisher:
             'patient_id': patient_id,
             'patient_data': patient_data,
             'deleted_by': deleted_by,
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.now().isoformat()
         }
         
         routing_key = f"patient.deleted.{patient_id}"

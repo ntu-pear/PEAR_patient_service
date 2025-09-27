@@ -69,8 +69,8 @@ def create_prescription(
 
         new_prescription = PatientPrescription(
             **data_dict,
-            CreatedDateTime=datetime.utcnow(),
-            UpdatedDateTime=datetime.utcnow(),
+            CreatedDateTime=datetime.now(),
+            UpdatedDateTime=datetime.now(),
             CreatedById=created_by,
             ModifiedById=created_by,
             # IsDeleted="0"  # Mark as active
@@ -131,7 +131,7 @@ def update_prescription(
         setattr(db_prescription, key, value)
 
     # Update metadata
-    db_prescription.ModifiedDateTime = datetime.utcnow()
+    db_prescription.ModifiedDateTime = datetime.now()
     db_prescription.ModifiedById = modified_by
 
     try:
@@ -181,7 +181,7 @@ def delete_prescription(
         original_data_dict = "{}"
 
     db_prescription.IsDeleted = "1"
-    db_prescription.ModifiedDateTime = datetime.utcnow()
+    db_prescription.ModifiedDateTime = datetime.now()
     db_prescription.ModifiedById = modified_by
 
     try:

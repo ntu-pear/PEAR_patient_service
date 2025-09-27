@@ -82,8 +82,8 @@ def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, cre
     # Create entry
     new_entry = PatientMobility(
         **mobility_data.model_dump(),
-        CreatedDateTime=datetime.utcnow(),
-        ModifiedDateTime=datetime.utcnow(),
+        CreatedDateTime=datetime.now(),
+        ModifiedDateTime=datetime.now(),
         CreatedById=created_by,
         ModifiedById=created_by,
     )
@@ -121,7 +121,7 @@ def update_mobility_entry(db: Session, mobility_id: int, mobility_data: PatientM
     for key, value in mobility_data.model_dump(exclude_unset=True).items():
         setattr(db_entry, key, value)
 
-    db_entry.ModifiedDateTime = datetime.utcnow()
+    db_entry.ModifiedDateTime = datetime.now()
     db_entry.ModifiedById = modified_by
 
     db.commit()
@@ -160,7 +160,7 @@ def delete_mobility_entry(db: Session, mobility_id: int, modified_by: str, user_
         original_data_dict = "{}"
 
     db_entry.IsDeleted = True
-    db_entry.ModifiedDateTime = datetime.utcnow()
+    db_entry.ModifiedDateTime = datetime.now()
     db_entry.ModifiedById = modified_by
 
     db.commit()
