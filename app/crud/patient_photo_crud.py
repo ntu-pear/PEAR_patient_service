@@ -29,8 +29,8 @@ def create_patient_photo(db: Session, file, photo_data: PatientPhotoCreate):
         AlbumCategoryListID=photo_data.AlbumCategoryListID,
         PatientID=PATIENT_ID,  # Default to 2
         IsDeleted=0,  # Default to active photo
-        CreatedDateTime=datetime.utcnow(),
-        UpdatedDateTime=datetime.utcnow(),
+        CreatedDateTime=datetime.now(),
+        UpdatedDateTime=datetime.now(),
         CreatedById=SYSTEM_USER_ID,  # Default system user
         ModifiedById=SYSTEM_USER_ID  # Default system user
     )
@@ -92,7 +92,7 @@ def update_patient_photo(db: Session, patient_id: int, file, update_data: Patien
     for key, value in update_data.dict(exclude_unset=True).items():
         setattr(db_photo, key, value)
 
-    db_photo.UpdatedDateTime = datetime.utcnow()
+    db_photo.UpdatedDateTime = datetime.now()
 
     db.commit()
     db.refresh(db_photo)
@@ -130,7 +130,7 @@ def delete_patient_photo(db: Session, patient_id: int, modified_by_id: int):
     for db_photo in db_photos:
         db_photo.IsDeleted = 1
         db_photo.ModifiedById = modified_by_id
-        db_photo.UpdatedDateTime = datetime.utcnow()
+        db_photo.UpdatedDateTime = datetime.now()
     
     db.commit()
 

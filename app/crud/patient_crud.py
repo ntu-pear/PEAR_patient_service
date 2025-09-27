@@ -9,7 +9,6 @@ import math
 from fastapi import HTTPException, UploadFile
 from typing import Optional, Dict, Any
 import logging
-from ..messaging import get_patient_publisher
 from ..services.outbox_service import get_outbox_service, generate_correlation_id
 
 logger = logging.getLogger(__name__)
@@ -98,7 +97,10 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
         correlation_id = generate_correlation_id()
 
     try:
-        # 1. Insert patient data
+        # 1. Create activity object
+        timestamp = datetime.now()
+
+        # 2. Insert patient data
         query = text("""
             INSERT INTO [PATIENT] (
                 name, nric, address, [tempAddress], [homeNo], [handphoneNo], gender, 
@@ -138,8 +140,8 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
             "inActiveReason": patient.inActiveReason,
             "inActiveDate": patient.inActiveDate,
             "profilePicture": patient.profilePicture,
-            "createdDate": datetime.utcnow(),
-            "modifiedDate": datetime.utcnow(),
+            "createdDate": timestamp,
+            "modifiedDate": timestamp,
             "CreatedById": user,
             "ModifiedById": user,
             "isDeleted": patient.isDeleted,
@@ -148,10 +150,10 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
         db.execute(query, params)
         db.flush()
 
-        # 2. Get the newly created patient
+        # 3. Get the newly created patient
         new_patient = db.query(Patient).filter(Patient.nric == patient.nric).first()
 
-        # 3. Create outbox event in the same transaction
+        # 4. Create outbox event in the same transaction
         outbox_service = get_outbox_service()
         
         event_payload = {
@@ -159,7 +161,7 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
             'patient_id': new_patient.id,
             'patient_data': _patient_to_dict(new_patient),
             'created_by': user,
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': timestamp.isoformat(),
             'correlation_id': correlation_id
         }
         
@@ -173,7 +175,7 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
             created_by=user
         )
 
-        # 4. Log the action
+        # 5. Log the action
         patient_data_dict = {
             k: serialize_data(v)
             for k, v in new_patient.__dict__.items()
@@ -191,7 +193,7 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
             updated_data=patient_data_dict,
         )
 
-        # 5. Commit both patient and outbox event atomically
+        # 6. Commit both patient and outbox event atomically
         db.commit()
         
         logger.info(f"Created patient {new_patient.id} with outbox event {outbox_event.id} (correlation: {correlation_id})")
@@ -214,6 +216,8 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
         correlation_id = generate_correlation_id()
 
     try:
+        timestamp = datetime.now()
+
         # 1. Capture original data
         original_patient_dict = _patient_to_dict(db_patient)
         original_data_dict = {
@@ -251,7 +255,7 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
         # 4. Apply updates
         for key, value in patient_update_dict.items():
             setattr(db_patient, key, value)
-        db_patient.modifiedDate = datetime.utcnow()
+        db_patient.modifiedDate = timestamp
         db_patient.ModifiedById = user
 
         db.flush()
@@ -267,7 +271,7 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
                 'new_data': _patient_to_dict(db_patient),
                 'changes': changes,
                 'modified_by': user,
-                'timestamp': datetime.utcnow().isoformat(),
+                'timestamp': timestamp.isoformat(),
                 'correlation_id': correlation_id
             }
             
@@ -330,7 +334,7 @@ def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFil
 
     # Update patient profile picture
     db_patient.profilePicture = profile_picture_url
-    db_patient.modifiedDate = datetime.utcnow()
+    db_patient.modifiedDate = datetime.now()
     db_patient.ModifiedById = user_id
     db.commit()
     db.refresh(db_patient)
@@ -378,7 +382,7 @@ def delete_patient(db: Session, patient_id: int, user_id: str, user_full_name: s
 
         # 2. Perform soft delete
         setattr(db_patient, "isDeleted", "1")
-        db_patient.modifiedDate = datetime.utcnow()
+        db_patient.modifiedDate = timestamp
         db_patient.ModifiedById = user_id
         db.flush()
 
@@ -390,7 +394,7 @@ def delete_patient(db: Session, patient_id: int, user_id: str, user_full_name: s
             'patient_id': db_patient.id,
             'patient_data': patient_dict,
             'deleted_by': user_id,
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': timestamp.isoformat(),
             'correlation_id': correlation_id
         }
         
@@ -444,7 +448,7 @@ def delete_patient_profile_picture(db: Session, patient_id: int, user_id: str, u
 
     # Set profile picture to empty string
     db_patient.profilePicture = ""
-    db_patient.modifiedDate = datetime.utcnow()
+    db_patient.modifiedDate = datetime.now()
     db_patient.ModifiedById = user_id
     db.commit()
     db.refresh(db_patient)

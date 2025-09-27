@@ -32,7 +32,7 @@ class PatientMedicationPublisher:
             'patient_id': patient_id,
             'medication_data': medication_data,
             'created_by': created_by,
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.now().isoformat()
         }
         
         routing_key = f"patient.medication.created.{medication_id}"
@@ -58,7 +58,7 @@ class PatientMedicationPublisher:
             'new_data': new_data,
             'changes': changes,
             'modified_by': modified_by,
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.now().isoformat()
         }
         
         routing_key = f"patient.medication.updated.{medication_id}"
@@ -81,7 +81,7 @@ class PatientMedicationPublisher:
             'patient_id': patient_id,
             'medication_data': medication_data,
             'deleted_by': deleted_by,
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.now().isoformat()
         }
         
         routing_key = f"patient.medication.deleted.{medication_id}"

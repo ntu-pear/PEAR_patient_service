@@ -218,7 +218,7 @@ def create_medication(
         correlation_id = generate_correlation_id()
 
     # Create consistent timestamp for database and event
-    timestamp = datetime.utcnow()
+    timestamp = datetime.now()
 
     try:
         # Exclude any fields you set manually
@@ -349,7 +349,7 @@ def update_medication(
             return db_medication
 
         # Create consistent timestamp for database and event
-        timestamp = datetime.utcnow()
+        timestamp = datetime.now()
 
         # Capture ORIGINAL prescription details
         original_prescription_list_id = db_medication.PrescriptionListId
@@ -463,7 +463,7 @@ def delete_medication(
         correlation_id = generate_correlation_id()
 
     # Create consistent timestamp for database and event
-    timestamp = datetime.utcnow()
+    timestamp = datetime.now()
 
     try:
         # Capture original data with prescription name

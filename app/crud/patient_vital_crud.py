@@ -69,8 +69,8 @@ def create_vital(
 
         new_vital = PatientVital(
             **data_to_create,
-            CreatedDateTime=datetime.utcnow(),
-            UpdatedDateTime=datetime.utcnow(),
+            CreatedDateTime=datetime.now(),
+            UpdatedDateTime=datetime.now(),
             CreatedById=created_by,
             ModifiedById=created_by,
             # IsDeleted="0"  # Mark as active
@@ -139,7 +139,7 @@ def update_vital(
             setattr(db_vital, key, value)
 
         # Update metadata
-        db_vital.ModifiedDateTime = datetime.utcnow()
+        db_vital.ModifiedDateTime = datetime.now()
         db_vital.ModifiedById = modified_by
 
         db.commit()
@@ -199,7 +199,7 @@ def delete_vital(
         original_data_dict = "{}"
 
     db_vital.IsDeleted = "1"
-    db_vital.ModifiedDateTime = datetime.utcnow()
+    db_vital.ModifiedDateTime = datetime.now()
     db_vital.ModifiedById = modified_by
 
     db.commit()

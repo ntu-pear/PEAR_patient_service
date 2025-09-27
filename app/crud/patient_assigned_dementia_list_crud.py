@@ -25,8 +25,8 @@ def get_dementia_list_entry_by_id(db: Session, dementia_list_id: int):
 def create_dementia_list_entry(db: Session, dementia_list_data: PatientAssignedDementiaListCreate, created_by: str, user_full_name:str):
     new_entry = PatientAssignedDementiaList(
         **dementia_list_data.model_dump(),
-        CreatedDate=datetime.utcnow(),
-        ModifiedDate=datetime.utcnow(),
+        CreatedDate=datetime.now(),
+        ModifiedDate=datetime.now(),
         CreatedById=created_by,
         ModifiedById=created_by,
     )
@@ -68,7 +68,7 @@ def update_dementia_list_entry(
             setattr(db_entry, key, value)
 
         # Update timestamps and modifiedById
-        db_entry.ModifiedDate = datetime.utcnow()
+        db_entry.ModifiedDate = datetime.now()
         db_entry.ModifiedById = modified_by
 
         db.commit()
@@ -105,7 +105,7 @@ def delete_dementia_list_entry(db: Session, dementia_list_id: int, modified_by: 
     
         # Soft delete the entry
         db_entry.IsDeleted = "1"
-        db_entry.ModifiedDate = datetime.utcnow()
+        db_entry.ModifiedDate = datetime.now()
         db_entry.ModifiedById = modified_by
 
         db.commit()

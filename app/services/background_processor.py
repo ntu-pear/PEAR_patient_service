@@ -90,7 +90,7 @@ class OutboxProcessor:
                 self.stats['total_processed'] += successful + failed
                 self.stats['total_successful'] += successful
                 self.stats['total_failed'] += failed
-                self.stats['last_run'] = datetime.utcnow().isoformat()
+                self.stats['last_run'] = datetime.now().isoformat()
                 
                 if successful > 0 or failed > 0:
                     logger.info(f"Processed {successful + failed} events - Success: {successful}, Failed: {failed}")
@@ -160,7 +160,7 @@ async def run_standalone():
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     
-    processor = SimpleOutboxProcessor(
+    processor = OutboxProcessor(
         poll_interval=args.poll_interval,
         batch_size=args.batch_size
     )
