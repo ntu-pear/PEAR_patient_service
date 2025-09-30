@@ -37,7 +37,7 @@ class PatientPrescriptionPublisher:
             "timestamp": datetime.utcnow().isoformat(),
         }
 
-        routing_key = f"patient.prescription.created.{patient_prescription_id}"
+        routing_key = f"patient.medication.created.{patient_prescription_id}"
         success = self.manager.publish(self.exchange, routing_key, message)
 
         if success:
@@ -51,7 +51,6 @@ class PatientPrescriptionPublisher:
 
         return success
 
-    # TODO: Implement update and delete event publishing methods for patient prescriptions
     def publish_patient_prescription_updated(
         self,
         patient_prescription_id: int,
@@ -71,7 +70,7 @@ class PatientPrescriptionPublisher:
             "timestamp": datetime.utcnow().isoformat(),
         }
 
-        routing_key = f"patient.prescription.updated.{patient_prescription_id}"
+        routing_key = f"patient.medication.updated.{patient_prescription_id}"
         success = self.manager.publish(self.exchange, routing_key, message)
 
         if success:
@@ -95,7 +94,7 @@ class PatientPrescriptionPublisher:
             "timestamp": datetime.utcnow().isoformat(),
         }
 
-        routing_key = f"patient.prescription.deleted.{patient_prescription_id}"
+        routing_key = f"patient.medication.deleted.{patient_prescription_id}"
         success = self.manager.publish(self.exchange, routing_key, message)
 
         if success:

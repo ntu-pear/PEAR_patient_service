@@ -119,7 +119,6 @@ def create_prescription(
         # Publish patient prescription creation event to message queue
         try:
             publisher = get_patient_prescription_publisher()
-            # patient_dict = _patient_to_dict(new_patient)
             patient_prescription_dict = updated_data_dict
             success = publisher.publish_patient_prescription_created(
                 patient_prescription_id=new_prescription.Id,
