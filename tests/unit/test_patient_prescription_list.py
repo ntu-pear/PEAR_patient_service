@@ -60,41 +60,6 @@ def test_get_prescription_lists(db_session_mock):
     assert prescription_lists[1].Value == "Ibuprofen"
 
 
-# def test_search_prescription_lists(db_session_mock):
-#     """Test searching prescription list items by value"""
-#     # Mock data
-#     mock_prescription_lists = [
-#         mock.MagicMock(
-#             Id=1,
-#             IsDeleted=False,
-#             CreatedDateTime=datetime(2023, 1, 1, 10, 0),
-#             UpdatedDateTime=datetime(2023, 1, 1, 10, 0),
-#             Value="Paracetamol"
-#         )
-#     ]
-
-#     # Mock the query chain properly
-#     mock_query = mock.MagicMock()
-#     mock_filtered_query = mock.MagicMock()
-#     mock_filtered_query.count.return_value = 1
-#     mock_filtered_query.offset.return_value.limit.return_value.all.return_value = mock_prescription_lists
-#     mock_filtered_query.order_by.return_value = mock_filtered_query  # In case order_by is called
-#     mock_query.filter.return_value = mock_filtered_query
-#     db_session_mock.query.return_value = mock_query
-
-#     prescription_lists, totalRecords, totalPages = search_prescription_lists(
-#         db_session_mock, 
-#         search_value="Para",
-#         pageNo=0, 
-#         pageSize=100
-#     )
-#     assert isinstance(prescription_lists, list)
-#     assert len(prescription_lists) == 1
-#     assert totalRecords == 1
-#     assert totalPages == 1
-#     assert prescription_lists[0].Value == "Paracetamol"
-
-
 def test_get_prescription_list_by_id(db_session_mock):
     """Test retrieving a specific prescription list item by ID"""
     # Mock data
