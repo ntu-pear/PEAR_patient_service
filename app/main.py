@@ -1,41 +1,45 @@
 import logging
 import os
+
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError  # For handling database-related errors
 from sqlalchemy.orm import clear_mappers
-from .database import engine, Base
+
 from app.models import (
     patient_allergy_mapping_model,  # Import all models to ensure they are registered
+)
+from app.models import (
     patient_allocation_model,
+    patient_assigned_dementia_list_model,
+    patient_assigned_dementia_mapping_model,
     patient_attendance_model,
     patient_doctor_note_model,
+    patient_guardian_model,
+    patient_guardian_relationship_mapping_model,
+    patient_highlight_model,
     patient_list_diet_model,
     patient_list_education_model,
-    patient_guardian_model,
-    patient_highlight_model,
-    patient_list_model,
-    patient_mobility_mapping_model,
-    patient_list_livewith_model,
     patient_list_language_model,
-    patient_model,
+    patient_list_livewith_model,
+    patient_list_model,
     patient_list_occupation_model,
     patient_list_pet_model,
+    patient_list_religion_model,
+    patient_medication_model,
+    patient_mobility_list_model,
+    patient_mobility_mapping_model,
+    patient_model,
+    patient_patient_guardian_model,
     patient_photo_list_model,
     patient_photo_model,
     patient_prescription_list_model,
     patient_prescription_model,
-    patient_list_religion_model,
     patient_social_history_model,
     patient_vital_model,
-    patient_medication_model,
-    patient_mobility_list_model,
-    patient_guardian_relationship_mapping_model,
-    patient_patient_guardian_model,
-    patient_assigned_dementia_list_model,
-    patient_assigned_dementia_mapping_model,
-    patient_list_language_model,
 )
 from app.routers import (
     allergy_reaction_type_router,
@@ -43,34 +47,35 @@ from app.routers import (
     outbox_router,
     patient_allergy_mapping_router,
     patient_allocation_router,
+    patient_assigned_dementia_list_router,
+    patient_assigned_dementia_mapping_router,
     patient_doctor_note_router,
     patient_guardian_router,
     patient_highlight_router,
     patient_highlight_type_router,
     patient_list_diet_router,
     patient_list_education_router,
+    patient_list_language_router,
     patient_list_livewith_router,
     patient_list_occupation_router,
     patient_list_pet_router,
     patient_list_religion_router,
     patient_list_router,
+    patient_medication_router,
+    patient_mobility_mapping_router,
     patient_mobility_router,
     patient_photo_router,
+    patient_prescription_list_router,
     patient_prescription_router,
+    patient_privacy_level_router,
     patient_router,
     patient_social_history_router,
     patient_vital_router,
-    patient_assigned_dementia_list_router,
-    patient_assigned_dementia_mapping_router,
-    patient_list_language_router,
-    patient_medication_router,
-    patient_mobility_mapping_router,
-    patient_privacy_level_router,
-    social_history_sensitive_mapping_router
+    social_history_sensitive_mapping_router,
 )
 from app.services.background_processor import outbox_lifespan
-from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
+
+from .database import Base, engine
 
 load_dotenv()
 
@@ -241,6 +246,12 @@ app.include_router(
     patient_prescription_router.router,
     prefix=f"{API_VERSION_PREFIX}",
     tags=["Prescriptions"],
+)
+
+app.include_router(
+    patient_prescription_list_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Prescription List"],
 )
 
 app.include_router(
