@@ -257,6 +257,7 @@ def create_medication(
             'patient_id': new_medication.PatientId,
             'medication_data': _medication_to_dict_with_prescription_name(medication_for_event, db),
             'created_by': created_by,
+            'created_by_name': user_full_name,
             'timestamp': timestamp.isoformat(),
             'correlation_id': correlation_id
         }
@@ -327,7 +328,7 @@ def update_medication(
         correlation_id = generate_correlation_id()
 
     try:
-        # Track business field changes only (exclude audit fields)
+        # Track BUSINESS LOGIC changes only (exclude audit fields)
         changes = {}
         update_fields = medication_data.model_dump(exclude_unset=True)
         
@@ -362,7 +363,7 @@ def update_medication(
             if not k.startswith("_")
         }
 
-        # Apply business field updates
+        # Apply business field updates only
         new_prescription_list_id = None
         for key, value in update_fields.items():
             if key not in audit_fields:
@@ -397,9 +398,10 @@ def update_medication(
             'patient_id': db_medication.PatientId,
             'old_data': original_medication_dict,
             'new_data': updated_medication_dict,  # This now has the CORRECT prescription name
-            'changes': changes,
+            'changes': changes,  # Only includes business field changes
             'modified_by': modified_by,
-            'timestamp': timestamp.isoformat(),
+            'modified_by_name': user_full_name,
+            'timestamp': timestamp.isoformat(),  # Use same timestamp as db_medication.UpdatedDateTime
             'correlation_id': correlation_id
         }
         
@@ -414,7 +416,7 @@ def update_medication(
         )
 
         # Log the action
-        updated_data_dict = serialize_data(update_fields)
+        updated_data_dict = serialize_data({k: v for k, v in update_fields.items() if k not in audit_fields})
         
         log_crud_action(
             action=ActionType.UPDATE,
@@ -490,6 +492,7 @@ def delete_medication(
             'patient_id': db_medication.PatientId,
             'medication_data': medication_dict,
             'deleted_by': modified_by,
+            'deleted_by_name': user_full_name,
             'timestamp': timestamp.isoformat(),
             'correlation_id': correlation_id
         }
