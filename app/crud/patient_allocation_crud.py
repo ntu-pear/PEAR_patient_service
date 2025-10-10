@@ -47,6 +47,7 @@ def create_allocation(db: Session, allocation: PatientAllocationCreate, user_id:
             tempDoctorId=allocation.tempDoctorId,
             tempCaregiverId=allocation.tempCaregiverId,
             guardian2Id=allocation.guardian2Id,
+            guardianUserId=allocation.guardianUserId,
             createdDate=datetime.now(),
             modifiedDate=datetime.now(),
             CreatedById=user_id,
