@@ -11,13 +11,13 @@ class PatientAllocation(Base):
     isDeleted = Column(String(1), default='0', nullable=False)
     patientId = Column(Integer, ForeignKey('PATIENT.id'))
     guardianId = Column(Integer, ForeignKey('PATIENT_GUARDIAN.id'), nullable=False)
-    guardian2Id = Column(Integer, ForeignKey('PATIENT_GUARDIAN.id'))
+    guardian2Id = Column(Integer, ForeignKey('PATIENT_GUARDIAN.id'), nullable = True)
     # External DB, uses String for IDs
     doctorId = Column(String, nullable=False)
     gameTherapistId = Column(String, nullable=False)
     supervisorId = Column(String, nullable=False)
     caregiverId = Column(String, nullable=False)
-    
+    guardianUserId = Column(String, nullable=True)
     tempDoctorId = Column(String)
     tempCaregiverId = Column(String)
     
