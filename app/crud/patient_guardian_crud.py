@@ -31,7 +31,9 @@ def create_guardian(
         table="PatientGuardian",
         entity_id=db_guardian.id,
         original_data=None,
-        updated_data=updated_data_dict
+        updated_data=updated_data_dict,
+        user_full_name="None",
+        message="create new guardian"
     )
     return db_guardian
 
@@ -65,7 +67,9 @@ def update_guardian(
             table="PatientGuardian",
             entity_id=guardian_id,
             original_data=original_data_dict,
-            updated_data=updated_data_dict
+            updated_data=updated_data_dict,
+            user_full_name="None",
+            message="Update guardian"
         )
     return db_guardian
 
@@ -89,6 +93,8 @@ def delete_guardian(db: Session, guardian_id: int):
             table="PatientGuardian",
             entity_id=db_guardian.id,
             original_data=original_data_dict,
-            updated_data=None
+            updated_data=None,
+            user_full_name="None",
+            message="Delete guardian"
         )
     return db_guardian

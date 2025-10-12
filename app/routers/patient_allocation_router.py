@@ -18,9 +18,10 @@ def get_allocation(
     allocation_id: int,
     request: Request,
     db: Session = Depends(get_db),
+    require_auth: bool = True
 ):
     """Get a specific allocation by ID"""
-    _ = extract_jwt_payload(request)
+    _ = extract_jwt_payload(request,require_auth)
     db_allocation = crud.get_allocation_by_id(db, allocation_id)
     if not db_allocation:
         raise HTTPException(status_code=404, detail="Allocation not found")
@@ -56,7 +57,7 @@ def get_allocations(
 def create_allocation(
     allocation: PatientAllocationCreate,
     request: Request,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db)
 ):
     """Create a new allocation"""
     payload = extract_jwt_payload(request)
@@ -80,7 +81,7 @@ def update_allocation(
     allocation_id: int,
     allocation: PatientAllocationUpdate,
     request: Request,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db)
 ):
     """Update an existing allocation"""
     payload = extract_jwt_payload(request)
@@ -100,7 +101,7 @@ def update_allocation(
 def delete_allocation(
     allocation_id: int,
     request: Request,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db)
 ):
     """Soft delete an allocation"""
     payload = extract_jwt_payload(request)

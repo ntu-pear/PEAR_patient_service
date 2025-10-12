@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Dict, Any
 from datetime import datetime
 
@@ -25,11 +26,12 @@ class PatientPublisher:
                               created_by: str) -> bool:
         """Publish patient creation event"""
         message = {
+            'correlation_id': str(uuid.uuid4()),
             'event_type': 'PATIENT_CREATED',
             'patient_id': patient_id,
             'patient_data': patient_data,
             'created_by': created_by,
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.now().isoformat()
         }
         
         routing_key = f"patient.created.{patient_id}"
@@ -47,13 +49,14 @@ class PatientPublisher:
                               modified_by: str) -> bool:
         """Publish patient update event"""
         message = {
+            'correlation_id': str(uuid.uuid4()),
             'event_type': 'PATIENT_UPDATED',
             'patient_id': patient_id,
             'old_data': old_data,
             'new_data': new_data,
             'changes': changes,
             'modified_by': modified_by,
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.now().isoformat()
         }
         
         routing_key = f"patient.updated.{patient_id}"
@@ -70,11 +73,12 @@ class PatientPublisher:
                               deleted_by: str) -> bool:
         """Publish patient deletion event"""
         message = {
+            'correlation_id': str(uuid.uuid4()),
             'event_type': 'PATIENT_DELETED',
             'patient_id': patient_id,
             'patient_data': patient_data,
             'deleted_by': deleted_by,
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.now().isoformat()
         }
         
         routing_key = f"patient.deleted.{patient_id}"

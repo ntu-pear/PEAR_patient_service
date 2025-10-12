@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import time
+import threading
 from typing import Dict, Any, Callable
 from datetime import datetime
 from dotenv import load_dotenv
@@ -27,6 +28,11 @@ class RabbitMQClient:
         self.connection = None
         self.channel = None
         self.is_connected = False
+        self.shutdown_event = None
+    
+    def set_shutdown_event(self, shutdown_event: threading.Event):
+        """Set the shutdown event for graceful shutdown"""
+        self.shutdown_event = shutdown_event
     
     def connect(self, max_retries: int = 5) -> bool:
         """Connect to RabbitMQ with retry logic"""
@@ -73,7 +79,7 @@ class RabbitMQClient:
         Publish message with fault tolerance
         """
         message_body = {
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now().isoformat(),
             'source_service': self.service_name,
             'data': message
         }
@@ -167,10 +173,20 @@ class RabbitMQClient:
             self.channel.start_consuming()
         except KeyboardInterrupt:
             logger.info(f"{self.service_name} stopping consumption...")
-            self.channel.stop_consuming()
+            self.stop_consuming()
         except Exception as e:
             logger.error(f"Error during consumption: {str(e)}")
             raise
+    
+    def stop_consuming(self):
+        """Stop consuming messages"""
+        try:
+            if self.channel and not self.channel.is_closed:
+                logger.info(f"{self.service_name} stopping message consumption...")
+                self.channel.stop_consuming()
+                logger.info(f"{self.service_name} stopped consuming")
+        except Exception as e:
+            logger.error(f"Error stopping consumption: {str(e)}")
     
     def close(self):
         """Close connection"""

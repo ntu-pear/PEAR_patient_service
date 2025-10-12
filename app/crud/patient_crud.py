@@ -9,7 +9,6 @@ import math
 from fastapi import HTTPException, UploadFile
 from typing import Optional, Dict, Any
 import logging
-from ..messaging import get_patient_publisher
 from ..services.outbox_service import get_outbox_service, generate_correlation_id
 
 logger = logging.getLogger(__name__)
@@ -98,7 +97,10 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
         correlation_id = generate_correlation_id()
 
     try:
-        # 1. Insert patient data
+        # 1. Create patient object
+        timestamp = datetime.now()
+
+        # 2. Insert patient data
         query = text("""
             INSERT INTO [PATIENT] (
                 name, nric, address, [tempAddress], [homeNo], [handphoneNo], gender, 
@@ -138,8 +140,8 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
             "inActiveReason": patient.inActiveReason,
             "inActiveDate": patient.inActiveDate,
             "profilePicture": patient.profilePicture,
-            "createdDate": datetime.utcnow(),
-            "modifiedDate": datetime.utcnow(),
+            "createdDate": timestamp,
+            "modifiedDate": timestamp,
             "CreatedById": user,
             "ModifiedById": user,
             "isDeleted": patient.isDeleted,
@@ -148,10 +150,10 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
         db.execute(query, params)
         db.flush()
 
-        # 2. Get the newly created patient
+        # 3. Get the newly created patient
         new_patient = db.query(Patient).filter(Patient.nric == patient.nric).first()
 
-        # 3. Create outbox event in the same transaction
+        # 4. Create outbox event in the same transaction
         outbox_service = get_outbox_service()
         
         event_payload = {
@@ -159,7 +161,8 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
             'patient_id': new_patient.id,
             'patient_data': _patient_to_dict(new_patient),
             'created_by': user,
-            'timestamp': datetime.utcnow().isoformat(),
+            'created_by_name': user_full_name,
+            'timestamp': timestamp.isoformat(),
             'correlation_id': correlation_id
         }
         
@@ -173,7 +176,7 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
             created_by=user
         )
 
-        # 4. Log the action
+        # 5. Log the action
         patient_data_dict = {
             k: serialize_data(v)
             for k, v in new_patient.__dict__.items()
@@ -191,7 +194,7 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
             updated_data=patient_data_dict,
         )
 
-        # 5. Commit both patient and outbox event atomically
+        # 6. Commit both patient and outbox event atomically
         db.commit()
         
         logger.info(f"Created patient {new_patient.id} with outbox event {outbox_event.id} (correlation: {correlation_id})")
@@ -235,29 +238,46 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
         if existing_patient:
             raise HTTPException(status_code=400, detail="NRIC must be unique for active records")
 
-        # 3. Track changes
+        # 3. Track BUSINESS LOGIC changes only (exclude audit fields)
         changes = {}
-        patient_update_dict = patient.model_dump()
+        patient_update_dict = patient.model_dump(exclude_unset=True)
+        
+        # Define audit fields to exclude from change tracking
+        audit_fields = {'createdDate', 'modifiedDate', 'CreatedById', 'ModifiedById'}
         
         for key, new_value in patient_update_dict.items():
-            if hasattr(db_patient, key):
+            if key not in audit_fields and hasattr(db_patient, key):
                 old_value = getattr(db_patient, key)
+                
+                # Strip timezone for datetime comparison
+                if hasattr(old_value, 'replace') and hasattr(old_value, 'tzinfo') and old_value.tzinfo:
+                    old_value = old_value.replace(tzinfo=None)
+                if hasattr(new_value, 'replace') and hasattr(new_value, 'tzinfo') and new_value.tzinfo:
+                    new_value = new_value.replace(tzinfo=None)
+                
                 if old_value != new_value:
                     changes[key] = {
                         'old': serialize_data(old_value),
                         'new': serialize_data(new_value)
                     }
-
-        # 4. Apply updates
-        for key, value in patient_update_dict.items():
-            setattr(db_patient, key, value)
-        db_patient.modifiedDate = datetime.utcnow()
-        db_patient.ModifiedById = user
-
-        db.flush()
-
-        # 5. Create outbox event only if there were changes
+                    
+        # 4. Only proceed with update if there are actual business changes
         if changes:
+            # Create consistent timestamp for all audit fields
+            timestamp = datetime.now()
+
+            # Apply business field updates
+            for key, value in patient_update_dict.items():
+                if key not in audit_fields:
+                    setattr(db_patient, key, value)
+            
+            # Update audit fields
+            db_patient.modifiedDate = timestamp
+            db_patient.ModifiedById = user
+
+            db.flush()
+
+            # 5. Create outbox event only if there were changes
             outbox_service = get_outbox_service()
             
             event_payload = {
@@ -265,9 +285,10 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
                 'patient_id': db_patient.id,
                 'old_data': original_patient_dict,
                 'new_data': _patient_to_dict(db_patient),
-                'changes': changes,
+                'changes': changes,  # Only includes business field changes
                 'modified_by': user,
-                'timestamp': datetime.utcnow().isoformat(),
+                'modified_by_name': user_full_name,
+                'timestamp': timestamp.isoformat(),  # Use same timestamp as db_patient.modifiedDate
                 'correlation_id': correlation_id
             }
             
@@ -281,23 +302,21 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
                 created_by=user
             )
 
-        # 6. Log the action
-        updated_data_dict = serialize_data(patient.model_dump())
-        log_crud_action(
-            action=ActionType.UPDATE,
-            user=user,
-            user_full_name=user_full_name,
-            message="Updated Patient",
-            table="Patient",
-            entity_id=db_patient.id,
-            original_data=original_data_dict,
-            updated_data=updated_data_dict,
-        )
+            # 6. Log the action
+            log_crud_action(
+                action=ActionType.UPDATE,
+                user=user,
+                user_full_name=user_full_name,
+                message="Updated Patient",
+                table="Patient",
+                entity_id=db_patient.id,
+                original_data=original_data_dict,
+                updated_data=serialize_data(patient_update_dict),
+            )
 
-        # 7. Commit atomically
-        db.commit()
-        
-        if changes:
+            # 7. Commit atomically
+            db.commit()
+            
             logger.info(f"Updated patient {db_patient.id} with outbox event {outbox_event.id} (correlation: {correlation_id})")
         else:
             logger.info(f"Updated patient {db_patient.id} with no changes")
@@ -330,7 +349,7 @@ def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFil
 
     # Update patient profile picture
     db_patient.profilePicture = profile_picture_url
-    db_patient.modifiedDate = datetime.utcnow()
+    db_patient.modifiedDate = datetime.now()
     db_patient.ModifiedById = user_id
     db.commit()
     db.refresh(db_patient)
@@ -377,8 +396,9 @@ def delete_patient(db: Session, patient_id: int, user_id: str, user_full_name: s
         patient_dict = _patient_to_dict(db_patient)
 
         # 2. Perform soft delete
+        timestamp = datetime.now()
         setattr(db_patient, "isDeleted", "1")
-        db_patient.modifiedDate = datetime.utcnow()
+        db_patient.modifiedDate = timestamp
         db_patient.ModifiedById = user_id
         db.flush()
 
@@ -390,7 +410,8 @@ def delete_patient(db: Session, patient_id: int, user_id: str, user_full_name: s
             'patient_id': db_patient.id,
             'patient_data': patient_dict,
             'deleted_by': user_id,
-            'timestamp': datetime.utcnow().isoformat(),
+            'deleted_by_name': user_full_name,
+            'timestamp': timestamp.isoformat(),
             'correlation_id': correlation_id
         }
         
@@ -444,7 +465,7 @@ def delete_patient_profile_picture(db: Session, patient_id: int, user_id: str, u
 
     # Set profile picture to empty string
     db_patient.profilePicture = ""
-    db_patient.modifiedDate = datetime.utcnow()
+    db_patient.modifiedDate = datetime.now()
     db_patient.ModifiedById = user_id
     db.commit()
     db.refresh(db_patient)

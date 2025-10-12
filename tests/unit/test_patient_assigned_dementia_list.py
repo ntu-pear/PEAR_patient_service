@@ -27,8 +27,8 @@ def get_mock_dementia_list_entry():
         DementiaTypeListId=1,
         Value="Alzheimer's",
         IsDeleted="0",
-        CreatedDate=datetime.utcnow(),
-        ModifiedDate=datetime.utcnow(),
+        CreatedDate=datetime.now(),
+        ModifiedDate=datetime.now(),
         CreatedById="1",
         ModifiedById="1",
     )
@@ -76,8 +76,8 @@ def test_get_all_dementia_list_entries(
     mock_instance.IsDeleted = "0"
     mock_instance.CreatedById = "1"
     mock_instance.ModifiedById = "1"
-    mock_instance.CreatedDate = datetime.utcnow()
-    mock_instance.ModifiedDate = datetime.utcnow()
+    mock_instance.CreatedDate = datetime.now()
+    mock_instance.ModifiedDate = datetime.now()
 
     # Mock query result to return the mock instance in a list
     db_session_mock.query.return_value.all.return_value = [mock_instance]

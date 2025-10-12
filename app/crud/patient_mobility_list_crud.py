@@ -40,8 +40,8 @@ def get_mobility_list_entry_by_id(db: Session, mobility_list_id: int):
 def create_mobility_list_entry(db: Session, mobility_list_data: PatientMobilityListCreate, created_by: str, user_full_name: str):
     new_entry = PatientMobilityList(
         **mobility_list_data.model_dump(exclude={"CreatedDateTime", "ModifiedDateTime", "CreatedById", "ModifiedById"}),  # Corrected set syntax
-        CreatedDateTime=datetime.utcnow(),
-        ModifiedDateTime=datetime.utcnow(),
+        CreatedDateTime=datetime.now(),
+        ModifiedDateTime=datetime.now(),
         CreatedById=created_by,
         ModifiedById=created_by,
     )
@@ -90,7 +90,7 @@ def update_mobility_list_entry(
         setattr(db_entry, key, value)
 
     # Update the modified fields
-    db_entry.ModifiedDateTime = datetime.utcnow()
+    db_entry.ModifiedDateTime = datetime.now()
     db_entry.ModifiedById = modified_by
 
     try:
@@ -142,7 +142,7 @@ def delete_mobility_list_entry(db: Session, mobility_list_id: int, modified_by: 
 
     # Soft delete the entry by setting IsDeleted to True
     db_entry.IsDeleted = "1"  # Use boolean True
-    db_entry.ModifiedDateTime = datetime.utcnow()
+    db_entry.ModifiedDateTime = datetime.now()
     db_entry.ModifiedById = modified_by
 
     # Commit the transaction to save the changes

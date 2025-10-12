@@ -26,7 +26,7 @@ def db_session_mock():
 def patient_assigned_dementia_create():
     from datetime import datetime
 
-    now = datetime.utcnow()
+    now = datetime.now()
     print("creating")
     return PatientAssignedDementiaCreate(
         IsDeleted="0",

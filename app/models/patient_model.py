@@ -55,6 +55,7 @@ class Patient(Base):
     )
     mobility_records = relationship("PatientMobility", back_populates="patient")
     prescriptions = relationship("PatientPrescription", back_populates="patient")
+    medications = relationship("PatientMedication", back_populates="patient")
     social_histories = relationship("PatientSocialHistory", back_populates="patient")
     vitals = relationship("PatientVital", back_populates="patient")
     attendances = relationship("PatientAttendance", back_populates="patient")

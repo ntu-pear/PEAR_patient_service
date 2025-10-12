@@ -73,22 +73,20 @@ class PatientSyncScript(BaseScript):
             # Set up messaging
             self.publisher = get_patient_publisher(testing=True)
             
-            self.logger.info("✅ Dependencies initialized successfully")
+            self.logger.info("Dependencies initialized successfully")
             
         except Exception as e:
-            self.logger.error(f"❌ Failed to initialize dependencies: {str(e)}")
+            self.logger.error(f"Failed to initialize dependencies: {str(e)}")
             raise
     
     def get_total_count(self) -> int:
         """Get total number of patients in the database"""
         try:
             with self.SessionLocal() as db:
-                # Count active patients (not soft deleted)
-                count = db.query(self.func.count(self.Patient.id)).filter(
-                    self.Patient.isDeleted == 0
-                ).scalar()
+                # Count patients
+                count = db.query(self.func.count(self.Patient.id)).scalar()
                 
-                self.logger.info(f"Found {count} active patients in database")
+                self.logger.info(f"Found {count} patients in database")
                 return count
                 
         except Exception as e:
@@ -99,9 +97,7 @@ class PatientSyncScript(BaseScript):
         """Fetch a batch of patients from the database"""
         try:
             with self.SessionLocal() as db:
-                patients = db.query(self.Patient).filter(
-                    self.Patient.isDeleted == 0
-                ).order_by(self.Patient.id).offset(offset).limit(limit).all()
+                patients = db.query(self.Patient).order_by(self.Patient.id).offset(offset).limit(limit).all()
                 
                 self.logger.debug(f"Fetched {len(patients)} patients from offset {offset}")
                 return patients
@@ -117,14 +113,14 @@ class PatientSyncScript(BaseScript):
             
             # Check if patient already exists in target (if enabled)
             if self.check_target and self._patient_exists_in_target(patient_id):
-                self.logger.info(f"⏭️  Patient {patient_id} already exists in target - skipping")
+                self.logger.info(f"Patient {patient_id} already exists in target - skipping")
                 return False  # Skipped, not an error
             
             # Convert patient model to dictionary
             patient_data = self._patient_to_dict(patient)
             
             if self.dry_run:
-                self.logger.info(f"🔍 [DRY RUN] Would emit PATIENT_CREATED for patient {patient_id} ({patient.name})")
+                self.logger.info(f"[DRY RUN] Would emit PATIENT_CREATED for patient {patient_id} ({patient.name})")
                 self.logger.debug(f"Patient data: {patient_data}")
                 return True
             
@@ -136,10 +132,10 @@ class PatientSyncScript(BaseScript):
             )
             
             if success:
-                self.logger.info(f"✅ Emitted PATIENT_CREATED event for patient {patient_id} ({patient.name})")
+                self.logger.info(f"Emitted PATIENT_CREATED event for patient {patient_id} ({patient.name})")
                 return True
             else:
-                self.logger.error(f"❌ Failed to emit PATIENT_CREATED event for patient {patient_id}")
+                self.logger.error(f"Failed to emit PATIENT_CREATED event for patient {patient_id}")
                 return False
                 
         except Exception as e:
@@ -333,10 +329,10 @@ def main():
             script.run()
             
     except KeyboardInterrupt:
-        print("\\n⚠️  Script interrupted by user")
+        print("Script interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"❌ Script failed: {str(e)}")
+        print(f"Script failed: {str(e)}")
         sys.exit(1)
 
 

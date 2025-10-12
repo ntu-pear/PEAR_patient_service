@@ -167,8 +167,8 @@ def create_assigned_dementia(
         PatientId=dementia_data.PatientId,
         DementiaTypeListId=dementia_data.DementiaTypeListId,
         IsDeleted="0",
-        CreatedDate=datetime.utcnow(),
-        ModifiedDate=datetime.utcnow(),
+        CreatedDate=datetime.now(),
+        ModifiedDate=datetime.now(),
         CreatedById=created_by,
         ModifiedById=created_by,
     )
@@ -240,7 +240,7 @@ def update_assigned_dementia(
         setattr(db_assignment, key, value)
 
     # Update metadata
-    db_assignment.ModifiedDate = datetime.utcnow()
+    db_assignment.ModifiedDate = datetime.now()
     db_assignment.ModifiedById = modified_by
 
     db.commit()
@@ -285,7 +285,7 @@ def delete_assigned_dementia(db: Session, dementia_id: int, modified_by: str, us
 
     # Soft delete the assignment
     db_assignment.IsDeleted = "1"
-    db_assignment.ModifiedDate = datetime.utcnow()
+    db_assignment.ModifiedDate = datetime.now()
     db_assignment.ModifiedById = modified_by
 
     db.commit()

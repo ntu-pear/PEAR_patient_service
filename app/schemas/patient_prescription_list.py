@@ -1,20 +1,23 @@
-from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
+from pydantic import BaseModel
+
+
 class PatientPrescriptionListBase(BaseModel):
     IsDeleted: bool
-    CreatedDateTime: datetime
-    UpdatedDateTime: datetime
     Value: str
 
 class PatientPrescriptionListCreate(PatientPrescriptionListBase):
-    pass
+    CreatedDateTime: datetime
+    UpdatedDateTime: datetime
 
 class PatientPrescriptionListUpdate(PatientPrescriptionListBase):
-    pass
+    UpdatedDateTime: datetime
 
 class PatientPrescriptionList(PatientPrescriptionListBase):
     Id: int
+    CreatedDateTime: datetime
+    UpdatedDateTime: datetime
 
     model_config = {"from_attributes": True}
