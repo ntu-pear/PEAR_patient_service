@@ -3,6 +3,9 @@ name: Base CI
 on:
   workflow_call:
     inputs:
+      environment:
+        required: true
+        type: string
       runner-label:
         required: true
         type: string
