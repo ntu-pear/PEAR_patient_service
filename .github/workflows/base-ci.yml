@@ -3,9 +3,6 @@ name: Base CI
 on:
   workflow_call:
     inputs:
-      environment:
-        required: true
-        type: string
       runner-label:
         required: true
         type: string
@@ -52,6 +49,7 @@ on:
 jobs:
   tests:
     runs-on: ${{ inputs.runner-label }}
+    environment: test
 
     steps:
       - uses: actions/checkout@v4
