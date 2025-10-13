@@ -28,7 +28,7 @@ on:
     secrets:
       DB_SERVER:
         required: true
-      DB_DATABASE_DEV:
+      DB_DATABASE:
         required: true
       DB_DATABASE_PORT:
         required: true
@@ -36,7 +36,7 @@ on:
         required: true
       DB_PASSWORD:
         required: true
-      DB_DRIVER_DEV:
+      DB_DRIVER:
         required: true
       CLOUDINARY_CLOUD_NAME:
         required: true
@@ -73,12 +73,12 @@ jobs:
           SERVICE_NAME=${{ vars.SERVICE_NAME }} # Taken directly from GitHub settings, not ci.yml
 
           # Database
-          DB_SERVER_DEV=${{ secrets.DB_SERVER }}
-          DB_DATABASE_DEV=${{ secrets.DB_DATABASE_DEV }}
+          DB_SERVER=${{ secrets.DB_SERVER }}
+          DB_DATABASE=${{ secrets.DB_DATABASE }}
           DB_DATABASE_PORT=${{ secrets.DB_DATABASE_PORT }}
-          DB_USERNAME_DEV=${{ secrets.DB_USERNAME }}
-          DB_PASSWORD_DEV=${{ secrets.DB_PASSWORD }}
-          DB_DRIVER_DEV=${{ secrets.DB_DRIVER_DEV }}
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_DRIVER=${{ secrets.DB_DRIVER }}
           
           # Cloudinary
           CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}

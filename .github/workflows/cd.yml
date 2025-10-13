@@ -20,17 +20,17 @@ jobs:
       docker-image-tag: 'latest'
     # These are passed in from GitHub secrets
     secrets:
-      DB_SERVER: ${{ secrets.DB_SERVER_STAGING }}
-      DB_DATABASE_DEV: ${{ secrets.DB_DATABASE_DEV }}
+      DB_SERVER: ${{ secrets.DB_SERVER }}
+      DB_DATABASE: ${{ secrets.DB_DATABASE}}
       DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
-      DB_USERNAME: ${{ secrets.DB_USERNAME_DEV }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD_DEV }}
-      DB_DRIVER_DEV: ${{ secrets.DB_DRIVER_DEV }}
+      DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_DRIVER: ${{ secrets.DB_DRIVER }}
       CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
       CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
       CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
-      WEB_FE_ORIGIN: ${{ secrets.WEB_FE_ORIGIN_STG }}
-      RABBITMQ_HOST: ${{ secrets.RABBITMQ_HOST_STG }}
+      WEB_FE_ORIGIN: ${{ secrets.WEB_FE_ORIGIN }}
+      RABBITMQ_HOST: ${{ secrets.RABBITMQ_HOST }}
       RABBITMQ_PORT: ${{ secrets.RABBITMQ_PORT }}
       RABBITMQ_USER: ${{ secrets.RABBITMQ_USER }}
       RABBITMQ_PASS: ${{ secrets.RABBITMQ_PASS }}
@@ -47,17 +47,17 @@ jobs:
       docker-image-name: 'patient_service_dev'
       docker-image-tag: 'latest'
     secrets:
-      DB_SERVER: ${{ secrets.DB_SERVER_PROD }}
-      DB_DATABASE_DEV: ${{ secrets.DB_DATABASE_DEV }}
+      DB_SERVER: ${{ secrets.DB_SERVER }}
+      DB_DATABASE: ${{ secrets.DB_DATABASE }}
       DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
-      DB_USERNAME: ${{ secrets.DB_USERNAME_DEV }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD_DEV }}
-      DB_DRIVER_DEV: ${{ secrets.DB_DRIVER_DEV }}
+      DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_DRIVER: ${{ secrets.DB_DRIVER }}
       CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
       CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
       CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
       WEB_FE_ORIGIN: ${{ secrets.WEB_FE_ORIGIN }}
-      RABBITMQ_HOST: ${{ secrets.RABBITMQ_HOST_PROD }}
+      RABBITMQ_HOST: ${{ secrets.RABBITMQ_HOST }}
       RABBITMQ_PORT: ${{ secrets.RABBITMQ_PORT }}
       RABBITMQ_USER: ${{ secrets.RABBITMQ_USER }}
       RABBITMQ_PASS: ${{ secrets.RABBITMQ_PASS }}

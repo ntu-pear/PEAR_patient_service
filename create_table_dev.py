@@ -40,4 +40,4 @@ from app.models import (
 # Create all tables in the database using the engine
 Base.metadata.create_all(bind=engine)
 
-print("Tables created successfully in the DB_DATABASE_DEV database.")
+print("Tables created successfully in the DB_DATABASE database.")
