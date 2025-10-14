@@ -23,12 +23,12 @@ def get_env_var(name, required=True, service=None):
     return value
 
 # Get the database URL from environment variables (required to connect to server's DB)
-DB_DRIVER_DEV = get_env_var("DB_DRIVER_DEV")
-DB_SERVER_DEV = get_env_var("DB_SERVER_DEV")
-DB_DATABASE_DEV = get_env_var("DB_DATABASE_DEV")
+DB_DRIVER = get_env_var("DB_DRIVER")
+DB_SERVER = get_env_var("DB_SERVER")
+DB_DATABASE = get_env_var("DB_DATABASE")
 DB_DATABASE_PORT = get_env_var("DB_DATABASE_PORT")
-DB_USERNAME_DEV = get_env_var("DB_USERNAME_DEV")
-DB_PASSWORD_DEV = get_env_var("DB_PASSWORD_DEV")
+DB_USERNAME = get_env_var("DB_USERNAME")
+DB_PASSWORD = get_env_var("DB_PASSWORD")
 
 # Get the database URL from environment (DOCKER LOCAL)
 DB_URL_LOCAL = os.getenv("DB_URL_LOCAL")
@@ -43,12 +43,12 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 # COMMMENT out this section when doing local development
 connection_url = sa.URL.create(
     "mssql+pyodbc",
-    username=DB_USERNAME_DEV,
-    password=DB_PASSWORD_DEV,
-    host=DB_SERVER_DEV,
+    username=DB_USERNAME,
+    password=DB_PASSWORD,
+    host=DB_SERVER,
     port=DB_DATABASE_PORT,
-    database=DB_DATABASE_DEV,
-    query={"driver": DB_DRIVER_DEV, "TrustServerCertificate": "yes"},
+    database=DB_DATABASE,
+    query={"driver": DB_DRIVER, "TrustServerCertificate": "yes"},
 )
 ###############################################################
 

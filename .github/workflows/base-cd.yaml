@@ -31,7 +31,7 @@ on:
     secrets:
       DB_SERVER:
         required: true
-      DB_DATABASE_DEV:
+      DB_DATABASE:
         required: true
       DB_DATABASE_PORT:
         required: true
@@ -39,7 +39,7 @@ on:
         required: true
       DB_PASSWORD:
         required: true
-      DB_DRIVER_DEV:
+      DB_DRIVER:
         required: true
       CLOUDINARY_CLOUD_NAME:
         required: true
@@ -79,12 +79,12 @@ jobs:
           echo "SERVICE_NAME=${{ vars.SERVICE_NAME }}" >> .env  # Taken directly from GitHub settings, not cd.yml
           
           # Database
-          echo "DB_SERVER_DEV=${{ secrets.DB_SERVER }}" >> .env
-          echo "DB_DATABASE_DEV=${{ secrets.DB_DATABASE_DEV }}" >> .env
+          echo "DB_SERVER=${{ secrets.DB_SERVER }}" >> .env
+          echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> .env
           echo "DB_DATABASE_PORT=${{ secrets.DB_DATABASE_PORT }}" >> .env
-          echo "DB_USERNAME_DEV=${{ secrets.DB_USERNAME }}" >> .env
-          echo "DB_PASSWORD_DEV=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "DB_DRIVER_DEV=${{ secrets.DB_DRIVER_DEV }}" >> .env
+          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "DB_DRIVER=${{ secrets.DB_DRIVER }}" >> .env
           
           # Cloudinary
           echo "CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}" >> .env
