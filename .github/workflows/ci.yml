@@ -20,12 +20,12 @@ jobs:
 
     # The "secrets.XXXX" are passed in from GitHub secrets
     secrets:
-      DB_SERVER: ${{ secrets.DB_SERVER_STAGING }} # Staging server DB
-      DB_DATABASE_DEV: ${{ secrets.DB_DATABASE_DEV }}
+      DB_SERVER: ${{ secrets.DB_SERVER }} # Staging server DB
+      DB_DATABASE: ${{ secrets.DB_DATABASE }}
       DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
-      DB_USERNAME: ${{ secrets.DB_USERNAME_DEV }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD_DEV }}
-      DB_DRIVER_DEV: ${{ secrets.DB_DRIVER_DEV }}
+      DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_DRIVER: ${{ secrets.DB_DRIVER }}
       CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
       CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
       CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
@@ -37,7 +37,7 @@ jobs:
     if: github.base_ref == 'main' && github.event_name == 'pull_request'
     uses: ./.github/workflows/base-ci.yml
     with:
-      environment: 'production'
+      environment: 'prod'
       runner-label: patient
       python-version: '3.9.19'
 
@@ -46,12 +46,12 @@ jobs:
       scheduler-service-image: '192.168.188.173:5000/pear_schedule:latest'
 
     secrets:
-      DB_SERVER: ${{ secrets.DB_SERVER_PROD }}
-      DB_DATABASE_DEV: ${{ secrets.DB_DATABASE_DEV }}
+      DB_SERVER: ${{ secrets.DB_SERVER }}
+      DB_DATABASE: ${{ secrets.DB_DATABASE }}
       DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
-      DB_USERNAME: ${{ secrets.DB_USERNAME_DEV }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD_DEV }}
-      DB_DRIVER_DEV: ${{ secrets.DB_DRIVER_DEV }}
+      DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_DRIVER: ${{ secrets.DB_DRIVER }}
       CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
       CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
       CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
