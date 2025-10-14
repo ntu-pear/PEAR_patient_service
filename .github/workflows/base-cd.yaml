@@ -63,6 +63,7 @@ on:
 jobs:
   deploy:
     runs-on: ${{ inputs.runner-label }}
+    environment: ${{ inputs.environment }}
 
     steps:
       - uses: actions/checkout@v4
