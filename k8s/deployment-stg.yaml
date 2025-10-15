@@ -20,6 +20,9 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
+        env:
+        - name: TZ
+          value: "Asia/Singapore" # GMT +8
         volumeMounts:
         - name: log-volume
           mountPath: /app/logs  # Path inside the container
