@@ -112,6 +112,7 @@ class ProducerManager:
             
             if success:
                 logger.info(f"Published to {request.exchange}/{request.routing_key} - correlation: {request.message.get('correlation_id', 'unknown')}")
+                time.sleep(0.2)
             else:
                 logger.error(f"Failed to publish to {request.exchange}/{request.routing_key} - correlation: {request.message.get('correlation_id', 'unknown')}")
         except Exception as e:
