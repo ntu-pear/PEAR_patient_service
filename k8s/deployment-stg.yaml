@@ -26,18 +26,11 @@ spec:
         volumeMounts:
         - name: log-volume
           mountPath: /app/logs  # Path inside the container
-        - name: timezone
-          mountPath: /etc/localtime
-          readOnly: true
       volumes:
       - name: log-volume
         hostPath:
           path: /home/VMadmin/FYP_microservices/PEAR_patient_service/logs  # Path on the host machine
           type: DirectoryOrCreate  # Ensures directory is created if it doesn’t exist
-      - name: timezone
-        hostPath:
-          path: /usr/share/zoneinfo/Asia/Singapore
-          type: File
 ---
 apiVersion: v1
 kind: Service
