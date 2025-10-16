@@ -24,10 +24,6 @@ def get_allocation_by_patient(db: Session, patient_id: int):
         data["guardianApplicationUserId"] = guardian_user_id
         data.pop('_sa_instance_state',None)
         return data
-        # return db.query(PatientAllocation).filter(
-        #     PatientAllocation.patientId == patient_id,
-        #     PatientAllocation.active == "Y"
-        # ).first()
     except SQLAlchemyError as e:
         db.rollback()
         raise e
