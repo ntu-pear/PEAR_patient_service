@@ -6,7 +6,8 @@ from ..crud import patient_allocation_crud as crud
 from ..schemas.patient_allocation import (
     PatientAllocation,
     PatientAllocationCreate,
-    PatientAllocationUpdate
+    PatientAllocationUpdate,
+    PatientAllocationWithGuardian
 )
 from ..auth.jwt_utils import extract_jwt_payload, get_user_id, get_full_name, get_role_name
 from ..logger.logger_utils import logger
@@ -27,7 +28,7 @@ def get_allocation(
         raise HTTPException(status_code=404, detail="Allocation not found")
     return db_allocation
 
-@router.get("/allocation/patient/{patient_id}", response_model=PatientAllocation)
+@router.get("/allocation/patient/{patient_id}", response_model=PatientAllocationWithGuardian)
 def get_patient_allocation(
     patient_id: int,
     request: Request,
@@ -57,7 +58,7 @@ def get_allocations(
 def create_allocation(
     allocation: PatientAllocationCreate,
     request: Request,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Create a new allocation"""
     payload = extract_jwt_payload(request)
@@ -81,7 +82,7 @@ def update_allocation(
     allocation_id: int,
     allocation: PatientAllocationUpdate,
     request: Request,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Update an existing allocation"""
     payload = extract_jwt_payload(request)
@@ -101,7 +102,7 @@ def update_allocation(
 def delete_allocation(
     allocation_id: int,
     request: Request,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Soft delete an allocation"""
     payload = extract_jwt_payload(request)
