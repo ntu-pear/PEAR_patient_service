@@ -14,7 +14,7 @@ from ..logger.logger_utils import logger
 
 router = APIRouter()
 
-@router.get("/allocation/{allocation_id}", response_model=PatientAllocation)
+@router.get("/allocation/{allocation_id}", response_model=PatientAllocationWithGuardian)
 def get_allocation(
     allocation_id: int,
     request: Request,
@@ -42,7 +42,7 @@ def get_patient_allocation(
         raise HTTPException(status_code=404, detail="Allocation not found for this patient")
     return db_allocation
 
-@router.get("/allocations/", response_model=List[PatientAllocation])
+@router.get("/allocations/", response_model=List[PatientAllocationWithGuardian])
 def get_allocations(
     request: Request,
     skip: int = Query(0, description="Skip first N records"),

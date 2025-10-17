@@ -6,7 +6,24 @@ from ..schemas.patient_allocation import PatientAllocationCreate, PatientAllocat
 from datetime import datetime
 
 def get_allocation_by_id(db: Session, allocation_id: int):
-    return db.query(PatientAllocation).filter(PatientAllocation.id == allocation_id).first()
+    try:
+        res = db.query(PatientAllocation, PatientGuardian.guardianApplicationUserId).join(
+            PatientGuardian, PatientAllocation.guardianId == PatientGuardian.id
+        ).filter(
+            PatientAllocation.id == allocation_id
+        ).first()
+        
+        if not res: return None
+        
+        allocation, guardian_user_id = res
+        data = allocation.__dict__.copy()
+        data["guardianApplicationUserId"] = guardian_user_id
+        data.pop('_sa_instance_state',None)
+        return data
+    
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise e
 
 def get_allocation_by_patient(db: Session, patient_id: int):
     try:
@@ -33,9 +50,27 @@ def get_guardian_id_by_patient(db: Session, patient_id: int):
 
 def get_all_allocations(db: Session, skip: int = 0, limit: int = 100):
     try:
-        return db.query(PatientAllocation).filter(
+        res = db.query(PatientAllocation, PatientGuardian.guardianApplicationUserId).join(
+            PatientGuardian, PatientAllocation.guardianId == PatientGuardian.id
+        ).filter(
             PatientAllocation.active == "Y"
-        ).order_by(PatientAllocation.id).offset(skip).limit(limit).all()
+        ).order_by(
+            PatientAllocation.id
+        ).offset(
+            skip
+        ).limit(
+            limit
+        ).all()
+        if not res: return None
+        allocation_list = []
+        
+        for allocation, guardian_user_id in res:
+            data = allocation.__dict__.copy()
+            data["guardianApplicationUserId"] = guardian_user_id
+            data.pop('_sa_instance_state',None)
+            allocation_list.append(data)
+            
+        return allocation_list
     except SQLAlchemyError as e:
         db.rollback()
         raise e
