@@ -46,7 +46,20 @@ def get_allocation_by_patient(db: Session, patient_id: int):
         raise e
 
 def get_guardian_id_by_patient(db: Session, patient_id: int):
-    return db.query(PatientAllocation).filter(PatientAllocation.patientId == patient_id).first()
+    try:
+        res = db.query(PatientGuardian.guardianApplicationUserId).join(
+            PatientAllocation, PatientAllocation.guardianId == PatientGuardian.id
+        ).filter(
+            PatientAllocation.patientId == patient_id
+        ).first()
+        
+        if not res: return None
+        
+        return res[0]
+        
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise e
 
 def get_all_allocations(db: Session, skip: int = 0, limit: int = 100):
     try:
