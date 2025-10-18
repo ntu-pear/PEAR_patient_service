@@ -196,7 +196,7 @@ jobs:
           docker stop scheduler || true
           docker rm scheduler || true
   integration-tests:
-    runs-on: ${{ inputs.runner-label }}
+    runs-on: [self-hosted, Linux, X64, patient]
     needs: tests
     environment: ${{ inputs.environment }}
     env:
