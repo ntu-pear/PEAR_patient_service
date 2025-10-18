@@ -416,7 +416,7 @@ class TestPatientUpdateOutbox:
         from fastapi import HTTPException
         with pytest.raises(HTTPException) as exc_info:
             update_patient(
-                patient_id=1,
+                patient_id=999999999999,
                 db=integration_db,
                 patient=update_data,
                 user=mock_user['id'],
