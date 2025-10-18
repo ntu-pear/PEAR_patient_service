@@ -32,32 +32,41 @@ def session_db():
 @pytest.fixture(autouse=True, scope="session")
 def setup_reference_tables(session_db):
     """
-    Setup required reference tables before tests run using SQLAlchemy ORM.
+    Setup required reference tables before tests run.
+    Only inserts if data doesn't exist - doesn't delete existing data.
     """
-    # Clear table first (optional, ensures idempotency)
-    session_db.query(PatientListLanguage).delete()
-    session_db.commit()
+    try:
+        # Check if languages already exist
+        existing_lang_1 = session_db.query(PatientListLanguage).filter_by(id=1).first()
+        existing_lang_2 = session_db.query(PatientListLanguage).filter_by(id=2).first()
 
-    # Insert test data
-    languages = [
-        PatientListLanguage(
-            id=1,
-            value="English",
-            isDeleted='0',
-            createdDate=datetime.now(),
-            modifiedDate=datetime.now()
-        ),
-        PatientListLanguage(
-            id=2,
-            value="Mandarin",
-            isDeleted='0',
-            createdDate=datetime.now(),
-            modifiedDate=datetime.now()
-        )
-    ]
+        # Only insert if they don't exist
+        if not existing_lang_1:
+            lang1 = PatientListLanguage(
+                id=1,
+                value="English",
+                isDeleted='0',
+                createdDate=datetime.now(),
+                modifiedDate=datetime.now()
+            )
+            session_db.add(lang1)
 
-    session_db.add_all(languages)
-    session_db.commit()
+        if not existing_lang_2:
+            lang2 = PatientListLanguage(
+                id=2,
+                value="Mandarin",
+                isDeleted='0',
+                createdDate=datetime.now(),
+                modifiedDate=datetime.now()
+            )
+            session_db.add(lang2)
+
+        session_db.commit()
+        print("\n[SETUP] Reference tables verified/initialized")
+
+    except Exception as e:
+        session_db.rollback()
+        print(f"\n[SETUP] Warning: {str(e)}")
 
     yield
 
