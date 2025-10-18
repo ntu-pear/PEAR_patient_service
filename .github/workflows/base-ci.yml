@@ -48,16 +48,6 @@ on:
         required: true
       RABBITMQ_VIRTUAL_HOST:
         required: true
-      # Integration tests
-      RABBITMQ_HOST:
-        required: true
-      RABBITMQ_PORT:
-        required: true
-      RABBITMQ_USER:
-        required: true
-      RABBITMQ_PASS:
-        required: true
-
 
 jobs:
   tests:
