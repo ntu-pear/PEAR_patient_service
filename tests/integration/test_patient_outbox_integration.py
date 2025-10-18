@@ -16,6 +16,51 @@ from app.schemas.patient import PatientCreate, PatientUpdate
 from app.models.patient_list_language_model import PatientListLanguage
 
 
+@pytest.fixture(scope="session")
+def session_db():
+    """
+    Session-level database connection for setup/teardown of reference data.
+    This is separate from the per-test integration_db fixture.
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# for foreign key constraint
+@pytest.fixture(autouse=True, scope="session")
+def setup_reference_tables(session_db):
+    """
+    Setup required reference tables before tests run using SQLAlchemy ORM.
+    """
+    # Clear table first (optional, ensures idempotency)
+    session_db.query(PatientListLanguage).delete()
+    session_db.commit()
+
+    # Insert test data
+    languages = [
+        PatientListLanguage(
+            id=1,
+            value="English",
+            isDeleted='0',
+            createdDate=datetime.now(),
+            modifiedDate=datetime.now()
+        ),
+        PatientListLanguage(
+            id=2,
+            value="Mandarin",
+            isDeleted='0',
+            createdDate=datetime.now(),
+            modifiedDate=datetime.now()
+        )
+    ]
+
+    session_db.add_all(languages)
+    session_db.commit()
+
+    yield
+
 @pytest.fixture(scope="function")
 def integration_db():
     """
@@ -28,7 +73,7 @@ def integration_db():
     try:
         yield db
     finally:
-        # Rollback everything - no manual cleanup needed!
+        # Rollback everything
         db.rollback()
         db.close()
 
@@ -102,39 +147,6 @@ def sample_created_patient_data():
             CreatedById="test-user-1",
             ModifiedById="test-user-1",
         )
-
-# for foreign key constraint
-@pytest.fixture(autouse=True, scope="session")
-def setup_reference_tables(integration_db):
-    """
-    Setup required reference tables before tests run using SQLAlchemy ORM.
-    """
-    # Clear table first (optional, ensures idempotency)
-    integration_db.query(PatientListLanguage).delete()
-    integration_db.commit()
-
-    # Insert test data
-    languages = [
-        PatientListLanguage(
-            id=1,
-            value="English",
-            isDeleted='0',
-            createdDate=datetime.now(),
-            modifiedDate=datetime.now()
-        ),
-        PatientListLanguage(
-            id=2,
-            value="Mandarin",
-            isDeleted='0',
-            createdDate=datetime.now(),
-            modifiedDate=datetime.now()
-        )
-    ]
-
-    integration_db.add_all(languages)
-    integration_db.commit()
-
-    yield
 
 # Uncomment this when you are testing to ensure clean state.
 # NOTE (IMPORTANT): This will delete ALL records in the tables after each test function, so make sure you point to the testing DB, and not PROD!
@@ -261,7 +273,7 @@ class TestPatientCreateOutbox:
         assert final_outbox_count == initial_outbox_count
 
 class TestPatientUpdateOutbox:
-    def test_update_patient_creates_outbox_event(self, integration_db, mock_user, sample_created_patient_data, sample_updated_patient_data, setup_reference_tables):
+    def test_update_patient_creates_outbox_event(self, integration_db, mock_user, sample_created_patient_data, sample_updated_patient_data):
         """
         GIVEN: An existing Patient
         WHEN: update_patient is called with changes
