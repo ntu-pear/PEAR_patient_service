@@ -15,16 +15,21 @@ from app.models.outbox_model import OutboxEvent
 from app.schemas.patient import PatientCreate, PatientUpdate
 from app.models.patient_list_language_model import PatientListLanguage
 
+
 @pytest.fixture(scope="function")
 def integration_db():
     """
-    Each test gets a fresh DB session.
-    NOTE: This is taken from database.py
+    Each test gets a fresh DB session with automatic rollback.
     """
     db = SessionLocal()
+    # Start a transaction
+    db.begin()
+
     try:
         yield db
     finally:
+        # Rollback everything - no manual cleanup needed!
+        db.rollback()
         db.close()
 
 @pytest.fixture
@@ -99,7 +104,7 @@ def sample_created_patient_data():
         )
 
 # for foreign key constraint
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="session")
 def setup_reference_tables(integration_db):
     """
     Setup required reference tables before tests run using SQLAlchemy ORM.
