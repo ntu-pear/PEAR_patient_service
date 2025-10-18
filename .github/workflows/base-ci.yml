@@ -46,6 +46,10 @@ on:
         required: true
       WEB_FE_ORIGIN:
         required: true
+      RABBITMQ_HOST:
+        required: true
+      RABBITMQ_PORT:
+        required: true
       RABBITMQ_VIRTUAL_HOST:
         required: true
 
