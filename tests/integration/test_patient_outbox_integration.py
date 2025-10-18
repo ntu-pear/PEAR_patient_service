@@ -15,6 +15,12 @@ from app.models.outbox_model import OutboxEvent
 from app.schemas.patient import PatientCreate, PatientUpdate
 from app.models.patient_list_language_model import PatientListLanguage
 
+@pytest.fixture
+def unique_nric():
+    """Generate a unique NRIC for each test."""
+    # Use last 7 chars of UUID to create unique NRIC
+    unique_id = str(uuid.uuid4()).replace('-', '')[:7].upper()
+    return f"S{unique_id}A"
 
 @pytest.fixture(scope="session")
 def session_db():
@@ -96,10 +102,10 @@ def mock_user():
         "fullname": "Integration Test User"
     }
 @pytest.fixture
-def sample_updated_patient_data():
+def sample_updated_patient_data(unique_nric):
     return PatientUpdate(
             name="Updated Patient",
-            nric="S0123456A",
+            nric=unique_nric,
             address="Updated Address",
             tempAddress="Test Temp Address",
             homeNo="Test Home No",
@@ -126,10 +132,10 @@ def sample_updated_patient_data():
         )
 
 @pytest.fixture
-def sample_created_patient_data():
+def sample_created_patient_data(unique_nric):
     return PatientCreate(
             name="Test Patient",
-            nric="S0123456A",
+            nric=unique_nric,
             address="Test Address",
             tempAddress="Test Temp Address",
             homeNo="Test Home No",
