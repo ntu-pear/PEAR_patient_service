@@ -474,7 +474,6 @@ class TestPatientDeleteOutbox:
         # Assertions: Patient soft-deleted
         assert deleted_patient.isDeleted == 1
 
-        # There is no get_patient_by_id in the patient_crud thus unable to assert refreshed = get_patient
         refreshed = get_patient_include_deleted(
             db=integration_db,
             patient_id=original_id,
