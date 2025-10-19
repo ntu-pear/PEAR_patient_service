@@ -45,7 +45,7 @@ def sample_created_patient_medication_data():
     return PatientMedicationCreate(
             IsDeleted="0",
             PatientId=10,
-            PrescriptionListId=22,
+            PrescriptionListId=1,
             AdministerTime="Test Administer Time",
             Dosage="Test Dosage",
             Instruction="Test Instruction",
@@ -63,7 +63,7 @@ def sample_updated_patient_medication_data():
     return PatientMedicationUpdate(
         IsDeleted="0",
         PatientId=10,
-        PrescriptionListId=2000,
+        PrescriptionListId=2,
         AdministerTime="Updated Administer Time",
         Dosage="Updated Dosage",
         Instruction="Updated Instruction",
@@ -199,7 +199,7 @@ class TestPatientMedicationUpdateOutbox:
         print(f"\n[DONE]: Updated Medication ID: {original_id}")
 
         # Assert that Medication is updated
-        assert updated_medication.PrescriptionListId == 2000
+        assert updated_medication.PrescriptionListId == 2
         assert updated_medication.AdministerTime == "Updated Administer Time"
         assert updated_medication.Instruction == "Updated Instruction"
 
