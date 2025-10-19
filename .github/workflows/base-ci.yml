@@ -206,7 +206,7 @@ jobs:
   integration-tests:
     runs-on: [self-hosted, Linux, X64, patient]
     needs: tests
-    environment: ${{ inputs.environment }}
+    environment: test
     timeout-minutes: 10
     env:
       SERVICE_NAME: ${{ vars.SERVICE_NAME }}
@@ -241,7 +241,7 @@ jobs:
           python -c "from app.main import app; print('All imports successful')"
 
       - name: Test integration tests with pytest
-        timeout-minutes: 5
+        timeout-minutes: 2
         run: |
           timeout 180 python -m pytest tests/integration -v --timeout=60 || true
 
