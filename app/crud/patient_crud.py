@@ -1,15 +1,17 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import func, text
+import logging
+import math
+from datetime import datetime
+from typing import Any, Dict, Optional
+
 import cloudinary.uploader
+from fastapi import HTTPException, UploadFile
+from sqlalchemy import func, text
+from sqlalchemy.orm import Session, joinedload
+
+from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_model import Patient
 from ..schemas.patient import PatientCreate, PatientUpdate
-from datetime import datetime
-from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
-import math
-from fastapi import HTTPException, UploadFile
-from typing import Optional, Dict, Any
-import logging
-from ..services.outbox_service import get_outbox_service, generate_correlation_id
+from ..services.outbox_service import generate_correlation_id, get_outbox_service
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +27,7 @@ def upload_photo_to_cloudinary(file: UploadFile):
 def get_patient(db: Session, patient_id: int, mask: bool = True):
     db_patient = (
         db.query(Patient)
+        .options(joinedload(Patient.preferred_language))
         .filter(Patient.id == patient_id, Patient.isDeleted == "0")
         .first()
     )
@@ -35,7 +38,7 @@ def get_patient(db: Session, patient_id: int, mask: bool = True):
 
 def get_patients(db: Session, mask: bool = True, pageNo: int = 0, pageSize: int = 10,name: Optional[str] = None,isActive: Optional[str] = None):
     offset = pageNo * pageSize
-    query = db.query(Patient).filter(Patient.isDeleted == "0")
+    query = db.query(Patient).options(joinedload(Patient.preferred_language)).filter(Patient.isDeleted == "0")
 
     # Apply name filter if provided (non-exact, case-insensitive match)
     if name:
@@ -61,6 +64,25 @@ def get_patients(db: Session, mask: bool = True, pageNo: int = 0, pageSize: int 
     return db_patients, totalRecords, totalPages
 
 
+# def _patient_to_dict(patient) -> Dict[str, Any]:
+#     """Convert patient model to dictionary for messaging"""
+#     try:
+#         if hasattr(patient, '__dict__'):
+#             patient_dict = {}
+#             for key, value in patient.__dict__.items():
+#                 if not key.startswith('_'):
+#                     # Convert datetime objects to ISO format strings
+#                     if hasattr(value, 'isoformat'):
+#                         patient_dict[key] = value.isoformat()
+#                     else:
+#                         patient_dict[key] = value
+#             return patient_dict
+#         else:
+#             return {}
+#     except Exception as e:
+#         logger.error(f"Error converting patient to dict: {str(e)}")
+#         return {}
+
 def _patient_to_dict(patient) -> Dict[str, Any]:
     """Convert patient model to dictionary for messaging"""
     try:
@@ -68,8 +90,11 @@ def _patient_to_dict(patient) -> Dict[str, Any]:
             patient_dict = {}
             for key, value in patient.__dict__.items():
                 if not key.startswith('_'):
+                    # Skip SQLAlchemy relationship objects - for language relationship object
+                    if hasattr(value, '__tablename__'):
+                        continue  # Skip this - it's a relationship object
                     # Convert datetime objects to ISO format strings
-                    if hasattr(value, 'isoformat'):
+                    elif hasattr(value, 'isoformat'):
                         patient_dict[key] = value.isoformat()
                     else:
                         patient_dict[key] = value
@@ -151,10 +176,10 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
         db.flush()
 
         # 3. Get the newly created patient
-        new_patient = db.query(Patient).filter(Patient.nric == patient.nric).first()
+        new_patient = db.query(Patient).options(joinedload(Patient.preferred_language)).filter(Patient.nric == patient.nric).first()
 
         # 4. Create outbox event in the same transaction
-        outbox_service = get_outbox_service()
+        outbox_service = get_outbox_service()        
         
         event_payload = {
             'event_type': 'PATIENT_CREATED',
@@ -208,7 +233,7 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
 
 def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: str, user_full_name: str, correlation_id: str = None):
     """Update patient with message queue publishing"""
-    db_patient = db.query(Patient).filter(Patient.id == patient_id, Patient.isDeleted == "0").first()
+    db_patient = db.query(Patient).options(joinedload(Patient.preferred_language)).filter(Patient.id == patient_id, Patient.isDeleted == "0").first()
     if not db_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 

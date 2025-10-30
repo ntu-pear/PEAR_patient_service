@@ -1,7 +1,15 @@
-from pydantic import BaseModel, Field, ConfigDict
+import re
 from datetime import datetime
 from typing import Optional
-import re
+
+from pydantic import BaseModel, ConfigDict, Field
+
+# To show language details for front end response
+class LanguageDetail(BaseModel):
+    id: int
+    value: str
+    
+    model_config = {"from_attributes": True}
 
 class PatientBase(BaseModel):
     name: str  # VARCHAR (255) -> str
@@ -45,4 +53,5 @@ class Patient(PatientBase):
     modifiedDate: datetime  # DATETIME -> datetime
     CreatedById: str = Field(json_schema_extra={"example": "1"})
     ModifiedById: str = Field(json_schema_extra={"example": "1"})
+    preferred_language: Optional[LanguageDetail] = None
     model_config = {"from_attributes": True}
