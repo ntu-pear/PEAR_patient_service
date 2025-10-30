@@ -63,26 +63,6 @@ def get_patients(db: Session, mask: bool = True, pageNo: int = 0, pageSize: int 
             db_patient.nric = db_patient.mask_nric
     return db_patients, totalRecords, totalPages
 
-
-# def _patient_to_dict(patient) -> Dict[str, Any]:
-#     """Convert patient model to dictionary for messaging"""
-#     try:
-#         if hasattr(patient, '__dict__'):
-#             patient_dict = {}
-#             for key, value in patient.__dict__.items():
-#                 if not key.startswith('_'):
-#                     # Convert datetime objects to ISO format strings
-#                     if hasattr(value, 'isoformat'):
-#                         patient_dict[key] = value.isoformat()
-#                     else:
-#                         patient_dict[key] = value
-#             return patient_dict
-#         else:
-#             return {}
-#     except Exception as e:
-#         logger.error(f"Error converting patient to dict: {str(e)}")
-#         return {}
-
 def _patient_to_dict(patient) -> Dict[str, Any]:
     """Convert patient model to dictionary for messaging"""
     try:
