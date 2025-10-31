@@ -4,9 +4,9 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+
 # To show language details for front end response
 class LanguageDetail(BaseModel):
-    id: int
     value: str
     
     model_config = {"from_attributes": True}
