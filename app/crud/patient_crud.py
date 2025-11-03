@@ -27,7 +27,7 @@ def upload_photo_to_cloudinary(file: UploadFile):
 def get_patient(db: Session, patient_id: int, mask: bool = True):
     db_patient = (
         db.query(Patient)
-        .options(joinedload(Patient.preferred_language))
+        .options(joinedload(Patient._preferred_language))
         .filter(Patient.id == patient_id, Patient.isDeleted == "0")
         .first()
     )
@@ -38,7 +38,7 @@ def get_patient(db: Session, patient_id: int, mask: bool = True):
 
 def get_patients(db: Session, mask: bool = True, pageNo: int = 0, pageSize: int = 10,name: Optional[str] = None,isActive: Optional[str] = None):
     offset = pageNo * pageSize
-    query = db.query(Patient).options(joinedload(Patient.preferred_language)).filter(Patient.isDeleted == "0")
+    query = db.query(Patient).options(joinedload(Patient._preferred_language)).filter(Patient.isDeleted == "0")
 
     # Apply name filter if provided (non-exact, case-insensitive match)
     if name:
@@ -156,7 +156,7 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
         db.flush()
 
         # 3. Get the newly created patient
-        new_patient = db.query(Patient).options(joinedload(Patient.preferred_language)).filter(Patient.nric == patient.nric).first()
+        new_patient = db.query(Patient).options(joinedload(Patient._preferred_language)).filter(Patient.nric == patient.nric).first()
 
         # 4. Create outbox event in the same transaction
         outbox_service = get_outbox_service()        

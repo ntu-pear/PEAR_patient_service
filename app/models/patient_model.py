@@ -1,4 +1,5 @@
 import datetime
+from typing import Optional
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import relationship
@@ -64,11 +65,18 @@ class Patient(Base):
     attendances = relationship("PatientAttendance", back_populates="patient")
     highlights = relationship("PatientHighlight", back_populates="patient")
     privacy = relationship("PatientPrivacyLevel", back_populates="patient")
-    preferred_language = relationship(
+    _preferred_language = relationship(
         PatientListLanguage,
         foreign_keys=[preferredLanguageId],
         lazy="joined"
     )
+    
+    @property
+    def preferred_language(self) -> Optional[str]:
+        """Return the language value (based on the language ID) as a string"""
+        if self._preferred_language:
+            return self._preferred_language.value
+        return None
 
     # Ensure other models follow similar changes for consistency
     @property

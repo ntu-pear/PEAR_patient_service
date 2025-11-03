@@ -5,12 +5,6 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
-# To show language details for front end response
-class LanguageDetail(BaseModel):
-    value: str
-    
-    model_config = {"from_attributes": True}
-
 class PatientBase(BaseModel):
     name: str  # VARCHAR (255) -> str
     nric: str  # VARCHAR (9) -> str
@@ -53,5 +47,5 @@ class Patient(PatientBase):
     modifiedDate: datetime  # DATETIME -> datetime
     CreatedById: str = Field(json_schema_extra={"example": "1"})
     ModifiedById: str = Field(json_schema_extra={"example": "1"})
-    preferred_language: Optional[LanguageDetail] = None
+    preferred_language: Optional[str] = None
     model_config = {"from_attributes": True}
