@@ -160,10 +160,8 @@ jobs:
         run: |
           echo "Running Docker maintenance cleanup..."
           # Removes any image not currently referenced by a container
-          docker container prune -a -f
-          docker image prune -a -f
-          
-          # Cleaning up inside minikube docker environment
-          minikube ssh -- "docker container prune -a -f && docker image prune -a -f"
+           docker container prune -f
+           docker image prune -a -f
+           minikube ssh -- "docker container prune -f && docker image prune -a -f"
           
     
