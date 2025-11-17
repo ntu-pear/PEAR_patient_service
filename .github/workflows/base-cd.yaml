@@ -74,6 +74,11 @@ jobs:
           ls -la
           git status
 
+      - name: Set commit SHA
+        id: vars
+        run: |
+          echo "COMMIT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
       - name: Create .env file from base-cd.yml
         run: |
 
@@ -117,36 +122,32 @@ jobs:
           kubectl apply -f './k8s/configmap.yaml'
           kubectl apply -f './k8s/secret.yaml'
 
-      - name: Delete old deployment
-        run: |
-          echo "Deleting old deployment..."
-          kubectl delete deployment.apps/patient-service-dev service/patient-service-dev
-
-      - name: Delete old docker images
-        run: |
-          docker rmi patient_service_dev
-          docker rmi localhost:5000/patient_service_dev
-
       - name: Build Docker image
         run: |
-          echo "Building Docker image..."
-          docker build --no-cache -f Dockerfile.dev -t patient_service_dev .
+          echo "Building Docker image with commit SHA"
+          docker build --no-cache -f Dockerfile.dev -t patient_service_dev:${{ env.COMMIT_SHA }} .
 
       - name: Tag Docker image
         run: |
           echo "Tagging Docker image..."
-          docker tag patient_service_dev:latest localhost:5000/patient_service_dev:latest
+          docker tag patient_service_dev:${{ env.COMMIT_SHA }} localhost:5000/patient_service_dev:${{ env.COMMIT_SHA }}
 
       - name: Push Docker image to local registry
         run: |
           echo "Pushing Docker image to localhost:5000..."
-          docker push localhost:5000/patient_service_dev:latest
+          docker push localhost:5000/patient_service_dev:${{ env.COMMIT_SHA }}
 
-      - name: Deploying Patient Service to Kubernetes
+      - name: Ensure deployment exists
         run: |
-          echo "Deploying..."
-          kubectl apply -f '${{ inputs.kube-deployment-file }}'
+          kubectl get deployment patient-service-dev || kubectl apply -f '${{ inputs.kube-deployment-file }}'
 
+      - name: Deploy to Kubernetes (rolling update)
+        run: |
+          echo "Updating deployment with commit SHA image..."
+          kubectl set image deployment/patient-service-dev \                               # Overwrites image defined in deployment manifest
+            patient-service=host.minikube.internal:5000/patient_service_dev:${{ env.COMMIT_SHA }}
+
+          kubectl rollout status deployment/patient-service-dev --timeout=300s
 
       - name: Deploy filebeat DaemonSet to Kubernetes
         if: ${{ inputs.filebeat-daemonset-file != '' }}
@@ -157,10 +158,11 @@ jobs:
       - name: Docker maintenace cleanup
         run: |
           echo "Running Docker maintenance cleanup..."
-          docker container prune -f
-          docker image prune -f
+          # Removes any image not currently referenced by a container
+          docker container prune -a -f
+          docker image prune -a -f
           
           # Cleaning up inside minikube docker environment
-          minikube ssh -- "docker container prune -f && docker image prune -f"
+          minikube ssh -- "docker container prune -a -f && docker image prune -a -f"
           
     
