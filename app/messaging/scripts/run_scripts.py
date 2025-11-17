@@ -13,8 +13,13 @@ def run_patient_sync():
     main()
 
 def run_patient_medication_sync():
-    """Run the patient sync script"""
+    """Run the patient medication sync script"""
     from messaging.scripts.patient_medication_sync_script import main
+    main()
+
+def run_patient_allocation_sync():
+    """Run the patient allocation sync script"""
+    from messaging.scripts.patient_allocation_sync_script import main
     main()
 
 def list_scripts():
@@ -22,6 +27,7 @@ def list_scripts():
     print("Available scripts:")
     print("  patient-sync    - Emit PATIENT_CREATED events for existing patients")
     print("  patient-medication-sync    - Emit PATIENT_MEDICATION_CREATED events for existing patient medications")
+    print("  patient-allocation-sync    - Emit PATIENT_ALLOCATION_CREATED events for existing patient allocations")
     print("")
     print("Usage:")
     print("  python run_scripts.py patient-sync --help")
@@ -42,6 +48,8 @@ def main():
         run_patient_sync()
     elif script_name == "patient-medication-sync":
         run_patient_medication_sync()
+    elif script_name == "patient-allocation-sync":
+        run_patient_allocation_sync()
     elif script_name == "list":
         list_scripts()
     else:
