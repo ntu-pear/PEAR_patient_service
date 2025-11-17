@@ -1,30 +1,89 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from ..models.patient_allocation_model import PatientAllocation
+from ..models.patient_guardian_model import PatientGuardian
 from ..schemas.patient_allocation import PatientAllocationCreate, PatientAllocationUpdate
 from datetime import datetime
 
 def get_allocation_by_id(db: Session, allocation_id: int):
-    return db.query(PatientAllocation).filter(PatientAllocation.id == allocation_id).first()
+    try:
+        res = db.query(PatientAllocation, PatientGuardian.guardianApplicationUserId).join(
+            PatientGuardian, PatientAllocation.guardianId == PatientGuardian.id
+        ).filter(
+            PatientAllocation.id == allocation_id
+        ).first()
+        
+        if not res: return None
+        
+        allocation, guardian_user_id = res
+        data = allocation.__dict__.copy()
+        data["guardianApplicationUserId"] = guardian_user_id
+        data.pop('_sa_instance_state',None)
+        return data
+    
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise e
 
 def get_allocation_by_patient(db: Session, patient_id: int):
     try:
-        return db.query(PatientAllocation).filter(
+        res = db.query(PatientAllocation, PatientGuardian.guardianApplicationUserId).join(
+            PatientGuardian, PatientAllocation.guardianId == PatientGuardian.id
+        ).filter(
             PatientAllocation.patientId == patient_id,
             PatientAllocation.active == "Y"
         ).first()
+        
+        if not res: return None
+
+        allocation, guardian_user_id = res
+        data = allocation.__dict__.copy()
+        data["guardianApplicationUserId"] = guardian_user_id
+        data.pop('_sa_instance_state',None)
+        return data
     except SQLAlchemyError as e:
         db.rollback()
         raise e
 
 def get_guardian_id_by_patient(db: Session, patient_id: int):
-    return db.query(PatientAllocation).filter(PatientAllocation.patientId == patient_id).first()
+    try:
+        res = db.query(PatientGuardian.guardianApplicationUserId).join(
+            PatientAllocation, PatientAllocation.guardianId == PatientGuardian.id
+        ).filter(
+            PatientAllocation.patientId == patient_id
+        ).first()
+        
+        if not res: return None
+        
+        return res[0]
+        
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise e
 
 def get_all_allocations(db: Session, skip: int = 0, limit: int = 100):
     try:
-        return db.query(PatientAllocation).filter(
+        res = db.query(PatientAllocation, PatientGuardian.guardianApplicationUserId).join(
+            PatientGuardian, PatientAllocation.guardianId == PatientGuardian.id
+        ).filter(
             PatientAllocation.active == "Y"
-        ).order_by(PatientAllocation.id).offset(skip).limit(limit).all()
+        ).order_by(
+            PatientAllocation.id
+        ).offset(
+            skip
+        ).limit(
+            limit
+        ).all()
+        if not res: return None
+        allocation_list = []
+        
+        for allocation, guardian_user_id in res:
+            data = allocation.__dict__.copy()
+            data["guardianApplicationUserId"] = guardian_user_id
+            data.pop('_sa_instance_state',None)
+            allocation_list.append(data)
+            
+        return allocation_list
     except SQLAlchemyError as e:
         db.rollback()
         raise e
@@ -47,7 +106,6 @@ def create_allocation(db: Session, allocation: PatientAllocationCreate, user_id:
             tempDoctorId=allocation.tempDoctorId,
             tempCaregiverId=allocation.tempCaregiverId,
             guardian2Id=allocation.guardian2Id,
-            guardianUserId=allocation.guardianUserId,
             createdDate=datetime.now(),
             modifiedDate=datetime.now(),
             CreatedById=user_id,

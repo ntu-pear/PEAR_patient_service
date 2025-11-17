@@ -17,7 +17,6 @@ class PatientAllocation(Base):
     gameTherapistId = Column(String, nullable=False)
     supervisorId = Column(String, nullable=False)
     caregiverId = Column(String, nullable=False)
-    guardianUserId = Column(String, nullable=True)
     tempDoctorId = Column(String)
     tempCaregiverId = Column(String)
     

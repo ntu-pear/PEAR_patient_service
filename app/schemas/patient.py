@@ -1,7 +1,9 @@
-from pydantic import BaseModel, Field, ConfigDict
+import re
 from datetime import datetime
 from typing import Optional
-import re
+
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class PatientBase(BaseModel):
     name: str  # VARCHAR (255) -> str
@@ -45,4 +47,5 @@ class Patient(PatientBase):
     modifiedDate: datetime  # DATETIME -> datetime
     CreatedById: str = Field(json_schema_extra={"example": "1"})
     ModifiedById: str = Field(json_schema_extra={"example": "1"})
+    preferred_language: Optional[str] = None
     model_config = {"from_attributes": True}

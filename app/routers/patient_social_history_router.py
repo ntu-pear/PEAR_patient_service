@@ -62,7 +62,7 @@ def create_social_history(social_history: PatientSocialHistoryCreate, request: R
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
-    role_name = get_role_name(payload)
+    role_name = get_role_name(payload) 
     
     is_supervisor = role_name == "SUPERVISOR"
     valid_primary_guardian = role_name == "GUARDIAN" and user_id == crud_patient_allocation.get_guardian_id_by_patient(db, social_history.patientId)
