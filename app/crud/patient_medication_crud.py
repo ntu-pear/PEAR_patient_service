@@ -202,6 +202,12 @@ def get_medication(db: Session, medication_id: int):
         PatientMedication.IsDeleted == '0'
     ).first()
 
+def get_medication_include_deleted(db: Session, medication_id: int, include_deleted: str):
+    return db.query(PatientMedication).filter(
+        PatientMedication.Id == medication_id,
+        PatientMedication.IsDeleted == include_deleted
+    ).first()
+
 # Updated create_medication function
 def create_medication(
     db: Session,
