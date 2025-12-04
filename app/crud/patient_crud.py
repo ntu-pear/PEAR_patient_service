@@ -213,7 +213,9 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
 
 def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: str, user_full_name: str, correlation_id: str = None):
     """Update patient with message queue publishing"""
-    db_patient = db.query(Patient).options(joinedload(Patient.preferred_language)).filter(Patient.id == patient_id, Patient.isDeleted == "0").first()
+    # db_patient = db.query(Patient).options(joinedload(Patient.preferred_language)).filter(Patient.id == patient_id, Patient.isDeleted == "0").first()
+    db_patient = db.query(Patient).filter(Patient.id == patient_id, Patient.isDeleted == "0").first()
+
     if not db_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 
