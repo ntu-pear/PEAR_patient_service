@@ -8,7 +8,7 @@ class PatientAllocationBase(BaseModel):
     guardianId: int = Field(..., gt=0, description="ID of the primary guardian for the patient")
     tempDoctorId: Optional[int] = Field(None, gt=0, description="ID of the temporary doctor (if any)")
     tempCaregiverId: Optional[int] = Field(None, gt=0, description="ID of the temporary caregiver (if any)")
-    guardian2Id: Optional[int] = Field(None, gt=0, description="ID of the secondary guardian (if any)")
+    secondaryGuardianId: Optional[int] = Field(None, gt=0, description="ID of the secondary guardian (if any)")
     doctorId: str = Field(..., description="ID of the primary doctor assigned to the patient")
     gameTherapistId: str = Field(..., description="ID of the game therapist assigned to the patient")
     supervisorId: str = Field(..., description="ID of the supervisor overseeing the patient's care")

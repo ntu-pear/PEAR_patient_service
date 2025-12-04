@@ -29,4 +29,4 @@ class PatientGuardian(Base):
 
     patient_patient_guardian = relationship ("PatientPatientGuardian", foreign_keys="[PatientPatientGuardian.guardianId]", back_populates="patient_guardian")
     allocations = relationship("PatientAllocation", foreign_keys="[PatientAllocation.guardianId]", back_populates="guardian")
-    guardian2_allocations = relationship("PatientAllocation", foreign_keys="[PatientAllocation.guardian2Id]", back_populates="guardian2")
+    guardian2_allocations = relationship("PatientAllocation", foreign_keys="[PatientAllocation.secondaryGuardianId]", back_populates="guardian2")

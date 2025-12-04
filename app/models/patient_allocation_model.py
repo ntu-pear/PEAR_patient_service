@@ -11,7 +11,7 @@ class PatientAllocation(Base):
     isDeleted = Column(String(1), default='0', nullable=False)
     patientId = Column(Integer, ForeignKey('PATIENT.id'))
     guardianId = Column(Integer, ForeignKey('PATIENT_GUARDIAN.id'), nullable=False)
-    guardian2Id = Column(Integer, ForeignKey('PATIENT_GUARDIAN.id'), nullable = True)
+    secondaryGuardianId = Column(Integer, ForeignKey("PATIENT_GUARDIAN.id"), nullable=True)
     # External DB, uses String for IDs
     doctorId = Column(String, nullable=False)
     gameTherapistId = Column(String, nullable=False)
@@ -28,4 +28,4 @@ class PatientAllocation(Base):
 
     patient = relationship("Patient", back_populates="allocations")
     guardian = relationship("PatientGuardian", foreign_keys=[guardianId], back_populates="allocations")
-    guardian2 = relationship("PatientGuardian", foreign_keys=[guardian2Id], back_populates="guardian2_allocations")
+    guardian2 = relationship("PatientGuardian", foreign_keys=[secondaryGuardianId], back_populates="guardian2_allocations")
