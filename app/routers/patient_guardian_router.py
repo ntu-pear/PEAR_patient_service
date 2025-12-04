@@ -1,23 +1,21 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+
+from ..crud import patient_crud as crud_patient
+from ..crud import patient_guardian_crud as crud_guardian
+from ..crud import patient_guardian_relationship_mapping_crud as crud_relationship
+from ..crud import patient_patient_guardian_crud as crud_patient_patient_guardian
 from ..database import get_db
-from ..crud import (
-    patient_crud as crud_patient,
-    patient_guardian_crud as crud_guardian,
-    patient_patient_guardian_crud as crud_patient_patient_guardian,
-    patient_guardian_relationship_mapping_crud as crud_relationship
+from ..schemas.patient_guardian import (  # TODO :note that this needs to be fixed
+    PatientGuardian,
+    PatientGuardianCreate,
+    PatientGuardianUpdate,
 )
 from ..schemas.patient_patient_guardian import (
     PatientPatientGuardianByGuardian,
     PatientPatientGuardianByPatient,
-    PatientPatientGuardianCreate
-) 
-
-from ..schemas.patient_guardian import (
-    PatientGuardian,
-    PatientGuardianCreate,
-    PatientGuardianUpdate,
-) #TODO :note that this needs to be fixed
+    PatientPatientGuardianCreate,
+)
 
 router = APIRouter()
 
@@ -51,7 +49,7 @@ def create_patient_guardian(guardian: PatientGuardianCreate, db: Session = Depen
     db_guardian =  crud_guardian.create_guardian(db, guardian)
     if not db_guardian:
         raise HTTPException(status_code=404, detail="Error when creating patient guardian")
-    db_patient = crud_patient.get_patient(db, guardian.patientId)
+    db_patient = crud_patient.get_patient(db, guardian.patientId, mask=False)
     if not db_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     print(PatientPatientGuardianCreate.model_fields)
