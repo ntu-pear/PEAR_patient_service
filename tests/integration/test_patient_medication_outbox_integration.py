@@ -4,17 +4,92 @@ Tests for flow: Patient Medication CRUD -> OUTBOX_EVENTS table creation
 """
 import uuid
 from datetime import datetime
+from sqlalchemy import text
 
 import pytest
 from app.crud.patient_medication_crud import (
     create_medication, update_medication, delete_medication, get_medication_include_deleted, get_medication
 )
 from app.database import SessionLocal
+from app.models import PatientPrescriptionList
 from app.models.outbox_model import OutboxEvent
 from app.schemas.patient_medication import PatientMedicationCreate, PatientMedicationUpdate
 from app.models.patient_medication_model import PatientMedication
+from app.models.patient_model import Patient
+from app.models.patient_list_language_model import PatientListLanguage
 
+@pytest.fixture(scope="session")
+def session_db():
+    """
+    Session-level database connection for setup/teardown of reference data.
+    This is separate from the per-test integration_db fixture.
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
+# for foreign key constraint
+@pytest.fixture(autouse=True, scope="session")
+def setup_reference_tables(session_db):
+    """
+    Setup required reference tables before tests run.
+    Only inserts if data doesn't exist - doesn't delete existing data.
+    """
+    try:
+        # Check if languages already exist
+        existing_lang_1 = session_db.query(PatientListLanguage).filter_by(id=1).first()
+        existing_lang_2 = session_db.query(PatientListLanguage).filter_by(id=2).first()
+        existing_prescription_1 = session_db.query(PatientPrescriptionList).filter_by(Id=1).first()
+        existing_prescription_2 = session_db.query(PatientPrescriptionList).filter_by(Id=2).first()
+
+        # Only insert if they don't exist
+        if not existing_lang_1:
+            lang1 = PatientListLanguage(
+                id=1,
+                value="English",
+                isDeleted='0',
+                createdDate=datetime.now(),
+                modifiedDate=datetime.now()
+            )
+            session_db.add(lang1)
+
+        if not existing_lang_2:
+            lang2 = PatientListLanguage(
+                id=2,
+                value="Mandarin",
+                isDeleted='0',
+                createdDate=datetime.now(),
+                modifiedDate=datetime.now()
+            )
+            session_db.add(lang2)
+        if not existing_prescription_1:
+            prescription1 = PatientPrescriptionList(
+                Id=1,
+                IsDeleted='0',
+                CreatedDateTime=datetime.now(),
+                UpdatedDateTime=datetime.now(),
+                Value="1",
+            )
+            session_db.add(prescription1)
+        if not existing_prescription_2:
+            prescription2 = PatientPrescriptionList(
+                Id=2,
+                IsDeleted='0',
+                CreatedDateTime=datetime.now(),
+                UpdatedDateTime=datetime.now(),
+                Value="2",
+            )
+            session_db.add(prescription2)
+        session_db.commit()
+        print("\n[SETUP] Reference tables verified/initialized")
+
+    except Exception as e:
+        session_db.rollback()
+        print(f"\n[SETUP] Warning: {str(e)}")
+
+    yield
 @pytest.fixture(scope="function")
 def integration_db():
     """
@@ -40,29 +115,54 @@ def mock_user():
         "id": "test-user-1",
         "fullname": "Integration Test User"
     }
+
 @pytest.fixture
-def sample_created_patient_medication_data():
-    return PatientMedicationCreate(
-            IsDeleted="0",
-            PatientId=10,
-            PrescriptionListId=1,
-            AdministerTime="Test Administer Time",
-            Dosage="Test Dosage",
-            Instruction="Test Instruction",
-            StartDate=datetime(2020, 1, 1),
-            EndDate=datetime(2020, 1, 1),
-            PrescriptionRemarks="Test Prescription Remarks",
-            CreatedDateTime=datetime.now(),
-            UpdatedDateTime=datetime.now(),
+def sample_created_patient_medication_data(integration_db):
+    # Check if patient with id=100000000 already exists
+    existing_patient = integration_db.query(Patient).filter(Patient.id == 100000000).first()
+
+    if not existing_patient:
+        # Create a new patient record
+        test_patient = Patient(
+            id=100000000,
+            name="Test Patient",
+            nric="S1234567A",
+            gender="M",
+            dateOfBirth=datetime(1990, 1, 1),
+            isApproved="1",
+            startDate=datetime(2020, 1, 1),
+            isRespiteCare="0",
+            createdDate=datetime.now(),
+            modifiedDate=datetime.now(),
             CreatedById="test-user-1",
             ModifiedById="test-user-1",
+            isDeleted=0,
+            preferredLanguageId=1
         )
+        integration_db.add(test_patient)
+        integration_db.flush()  # Flush to make the patient available for the medication foreign key
 
+    # Return the PatientMedicationCreate object with the valid PatientId
+    return PatientMedicationCreate(
+        IsDeleted="0",
+        PatientId=100000000,  # Now this patient exists
+        PrescriptionListId=1,
+        AdministerTime="Test Administer Time",
+        Dosage="Test Dosage",
+        Instruction="Test Instruction",
+        StartDate=datetime(2020, 1, 1),
+        EndDate=datetime(2020, 1, 1),
+        PrescriptionRemarks="Test Prescription Remarks",
+        CreatedDateTime=datetime.now(),
+        UpdatedDateTime=datetime.now(),
+        CreatedById="test-user-1",
+        ModifiedById="test-user-1",
+    )
 @pytest.fixture
 def sample_updated_patient_medication_data():
     return PatientMedicationUpdate(
         IsDeleted="0",
-        PatientId=10,
+        PatientId=100000000,
         PrescriptionListId=2,
         AdministerTime="Updated Administer Time",
         Dosage="Updated Dosage",
@@ -88,13 +188,29 @@ def cleanup_test_data(integration_db):
 
     # This runs AFTER the test - cleanup
     try:
-        # Delete all outbox events first
-        integration_db.query(OutboxEvent).delete()
+        # Delete all outbox events created by test user
+        integration_db.query(OutboxEvent).filter(
+            OutboxEvent.created_by == "test-user-1"
+        ).delete()
         integration_db.commit()
 
-        # Delete all patient Medication
-        integration_db.query(PatientMedication).delete()
+        # Delete all patients created by test user
+        integration_db.query(PatientMedication).filter(
+            PatientMedication.CreatedById == "test-user-1"
+        ).delete()
         integration_db.commit()
+
+        integration_db.query(Patient).filter(
+            Patient.CreatedById == "test-user-1"
+        ).delete()
+        integration_db.commit()
+
+        integration_db.query(PatientPrescriptionList).filter(
+            PatientPrescriptionList.CreatedById == "test-user-1"
+        ).delete()
+        integration_db.commit()
+
+        print("\n[CLEANUP] Test data cleared successfully")
 
         print("\n[CLEANUP] Test data cleared successfully")
     except Exception as e:
@@ -129,7 +245,7 @@ class TestPatientMedicationCreateOutbox:
         # Assert if medication is created
         assert medication.Id is not None
         assert medication.AdministerTime == "Test Administer Time"
-        assert medication.PatientId == 10
+        assert medication.PatientId == 100000000
         assert medication.CreatedById == 'test-user-1'
         assert medication.IsDeleted == '0'
 

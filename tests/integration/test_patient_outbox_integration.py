@@ -170,19 +170,23 @@ def sample_created_patient_data(unique_nric):
 def cleanup_test_data(integration_db):
     """
     Cleanup fixture that runs after each test.
-    Deletes all test data created during the test.
+    Deletes only test data created during the test.
     """
     # This runs BEFORE the test
     yield
 
     # This runs AFTER the test - cleanup
     try:
-        # Delete all outbox events first
-        integration_db.query(OutboxEvent).delete()
+        # Delete all outbox events created by test user
+        integration_db.query(OutboxEvent).filter(
+            OutboxEvent.created_by == "test-user-1"
+        ).delete()
         integration_db.commit()
 
-        # Delete all patients
-        integration_db.query(Patient).delete()
+        # Delete all patients created by test user
+        integration_db.query(Patient).filter(
+            Patient.CreatedById == "test-user-1"
+        ).delete()
         integration_db.commit()
 
         print("\n[CLEANUP] Test data cleared successfully")
