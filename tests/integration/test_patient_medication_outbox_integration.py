@@ -205,10 +205,6 @@ def cleanup_test_data(integration_db):
         ).delete()
         integration_db.commit()
 
-        integration_db.query(PatientPrescriptionList).filter(
-            PatientPrescriptionList.CreatedById == "test-user-1"
-        ).delete()
-        integration_db.commit()
 
         print("\n[CLEANUP] Test data cleared successfully")
 
