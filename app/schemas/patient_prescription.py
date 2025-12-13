@@ -1,6 +1,8 @@
-from pydantic import BaseModel,Field
 from datetime import datetime
 from typing import Optional
+
+from pydantic import BaseModel, Field
+
 
 class PatientPrescriptionBase(BaseModel):
     IsDeleted: Optional[str] = '0'
@@ -11,7 +13,7 @@ class PatientPrescriptionBase(BaseModel):
     Instruction: str
     StartDate: datetime
     EndDate: Optional[datetime] = None
-    IsAfterMeal: Optional[str] = None
+    IsAfterMeal: Optional[str] = Field(json_schema_extra={"example": "1"})
     PrescriptionRemarks: str
     Status: Optional[str] = None
 
