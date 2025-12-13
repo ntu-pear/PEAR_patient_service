@@ -204,11 +204,8 @@ def cleanup_test_data(integration_db):
             Patient.CreatedById == "test-user-1"
         ).delete()
         integration_db.commit()
-
-
         print("\n[CLEANUP] Test data cleared successfully")
-
-        print("\n[CLEANUP] Test data cleared successfully")
+        
     except Exception as e:
         integration_db.rollback()
         print(f"\n[CLEANUP] Warning: Failed to cleanup test data: {str(e)}")
