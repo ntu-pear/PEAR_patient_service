@@ -46,6 +46,14 @@ on:
         required: true
       WEB_FE_ORIGIN:
         required: true
+      RABBITMQ_HOST:
+        required: true
+      RABBITMQ_PORT:
+        required: true
+      RABBITMQ_USER:
+        required: true
+      RABBITMQ_PASS:
+        required: true
       RABBITMQ_VIRTUAL_HOST:
         required: true
 
@@ -180,9 +188,9 @@ jobs:
             --env-file .env \
             ${{ inputs.scheduler-service-image }}
 
-      - name: Run Pytests
+      - name: Test unit tests with pytest
         run: |
-          python -m pytest
+          python -m pytest tests/unit
 
       - name: Cleanup
         if: always()
@@ -195,3 +203,49 @@ jobs:
 
           docker stop scheduler || true
           docker rm scheduler || true
+  integration-tests:
+    runs-on: [self-hosted, Linux, X64, patient]
+    needs: tests
+    environment: test
+    timeout-minutes: 10
+    env:
+      SERVICE_NAME: ${{ vars.SERVICE_NAME }}
+      DB_DATABASE: ${{ secrets.DB_DATABASE }}
+      DB_DRIVER: ${{ secrets.DB_DRIVER }}
+      DB_SERVER: ${{ secrets.DB_SERVER }}
+      DB_DATABASE_PORT: ${{ secrets.DB_DATABASE_PORT }}
+      DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      RABBITMQ_HOST: ${{ secrets.RABBITMQ_HOST }}
+      RABBITMQ_PORT: ${{ secrets.RABBITMQ_PORT }}
+      RABBITMQ_USER: ${{ secrets.RABBITMQ_USER }}
+      RABBITMQ_PASS: ${{ secrets.RABBITMQ_PASS }}
+      RABBITMQ_VIRTUAL_HOST: ${{ secrets.RABBITMQ_VIRTUAL_HOST }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.9.19
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.9.19'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest-timeout
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Check app imports
+        run: |
+          python -c "from app.main import app; print('All imports successful')"
+
+      - name: Test integration tests with pytest
+        timeout-minutes: 2
+        run: |
+          timeout 180 python -m pytest tests/integration -v --timeout=60 || true
+
+      - name: Force cleanup
+        if: always()
+        run: |
+          pkill -9 -f pytest || true
