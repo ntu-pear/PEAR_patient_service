@@ -28,32 +28,6 @@ spec:
         env:
         - name: TZ
           value: "Asia/Singapore" # GMT +8
-        # Adding RabbitMQ environment variables in for Staging.
-        - name: RABBITMQ_HOST
-          valueFrom:
-            secretKeyRef:
-              name: patient-service-secret
-              key: RABBITMQ_HOST
-        - name: RABBITMQ_PORT
-          valueFrom:
-            secretKeyRef:
-              name: patient-service-secret
-              key: RABBITMQ_PORT
-        - name: RABBITMQ_USER
-          valueFrom:
-            secretKeyRef:
-              name: patient-service-secret
-              key: RABBITMQ_USER
-        - name: RABBITMQ_PASS
-          valueFrom:
-            secretKeyRef:
-              name: patient-service-secret
-              key: RABBITMQ_PASS
-        - name: RABBITMQ_VIRTUAL_HOST
-          valueFrom:
-            secretKeyRef:
-              name: patient-service-secret
-              key: RABBITMQ_VIRTUAL_HOST
         volumeMounts:
         - name: log-volume
           mountPath: /app/logs  # Path inside the container
