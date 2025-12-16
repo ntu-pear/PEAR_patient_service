@@ -30,15 +30,30 @@ spec:
           value: "Asia/Singapore" # GMT +8
         # Adding RabbitMQ environment variables in for Staging.
         - name: RABBITMQ_HOST
-          value: "rabbitmq-service-stg"  # Use K8s service name
+          valueFrom:
+            secretKeyRef:
+              name: patient-service-secret
+              key: RABBITMQ_HOST
         - name: RABBITMQ_PORT
-          value: "5672"  # Internal port
+          valueFrom:
+            secretKeyRef:
+              name: patient-service-secret
+              key: RABBITMQ_PORT
         - name: RABBITMQ_USER
-          value: "admin"
+          valueFrom:
+            secretKeyRef:
+              name: patient-service-secret
+              key: RABBITMQ_USER
         - name: RABBITMQ_PASS
-          value: "pear2025"
+          valueFrom:
+            secretKeyRef:
+              name: patient-service-secret
+              key: RABBITMQ_PASS
         - name: RABBITMQ_VIRTUAL_HOST
-          value: "vhost"
+          valueFrom:
+            secretKeyRef:
+              name: patient-service-secret
+              key: RABBITMQ_VIRTUAL_HOST
         volumeMounts:
         - name: log-volume
           mountPath: /app/logs  # Path inside the container
