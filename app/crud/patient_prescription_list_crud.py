@@ -39,7 +39,7 @@ def create_prescription_list(
         PatientPrescriptionList.IsDeleted == '0').first()
     
     if existing_prescription_list:
-        raise HTTPException(status_code=400, detail="A prescription list with this name already exists")
+        raise HTTPException(status_code=400, detail="A prescription list record with this name already exists")
     
     try:
         
