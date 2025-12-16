@@ -92,15 +92,11 @@ jobs:
           # RabbitMQ local instance for Integration Test
           RABBITMQ_HOST=localhost
           RABBITMQ_PORT=5672
-          # RABBITMQ_USER=CI_TestUser
-          # RABBITMQ_PASS=CI_TestPassword
-          RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}
-          RABBITMQ_PASS=${{ secrets.RABBITMQ_PASS }}
+          RABBITMQ_USER=CI_TestUser
+          RABBITMQ_PASS=CI_TestPassword
           RABBITMQ_VIRTUAL_HOST=/
-          # RABBITMQ_DEFAULT_USER=CI_TestUser
-          # RABBITMQ_DEFAULT_PASS=CI_TestPassword
-          RABBITMQ_DEFAULT_USER=${{ secrets.RABBITMQ_USER }}
-          RABBITMQ_DEFAULT_PASS=${{ secrets.RABBITMQ_PASS }}
+          RABBITMQ_DEFAULT_USER=CI_TestUser
+          RABBITMQ_DEFAULT_PASS=CI_TestPassword
           EOF
           grep -v 'PASSWORD' .env
       
@@ -159,13 +155,8 @@ jobs:
             --name rabbitmq \
             --memory="800m" \
             -e RABBITMQ_ERLANG_COOKIE="TESTCOOKIE123" \
-            # -e RABBITMQ_DEFAULT_USER=${{ inputs.rabbitmq-user }} \
-            # -e RABBITMQ_DEFAULT_PASS=${{ inputs.rabbitmq-pass }} \
-
-            -e RABBITMQ_DEFAULT_USER=${{ secrets.RABBITMQ_USER }} \
-            -e RABBITMQ_DEFAULT_PASS=${{ secrets.RABBITMQ_PASS }} \
-
-
+            -e RABBITMQ_DEFAULT_USER=${{ inputs.rabbitmq-user }} \
+            -e RABBITMQ_DEFAULT_PASS=${{ inputs.rabbitmq-pass }} \
             -v $(pwd)/rabbitmq-config:/etc/rabbitmq \
             -v $(pwd)/rabbitmq-entrypoint.sh:/usr/local/bin/custom-entrypoint \
             --entrypoint /usr/local/bin/custom-entrypoint \
