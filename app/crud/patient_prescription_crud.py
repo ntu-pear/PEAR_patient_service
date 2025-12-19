@@ -61,7 +61,18 @@ def create_prescription(
     Creates a new PatientPrescription record, sets CreatedDateTime, 
     ModifiedDateTime, CreatedById, and ModifiedById.
     """
+    # Check for duplicate prescription
+    existing_prescription = db.query(PatientPrescription).filter(
+        PatientPrescription.PatientId == prescription_data.PatientId,
+        PatientPrescription.PrescriptionListId == prescription_data.PrescriptionListId,
+        PatientPrescription.IsDeleted == '0').first()
+    
+    if existing_prescription:
+        raise HTTPException(status_code=400, detail="Duplicate prescription for the same patient and prescription list.")
+    
     try:
+        
+        
         # Exclude any fields you set manually (like CreatedDateTime, etc.)
         data_dict = prescription_data.model_dump(
             exclude={"CreatedDateTime", "UpdatedDateTime", "CreatedById", "ModifiedById"}

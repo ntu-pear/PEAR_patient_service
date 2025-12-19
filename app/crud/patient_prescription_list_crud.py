@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
@@ -32,25 +33,37 @@ def create_prescription_list(
     created_by: str,
     user_full_name: str
 ):
-    """Create a new prescription list item"""
-    db_prescription_list = PatientPrescriptionList(**prescription_list.model_dump())
-    updated_data_dict = serialize_data(prescription_list.model_dump())
+    # Check for existing prescription list with same Prescription List Value
+    existing_prescription_list = db.query(PatientPrescriptionList).filter(
+        PatientPrescriptionList.Value == prescription_list.Value,
+        PatientPrescriptionList.IsDeleted == '0').first()
     
-    db.add(db_prescription_list)
-    db.commit()
-    db.refresh(db_prescription_list)
+    if existing_prescription_list:
+        raise HTTPException(status_code=400, detail="A prescription list record with this name already exists")
+    
+    try:
+        
+        """Create a new prescription list item"""
+        db_prescription_list = PatientPrescriptionList(**prescription_list.model_dump())
+        updated_data_dict = serialize_data(prescription_list.model_dump())
+        db.add(db_prescription_list)
+        db.commit()
+        db.refresh(db_prescription_list)
 
-    log_crud_action(
-        action=ActionType.CREATE,
-        user=created_by,
-        user_full_name=user_full_name,
-        message="Created prescription list record",
-        table="PatientPrescriptionList",
-        entity_id=db_prescription_list.Id,
-        original_data=None,
-        updated_data=updated_data_dict,
-    )
-    return db_prescription_list
+        log_crud_action(
+            action=ActionType.CREATE,
+            user=created_by,
+            user_full_name=user_full_name,
+            message="Created prescription list record",
+            table="PatientPrescriptionList",
+            entity_id=db_prescription_list.Id,
+            original_data=None,
+            updated_data=updated_data_dict,
+        )
+        return db_prescription_list
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 def update_prescription_list(
     db: Session, 

@@ -92,6 +92,10 @@ def test_get_prescription_list_by_id_not_found(db_session_mock):
 @mock.patch("app.models.patient_prescription_list_model.PatientPrescriptionList")
 def test_create_prescription_list(mock_model, db_session_mock):
     """Test creating a new prescription list item"""
+    
+    # If this returns None, it means no existing prescription list record found
+    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+    
     data = {
         "IsDeleted": False,
         "CreatedDateTime": datetime(2023, 1, 1, 10, 0),
