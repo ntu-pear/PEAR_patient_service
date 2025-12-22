@@ -66,9 +66,9 @@ class ProducerManager:
             logger.warning("Failed initial connection, will retry in background")
         
         last_heartbeat = time.time()
-        last_reconnect_attempt = time.time()
+        last_reconnect_attempt = 0
         heartbeat_interval = 15  # Send heartbeat every 15 seconds
-        reconnect_interval = 30  # Attempt reconnection every 30 seconds if disconnected
+        reconnect_interval = 5  # Attempt reconnection every 30 seconds if disconnected
         
         while self.is_running:
             try:
@@ -78,7 +78,7 @@ class ProducerManager:
                     logger.info("Attempting background reconnection...")
                     # self._attempt_reconnect()
                     self._handle_connection_error()
-                    last_reconnect_attempt = current_time
+                    last_reconnect_attempt = time.time()
                 
                 # Process publish requests with timeout to allow heartbeats
                 try:
@@ -125,6 +125,15 @@ class ProducerManager:
         except Exception as e:
             logger.error(f"Error processing publish request: {str(e)}")
             raise
+    
+    def _is_connected(self) -> bool:
+        """Check if currently connected to RabbitMQ"""
+        try:
+            return (self.client.connection is not None and 
+                    not self.client.connection.is_closed and
+                    self.client.is_connected)
+        except:
+            return False
     
     def _send_heartbeat(self):
         """Send heartbeat to keep connection alive"""
