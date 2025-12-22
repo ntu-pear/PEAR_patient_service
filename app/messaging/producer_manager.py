@@ -1,9 +1,9 @@
 import logging
-import threading
 import queue
+import threading
 import time
-from typing import Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 from .rabbitmq_client import RabbitMQClient
 
@@ -62,17 +62,24 @@ class ProducerManager:
         """Main loop that maintains connection and processes publish requests"""
         logger.info("Starting producer loop...")
         
-        # Initial connection
         if not self.client.connect():
-            logger.error("Failed initial connection")
-            self.is_running = False
-            return
+            logger.warning("Failed initial connection, will retry in background")
         
         last_heartbeat = time.time()
+        last_reconnect_attempt = time.time()
         heartbeat_interval = 15  # Send heartbeat every 15 seconds
+        reconnect_interval = 30  # Attempt reconnection every 30 seconds if disconnected
         
         while self.is_running:
             try:
+                # Try background reconnection if not connected
+                current_time = time.time()
+                if not self._is_connected() and (current_time - last_reconnect_attempt > reconnect_interval):
+                    logger.info("Attempting background reconnection...")
+                    # self._attempt_reconnect()
+                    self._handle_connection_error()
+                    last_reconnect_attempt = current_time
+                
                 # Process publish requests with timeout to allow heartbeats
                 try:
                     request = self.publish_queue.get(timeout=1.0)
@@ -88,7 +95,7 @@ class ProducerManager:
                     
             except Exception as e:
                 logger.error(f"Error in producer loop: {str(e)}")
-                self._handle_connection_error()
+                # self._handle_connection_error()
         
         logger.info("Producer loop ended")
         self._cleanup()
@@ -164,7 +171,8 @@ class ProducerManager:
                 retry_delay *= 2  # Exponential backoff
         
         logger.error("Failed to reconnect after all attempts")
-        self.is_running = False
+        # self.is_running = False
+        return False
     
     def _cleanup(self):
         """Clean up resources"""
