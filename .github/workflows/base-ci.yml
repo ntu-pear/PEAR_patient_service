@@ -158,6 +158,7 @@ jobs:
           
           chmod +x rabbitmq-entrypoint.sh
           
+          docker rm -f rabbitmq || true # forces remove if exists
           # Start container with configuration
           docker run -d \
             --name rabbitmq \
