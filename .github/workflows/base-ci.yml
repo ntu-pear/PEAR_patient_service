@@ -156,9 +156,7 @@ jobs:
           exec docker-entrypoint.sh rabbitmq-server
           EOF
           
-          chmod +x rabbitmq-entrypoint.sh
-          
-          docker rm -f rabbitmq || true # forces remove if exists
+          chmod +x rabbitmq-entrypoint.sh          
           # Start container with configuration
           docker run -d \
             --name rabbitmq \
