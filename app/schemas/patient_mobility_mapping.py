@@ -16,6 +16,7 @@ class PatientMobilityCreate(PatientMobilityBase):
 class PatientMobilityUpdate(BaseModel):
     MobilityRemarks: Optional[str] = None
     IsRecovered: Optional[bool] = None
+    RecoveryDate: Optional[date] = None
 
 class PatientMobilityResponse(BaseModel):
     MobilityID: int
