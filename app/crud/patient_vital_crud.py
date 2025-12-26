@@ -1,16 +1,21 @@
+import logging
+import math
 from datetime import datetime
-from sqlalchemy.orm import Session
-from sqlalchemy import func
+
 from fastapi import HTTPException
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from app.services.highlight_helper import create_highlight_if_needed
+
+from ..config import Config
+from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_vital_model import PatientVital
 from ..schemas.patient_vital import (
     PatientVitalCreate,
+    PatientVitalDelete,
     PatientVitalUpdate,
-    PatientVitalDelete
 )
-from ..config import Config
-from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
-import math
 
 config = Config().Vital
 
@@ -46,7 +51,7 @@ def get_vital_list(db: Session, patient_id: int, pageNo: int = 0, pageSize: int 
     )
 
     return vitals, totalRecords, totalPages
-
+logger = logging.getLogger(__name__)
 # Create a new vital record
 def create_vital(
     db: Session,
@@ -80,7 +85,26 @@ def create_vital(
         db.add(new_vital)
         db.commit()
         db.refresh(new_vital)
-
+        
+        # Check if the new record needs to be inserted into Highlight table
+        try:
+            logger.info(f"Checking if highlight needed for vital: PatientId={new_vital.PatientId}, VitalId={new_vital.Id}")
+            
+            create_highlight_if_needed(
+                db=db,
+                source_record=new_vital,
+                type_code="VITAL",
+                patient_id=new_vital.PatientId,
+                source_table="PATIENT_VITAL",
+                source_record_id=new_vital.Id,
+                created_by=created_by
+            )
+            
+            logger.info(f"Highlight check completed for vital: VitalId={new_vital.Id}")
+            
+        except Exception as e:
+            logger.error(f"Failed to create highlight for vital {new_vital.Id}: {str(e)}", exc_info=True)
+    
         log_crud_action(
             action=ActionType.CREATE,
             user=created_by,
@@ -144,6 +168,27 @@ def update_vital(
 
         db.commit()
         db.refresh(db_vital)
+        
+        
+        # Check if the new record needs to be inserted into Highlight table
+        try:
+            logger.info(f"Checking if highlight needed for vital: PatientId={db_vital.PatientId}, VitalId={db_vital.Id}")
+            
+            create_highlight_if_needed(
+                db=db,
+                source_record=db_vital,
+                type_code="VITAL",
+                patient_id=db_vital.PatientId,
+                source_table="PATIENT_VITAL",
+                source_record_id=db_vital.Id,
+                created_by=db_vital.CreatedById
+            )
+            
+            logger.info(f"Highlight check completed for vital: VitalId={db_vital.Id}")
+            
+        except Exception as e:
+            logger.error(f"Failed to create highlight for vital {db_vital.Id}: {str(e)}", exc_info=True)
+        
 
         updated_data_dict = serialize_data(update_data)
         log_crud_action(
