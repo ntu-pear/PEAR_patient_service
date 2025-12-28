@@ -1,16 +1,20 @@
 import math
+from datetime import date, datetime
+
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+
 from app.models.patient_mobility_list_model import PatientMobilityList
 from app.models.patient_model import Patient
-from sqlalchemy.orm import Session
-from datetime import datetime
-from fastapi import HTTPException
+
+from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_mobility_mapping_model import PatientMobility
 from ..schemas.patient_mobility_mapping import (
     PatientMobilityCreate,
-    PatientMobilityUpdate,
     PatientMobilityResponse,
+    PatientMobilityUpdate,
 )
-from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
+
 
 # Get all mobility entries
 def get_all_mobility_entries(db: Session, pageNo: int = 0, pageSize: int = 100):
@@ -79,9 +83,20 @@ def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, cre
         if existing_mobility:
             raise HTTPException(status_code=400, detail="Patient already has an existing mobility aid.")    
 
+    entry_data = mobility_data.model_dump()
+    # Checks if IsRecovered is True but RecoveryDate is not provided
+    if mobility_data.IsRecovered:
+        # If IsRecovered is True then set the RecoveryDate to the date specified
+        if mobility_data.RecoveryDate:
+            entry_data['RecoveryDate'] = mobility_data.RecoveryDate
+        else:
+            entry_data['RecoveryDate'] = date.today() # Set to today's date if not provided
+    else:
+        entry_data['RecoveryDate'] = None
+        
     # Create entry
     new_entry = PatientMobility(
-        **mobility_data.model_dump(),
+        **entry_data,
         CreatedDateTime=datetime.now(),
         ModifiedDateTime=datetime.now(),
         CreatedById=created_by,
@@ -119,6 +134,14 @@ def update_mobility_entry(db: Session, mobility_id: int, mobility_data: PatientM
     }
 
     for key, value in mobility_data.model_dump(exclude_unset=True).items():
+        # Add in logic to check for "IsRecovered" field to set RecoveryDate
+        if key == 'IsRecovered':
+            if value is True and db_entry.IsRecovered is False:
+                # If the value (new value) is True and old value is False - set recovery date
+                db_entry.RecoveryDate = date.today()
+            elif value is False:
+                # New value is False, reset recovery date to None
+                db_entry.RecoveryDate = None
         setattr(db_entry, key, value)
 
     db_entry.ModifiedDateTime = datetime.now()
