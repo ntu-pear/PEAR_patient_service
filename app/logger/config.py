@@ -10,36 +10,18 @@ os.makedirs(LOG_DIR, exist_ok=True)
 today = datetime.now().strftime("%Y-%m-%d")
 log_file = f"{LOG_DIR}/patient_{today}.log"
 
-def serialize_for_json(obj):
-    """Serialize datetime and other objects for JSON compatibility"""
-    if isinstance(obj, datetime):
-        return obj.isoformat()
-    elif isinstance(obj, dict):
-        return {key: serialize_for_json(value) for key, value in obj.items()}
-    elif isinstance(obj, list):
-        return [serialize_for_json(item) for item in obj]
-    return obj
 
 class ConditionalFormatter(logging.Formatter):
     """
     Custom formatter that handles optional fields gracefully
-    and properly serializes message objects to JSON
     """
+
     def __init__(self, detailed_format, simple_format, datefmt=None):
         super().__init__(datefmt=datefmt)
         self.detailed_format = detailed_format
         self.simple_format = simple_format
-    
+
     def format(self, record):
-        # If message is a dict/ object, serialize it to JSON string
-        # This ensures the message field contains valid JSON, not Python dict
-
-        original_msg = record.msg
-        if isinstance(record.msg, dict):
-            record.msg = json.dumps(serialize_for_json(record.msg))
-        elif not isinstance(record.msg, str):
-            record.msg = json.dumps(serialize_for_json(record.msg))
-
         # Check if this is a detailed log record with user info
         if hasattr(record, 'user') and hasattr(record, 'table'):
             # Use detailed format for CRUD operations
@@ -48,12 +30,8 @@ class ConditionalFormatter(logging.Formatter):
             # Use simple format for general logging
             formatter = logging.Formatter(self.simple_format, datefmt=self.datefmt)
 
-        result = formatter.format(record)
+        return formatter.format(record)
 
-        # Restore original message in case the record is used elsewhere
-        record.msg = original_msg
-
-        return result
 
 # Detailed format for CRUD operations (when user context is available)
 detailed_format = '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "user": "%(user)s", "user_full_name": "%(user_full_name)s", "table": "%(table)s", "action": "%(action)s", "log_text": "%(log_text)s", "message": %(message)s}'
