@@ -1,4 +1,6 @@
 from datetime import datetime
+from app.services.highlight_helper import create_highlight_if_needed
+from app.services.highlight_helper import create_highlight_if_needed
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from ..models.patient_medication_model import PatientMedication
@@ -295,6 +297,20 @@ def create_medication(
             updated_data=updated_data_dict,
         )
 
+        if medication_with_prescription:
+            try:
+                create_highlight_if_needed(
+                    db=db,
+                    source_record=medication_with_prescription,  # Has prescription_list loaded into the Medication record.
+                    type_code="MEDICATION",
+                    patient_id=new_medication.PatientId,
+                    source_table="PATIENT_MEDICATION",
+                    source_record_id=new_medication.Id,
+                    created_by=created_by
+                )
+            except Exception as e:
+                logger.error(f"Failed to create highlight for medication {new_medication.Id}: {e}")
+                
         # Commit both medication and outbox event atomically
         db.commit()
         db.refresh(new_medication)
@@ -391,6 +407,9 @@ def update_medication(
             db, db_medication, target_prescription_id
         )
 
+        # Need this for patient highlight integration
+        medication_with_prescription = _get_medication_with_prescription_name(db, medication_id)
+
         # Debug logging
         logger.info(f"Original prescription ID: {original_prescription_list_id}, name: '{original_medication_dict.get('PrescriptionName')}'")
         logger.info(f"New prescription ID: {target_prescription_id}, name: '{updated_medication_dict.get('PrescriptionName')}'")
@@ -434,6 +453,23 @@ def update_medication(
             original_data=original_data_dict,
             updated_data=updated_data_dict,
         )
+        
+        # Trigger patient highlights update after successsful update operation + logging
+        if medication_with_prescription:
+            try:
+                create_highlight_if_needed(
+                    db=db,
+                    source_record=medication_with_prescription,
+                    type_code="MEDICATION",
+                    patient_id=db_medication.PatientId,
+                    source_table="PATIENT_MEDICATION",
+                    source_record_id=medication_id,
+                    created_by=modified_by
+                )
+            except Exception as e:
+                logger.error(f"Failed to create/update highlight for medication {medication_id}: {e}")
+        else:
+            logger.warning(f"Skipping highlight update for medication {medication_id} - prescription not loaded")
 
         # Commit atomically
         db.commit()

@@ -123,45 +123,45 @@ def create_highlight_if_needed(
         return False
 
 
-def get_patient_highlights(
-    db: Session,
-    patient_id: int,
-    type_code: str = None,
-    active_only: bool = True
-):
-    """
-    Get highlights for a patient.
+# def get_patient_highlights(
+#     db: Session,
+#     patient_id: int,
+#     type_code: str = None,
+#     active_only: bool = True
+# ):
+#     """
+#     Get highlights for a patient.
     
-    Args:
-        db: Database session
-        patient_id: Patient ID
-        type_code: Optional filter by type ("VITAL", "ALLERGY", etc.)
-        active_only: Only return non-deleted highlights (default: True)
+#     Args:
+#         db: Database session
+#         patient_id: Patient ID
+#         type_code: Optional filter by type ("VITAL", "ALLERGY", etc.)
+#         active_only: Only return non-deleted highlights (default: True)
     
-    Returns:
-        List of PatientHighlight objects
+#     Returns:
+#         List of PatientHighlight objects
     
-    Example:
-        # Get all active highlights
-        highlights = get_patient_highlights(db, patient_id=123)
+#     Example:
+#         # Get all active highlights
+#         highlights = get_patient_highlights(db, patient_id=123)
         
-        # Get only vital highlights
-        vital_highlights = get_patient_highlights(db, patient_id=123, type_code="VITAL")
-    """
-    query = db.query(PatientHighlight).filter(
-        PatientHighlight.PatientId == patient_id
-    )
+#         # Get only vital highlights
+#         vital_highlights = get_patient_highlights(db, patient_id=123, type_code="VITAL")
+#     """
+#     query = db.query(PatientHighlight).filter(
+#         PatientHighlight.PatientId == patient_id
+#     )
     
-    if active_only:
-        query = query.filter(PatientHighlight.IsDeleted == "0")
+#     if active_only:
+#         query = query.filter(PatientHighlight.IsDeleted == "0")
     
-    if type_code:
-        # Get type ID
-        highlight_type = db.query(PatientHighlightType).filter(
-            PatientHighlightType.TypeCode == type_code
-        ).first()
+#     if type_code:
+#         # Get type ID
+#         highlight_type = db.query(PatientHighlightType).filter(
+#             PatientHighlightType.TypeCode == type_code
+#         ).first()
         
-        if highlight_type:
-            query = query.filter(PatientHighlight.HighlightTypeId == highlight_type.Id)
+#         if highlight_type:
+#             query = query.filter(PatientHighlight.HighlightTypeId == highlight_type.Id)
     
-    return query.order_by(PatientHighlight.CreatedDate.desc()).all()
+#     return query.order_by(PatientHighlight.CreatedDate.desc()).all()

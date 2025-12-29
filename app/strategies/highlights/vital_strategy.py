@@ -2,6 +2,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from app.config import Config
 from app.models.patient_vital_model import PatientVital
 
 from .base_strategy import HighlightStrategy
@@ -18,54 +19,44 @@ class VitalStrategy(HighlightStrategy):
         """
         Check if vital is abnormal and should generate a highlight.
         
-        CUSTOMIZE THIS based on your vital signs structure!
-        
-        Returns True if ANY of these conditions are met:
-        - High or low blood pressure
-        - High or low temperature
-        - High or low heart rate
+        If any vital sign is outside normal ranges, return True.
         """
-        # Blood Pressure - CUSTOMIZE THRESHOLDS
+        # Blood Pressure
         if hasattr(vital_record, 'SystolicBP') and vital_record.SystolicBP:
-            if vital_record.SystolicBP > 140:  # High
-                return True
-            if vital_record.SystolicBP < 90:   # Low
+            if (vital_record.SystolicBP > Config.Vital.SystolicBP.MAX_VALUE or 
+                vital_record.SystolicBP < Config.Vital.SystolicBP.MIN_VALUE):
                 return True
             if vital_record.SystolicBP == 100:   # Testing
                 return True
         
         if hasattr(vital_record, 'DiastolicBP') and vital_record.DiastolicBP:
-            if vital_record.DiastolicBP > 90:  # High
-                return True
-            if vital_record.DiastolicBP < 60:  # Low
+            if (vital_record.DiastolicBP > Config.Vital.DiastolicBP.MAX_VALUE or 
+                vital_record.DiastolicBP < Config.Vital.DiastolicBP.MIN_VALUE):
                 return True
         
-        # Temperature - CUSTOMIZE THRESHOLDS
+        # Temperature
         if hasattr(vital_record, 'Temperature') and vital_record.Temperature:
-            if vital_record.Temperature > 38.0:  # Fever (Celsius)
-                return True
-            if vital_record.Temperature < 36.0:  # Hypothermia
+            if (vital_record.Temperature > Config.Vital.Temperature.MAX_VALUE or 
+                vital_record.Temperature < Config.Vital.Temperature.MIN_VALUE):
                 return True
             if vital_record.Temperature == 37:  # Testing
                 return True
         
-        # Heart Rate - CUSTOMIZE THRESHOLDS
+        # Heart Rate
         if hasattr(vital_record, 'HeartRate') and vital_record.HeartRate:
-            if vital_record.HeartRate > 100:  # Tachycardia
-                return True
-            if vital_record.HeartRate < 60:   # Bradycardia
+            if (vital_record.HeartRate > Config.Vital.HeartRate.MAX_VALUE or 
+                vital_record.HeartRate < Config.Vital.HeartRate.MIN_VALUE):
                 return True
         
-        # Blood Sugar Level - CUSTOMIZE THRESHOLDS (optional)
+        # Blood Sugar Level
         if hasattr(vital_record, 'BloodSugarLevel') and vital_record.BloodSugarLevel:
-            if vital_record.RespiratoryRate > 13:
-                return True
-            if vital_record.RespiratoryRate < 6:
+            if (vital_record.BloodSugarLevel > Config.Vital.BloodSugarLevel.MAX_VALUE or 
+                vital_record.BloodSugarLevel < Config.Vital.BloodSugarLevel.MIN_VALUE):
                 return True
         
-        # Oxygen Saturation - CUSTOMIZE THRESHOLDS (optional)
-        if hasattr(vital_record, 'SpO2') and vital_record.OxygenSaturation:
-            if vital_record.OxygenSaturation < 95:  # Low SpO2
+        # Oxygen Saturation
+        if hasattr(vital_record, 'SpO2') and vital_record.SpO2:
+            if vital_record.SpO2 < Config.Vital.SpO2.MIN_VALUE:
                 return True
         
         return False
@@ -82,43 +73,44 @@ class VitalStrategy(HighlightStrategy):
             sys = vital_record.SystolicBP
             dia = vital_record.DiastolicBP
             if sys and dia:
-                if sys > 140 or dia > 90:
+                sys_high = sys > Config.Vital.SystolicBP.MAX_VALUE
+                sys_low = sys < Config.Vital.SystolicBP.MIN_VALUE
+                dia_high = dia > Config.Vital.DiastolicBP.MAX_VALUE
+                dia_low = dia < Config.Vital.DiastolicBP.MIN_VALUE
+                
+                if sys_high or dia_high:
                     parts.append(f"High BP: {sys}/{dia} mmHg")
-                elif sys < 90 or dia < 60:
+                elif sys_low or dia_low:
                     parts.append(f"Low BP: {sys}/{dia} mmHg")
-                elif sys == 100 or dia == 80:
-                    parts.append(f"Testing for Systolic BP: {sys}/{dia} mmHg")
         
         # Temperature
         if hasattr(vital_record, 'Temperature') and vital_record.Temperature:
             temp = vital_record.Temperature
-            if temp > 38.0:
+            if temp > Config.Vital.Temperature.MAX_VALUE:
                 parts.append(f"Fever: {temp}°C")
-            elif temp < 36.0:
+            elif temp < Config.Vital.Temperature.MIN_VALUE:
                 parts.append(f"Low temp: {temp}°C")
-            elif temp == 37.0:
-                parts.append(f"TESTING TEMPERATURE: {temp}°C")
         
         # Heart Rate
         if hasattr(vital_record, 'HeartRate') and vital_record.HeartRate:
             hr = vital_record.HeartRate
-            if hr > 100:
+            if hr > Config.Vital.HeartRate.MAX_VALUE:
                 parts.append(f"High HR: {hr} bpm")
-            elif hr < 60:
+            elif hr < Config.Vital.HeartRate.MIN_VALUE:
                 parts.append(f"Low HR: {hr} bpm")
         
         # Blood Sugar level
         if hasattr(vital_record, 'BloodSugarLevel') and vital_record.BloodSugarLevel:
             bsl = vital_record.BloodSugarLevel
-            if bsl > 13:
+            if bsl > Config.Vital.BloodSugarLevel.MAX_VALUE:
                 parts.append(f"High BSL: {bsl} mg/dL")
-            elif bsl < 6:
+            elif bsl < Config.Vital.BloodSugarLevel.MIN_VALUE:
                 parts.append(f"Low BSL: {bsl} mg/dL")
         
         # Oxygen Saturation
         if hasattr(vital_record, 'SpO2') and vital_record.SpO2:
             spo2 = vital_record.SpO2
-            if spo2 < 95:
+            if spo2 < Config.Vital.SpO2.MIN_VALUE:
                 parts.append(f"Low SpO2: {spo2}%")
         
         # Join all parts or return generic message

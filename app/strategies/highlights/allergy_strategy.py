@@ -6,7 +6,7 @@ from .base_strategy import HighlightStrategy
 
 
 class AllergyStrategy(HighlightStrategy):
-    """Strategy for generating highlights from active allergies (ultra-simplified)"""
+    """Strategy for generating highlights from active allergies"""
     
     def get_type_code(self) -> str:
         """Return type code that matches database"""
@@ -24,7 +24,7 @@ class AllergyStrategy(HighlightStrategy):
         
         # ** Need to discuss with prof about this logic
         
-        # Option 1: Highlight all active allergies (RECOMMENDED)
+        # Option 1: Highlight all active allergies
         # if hasattr(allergy_record, 'AllergyTypeID'):
         #     return allergy_record.AllergyTypeID == "3" # Testing only
         

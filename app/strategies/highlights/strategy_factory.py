@@ -12,7 +12,6 @@ from .vital_strategy import VitalStrategy
 class HighlightStrategyFactory:
     """
     Factory to create and manage highlight strategies.
-    Ultra-simplified - just manages strategy instances.
     """
     
     def __init__(self):

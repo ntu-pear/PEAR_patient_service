@@ -12,13 +12,13 @@ class HighlightStrategy(ABC):
     """
     Base strategy for generating highlights from different sources.
     
-    ULTRA-SIMPLIFIED - Only 3 methods:
+    4 methods to implement:
     1. get_type_code() - Links to database
     2. should_generate_highlight() - Core logic (is this worth highlighting?)
     3. generate_highlight_text() - Display text
+    4. get_source_value() - Raw data retrieval for details view
     
-    NO get_candidate_records() - not needed for event-driven approach!
-    You already have the record when you call the strategy.
+    Each strategy corresponds to a specific type of highlight, e.g., Vital, Allergy, Medication, etc.
     """
     
     @abstractmethod
@@ -80,8 +80,9 @@ class HighlightStrategy(ABC):
     @abstractmethod
     def get_source_value(self, db: Session, source_record_id: int) -> Optional[str]:
         """
-        Each strategy knows how to get its own source value - for retrieval of raw data.
-        This is used when displaying details about the highlight.
+        Each strategy knows how to get its own source value - for retrieval of raw data
+        This is used when displaying details about the highlight 
+        E.g. PrescriptionRemarks for Medication.
         E.g. For the Highlight Type Allergy, this function will retrieve the Value (e.g. Panadol) from the PATIENT_ALLERGY table.
         """
         pass

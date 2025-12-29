@@ -40,15 +40,16 @@ class ProblemStrategy(HighlightStrategy):
         Generate readable problem text.
         Shows the problem name/description.
         """
-        # Get problem name
-        problem_name = getattr(problem_record, 'ProblemName', 
-                              getattr(problem_record, 'Description', 'Medical problem'))
+        # # Get problem name
+        # problem_name = getattr(problem_record, 'ProblemName', 
+        #                       getattr(problem_record, 'Description', 'Medical problem'))
         
-        # Include severity if available
-        if hasattr(problem_record, 'Severity') and problem_record.Severity:
-            return f"Problem: {problem_name} ({problem_record.Severity})"
-        else:
-            return f"Problem: {problem_name}"
+        # # Include severity if available
+        # if hasattr(problem_record, 'Severity') and problem_record.Severity:
+        #     return f"Problem: {problem_name} ({problem_record.Severity})"
+        # else:
+        #     return f"Problem: {problem_name}"
+        pass
         
     def get_source_value(self, db, source_record_id):
         # Implement this after confirming logic
