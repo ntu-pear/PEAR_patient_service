@@ -70,9 +70,9 @@ class PatientHighlight(PatientHighlightBase):
         None, 
         json_schema_extra={"example": "VITAL"}
     )
-    
-    # Source value (from strategy via CRUD enrichment)
-    source_value: Optional[str] = Field(
+
+    # Source remarks (from strategy via CRUD enrichment)
+    source_remarks: Optional[str] = Field(
         None,
         json_schema_extra={"example": "Patient feeling dizzy"}
     )

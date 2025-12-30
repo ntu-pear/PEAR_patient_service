@@ -119,10 +119,10 @@ class VitalStrategy(HighlightStrategy):
         else:
             return "Abnormal vital signs"
         
-    def get_source_value(self, db, source_record_id):
+    def get_source_remarks(self, db, source_record_id):
         """
         Get VitalRemarks from PATIENT_VITAL table.
-        This is what displays in the 'source_value' field.
+        This is what displays in the 'source_remarks' field.
         """
         try:
             vital = db.query(PatientVital).filter(

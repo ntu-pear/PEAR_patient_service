@@ -55,7 +55,7 @@ class ProblemStrategy(HighlightStrategy):
         #     return f"Problem: {problem_name}"
         pass
         
-    def get_source_value(self, db, source_record_id):
+    def get_source_remarks(self, db, source_record_id):
         # Implement this after confirming logic
         pass
     

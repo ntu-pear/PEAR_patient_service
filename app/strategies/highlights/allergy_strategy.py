@@ -56,16 +56,13 @@ class AllergyStrategy(HighlightStrategy):
         else:
             return f"Allergy: {allergy_name}"
         
-    def get_source_value(self, db, source_record_id):
+    def get_source_remarks(self, db, source_record_id):
         """
-        Get the allergy name from ALLERGY_TYPE via PATIENT_ALLERGY_MAPPING.
-        
-        For allergies, the source is PATIENT_ALLERGY_MAPPING, but the "value"
-        we want to display is the AllergyType.Value (e.g., "Penicillin").
+        Get the allergy remarks.
         
         We need to:
         1. Query PATIENT_ALLERGY_MAPPING by Patient_AllergyID
-        2. Join to ALLERGY_TYPE to get the Value
+        2. Join to ALLERGY_TYPE to get the Remarks
         """
         try:
             allergy_mapping = db.query(PatientAllergyMapping).options(

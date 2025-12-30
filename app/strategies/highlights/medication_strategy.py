@@ -77,7 +77,7 @@ class MedicationStrategy(HighlightStrategy):
         # return " ".join(parts)
         return "High Risk Medication"
     
-    def get_source_value(self, db, source_record_id):
+    def get_source_remarks(self, db, source_record_id):
         # Implement this after confirming logic with prof
         try:
             # Query PATIENT_MEDICATION by Id
@@ -90,7 +90,7 @@ class MedicationStrategy(HighlightStrategy):
             return None
             
         except Exception as e:
-            print(f"Error getting medication source value: {e}")
+            print(f"Error getting medication source remarks: {e}")
             return None
 
     def get_additional_fields(self, db: Session, source_record_id: int) -> Dict[str, Any]:

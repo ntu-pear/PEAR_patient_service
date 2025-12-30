@@ -84,7 +84,7 @@ class PrescriptionStrategy(HighlightStrategy):
         # return " ".join(parts)
         return "High-Risk Prescription"
 
-    def get_source_value(self, db: Session, source_record_id: int) -> Optional[str]:
+    def get_source_remarks(self, db: Session, source_record_id: int) -> Optional[str]:
         """
         Get PrescriptionRemarks from PATIENT_PRESCRIPTION table.
         This contains special instructions or notes about the prescription.
@@ -99,7 +99,7 @@ class PrescriptionStrategy(HighlightStrategy):
             return None
             
         except Exception as e:
-            print(f"Error getting prescription source value: {e}")
+            print(f"Error getting prescription source remarks: {e}")
             return None
     
     def get_additional_fields(self, db: Session, source_record_id: int) -> Dict[str, Any]:

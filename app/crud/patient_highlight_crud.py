@@ -14,12 +14,12 @@ from ..schemas.patient_highlight import PatientHighlightCreate, PatientHighlight
 
 logger = logging.getLogger(__name__)
 
-def _add_source_values_and_additional_fields(db: Session, highlights):
+def _add_source_remarks_and_additional_fields(db: Session, highlights):
     """
-    Add source_value AND additional_fields to each highlight using its strategy.
+    Add source_remarks AND additional_fields to each highlight using its strategy.
     
     This populates:
-    - source_value: Main value field (e.g., VitalRemarks, AllergyRemarks)
+    - source_remarks: Main remarks field (e.g., VitalRemarks, AllergyRemarks)
     - additional_fields: Type-specific fields (e.g., allergy_type, prescription_name)
     """
     if not highlights:
@@ -33,18 +33,18 @@ def _add_source_values_and_additional_fields(db: Session, highlights):
             strategy = factory.get_strategy(highlight.highlight_type_code)
             
             if strategy:
-                # Get source value
-                highlight.source_value = strategy.get_source_value(db, highlight.SourceRecordId)
+                # Get source remarks
+                highlight.source_remarks = strategy.get_source_remarks(db, highlight.SourceRecordId)
                 
                 # Get additional fields
                 highlight.additional_fields = strategy.get_additional_fields(db, highlight.SourceRecordId)
             else:
-                highlight.source_value = None
+                highlight.source_remarks = None
                 highlight.additional_fields = {}
                 
         except Exception as e:
             logger.error(f"Error getting data for highlight {highlight.Id}: {e}")
-            highlight.source_value = None
+            highlight.source_remarks = None
             highlight.additional_fields = {}
     
     return highlights
@@ -52,11 +52,11 @@ def _add_source_values_and_additional_fields(db: Session, highlights):
 
 def get_all_highlights(db: Session):
     highlights = db.query(PatientHighlight).options(joinedload(PatientHighlight._highlight_type)).filter(PatientHighlight.IsDeleted == "0").order_by(PatientHighlight.PatientId, PatientHighlight.CreatedDate.desc()).all()
-    return _add_source_values_and_additional_fields(db, highlights)
+    return _add_source_remarks_and_additional_fields(db, highlights)
 
 def get_highlights_by_patient(db: Session, patient_id: int):
     highlights = db.query(PatientHighlight).options(joinedload(PatientHighlight._highlight_type)).filter(PatientHighlight.PatientId == patient_id, PatientHighlight.IsDeleted == "0").order_by(PatientHighlight.CreatedDate.desc()).all()
-    return _add_source_values_and_additional_fields(db, highlights)
+    return _add_source_remarks_and_additional_fields(db, highlights)
 
 def create_highlight(db: Session, highlight_data: PatientHighlightCreate, created_by: str, user_full_name:str):
     db_highlight = PatientHighlight(

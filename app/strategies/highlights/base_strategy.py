@@ -78,12 +78,12 @@ class HighlightStrategy(ABC):
         pass
     
     @abstractmethod
-    def get_source_value(self, db: Session, source_record_id: int) -> Optional[str]:
+    def get_source_remarks(self, db: Session, source_record_id: int) -> Optional[str]:
         """
-        Each strategy knows how to get its own source value - for retrieval of raw data
+        Each strategy knows how to get its own source remarks - for retrieval of raw data
         This is used when displaying details about the highlight 
         E.g. PrescriptionRemarks for Medication.
-        E.g. For the Highlight Type Allergy, this function will retrieve the Value (e.g. Panadol) from the PATIENT_ALLERGY table.
+        E.g. For the Highlight Type Allergy, this function will retrieve the Remarks (e.g. VitalRemarks).
         """
         pass
     
