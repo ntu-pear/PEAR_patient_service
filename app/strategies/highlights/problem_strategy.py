@@ -1,3 +1,7 @@
+from typing import Any, Dict
+
+from sqlalchemy.orm import Session, joinedload
+
 from .base_strategy import HighlightStrategy
 
 
@@ -53,4 +57,8 @@ class ProblemStrategy(HighlightStrategy):
         
     def get_source_value(self, db, source_record_id):
         # Implement this after confirming logic
+        pass
+    
+    def get_additional_fields(self, db: Session, source_record_id: int) -> Dict[str, Any]:
+        # Implement this after confirming logic with prof
         pass

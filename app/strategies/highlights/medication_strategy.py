@@ -1,3 +1,7 @@
+from typing import Any, Dict
+
+from sqlalchemy.orm import Session, joinedload
+
 from app.models.patient_medication_model import PatientMedication
 
 from .base_strategy import HighlightStrategy
@@ -55,22 +59,23 @@ class MedicationStrategy(HighlightStrategy):
         Shows medication name and optionally dose/route.
         """
         # Get medication name from prescription_list
-        med_name = "Unknown Medication"
-        if hasattr(medication_record, 'prescription_list') and medication_record.prescription_list:
-            med_name = medication_record.prescription_list.Value
+        # med_name = "Unknown Medication"
+        # if hasattr(medication_record, 'prescription_list') and medication_record.prescription_list:
+        #     med_name = medication_record.prescription_list.Value
         
         # Build highlight text
-        parts = [f"High-Risk Medication: {med_name}"]
+        # parts = [f"High-Risk Medication: {med_name}"]
+        # parts = ["High-Risk Medication"]
+        # # Add dosage if available
+        # if hasattr(medication_record, 'Dosage') and medication_record.Dosage:
+        #     parts.append(medication_record.Dosage)
         
-        # Add dosage if available
-        if hasattr(medication_record, 'Dosage') and medication_record.Dosage:
-            parts.append(medication_record.Dosage)
+        # # Add instruction if available
+        # if hasattr(medication_record, 'Instruction') and medication_record.Instruction:
+        #     parts.append(medication_record.Instruction)
         
-        # Add instruction if available
-        if hasattr(medication_record, 'Instruction') and medication_record.Instruction:
-            parts.append(medication_record.Instruction)
-        
-        return " ".join(parts)
+        # return " ".join(parts)
+        return "High Risk Medication"
     
     def get_source_value(self, db, source_record_id):
         # Implement this after confirming logic with prof
@@ -87,3 +92,59 @@ class MedicationStrategy(HighlightStrategy):
         except Exception as e:
             print(f"Error getting medication source value: {e}")
             return None
+
+    def get_additional_fields(self, db: Session, source_record_id: int) -> Dict[str, Any]:
+        """
+        Get medication-specific additional fields.
+        
+        Returns:
+        {
+            "prescription_name": "Warfarin",              # From PATIENT_PRESCRIPTION_LIST.Value
+            "dosage": "5mg",                              # From PATIENT_MEDICATION.Dosage
+            "instruction": "PO Daily",                    # From PATIENT_MEDICATION.Instruction
+            "administer_time": "08:00",                   # From PATIENT_MEDICATION.AdministerTime
+            "start_date": "2025-01-01",                   # From PATIENT_MEDICATION.StartDate
+            "end_date": "2025-12-31"                      # From PATIENT_MEDICATION.EndDate
+        }
+        """
+        try:
+            # Query with prescription_list relationship loaded
+            medication = db.query(PatientMedication).options(
+                joinedload(PatientMedication.prescription_list)
+            ).filter(
+                PatientMedication.Id == source_record_id
+            ).first()
+            
+            if not medication:
+                return {}
+            
+            # Extract the fields you want
+            additional_fields = {}
+            
+            # Get prescription name (from PATIENT_PRESCRIPTION_LIST.Value)
+            if medication.prescription_list:
+                additional_fields["prescription_name"] = medication.prescription_list.Value
+            else:
+                additional_fields["prescription_name"] = None
+            
+            # Get medication details
+            additional_fields["dosage"] = medication.Dosage
+            additional_fields["instruction"] = medication.Instruction
+            additional_fields["administer_time"] = medication.AdministerTime
+            
+            # Convert dates to ISO format strings
+            if medication.StartDate:
+                additional_fields["start_date"] = medication.StartDate.isoformat()
+            else:
+                additional_fields["start_date"] = None
+                
+            if medication.EndDate:
+                additional_fields["end_date"] = medication.EndDate.isoformat()
+            else:
+                additional_fields["end_date"] = None
+            
+            return additional_fields
+            
+        except Exception as e:
+            print(f"Error getting medication additional fields: {e}")
+            return {}

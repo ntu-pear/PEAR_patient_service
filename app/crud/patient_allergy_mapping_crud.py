@@ -2,6 +2,7 @@ import logging
 import math
 from datetime import datetime
 
+from app.models.patient_highlight_model import PatientHighlight
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
@@ -216,8 +217,6 @@ def create_patient_allergy(
         # Log error but don't fail the allergy creation
         logger.error(f"Failed to create highlight for allergy {new_allergy.Patient_AllergyID}: {e}")
     
-    
-
     updated_data_dict = serialize_data(allergy_data.model_dump())
     log_crud_action(
         action=ActionType.CREATE,
@@ -369,6 +368,27 @@ def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: st
 
     # Commit the changes to the database
     db.commit()
+    
+    try:
+        highlights = db.query(PatientHighlight).filter(
+            PatientHighlight.SourceTable == "PATIENT_ALLERGY_MAPPING",
+            PatientHighlight.SourceRecordId == patient_allergy_id,
+            PatientHighlight.IsDeleted == 0
+        ).all()
+        
+        for highlight in highlights:
+            highlight.IsDeleted = 1
+            highlight.ModifiedDate = datetime.now()
+            highlight.ModifiedById = modified_by
+        
+        if highlights:
+            logger.info(f"Deleted {len(highlights)} highlights for allergy {patient_allergy_id}")
+        
+        db.commit()
+        
+    except Exception as e:
+        logger.error(f"Failed to delete highlights for allergy {patient_allergy_id}: {e}")
+    
     db.refresh(db_allergy)
 
     try:

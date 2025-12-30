@@ -1,17 +1,13 @@
-# app/services/highlight_helper.py
-# ULTRA-SIMPLIFIED - Direct helper functions for routers
-
+import logging
 from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from ..logger.logger_utils import logger
-from ..models.patient_highlight_model import PatientHighlight
-from ..models.patient_highlight_type_model import PatientHighlightType
-from ..strategies.highlights.strategy_factory import HighlightStrategyFactory
+from app.models.patient_highlight_model import PatientHighlight
+from app.strategies.highlights.strategy_factory import HighlightStrategyFactory
 
-# Initialize factory once
-_factory = HighlightStrategyFactory()
+logger = logging.getLogger(__name__)
+
 
 def create_highlight_if_needed(
     db: Session,
@@ -19,149 +15,123 @@ def create_highlight_if_needed(
     type_code: str,
     patient_id: int,
     source_table: str,
-    source_record_id: int = None,
-    created_by: str = "system"
-) -> bool:
+    source_record_id: int,
+    created_by: str
+):
     """
-    Ultra-simplified helper to create highlight for a single record.
-    Call this directly from your routers after creating a record.
+    Creates, updates, or deletes a highlight based on whether the source record qualifies.
+    
+    Logic:
+    1. Check if record should generate highlight (via strategy)
+    2. If YES and no highlight exists - Create new highlight
+    3. If YES and highlight exists - Update existing highlight (including HighlightText)
+    4. If NO and highlight exists - Delete highlight (set IsDeleted=1)
+    5. If NO and no highlight exists - Do nothing
     
     Args:
         db: Database session
-        source_record: The record to check (Vital, Allergy, Problem, etc.)
-        type_code: Type code ("VITAL", "ALLERGY", "PROBLEM", "MEDICATION")
+        source_record: The source record (with relationships loaded if needed)
+        type_code: Highlight type code (e.g., "VITAL", "MEDICATION", "PRESCRIPTION")
         patient_id: Patient ID
-        source_table: Source table name ("VITAL", "ALLERGY", etc.)
-        created_by: Who created this (default: "system")
-    
-    Returns:
-        bool: True if highlight was created, False otherwise
-    
-    Example:
-        # In vital_router.py
-        db_vital = create_vital_crud(...)
-        
-        create_highlight_if_needed(
-            db=db,
-            source_record=db_vital,
-            type_code="VITAL",
-            patient_id=db_vital.PatientId,
-            source_table="VITAL",
-            created_by=user_id
-        )
+        source_table: Source table name (e.g., "PATIENT_MEDICATION")
+        source_record_id: Source record ID
+        created_by: User who triggered the action
     """
     try:
-        # Get the highlight type from database
-        highlight_type = db.query(PatientHighlightType).filter(
-            PatientHighlightType.TypeCode == type_code,
-            PatientHighlightType.IsEnabled == True,
-            PatientHighlightType.IsDeleted == False
-        ).first()
+        # Get strategy for this type
+        factory = HighlightStrategyFactory()
+        strategy = factory.get_strategy(type_code)
         
-        if not highlight_type:
-            logger.info(f"Highlight type {type_code} is not enabled or doesn't exist")
-            return False
+        if not strategy:
+            logger.warning(f"No strategy found for type_code: {type_code}")
+            return
         
-        # Get the strategy
-        if not _factory.has_strategy(type_code):
-            logger.warning(f"No strategy found for type: {type_code}")
-            return False
+        # Check if record should generate a highlight
+        should_highlight = strategy.should_generate_highlight(source_record)
+        logger.info(f"Strategy evaluation for {source_table}:{source_record_id} - should_highlight: {should_highlight}")
         
-        strategy = _factory.get_strategy(type_code)
-        
-        # Check if should generate highlight
-        if not strategy.should_generate_highlight(source_record):
-            logger.debug(f"Record does not meet highlight criteria for {type_code}")
-            return False
-        
-        # Generate highlight text
-        highlight_text = strategy.generate_highlight_text(source_record)
-        
-        # Check if highlight already exists for this source record
-        existing = db.query(PatientHighlight).filter(
-            PatientHighlight.PatientId == patient_id,
-            PatientHighlight.HighlightTypeId == highlight_type.Id,
+        # Check if highlight already exists
+        existing_highlight = db.query(PatientHighlight).filter(
             PatientHighlight.SourceTable == source_table,
             PatientHighlight.SourceRecordId == source_record_id,
-            PatientHighlight.IsDeleted == "0"
+            PatientHighlight.IsDeleted == 0  # Only check active highlights
         ).first()
         
-        if existing:
-            # Update if text changed
-            if existing.HighlightText != highlight_text:
-                existing.HighlightText = highlight_text
-                existing.ModifiedDate = datetime.now()
-                existing.ModifiedById = created_by
-                db.commit()
-                logger.info(f"Updated highlight for {type_code}: {highlight_text}")
-                return True
-            else:
-                logger.debug(f"Highlight already exists with same text for {type_code}")
-                return False
+        logger.info(f"Existing highlight check: {'Found' if existing_highlight else 'Not found'}")
         
-        # Create new highlight
-        highlight = PatientHighlight(
-            PatientId=patient_id,
-            HighlightTypeId=highlight_type.Id,
-            HighlightText=highlight_text,
-            SourceTable=source_table,
-            SourceRecordId=source_record_id,
-            IsDeleted="0",
-            CreatedById=created_by,
-            ModifiedById=created_by
-        )
+        # Case 1: Should highlight AND no existing highlight - CREATE
+        if should_highlight and not existing_highlight:
+            highlight_text = strategy.generate_highlight_text(source_record)
+            logger.info(f"Generating NEW highlight text: '{highlight_text}'")
+            
+            # Get highlight type ID from database
+            from app.models.patient_highlight_type_model import PatientHighlightType
+            highlight_type = db.query(PatientHighlightType).filter(
+                PatientHighlightType.TypeCode == type_code,
+                PatientHighlightType.IsDeleted == False
+            ).first()
+            
+            if not highlight_type:
+                logger.error(f"Highlight type not found for code: {type_code}")
+                return
+            
+            # Create new highlight
+            new_highlight = PatientHighlight(
+                PatientId=patient_id,
+                HighlightTypeId=highlight_type.Id,
+                HighlightText=highlight_text,
+                SourceTable=source_table,
+                SourceRecordId=source_record_id,
+                CreatedDate=datetime.now(),
+                ModifiedDate=datetime.now(),
+                IsDeleted=0,
+                CreatedById=created_by,
+                ModifiedById=created_by
+            )
+            
+            db.add(new_highlight)
+            db.flush()
+            db.commit()
+            logger.info(f"Created highlight {new_highlight.Id} with text: '{highlight_text}'")
         
-        db.add(highlight)
-        db.commit()
+        # Case 2: Should highlight AND existing highlight - UPDATE
+        elif should_highlight and existing_highlight:
+            # Regenerate highlight text (might have changed)
+            old_text = existing_highlight.HighlightText
+            new_text = strategy.generate_highlight_text(source_record)
+            
+            logger.info(f"Updating highlight {existing_highlight.Id}:")
+            logger.info(f"  Old text: '{old_text}'")
+            logger.info(f"  New text: '{new_text}'")
+            
+            # Update the highlight
+            existing_highlight.HighlightText = new_text
+            existing_highlight.ModifiedDate = datetime.now()
+            existing_highlight.ModifiedById = created_by
+            
+            db.flush()
+            db.commit()
+            
+            # Verify the update
+            db.refresh(existing_highlight)
+            logger.info(f"Updated highlight {existing_highlight.Id} - Current text: '{existing_highlight.HighlightText}'")
         
-        logger.info(f"Created highlight for {type_code}: {highlight_text}")
-        return True
+        # Case 3: Should NOT highlight BUT existing highlight - DELETE
+        elif not should_highlight and existing_highlight:
+            logger.info(f"Deleting highlight {existing_highlight.Id} (no longer qualifies)")
+            
+            existing_highlight.IsDeleted = 1
+            existing_highlight.ModifiedDate = datetime.now()
+            existing_highlight.ModifiedById = created_by
+            
+            db.flush()
+            db.commit()
+            logger.info(f"🗑️ Deleted highlight {existing_highlight.Id} for {source_table}:{source_record_id}")
+        
+        # Case 4: Should NOT highlight AND no existing highlight - DO NOTHING
+        else:
+            logger.debug(f"No highlight action needed for {source_table}:{source_record_id}")
         
     except Exception as e:
-        logger.error(f"Error creating highlight for {type_code}: {e}")
+        logger.error(f"Error in create_highlight_if_needed: {e}", exc_info=True)
         db.rollback()
-        return False
-
-
-# def get_patient_highlights(
-#     db: Session,
-#     patient_id: int,
-#     type_code: str = None,
-#     active_only: bool = True
-# ):
-#     """
-#     Get highlights for a patient.
-    
-#     Args:
-#         db: Database session
-#         patient_id: Patient ID
-#         type_code: Optional filter by type ("VITAL", "ALLERGY", etc.)
-#         active_only: Only return non-deleted highlights (default: True)
-    
-#     Returns:
-#         List of PatientHighlight objects
-    
-#     Example:
-#         # Get all active highlights
-#         highlights = get_patient_highlights(db, patient_id=123)
-        
-#         # Get only vital highlights
-#         vital_highlights = get_patient_highlights(db, patient_id=123, type_code="VITAL")
-#     """
-#     query = db.query(PatientHighlight).filter(
-#         PatientHighlight.PatientId == patient_id
-#     )
-    
-#     if active_only:
-#         query = query.filter(PatientHighlight.IsDeleted == "0")
-    
-#     if type_code:
-#         # Get type ID
-#         highlight_type = db.query(PatientHighlightType).filter(
-#             PatientHighlightType.TypeCode == type_code
-#         ).first()
-        
-#         if highlight_type:
-#             query = query.filter(PatientHighlight.HighlightTypeId == highlight_type.Id)
-    
-#     return query.order_by(PatientHighlight.CreatedDate.desc()).all()

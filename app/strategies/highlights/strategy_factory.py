@@ -3,10 +3,9 @@ from typing import Dict
 from .allergy_strategy import AllergyStrategy
 from .base_strategy import HighlightStrategy
 from .medication_strategy import MedicationStrategy
+from .prescription_strategy import PrescriptionStrategy
 from .problem_strategy import ProblemStrategy
 from .vital_strategy import VitalStrategy
-
-# Add more strategies here as you create them
 
 
 class HighlightStrategyFactory:
@@ -22,8 +21,11 @@ class HighlightStrategyFactory:
         """Register all available strategies"""
         self.register_strategy(VitalStrategy())
         self.register_strategy(AllergyStrategy())
-        self.register_strategy(ProblemStrategy())
         self.register_strategy(MedicationStrategy())
+        self.register_strategy(PrescriptionStrategy())
+        
+        # Uncomment when ProblemStrategy is implemented
+        # self.register_strategy(ProblemStrategy())
         
         # Add more strategies here:
         # self.register_strategy(LabStrategy())

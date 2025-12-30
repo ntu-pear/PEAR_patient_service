@@ -1,6 +1,6 @@
-from typing import Optional
+from typing import Any, Dict, Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.config import Config
 from app.models.patient_vital_model import PatientVital
@@ -136,3 +136,39 @@ class VitalStrategy(HighlightStrategy):
         except Exception as e:
             print(f"Error getting vital source value: {e}")
             return None
+        
+    def get_additional_fields(self, db: Session, source_record_id: int) -> Dict[str, Any]:
+        """
+        Get vital-specific additional fields.
+        
+        Returns:
+        {
+            "systolic_bp": 180,
+            "diastolic_bp": 110,
+            "temperature": 39.5,
+            "heart_rate": 120,
+            "spo2": 92,
+            "blood_sugar_level": 15.5
+        }
+        """
+        try:
+            vital = db.query(PatientVital).filter(
+                PatientVital.Id == source_record_id
+            ).first()
+            
+            if not vital:
+                return {}
+            
+            # Return all vital measurements
+            return {
+                "systolic_bp": vital.SystolicBP,
+                "diastolic_bp": vital.DiastolicBP,
+                "temperature": vital.Temperature,
+                "heart_rate": vital.HeartRate,
+                "spo2": vital.SpO2,
+                "blood_sugar_level": vital.BloodSugarLevel
+            }
+            
+        except Exception as e:
+            print(f"Error getting vital additional fields: {e}")
+            return {}

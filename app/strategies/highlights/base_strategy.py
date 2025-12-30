@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any, Optional, Dict
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 '''
 This file defines the base strategy class for generating patient highlights. It acts as a interface for all specific highlight strategies
@@ -17,7 +17,7 @@ class HighlightStrategy(ABC):
     2. should_generate_highlight() - Core logic (is this worth highlighting?)
     3. generate_highlight_text() - Display text
     4. get_source_value() - Raw data retrieval for details view
-    
+    5. get_additional_fields() - Get type-specific additional fields
     Each strategy corresponds to a specific type of highlight, e.g., Vital, Allergy, Medication, etc.
     """
     
@@ -84,5 +84,26 @@ class HighlightStrategy(ABC):
         This is used when displaying details about the highlight 
         E.g. PrescriptionRemarks for Medication.
         E.g. For the Highlight Type Allergy, this function will retrieve the Value (e.g. Panadol) from the PATIENT_ALLERGY table.
+        """
+        pass
+    
+    @abstractmethod
+    def get_additional_fields(self, db: Session, source_record_id: int) -> Dict[str, Any]:
+        """
+        Get type-specific additional fields for the API response.
+        
+        Each strategy can return different fields based on its type.
+        
+        Examples:
+        - AllergyStrategy returns: {"allergy_type": "Penicillin", "reaction_type": "Severe"}
+        - MedicationStrategy returns: {"prescription_name": "Warfarin", "prescription_remarks": "Monitor INR"}
+        - VitalStrategy returns: {"systolic_bp": 180, "diastolic_bp": 110, "temperature": 39.5}
+        
+        Args:
+            db: Database session
+            source_record_id: ID of the source record
+            
+        Returns:
+            Dict[str, Any]: Dictionary of additional fields specific to this type
         """
         pass

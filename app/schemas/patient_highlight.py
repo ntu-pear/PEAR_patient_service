@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -76,6 +76,17 @@ class PatientHighlight(PatientHighlightBase):
         None,
         json_schema_extra={"example": "Patient feeling dizzy"}
     )
+    
+    additional_fields: Dict[str, Any] = Field(
+        default_factory=dict,
+        json_schema_extra={
+            "example": {
+                "allergy_type": "Penicillin",
+                "allergy_reaction_type": "Severe"
+            }
+        }
+    )
+    
     
     # Convert int to string for IsDeleted - TODO: standardize this across the app - change all to int
     @field_validator('IsDeleted', mode='before')

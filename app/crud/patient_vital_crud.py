@@ -2,6 +2,7 @@ import logging
 import math
 from datetime import datetime
 
+from app.models.patient_highlight_model import PatientHighlight
 from fastapi import HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -248,6 +249,27 @@ def delete_vital(
     db_vital.ModifiedById = modified_by
 
     db.commit()
+    
+    try:
+        highlights = db.query(PatientHighlight).filter(
+            PatientHighlight.SourceTable == "PATIENT_VITAL",
+            PatientHighlight.SourceRecordId == vital_id,
+            PatientHighlight.IsDeleted == 0
+        ).all()
+        
+        for highlight in highlights:
+            highlight.IsDeleted = 1
+            highlight.ModifiedDate = datetime.now()
+            highlight.ModifiedById = modified_by
+        
+        if highlights:
+            logger.info(f"Deleted {len(highlights)} highlights for vital {vital_id}")
+        
+        db.commit()
+        
+    except Exception as e:
+        logger.error(f"Failed to delete highlights for vital {vital_id}: {e}")
+    
     db.refresh(db_vital)
 
     log_crud_action(

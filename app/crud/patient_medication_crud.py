@@ -1,20 +1,23 @@
+import logging
+import math
 from datetime import datetime
-from app.services.highlight_helper import create_highlight_if_needed
-from app.services.highlight_helper import create_highlight_if_needed
-from sqlalchemy.orm import Session, joinedload
+from typing import Any, Dict, Optional
+
+from fastapi import HTTPException
 from sqlalchemy import func
+from sqlalchemy.orm import Session, joinedload
+
+from app.models.patient_highlight_model import PatientHighlight
+from app.services.highlight_helper import create_highlight_if_needed
+
+from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_medication_model import PatientMedication
 from ..models.patient_prescription_list_model import PatientPrescriptionList
 from ..schemas.patient_medication import (
     PatientMedicationCreate,
-    PatientMedicationUpdate
+    PatientMedicationUpdate,
 )
-from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
-from ..services.outbox_service import get_outbox_service, generate_correlation_id
-import math
-import logging
-from fastapi import HTTPException
-from typing import Dict, Any, Optional
+from ..services.outbox_service import generate_correlation_id, get_outbox_service
 
 logger = logging.getLogger(__name__)
 
@@ -453,8 +456,9 @@ def update_medication(
             original_data=original_data_dict,
             updated_data=updated_data_dict,
         )
-        
+
         # Trigger patient highlights update after successsful update operation + logging
+        medication_with_prescription = _get_medication_with_prescription_name(db, medication_id)
         if medication_with_prescription:
             try:
                 create_highlight_if_needed(
@@ -548,6 +552,24 @@ def delete_medication(
             correlation_id=correlation_id,
             created_by=modified_by
         )
+        
+        try:
+            highlights = db.query(PatientHighlight).filter(
+                PatientHighlight.SourceTable == "PATIENT_MEDICATION",
+                PatientHighlight.SourceRecordId == medication_id,
+                PatientHighlight.IsDeleted == 0
+            ).all()
+            
+            for highlight in highlights:
+                highlight.IsDeleted = 1
+                highlight.ModifiedDate = datetime.now()
+                highlight.ModifiedById = modified_by
+            
+            if highlights:
+                logger.info(f"Deleted {len(highlights)} highlights for medication {medication_id}")
+            
+        except Exception as e:
+            logger.error(f"Failed to delete highlights for medication {medication_id}: {e}")
 
         # Log the action
         log_crud_action(
