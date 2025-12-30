@@ -24,17 +24,19 @@ class ConditionalFormatter(logging.Formatter):
     def format(self, record):
         # Check if this is a detailed log record with user info
         if hasattr(record, 'user') and hasattr(record, 'table'):
-            # Use detailed format for CRUD operations
             formatter = logging.Formatter(self.detailed_format, datefmt=self.datefmt)
         else:
-            # Use simple format for general logging
             formatter = logging.Formatter(self.simple_format, datefmt=self.datefmt)
 
         return formatter.format(record)
 
 
 # Detailed format for CRUD operations (when user context is available)
-detailed_format = '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "user": "%(user)s", "user_full_name": "%(user_full_name)s", "table": "%(table)s", "action": "%(action)s", "log_text": "%(log_text)s", "message": %(message)s}'
+detailed_format = (
+    '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", '
+    '"user": "%(user)s", "user_full_name": "%(user_full_name)s", "table": "%(table)s", '
+    '"action": "%(action)s", "log_text": "%(log_text)s", "message": %(message_json)s}'
+)
 
 # Simple format for general logging (when user context is not available)
 simple_format = '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": "%(message)s"}'
