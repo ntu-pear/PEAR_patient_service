@@ -4,26 +4,30 @@ import json
 from enum import Enum
 from typing import Optional
 
+
 class ActionType(Enum):
     CREATE = "create"
     UPDATE = "update"
     DELETE = "delete"
 
+
 EXCLUDED_KEYS = {"CreatedById", "ModifiedById", "ModifiedDate", "CreatedDate", "IsDeleted", "isDeleted"}
+
 
 def filter_data(data: dict) -> dict:
     """Removes unwanted keys from the given dictionary."""
     return {k: v for k, v in data.items() if k not in EXCLUDED_KEYS} if data else {}
 
+
 def log_crud_action(
-    action: ActionType,
-    user: str,
-    user_full_name: str,
-    message: str,
-    table: str,
-    entity_id: Optional[int] = None,
-    original_data: Optional[dict] = None,
-    updated_data: Optional[dict] = None,
+        action: ActionType,
+        user: str,
+        user_full_name: str,
+        message: str,
+        table: str,
+        entity_id: Optional[int] = None,
+        original_data: Optional[dict] = None,
+        updated_data: Optional[dict] = None,
 ):
     """
     Log CRUD actions in format compatible with Elasticsearch log service
@@ -32,7 +36,7 @@ def log_crud_action(
         original_data = None
     elif action == ActionType.DELETE:
         updated_data = None
-        
+
     # Create the message object that the log service expects
     log_message = {
         "entity_id": entity_id,
@@ -41,12 +45,18 @@ def log_crud_action(
     }
 
     # Create extra fields for the conditional formatter
-    extra = {"table": table, "user": user, "action": action.value, "user_full_name": user_full_name,
-             "log_text": message}
-    
+    extra = {
+        "table": table,
+        "user": user,
+        "action": action.value,  # This maps to "method" in log service
+        "user_full_name": user_full_name,
+        "log_text": message,
+    }
+
     # IMPORTANT: Pass the message object, not a JSON string
     # The conditional formatter will handle the JSON serialization
     logger.info(log_message, extra=extra)
+
 
 def serialize_data(data):
     """Serialize datetime and other objects for JSON compatibility"""
