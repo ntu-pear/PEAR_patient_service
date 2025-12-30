@@ -22,6 +22,10 @@ class ConditionalFormatter(logging.Formatter):
         self.simple_format = simple_format
 
     def format(self, record):
+        # Serialize the message as proper JSON if it's a dict
+        if hasattr(record, 'msg') and isinstance(record.msg, dict):
+            record.msg = json.dumps(record.msg)
+
         # Check if this is a detailed log record with user info
         if hasattr(record, 'user') and hasattr(record, 'table'):
             # Use detailed format for CRUD operations
