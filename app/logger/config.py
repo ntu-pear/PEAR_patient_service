@@ -22,23 +22,27 @@ class ConditionalFormatter(logging.Formatter):
         self.simple_format = simple_format
 
     def format(self, record):
-        # Serialize the message as proper JSON if it's a dict
-        if hasattr(record, 'msg') and isinstance(record.msg, dict):
-            record.msg = json.dumps(record.msg)
+        # Safely encode message_json without changing record.msg
+        if isinstance(record.msg, dict):
+            record.message_json = json.dumps(record.msg, ensure_ascii=False)
+        else:
+            record.message_json = json.dumps({"message": record.getMessage()})
 
-        # Check if this is a detailed log record with user info
+        # Choose detailed or simple format
         if hasattr(record, 'user') and hasattr(record, 'table'):
-            # Use detailed format for CRUD operations
             formatter = logging.Formatter(self.detailed_format, datefmt=self.datefmt)
         else:
-            # Use simple format for general logging
             formatter = logging.Formatter(self.simple_format, datefmt=self.datefmt)
 
         return formatter.format(record)
 
 
 # Detailed format for CRUD operations (when user context is available)
-detailed_format = '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "user": "%(user)s", "user_full_name": "%(user_full_name)s", "table": "%(table)s", "action": "%(action)s", "log_text": "%(log_text)s", "message": %(message)s}'
+detailed_format = (
+    '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", '
+    '"user": "%(user)s", "user_full_name": "%(user_full_name)s", "table": "%(table)s", '
+    '"action": "%(action)s", "log_text": "%(log_text)s", "message": %(message_json)s}'
+)
 
 # Simple format for general logging (when user context is not available)
 simple_format = '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": "%(message)s"}'
