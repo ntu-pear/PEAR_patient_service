@@ -41,17 +41,12 @@ def log_crud_action(
     }
 
     # Create extra fields for the conditional formatter
-    extra = {
-        "table": table,
-        "user": user,
-        "action": action.value,  # This maps to "method" in log service
-        "user_full_name": user_full_name,
-        "log_text": message,
-    }
+    extra = {"table": table, "user": user, "action": action.value, "user_full_name": user_full_name,
+             "log_text": message, "message_json": json.dumps(serialize_data(log_message))}
     
     # IMPORTANT: Pass the message object, not a JSON string
     # The conditional formatter will handle the JSON serialization
-    logger.info(log_message, extra=extra)
+    logger.info("", extra=extra)
 
 def serialize_data(data):
     """Serialize datetime and other objects for JSON compatibility"""
