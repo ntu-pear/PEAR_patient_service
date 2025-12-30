@@ -22,13 +22,7 @@ class ConditionalFormatter(logging.Formatter):
         self.simple_format = simple_format
 
     def format(self, record):
-        # Safely encode message_json without changing record.msg
-        if isinstance(record.msg, dict):
-            record.message_json = json.dumps(record.msg, ensure_ascii=False)
-        else:
-            record.message_json = json.dumps({"message": record.getMessage()})
-
-        # Choose detailed or simple format
+        # Check if this is a detailed log record with user info
         if hasattr(record, 'user') and hasattr(record, 'table'):
             formatter = logging.Formatter(self.detailed_format, datefmt=self.datefmt)
         else:
