@@ -1,8 +1,11 @@
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from datetime import datetime
-from typing import Optional, List
-from .patient import Patient
+from typing import List, Optional
+
 import pytz
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+from .patient import Patient
+
 
 class PatientGuardianBase(BaseModel):
     active: Optional[str] = 'Y'
@@ -12,7 +15,7 @@ class PatientGuardianBase(BaseModel):
     gender: str
     contactNo: str
     nric: str
-    email: EmailStr
+    email: Optional[EmailStr] = None
     dateOfBirth: datetime
     address: str
     tempAddress: Optional[str] = None

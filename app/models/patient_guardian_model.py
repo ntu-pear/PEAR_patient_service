@@ -1,7 +1,10 @@
-from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.orm import relationship
 from datetime import datetime
+
+from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy.orm import relationship
+
 from app.database import Base
+
 
 class PatientGuardian(Base):
     __tablename__ = "PATIENT_GUARDIAN"
@@ -14,7 +17,7 @@ class PatientGuardian(Base):
     gender = Column(String(1), nullable=False)
     contactNo = Column(String(32), nullable=False)
     nric = Column(String(9), nullable=False)
-    email = Column(String(255))
+    email = Column(String(255), nullable=True)
     dateOfBirth = Column(DateTime, nullable=False)
     address = Column(String(255), nullable=False)
     tempAddress = Column(String(255))
