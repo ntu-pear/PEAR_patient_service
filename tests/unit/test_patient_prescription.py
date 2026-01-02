@@ -1,18 +1,19 @@
-import pytest
-from unittest import mock
 from datetime import datetime
+from unittest import mock
+
+import pytest
+
 from app.crud.patient_prescription_crud import (
-    get_prescriptions,
     create_prescription,
-    update_prescription,
     delete_prescription,
+    get_prescriptions,
+    update_prescription,
 )
 from app.schemas.patient_prescription import (
+    PatientPrescription,
     PatientPrescriptionCreate,
     PatientPrescriptionUpdate,
-    PatientPrescription,
 )
-
 from tests.utils.mock_db import get_db_session_mock
 
 
@@ -134,6 +135,9 @@ def test_create_prescription(
     mock_patient_guardian_relationship_mapping,
     db_session_mock,
 ):
+    # If this returns None, it means no existing prescription found
+    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+    
     data = {
         "IsDeleted": "1",
         "PatientId": 1,

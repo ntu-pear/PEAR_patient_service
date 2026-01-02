@@ -35,6 +35,16 @@ def get_patient(db: Session, patient_id: int, mask: bool = True):
         db_patient.nric = db_patient.mask_nric
     return db_patient
 
+def get_patient_include_deleted(db: Session, patient_id: int, include_deleted: str, mask: bool = True):
+    db_patient = (
+        db.query(Patient)
+        .filter(Patient.id == patient_id, Patient.isDeleted == include_deleted)
+        .first()
+    )
+    if db_patient and mask:
+        db_patient.nric = db_patient.mask_nric
+    return db_patient
+
 
 def get_patients(db: Session, mask: bool = True, pageNo: int = 0, pageSize: int = 10,name: Optional[str] = None,isActive: Optional[str] = None):
     offset = pageNo * pageSize

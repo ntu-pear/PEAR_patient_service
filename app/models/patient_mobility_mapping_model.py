@@ -1,7 +1,10 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
-from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Date
+from sqlalchemy.orm import relationship
+
 from app.database import Base
+
 
 class PatientMobility(Base):
     __tablename__ = "PATIENT_MOBILITY_MAPPING"
@@ -16,6 +19,7 @@ class PatientMobility(Base):
     ModifiedDateTime = Column(DateTime, nullable=False, default=datetime.utcnow)
     CreatedById = Column(String, nullable=False)  # Changed to String
     ModifiedById = Column(String, nullable=False)  # Changed to String
+    RecoveryDate = Column(Date, nullable=True, default=None) # Default is null for recovery date
 
     mobility_list = relationship(
         "PatientMobilityList",
