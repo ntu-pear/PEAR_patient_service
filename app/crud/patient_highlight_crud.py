@@ -146,8 +146,10 @@ def delete_highlight(db: Session, highlight_id: int, modified_by: str,  user_ful
 
 def cleanup_old_highlights(db: Session):
     """
-    Delete old highlights based on type-specific retention periods.
+    HARD DELETE old highlights based on type-specific retention periods.
     Each highlight type can have different retention (business days).
+    
+    HARD DELETION: Permanently removes records from database (not soft delete).
     
     RETENTION LOGIC:
     - If retention is 3 business days:
@@ -160,13 +162,13 @@ def cleanup_old_highlights(db: Session):
     Example:
       Today: Thursday 12:00 AM
       Retention: 3 business days
-      Cutoff: Monday 23:59:59
+      Cutoff: Monday 23:59:59 (Thursday - 3 business days = Monday 23:59:59)
       
       Highlight A (created Monday 9:00 AM):
-        Monday 9:00 AM < Monday 23:59:59? YES → DELETED ✅
+        Monday 9:00 AM < Monday 23:59:59? YES -> DELETED
       
       Highlight B (created Tuesday 9:00 AM):
-        Tuesday 9:00 AM < Monday 23:59:59? NO → KEPT ✅
+        Tuesday 9:00 AM < Monday 23:59:59? NO -> KEPT
     
     Returns:
         dict: Summary of cleanup operation
@@ -188,8 +190,8 @@ def cleanup_old_highlights(db: Session):
             # Calculate cutoff date (N business days ago)
             cutoff_date = calculate_business_days_ago(retention_days)
             
-            # CRITICAL FIX: Set to END of that day (23:59:59.999999)
-            # This ensures any highlight created DURING that day is included
+            # Set to END of that day (23:59:59.999999)
+            # This ensures any highlight created during that day is included
             cutoff_date = cutoff_date.replace(
                 hour=23,
                 minute=59,
@@ -198,21 +200,20 @@ def cleanup_old_highlights(db: Session):
             )
             
             # Find old highlights of this type
+            # Note: We check both soft-deleted (IsDeleted='1') and active (IsDeleted='0')
+            # because we want to permanently delete ALL old highlights
             old_highlights = db.query(PatientHighlight).filter(
                 PatientHighlight.HighlightTypeId == highlight_type.Id,
-                PatientHighlight.CreatedDate < cutoff_date,
-                PatientHighlight.IsDeleted == "0"
+                PatientHighlight.CreatedDate < cutoff_date
             ).all()
             
             deleted_count = len(old_highlights)
             deleted_ids = []
             
-            # Soft delete each highlight
+            # HARD DELETE each highlight (permanently remove from database)
             for highlight in old_highlights:
-                highlight.IsDeleted = "1"
-                highlight.ModifiedDate = datetime.now()
-                highlight.ModifiedById = "system_cronjob"
                 deleted_ids.append(highlight.Id)
+                db.delete(highlight)  # ← HARD DELETE instead of setting IsDeleted=1
             
             if deleted_count > 0:
                 details.append({
@@ -233,7 +234,7 @@ def cleanup_old_highlights(db: Session):
             action=ActionType.DELETE,
             user="system_cronjob",
             user_full_name="System CronJob",
-            message=f"Cleaned up {total_deleted} old highlights across {len(details)} types",
+            message=f"HARD DELETED {total_deleted} old highlights across {len(details)} types",
             table="PatientHighlight",
             entity_id=None,
             original_data={"details": details},
@@ -242,6 +243,7 @@ def cleanup_old_highlights(db: Session):
         
         return {
             "status": "success",
+            "deletion_type": "HARD",
             "total_deleted": total_deleted,
             "types_processed": len(highlight_types),
             "details": details
