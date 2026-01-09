@@ -13,20 +13,20 @@ logger = logging.getLogger(__name__)
 class VitalStrategy(HighlightStrategy):
     """Strategy for generating highlights from abnormal vitals"""
     
-    # Default clinical baselines for patients with no vital history
-    DEFAULT_TEMPERATURE = 37.0       # Normal body temperature (°C)
+    # FOR PATIENTS WITH <= 2 VITAL HISTORY RECORDS: Default clinical baselines for patients with no vital history
+    DEFAULT_TEMPERATURE = 36.5       # Normal body temperature (°C)
     DEFAULT_SYSTOLIC_BP = 120        # Normal systolic BP (mmHg)
     DEFAULT_DIASTOLIC_BP = 80        # Normal diastolic BP (mmHg)
     DEFAULT_HEART_RATE = 75          # Normal resting heart rate (bpm)
-    DEFAULT_BLOOD_SUGAR = 7.0        # Normal blood sugar (mg/dL)
+    DEFAULT_BLOOD_SUGAR = 7.0        # Normal blood sugar (mmol/L)
     DEFAULT_SPO2 = 97                # Normal oxygen saturation (%)
     
-    # FOR PATIENTS WITH VITAL HISTORY: Define tolerances for personalized thresholds based on patient vital history
-    TEMPERATURE_TOLERANCE = 1.0      # +- 1.0°C from patient's average
+    # FOR PATIENTS WITH > 2 VITAL HISTORY RECORDS: Define tolerances for personalized thresholds based on patient vital history
+    TEMPERATURE_TOLERANCE = 1.0      # +- 1.0 Degree Celcius from patient's average
     SYSTOLIC_BP_TOLERANCE = 20       # +- 20 mmHg from patient's average
     DIASTOLIC_BP_TOLERANCE = 15      # +- 15 mmHg from patient's average
     HEART_RATE_TOLERANCE = 20        # +- 20 bpm from patient's average
-    BLOOD_SUGAR_TOLERANCE = 3.0      # +- 3.0 mg/dL from patient's average
+    BLOOD_SUGAR_TOLERANCE = 3.0      # +- 3.0 mmol/L from patient's average
     SPO2_TOLERANCE = 3               # -3% from patient's average
     
     # Minimum number of historical records needed to calculate personalized thresholds
@@ -36,8 +36,7 @@ class VitalStrategy(HighlightStrategy):
     
     def _get_default_baselines(self) -> Dict[str, float]:
         """
-        Get default clinical baselines for new patients.
-        These are normal adult values used when patient has no history.
+        Get default clinical baselines for new vital records for patients with no prior vital records.
         """
         return {
             'temperature': self.DEFAULT_TEMPERATURE,
@@ -52,21 +51,19 @@ class VitalStrategy(HighlightStrategy):
         """
         Calculate average vital signs for a patient based on their historical records.
         
-        CRITICAL: Excludes the current record from calculation!
-        
         Args:
             db: Database session
             patient_id: Patient ID
-            current_vital_id: Current vital ID to EXCLUDE from calculation
+            current_vital_id: Current vital ID to exclude from calculation
             
         Returns:
             Dict with average values for each vital sign, or None if not enough data
         """
         try:
-            # Get all past vitals for this patient (EXCLUDING current one and deleted records)
+            # Get all past vitals for this patient (Excluding current one and deleted records)
             past_vitals = db.query(PatientVital).filter(
                 PatientVital.PatientId == patient_id,
-                PatientVital.Id != current_vital_id,  # ← CRITICAL: Exclude current record
+                PatientVital.Id != current_vital_id,  # Exclude current record
                 PatientVital.IsDeleted == '0'
             ).all()
             
@@ -77,7 +74,7 @@ class VitalStrategy(HighlightStrategy):
                 logger.info(f"Patient {patient_id} has only {len(past_vitals)} past vitals - will use default clinical baselines (need {self.MIN_RECORDS_FOR_AVERAGE})")
                 return None
             
-            # Calculate averages (only for non-null values)
+            # Calculate averages
             averages = {}
             
             # Temperature
@@ -386,13 +383,11 @@ class VitalStrategy(HighlightStrategy):
                 "blood_sugar_level": vital.BloodSugarLevel
             }
             
-            # Add patient averages or default baselines
+            # Add patient averages or default baselines - here we define what baseline we used for this patient
             if averages:
-                result["patient_averages"] = averages
-                result["baseline_source"] = "patient_history"
+                result["patient_averages"] = averages # For patients with prior vital history, return their averages
             else:
-                result["default_baselines"] = self._get_default_baselines()
-                result["baseline_source"] = "clinical_defaults"
+                result["default_baselines"] = self._get_default_baselines() # For patients with no prior vital history, return default baselines
             
             return result
             
