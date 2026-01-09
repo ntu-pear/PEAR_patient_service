@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.patient_allergy_mapping_model import PatientAllergyMapping
@@ -7,13 +7,13 @@ from .base_strategy import HighlightStrategy
 
 
 class AllergyStrategy(HighlightStrategy):
-    """Strategy for generating highlights from active allergies"""
+    """Strategy for generating highlights from allergies"""
     
     def get_type_code(self) -> str:
         """Return type code that matches database"""
         return "ALLERGY"
     
-    def should_generate_highlight(self, allergy_record) -> bool:
+    def should_generate_highlight(self, allergy_record, db: Optional[Session] = None) -> bool:
         """
         Check if allergy should be highlighted.
 

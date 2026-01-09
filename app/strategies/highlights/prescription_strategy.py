@@ -13,7 +13,7 @@ class PrescriptionStrategy(HighlightStrategy):
     def get_type_code(self) -> str:
         return "PRESCRIPTION"
     
-    def should_generate_highlight(self, prescription_record) -> bool:
+    def should_generate_highlight(self, prescription_record, db: Optional[Session] = None) -> bool:
         """
         Check if prescription should be highlighted.
 

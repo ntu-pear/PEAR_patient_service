@@ -36,7 +36,7 @@ class HighlightStrategy(ABC):
         pass
     
     @abstractmethod
-    def should_generate_highlight(self, source_record: Any) -> bool:
+    def should_generate_highlight(self, source_record: Any, db: Optional[Session] = None) -> bool:
         """
         Determine if a source record should generate a highlight.
         

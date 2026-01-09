@@ -46,20 +46,20 @@ def create_highlight_if_needed(
             logger.warning(f"No strategy found for type_code: {type_code}")
             return
         
-        # Check if record should generate a highlight
-        should_highlight = strategy.should_generate_highlight(source_record)
+        # Pass db session to strategy (Vital strategies need it for historical data)
+        should_highlight = strategy.should_generate_highlight(source_record, db=db)
         logger.info(f"Strategy evaluation for {source_table}:{source_record_id} - should_highlight: {should_highlight}")
         
         # Check if highlight already exists
         existing_highlight = db.query(PatientHighlight).filter(
             PatientHighlight.SourceTable == source_table,
             PatientHighlight.SourceRecordId == source_record_id,
-            PatientHighlight.IsDeleted == 0  # Only check active highlights
+            PatientHighlight.IsDeleted == 0
         ).first()
         
         logger.info(f"Existing highlight check: {'Found' if existing_highlight else 'Not found'}")
         
-        # Case 1: Should highlight AND no existing highlight - CREATE
+        # Case 1: Should highlight AND no existing highlight -> CREATE
         if should_highlight and not existing_highlight:
             highlight_text = strategy.generate_highlight_text(source_record)
             logger.info(f"Generating NEW highlight text: '{highlight_text}'")
@@ -94,15 +94,14 @@ def create_highlight_if_needed(
             db.commit()
             logger.info(f"Created highlight {new_highlight.Id} with text: '{highlight_text}'")
         
-        # Case 2: Should highlight AND existing highlight - UPDATE
+        # Case 2: Should highlight and existing highlight -> UPDATE
         elif should_highlight and existing_highlight:
-            # Regenerate highlight text (might have changed)
             old_text = existing_highlight.HighlightText
             new_text = strategy.generate_highlight_text(source_record)
             
             logger.info(f"Updating highlight {existing_highlight.Id}:")
-            logger.info(f"  Old text: '{old_text}'")
-            logger.info(f"  New text: '{new_text}'")
+            logger.info(f"Old text: '{old_text}'")
+            logger.info(f"New text: '{new_text}'")
             
             # Update the highlight
             existing_highlight.HighlightText = new_text
@@ -116,7 +115,7 @@ def create_highlight_if_needed(
             db.refresh(existing_highlight)
             logger.info(f"Updated highlight {existing_highlight.Id} - Current text: '{existing_highlight.HighlightText}'")
         
-        # Case 3: Should NOT highlight BUT existing highlight - DELETE
+        # Case 3: Should NOT highlight but existing highlight -> DELETE
         elif not should_highlight and existing_highlight:
             logger.info(f"Deleting highlight {existing_highlight.Id} (no longer qualifies)")
             
@@ -126,9 +125,9 @@ def create_highlight_if_needed(
             
             db.flush()
             db.commit()
-            logger.info(f"🗑️ Deleted highlight {existing_highlight.Id} for {source_table}:{source_record_id}")
+            logger.info(f"Deleted highlight {existing_highlight.Id} for {source_table}:{source_record_id}")
         
-        # Case 4: Should NOT highlight AND no existing highlight - DO NOTHING
+        # Case 4: Should NOT highlight and no existing highlight -> Do nothing
         else:
             logger.debug(f"No highlight action needed for {source_table}:{source_record_id}")
         
