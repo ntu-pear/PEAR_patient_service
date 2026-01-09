@@ -19,6 +19,8 @@ from .patient_list_livewith_model import PatientLiveWithList
 from .patient_list_occupation_model import PatientOccupationList
 from .patient_list_pet_model import PatientPetList
 from .patient_list_religion_model import PatientReligionList
+from .patient_medical_diagnosis_list_model import PatientMedicalDiagnosisList
+from .patient_medical_history_model import PatientMedicalHistory
 from .patient_medication_model import PatientMedication
 from .patient_mobility_list_model import PatientMobilityList
 from .patient_mobility_mapping_model import PatientMobility
