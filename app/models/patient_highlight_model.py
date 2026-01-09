@@ -32,10 +32,6 @@ class PatientHighlight(Base):
     - A patient (PatientId)
     - A highlight type (HighlightTypeId)
     - The source record that triggered it (SourceTable + SourceRecordId)
-    
-    Examples:
-    - Vital highlight: Links to PATIENT_VITAL record with abnormal BP
-    - Allergy highlight: Links to PATIENT_ALLERGY_MAPPING with active allergy
     """
     __tablename__ = "PATIENT_HIGHLIGHT"
 

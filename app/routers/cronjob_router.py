@@ -13,7 +13,7 @@ def trigger_highlight_cleanup(db: Session = Depends(get_db)):
     Trigger highlight cleanup job.
     
     Called by Kubernetes CronJob daily at midnight.
-    Deletes highlights older than their type's RetentionBusinessDays.
+    Deletes highlights older than 3 days
     
     Returns:
         dict: Cleanup results including number deleted

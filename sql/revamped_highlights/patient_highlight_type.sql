@@ -10,7 +10,6 @@ CREATE TABLE PATIENT_HIGHLIGHT_TYPE (
     
     -- Configuration
     IsEnabled INT NOT NULL DEFAULT 1,                 -- Admin can enable/disable types
-    RetentionBusinessDays INT NOT NULL DEFAULT 3,     -- How many business days to keep highlights
     
     -- Audit Fields
     CreatedDate DATETIME NOT NULL DEFAULT GETDATE(),

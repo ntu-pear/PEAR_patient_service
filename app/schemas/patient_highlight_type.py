@@ -27,8 +27,6 @@ class HighlightTypeBase(BaseModel):
     TypeCode: str = Field(max_length=50, json_schema_extra={"example": "VITAL"})
     Description: Optional[str] = Field(None, max_length=500, json_schema_extra={"example": "Alerts for abnormal vital signs"})
     IsEnabled: bool = Field(default=True, json_schema_extra={"example": True})
-    RetentionBusinessDays: int = Field(default=3, ge=1, le=30, json_schema_extra={"example": 3})
-
 
 class HighlightTypeCreate(HighlightTypeBase):
     """Schema for creating a new highlight type"""
@@ -41,8 +39,6 @@ class HighlightTypeUpdate(BaseModel):
     TypeCode: Optional[str] = Field(None, max_length=50, json_schema_extra={"example": "VITAL"})
     Description: Optional[str] = Field(None, max_length=500, json_schema_extra={"example": "Updated description"})
     IsEnabled: Optional[bool] = Field(None, json_schema_extra={"example": False})
-    RetentionBusinessDays: Optional[int] = Field(None, ge=1, le=30, json_schema_extra={"example": 5})
-
 
 class HighlightType(HighlightTypeBase):
     """Full schema for Patient Highlight Type responses (NO PRIORITY)"""

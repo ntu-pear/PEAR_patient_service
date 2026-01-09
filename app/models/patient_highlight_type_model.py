@@ -44,7 +44,6 @@ class PatientHighlightType(Base):
     
     # Configuration
     IsEnabled = Column(Boolean, nullable=False, default=True, index=True)  # Admin can enable/disable
-    RetentionBusinessDays = Column(Integer, nullable=False, default=3)     # How long to keep highlights
     
     # Audit Fields
     CreatedDate = Column(DateTime, nullable=False, default=datetime.now)

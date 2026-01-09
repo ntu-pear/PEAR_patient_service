@@ -185,7 +185,7 @@ def cleanup_old_highlights(db: Session):
         
         for highlight_type in highlight_types:
             # Get retention period for this type
-            retention_days = highlight_type.RetentionBusinessDays or 3
+            retention_days = 3
             
             # Calculate cutoff date (N business days ago)
             cutoff_date = calculate_business_days_ago(retention_days)
@@ -213,7 +213,7 @@ def cleanup_old_highlights(db: Session):
             # HARD DELETE each highlight (permanently remove from database)
             for highlight in old_highlights:
                 deleted_ids.append(highlight.Id)
-                db.delete(highlight)  # ← HARD DELETE instead of setting IsDeleted=1
+                db.delete(highlight)  # Hard Delete instead of setting IsDeleted=1
             
             if deleted_count > 0:
                 details.append({
@@ -222,7 +222,7 @@ def cleanup_old_highlights(db: Session):
                     "retention_days": retention_days,
                     "cutoff_date": cutoff_date.isoformat(),
                     "deleted_count": deleted_count,
-                    "deleted_ids": deleted_ids[:10]  # First 10 IDs only
+                    "deleted_ids": deleted_ids
                 })
             
             total_deleted += deleted_count
@@ -243,7 +243,7 @@ def cleanup_old_highlights(db: Session):
         
         return {
             "status": "success",
-            "deletion_type": "HARD",
+            "deletion_type": "Hard",
             "total_deleted": total_deleted,
             "types_processed": len(highlight_types),
             "details": details
