@@ -29,27 +29,26 @@ class PrescriptionStrategy(HighlightStrategy):
         Example: "Chronic Prescription: Metformin 500mg 2x daily"
         """
         # Get prescription name
-        # prescription_name = "Unknown Prescription"
-        # if hasattr(prescription_record, 'prescription_list') and prescription_record.prescription_list:
-        #     prescription_name = prescription_record.prescription_list.Value
-        
-        # Determine if chronic or high-risk
-        # parts = ["High-risk Prescription"]
+        prescription_name = "Unknown Prescription"
+        if hasattr(prescription_record, 'prescription_list') and prescription_record.prescription_list:
+            prescription_name = prescription_record.prescription_list.Value
+    
+        prefix = ["Prescription"]
         
         # # Build text
-        # parts = [f"{prefix}: {prescription_name}"]
+        parts = [f"{prefix}: {prescription_name}"]
         
-        # # Add dosage
-        # if hasattr(prescription_record, 'Dosage') and prescription_record.Dosage:
-        #     parts.append(prescription_record.Dosage)
+        # Add dosage
+        if hasattr(prescription_record, 'Dosage') and prescription_record.Dosage:
+            parts.append(prescription_record.Dosage)
         
-        # # Add frequency
-        # if hasattr(prescription_record, 'FrequencyPerDay') and prescription_record.FrequencyPerDay:
-        #     freq = prescription_record.FrequencyPerDay
-        #     parts.append(f"{freq}x daily")
+        # Add frequency
+        if hasattr(prescription_record, 'FrequencyPerDay') and prescription_record.FrequencyPerDay:
+            freq = prescription_record.FrequencyPerDay
+            parts.append(f"{freq}x daily")
         
-        # return " ".join(parts)
-        return "High-Risk Prescription"
+        return " ".join(parts)
+        
 
     def get_source_remarks(self, db: Session, source_record_id: int) -> Optional[str]:
         """

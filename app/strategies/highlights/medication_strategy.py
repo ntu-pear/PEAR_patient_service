@@ -30,23 +30,21 @@ class MedicationStrategy(HighlightStrategy):
         Shows medication name and optionally dose/route.
         """
         # Get medication name from prescription_list
-        # med_name = "Unknown Medication"
-        # if hasattr(medication_record, 'prescription_list') and medication_record.prescription_list:
-        #     med_name = medication_record.prescription_list.Value
+        med_name = "Unknown Medication"
+        if hasattr(medication_record, 'prescription_list') and medication_record.prescription_list:
+            med_name = medication_record.prescription_list.Value
         
         # Build highlight text
-        # parts = [f"High-Risk Medication: {med_name}"]
-        # parts = ["High-Risk Medication"]
-        # # Add dosage if available
-        # if hasattr(medication_record, 'Dosage') and medication_record.Dosage:
-        #     parts.append(medication_record.Dosage)
+        parts = [f"Medication: {med_name}"]
+        # Add dosage if available
+        if hasattr(medication_record, 'Dosage') and medication_record.Dosage:
+            parts.append(medication_record.Dosage)
         
-        # # Add instruction if available
-        # if hasattr(medication_record, 'Instruction') and medication_record.Instruction:
-        #     parts.append(medication_record.Instruction)
+        # Add instruction if available
+        if hasattr(medication_record, 'Instruction') and medication_record.Instruction:
+            parts.append(medication_record.Instruction)
         
-        # return " ".join(parts)
-        return "High Risk Medication"
+        return " ".join(parts)
     
     def get_source_remarks(self, db, source_record_id):
         # Implement this after confirming logic with prof
