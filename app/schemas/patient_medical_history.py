@@ -27,7 +27,7 @@ class PatientMedicalHistoryUpdate(BaseModel):
 class PatientMedicalHistory(PatientMedicalHistoryBase):
     Id: int = Field(json_schema_extra={"example": 1})
     CreatedDate: datetime = Field(default_factory=datetime.now)
-    LastUpdatedDate: datetime = Field(default_factory=datetime.now)
+    ModifiedDate: datetime = Field(default_factory=datetime.now)
     CreatedByID: str = Field(json_schema_extra={"example": "1"})
     ModifiedByID: str = Field(json_schema_extra={"example": "1"})
     

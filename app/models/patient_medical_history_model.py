@@ -14,7 +14,7 @@ class PatientMedicalHistory(Base):
     SourceOfInformation = Column(String(255), nullable=True)
     IsDeleted = Column(String(1), default="0", nullable=False)
     CreatedDate = Column(DateTime, nullable=False, default=datetime.now)
-    LastUpdatedDate = Column(DateTime, nullable=False, default=datetime.now)
+    ModifiedDate = Column(DateTime, nullable=False, default=datetime.now)
     CreatedByID = Column(String(255), nullable=False)
     ModifiedByID = Column(String(255), nullable=False)
 

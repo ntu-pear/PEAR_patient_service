@@ -40,7 +40,7 @@ def create_medical_history(db: Session, medical_history: PatientMedicalHistoryCr
     
     if db_medical_history:
         db_medical_history.CreatedDate = datetime.now()
-        db_medical_history.LastUpdatedDate = datetime.now()
+        db_medical_history.ModifiedDate = datetime.now()
         db.add(db_medical_history)
         db.commit()
         db.refresh(db_medical_history)
@@ -78,7 +78,7 @@ def update_medical_history(db: Session, history_id: int, medical_history: Patien
             if value is not None:
                 setattr(db_medical_history, key, value)
 
-        db_medical_history.LastUpdatedDate = datetime.now()
+        db_medical_history.ModifiedDate = datetime.now()
         db.commit()
         db.refresh(db_medical_history)
 
@@ -112,7 +112,7 @@ def delete_medical_history(db: Session, history_id: int, user_id: str, user_full
             original_data_dict = "{}"
 
         db_medical_history.IsDeleted = '1'
-        db_medical_history.LastUpdatedDate = datetime.now()
+        db_medical_history.ModifiedDate = datetime.now()
         db.commit()
         db.refresh(db_medical_history)
 
