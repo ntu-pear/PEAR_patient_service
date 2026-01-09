@@ -36,6 +36,7 @@ class VitalStrategy(HighlightStrategy):
         
         # Temperature
         if hasattr(vital_record, 'Temperature') and vital_record.Temperature:
+            # TODO: Add conditions for fever, and hypothermia
             if (vital_record.Temperature > Config.Vital.Temperature.MAX_VALUE or 
                 vital_record.Temperature < Config.Vital.Temperature.MIN_VALUE):
                 return True

@@ -16,43 +16,10 @@ class PrescriptionStrategy(HighlightStrategy):
     def should_generate_highlight(self, prescription_record) -> bool:
         """
         Check if prescription should be highlighted.
-        
-        Highlights prescriptions that are:
-        - Active (IsDeleted == "0")
-        - AND Chronic (Status == "Chronic") OR High-Risk medication
-        
-        Customize the high-risk medications list based on your hospital's needs.
+
         """
-        # Only active prescriptions
-        if hasattr(prescription_record, 'IsDeleted'):
-            if prescription_record.IsDeleted != "0":
-                return False
-        
-        # Check if high-risk medication
-        prescription_name = None
-        if hasattr(prescription_record, 'prescription_list') and prescription_record.prescription_list:
-            prescription_name = prescription_record.prescription_list.Value
-        
-        if not prescription_name:
-            return False
-        
-        # List of high-risk prescriptions (same as medication strategy)
-        high_risk_prescriptions = [
-            'Acetaminophen',
-            'Diphenhydramine',
-            'Donepezil',
-            'Galantamine',
-            'Guaifenesin',
-            'Ibuprofen',
-        ]
-        
-        # Check if prescription name matches high-risk list
-        prescription_name_lower = prescription_name.lower()
-        for risk_med in high_risk_prescriptions:
-            if risk_med.lower() in prescription_name_lower:
-                return True
-        
-        return False
+        # Default: highlight all recently created or updated Prescriptions
+        return True
     
     def generate_highlight_text(self, prescription_record) -> str:
         """

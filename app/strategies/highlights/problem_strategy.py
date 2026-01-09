@@ -15,28 +15,9 @@ class ProblemStrategy(HighlightStrategy):
     def should_generate_highlight(self, problem_record) -> bool:
         """
         Check if problem should be highlighted.
-        
-        CUSTOMIZE THIS based on your needs:
-        - Option 1: Highlight all active problems (default)
-        - Option 2: Only critical/severe problems
-        - Option 3: Specific problem types
         """
-        # Option 1: All active problems
-        # if hasattr(problem_record, 'Status'):
-        #     return problem_record.Status == "Active"
-        
-        # Option 2: Only critical/severe
-        # if hasattr(problem_record, 'Severity'):
-        #     return problem_record.Severity in ["Critical", "Severe"]
-        
-        # Option 3: Specific problem types
-        # critical_problems = ["Sepsis", "Stroke", "MI", "Pneumonia"]
-        # if hasattr(problem_record, 'ProblemName'):
-        #     for critical in critical_problems:
-        #         if critical.lower() in problem_record.ProblemName.lower():
-        #             return True
-        
-        # Default: highlight all active
+
+        # Default: highlight all recently created or updated problems
         return True
     
     def generate_highlight_text(self, problem_record) -> str:

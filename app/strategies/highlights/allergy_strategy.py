@@ -16,29 +16,10 @@ class AllergyStrategy(HighlightStrategy):
     def should_generate_highlight(self, allergy_record) -> bool:
         """
         Check if allergy should be highlighted.
-        
-        CUSTOMIZE THIS based on your needs:
-        - Option 1: Highlight ALL active allergies (default)
-        - Option 2: Only highlight severe allergies
-        - Option 3: Highlight specific allergens
+
         """
         
-        # ** Need to discuss with prof about this logic
-        
-        # Option 1: Highlight all active allergies
-        # if hasattr(allergy_record, 'AllergyTypeID'):
-        #     return allergy_record.AllergyTypeID == "3" # Testing only
-        
-        # Option 2: Only severe allergies
-        # if hasattr(allergy_record, 'Severity'):
-        #     return allergy_record.Severity in ["Severe", "Critical"]
-        
-        # Option 3: Specific allergens
-        # high_risk_allergens = ["Penicillin", "Latex", "Iodine"]
-        # if hasattr(allergy_record, 'AllergyName'):
-        #     return allergy_record.AllergyName in high_risk_allergens
-        
-        # Default: highlight all
+        # Default: highlight all recently created or updated allergies
         return True
     
     def generate_highlight_text(self, allergy_record) -> str:

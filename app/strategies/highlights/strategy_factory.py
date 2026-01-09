@@ -27,7 +27,7 @@ class HighlightStrategyFactory:
         # Uncomment when ProblemStrategy is implemented
         # self.register_strategy(ProblemStrategy())
         
-        # Add more strategies here:
+        # Add more strategies:
         # self.register_strategy(LabStrategy())
     
     def register_strategy(self, strategy: HighlightStrategy):

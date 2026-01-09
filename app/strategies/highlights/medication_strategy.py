@@ -20,38 +20,9 @@ class MedicationStrategy(HighlightStrategy):
         
         This function can be customized based on hospital needs. For the base code, I identified certain high risk medications that should be flagged as a highlight.
         """
-        medication_name = None
-        # Here we only want to deal with active medications
-        if hasattr(medication_record, 'IsDeleted'):
-            if medication_record.IsDeleted != "0":
-                return False
         
-        # Get medication name from prescription_list relationship
-        medication_name = None
-        if hasattr(medication_record, 'prescription_list') and medication_record.prescription_list:
-            medication_name = medication_record.prescription_list.Value
-        
-        if not medication_name:
-            return False  # No medication name, can't determine if high-risk - don't highlight
-        
-        # List of high-alert medications
-        high_alert_medications = [
-            'Acetaminophen',
-            'Diphenhydramine',
-            'Donepezil',
-            'Galantamine',
-            'Guaifenesin',
-            'Ibuprofen',
-        ]
-        
-        # Check if medication name contains any high-alert medication
-        med_name_lower = medication_name.lower()
-        for alert_med in high_alert_medications:
-            if alert_med.lower() in med_name_lower:
-                return True
-        
-        # Default: don't highlight
-        return False
+        # Default: highlight all recently created or updated Medications
+        return True
     
     def generate_highlight_text(self, medication_record) -> str:
         """
