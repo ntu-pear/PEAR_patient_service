@@ -1,19 +1,17 @@
 from datetime import datetime
 from typing import Optional
-
-from pydantic import BaseModel
-
+from pydantic import BaseModel, Field
 
 class PatientPrescriptionListBase(BaseModel):
-    IsDeleted: bool
-    Value: str
+    Value: str = Field(..., example="Paracetamol")
+    IsDeleted: Optional[bool] = Field(default=False, example=False)
 
 class PatientPrescriptionListCreate(PatientPrescriptionListBase):
-    CreatedDateTime: datetime
-    UpdatedDateTime: datetime
+    CreatedDateTime: Optional[datetime] = None
+    UpdatedDateTime: Optional[datetime] = None
 
 class PatientPrescriptionListUpdate(PatientPrescriptionListBase):
-    UpdatedDateTime: datetime
+    UpdatedDateTime: Optional[datetime] = None
 
 class PatientPrescriptionList(PatientPrescriptionListBase):
     Id: int
