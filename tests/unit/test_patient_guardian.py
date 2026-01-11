@@ -1,21 +1,23 @@
-import pytest
+from datetime import datetime
 from unittest.mock import MagicMock, patch
+
+import pytest
 from fastapi import HTTPException
+
 from app.crud.patient_guardian_crud import (
+    create_guardian,
+    delete_guardian,
     get_guardian,
     get_guardian_by_id_list,
     get_guardian_by_nric,
-    create_guardian,
     update_guardian,
-    delete_guardian,
 )
-from app.schemas.patient_guardian import PatientGuardianCreate, PatientGuardianUpdate
 from app.models.patient_guardian_model import PatientGuardian
-from app.models.patient_patient_guardian_model import PatientPatientGuardian
 from app.models.patient_guardian_relationship_mapping_model import (
     PatientGuardianRelationshipMapping,
 )
-from datetime import datetime
+from app.models.patient_patient_guardian_model import PatientPatientGuardian
+from app.schemas.patient_guardian import PatientGuardianCreate, PatientGuardianUpdate
 from tests.utils.mock_db import get_db_session_mock
 
 
@@ -132,7 +134,6 @@ def test_update_guardian_invalid_relationship_name(db_session_mock):
     with patch('app.crud.patient_guardian_crud.patient_guardian_relationship_mapping_crud.get_relationshipId_by_relationshipName') as mock_get_relationship:
         mock_get_relationship.return_value = None
         
-        # Act & Assert
         with pytest.raises(HTTPException) as exc_info:
             update_guardian(db_session_mock, 1, guardian_update)
         
@@ -182,7 +183,6 @@ def test_update_guardian_no_patient_relationship(db_session_mock):
     with patch('app.crud.patient_guardian_crud.patient_guardian_relationship_mapping_crud.get_relationshipId_by_relationshipName') as mock_get_relationship:
         mock_get_relationship.return_value = mock_relationship
         
-        # Act & Assert
         with pytest.raises(HTTPException) as exc_info:
             update_guardian(db_session_mock, 1, guardian_update)
         
