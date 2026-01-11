@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from datetime import datetime
 
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_prescription_list_model import PatientPrescriptionList
@@ -28,28 +29,36 @@ def get_prescription_list_by_id(db: Session, prescription_list_id: int):
     ).first()
 
 def create_prescription_list(
-    db: Session, 
+    db: Session,
     prescription_list: PatientPrescriptionListCreate,
     created_by: str,
     user_full_name: str
 ):
-    # Check for existing prescription list with same Prescription List Value
+    # Check for duplicate Value
     existing_prescription_list = db.query(PatientPrescriptionList).filter(
         PatientPrescriptionList.Value == prescription_list.Value,
-        PatientPrescriptionList.IsDeleted == '0').first()
+        PatientPrescriptionList.IsDeleted == '0'
+    ).first()
     
     if existing_prescription_list:
         raise HTTPException(status_code=400, detail="A prescription list record with this name already exists")
     
     try:
-        
-        """Create a new prescription list item"""
-        db_prescription_list = PatientPrescriptionList(**prescription_list.model_dump())
-        updated_data_dict = serialize_data(prescription_list.model_dump())
+        # Ensure timestamps exist even if frontend didn’t send them
+        now = datetime.now()
+        data = prescription_list.model_dump()
+        data["CreatedDateTime"] = data.get("CreatedDateTime") or now
+        data["UpdatedDateTime"] = data.get("UpdatedDateTime") or now
+
+        # Create the record
+        db_prescription_list = PatientPrescriptionList(**data)
+        updated_data_dict = serialize_data(data)
+
         db.add(db_prescription_list)
         db.commit()
         db.refresh(db_prescription_list)
 
+        # Log the creation
         log_crud_action(
             action=ActionType.CREATE,
             user=created_by,
@@ -60,7 +69,9 @@ def create_prescription_list(
             original_data=None,
             updated_data=updated_data_dict,
         )
+
         return db_prescription_list
+
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))

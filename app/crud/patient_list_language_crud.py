@@ -1,9 +1,15 @@
-from sqlalchemy.orm import Session
-from fastapi import HTTPException
-from ..models.patient_list_language_model import PatientListLanguage
-from ..schemas.patient_list_language import PatientListLanguageCreate, PatientListLanguageUpdate
 from datetime import datetime
-from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
+
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+
+from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
+from ..models.patient_list_language_model import PatientListLanguage
+from ..schemas.patient_list_language import (
+    PatientListLanguageCreate,
+    PatientListLanguageUpdate,
+)
+
 
 def get_patient_list_language(db: Session, patient_list_language_id: int):
     db_patient_language =  db.query(PatientListLanguage).filter(PatientListLanguage.id == patient_list_language_id, PatientListLanguage.isDeleted == '0').first()
@@ -36,8 +42,10 @@ def create_patient_list_language(
 
     log_crud_action(
         action=ActionType.CREATE,
-        user="1",
         table="PatientListLanguage",
+        user="1",
+        user_full_name="None",
+        message="Create patient list language",
         entity_id=db_language_item.id,
         original_data=None,
         updated_data=updated_data_dict,
@@ -84,6 +92,8 @@ def update_patient_list_language(
     log_crud_action(
         action=ActionType.UPDATE,
         user="1",
+        user_full_name="None",
+        message="Update patient list language",
         table="PatientListLanguage",
         entity_id=db_patient_language.id,
         original_data=original_data_dict,
@@ -116,6 +126,8 @@ def delete_patient_list_language(db: Session, patient_language_id: int):
     log_crud_action(
         action=ActionType.DELETE,
         user="1",
+        user_full_name="None",
+        message="Delete patient list language",
         table="PatientListLanguage",
         entity_id=db_patient_language.id,
         original_data=original_data_dict,

@@ -48,6 +48,8 @@ def create_patient_photo(db: Session, file, photo_data: PatientPhotoCreate):
         entity_id=db_photo.PhotoID,
         original_data=None,
         updated_data=updated_data_dict,
+        user_full_name="None",
+        message="Create patient photo",
     )
     return db_photo
 
@@ -105,6 +107,8 @@ def update_patient_photo(db: Session, patient_id: int, file, update_data: Patien
         entity_id=db_photo.PhotoID,
         original_data=original_data_dict,
         updated_data=updated_data_dict,
+        user_full_name="None",
+        message="Update patient photo",
     )
     return db_photo
 
@@ -141,6 +145,8 @@ def delete_patient_photo(db: Session, patient_id: int, modified_by_id: int):
         entity_id=patient_id,
         original_data=original_data_dict,
         updated_data=None,
+        user_full_name="None",
+        message="Delete patient photo",
     )
     return db_photos
 

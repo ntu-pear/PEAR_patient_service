@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field, constr
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, Field, constr
+
 
 class PatientAllocationBase(BaseModel):
     active: str = Field("Y", pattern="^[YN]$", description="Active status: Y for active, N for inactive", json_schema_extra={"example": "Y"})
@@ -9,10 +11,10 @@ class PatientAllocationBase(BaseModel):
     tempDoctorId: Optional[int] = Field(None, gt=0, description="ID of the temporary doctor (if any)")
     tempCaregiverId: Optional[int] = Field(None, gt=0, description="ID of the temporary caregiver (if any)")
     guardian2Id: Optional[int] = Field(None, gt=0, description="ID of the secondary guardian (if any)")
-    doctorId: str = Field(..., description="ID of the primary doctor assigned to the patient")
-    gameTherapistId: str = Field(..., description="ID of the game therapist assigned to the patient")
-    supervisorId: str = Field(..., description="ID of the supervisor overseeing the patient's care")
-    caregiverId: str = Field(..., description="ID of the primary caregiver assigned to the patient")
+    doctorId: Optional[str] = Field(None, description="ID of the primary doctor assigned to the patient")
+    gameTherapistId: Optional[str] = Field(None, description="ID of the game therapist assigned to the patient")
+    supervisorId: Optional[str] = Field(None, description="ID of the supervisor overseeing the patient's care")
+    caregiverId: Optional[str] = Field(None, description="ID of the primary caregiver assigned to the patient")
 
 class PatientAllocationCreate(PatientAllocationBase):
     createdDate: datetime = Field(default_factory=datetime.now)
