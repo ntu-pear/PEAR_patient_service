@@ -12,7 +12,7 @@ class PatientGuardianBase(BaseModel):
     firstName: str
     lastName: str
     preferredName: Optional[str] = None
-    gender: str
+    gender: str = 'M'
     contactNo: str
     nric: str
     email: Optional[EmailStr] = None
@@ -20,7 +20,7 @@ class PatientGuardianBase(BaseModel):
     address: str = "Testing Address"
     tempAddress: Optional[str] = None
     status: Optional[str] = None
-    isDeleted: str = 0
+    isDeleted: str = "0"
     guardianApplicationUserId:  Optional[str] = None
 
 
@@ -30,7 +30,7 @@ class PatientGuardianCreate(PatientGuardianBase):
     CreatedById: str = Field(json_schema_extra={"example": "1"})
     ModifiedById: str = Field(json_schema_extra={"example": "1"})
     patientId: int
-    relationshipName: str
+    relationshipName: str = "Husband"
 
 class PatientGuardianUpdate(PatientGuardianBase):
     modifiedDate: datetime = Field(default_factory=datetime.now)
