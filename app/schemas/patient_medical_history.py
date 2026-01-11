@@ -30,5 +30,6 @@ class PatientMedicalHistory(PatientMedicalHistoryBase):
     ModifiedDate: datetime = Field(default_factory=datetime.now)
     CreatedByID: str = Field(json_schema_extra={"example": "1"})
     ModifiedByID: str = Field(json_schema_extra={"example": "1"})
+    diagnosis_name: Optional[str] = Field(default=None, json_schema_extra={"example": "Cardiovascular"})
     
     model_config = {"from_attributes": True}
