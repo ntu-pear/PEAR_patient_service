@@ -36,7 +36,7 @@ def read_patients(
     patients = [Patient.model_validate(patient) for patient in db_patients]
     return PaginatedResponse(data=patients, pageNo=pageNo, pageSize=pageSize, totalRecords= totalRecords, totalPages=totalPages)
 
-@router.get("/Patient/GetByDoctorId", response_model=PaginatedResponse[Patient])
+@router.get("/patients/{doctor_id}", response_model=PaginatedResponse[Patient])
 def get_patients_by_doctor_id(
     doctor_id: str,
     request: Request,
@@ -67,7 +67,7 @@ def get_patients_by_doctor_id(
     )
 
 
-@router.get("/Patient/GetBySupervisorId", response_model=PaginatedResponse[Patient])
+@router.get("/patients/{supervisor_id}", response_model=PaginatedResponse[Patient])
 def get_patients_by_supervisor_id(
     supervisor_id: str,
     request: Request,
