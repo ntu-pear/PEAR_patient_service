@@ -81,7 +81,6 @@ from app.routers import (
     patient_vital_router,
     social_history_sensitive_mapping_router,
 )
-
 from app.services.background_processor import get_processor
 
 from .database import Base, engine
@@ -379,10 +378,17 @@ app.include_router(
     prefix=f"{API_VERSION_PREFIX}",
     tags=["Social History Sensitive Mapping"],
 )
-app.include_router(patient_medical_diagnosis_list_router.router, prefix="/api/patient", tags=["Medical Diagnosis List"])
-app.include_router(patient_medical_history_router.router, prefix="/api/patient", tags=["Medical History"])
+app.include_router(
+    patient_medical_diagnosis_list_router.router, 
+    prefix=f"{API_VERSION_PREFIX}", 
+    tags=["Medical Diagnosis List"]
+)
 
-
+app.include_router(
+    patient_medical_history_router.router, 
+    prefix=f"{API_VERSION_PREFIX}", 
+    tags=["Medical History"]
+)
 
 app.include_router(
     integrity_router.router,

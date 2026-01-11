@@ -16,7 +16,7 @@ from ..schemas.response import PaginatedResponse, SingleResponse
 router = APIRouter()
 
 
-@router.get("/MedicalHistory/GetByPatient", response_model=PaginatedResponse[PatientMedicalHistory])
+@router.get("/MedicalHistory/{patient_id}", response_model=PaginatedResponse[PatientMedicalHistory])
 def get_medical_histories_by_patient(request: Request, patient_id: int, pageNo: int = 0, pageSize: int = 10, db: Session = Depends(get_db), require_auth: bool = True):
     _ = extract_jwt_payload(request, require_auth)
 
