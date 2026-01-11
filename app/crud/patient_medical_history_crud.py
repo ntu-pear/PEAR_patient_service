@@ -2,7 +2,7 @@ import math
 from datetime import datetime
 
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_medical_history_model import PatientMedicalHistory
@@ -14,7 +14,9 @@ from ..schemas.patient_medical_history import (
 
 def get_medical_histories_by_patient(db: Session, patient_id: int, pageNo: int = 0, pageSize: int = 10):
     offset = pageNo * pageSize
-    db_medical_histories = db.query(PatientMedicalHistory).filter(
+    db_medical_histories = db.query(PatientMedicalHistory).options(
+        joinedload(PatientMedicalHistory._diagnosis)
+    ).filter(
         PatientMedicalHistory.PatientID == patient_id,
         PatientMedicalHistory.IsDeleted == '0'
     ).order_by(PatientMedicalHistory.Id.desc()).offset(offset).limit(pageSize).all()
@@ -29,7 +31,9 @@ def get_medical_histories_by_patient(db: Session, patient_id: int, pageNo: int =
 
 
 def get_medical_history_by_id(db: Session, history_id: int):
-    return db.query(PatientMedicalHistory).filter(
+    return db.query(PatientMedicalHistory).options(
+        joinedload(PatientMedicalHistory._diagnosis)
+    ).filter(
         PatientMedicalHistory.Id == history_id,
         PatientMedicalHistory.IsDeleted == '0'
     ).first()
