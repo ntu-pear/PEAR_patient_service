@@ -17,10 +17,10 @@ class PatientGuardianBase(BaseModel):
     nric: str
     email: Optional[EmailStr] = None
     dateOfBirth: datetime
-    address: str
+    address: str = "Testing Address"
     tempAddress: Optional[str] = None
     status: Optional[str] = None
-    isDeleted: str
+    isDeleted: str = 0
     guardianApplicationUserId:  Optional[str] = None
 
 
