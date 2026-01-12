@@ -1,15 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request, Query
-from sqlalchemy.orm import Session
-from ..database import get_db
-from ..crud import patient_crud as crud_patient
-from ..schemas.response import SingleResponse, PaginatedResponse
-from ..schemas.patient import (
-    Patient,
-    PatientCreate,
-    PatientUpdate
-)
-from ..auth.jwt_utils import extract_jwt_payload, get_user_id, get_full_name
 from typing import Optional
+
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
+from sqlalchemy.orm import Session
+
+from ..auth.jwt_utils import extract_jwt_payload, get_full_name, get_user_id
+from ..crud import patient_crud as crud_patient
+from ..database import get_db
+from ..schemas.patient import Patient, PatientCreate, PatientUpdate
+from ..schemas.response import PaginatedResponse, SingleResponse
 
 router = APIRouter()
 
@@ -37,6 +35,67 @@ def read_patients(
     db_patients, totalRecords, totalPages = crud_patient.get_patients(db=db, pageNo=pageNo, pageSize=pageSize, mask=mask, name=name, isActive = isActive)
     patients = [Patient.model_validate(patient) for patient in db_patients]
     return PaginatedResponse(data=patients, pageNo=pageNo, pageSize=pageSize, totalRecords= totalRecords, totalPages=totalPages)
+
+@router.get("/patients/{doctor_id}", response_model=PaginatedResponse[Patient])
+def get_patients_by_doctor_id(
+    doctor_id: str,
+    request: Request,
+    require_auth: bool = Query(True, description="Require authentication"),
+    mask: bool = Query(True, description="Mask sensitive data"),
+    pageNo: int = Query(0, description="Page number (starting from 0)"),
+    pageSize: int = Query(10, description="Number of records per page"),
+    db: Session = Depends(get_db),
+):
+    """Get all patients allocated to a specific doctor"""
+    _ = extract_jwt_payload(request, require_auth)
+    
+    db_patients, totalRecords, totalPages = crud_patient.get_patients_by_doctor(
+        db=db, 
+        doctor_id=doctor_id, 
+        mask=mask, 
+        pageNo=pageNo, 
+        pageSize=pageSize
+    )
+    
+    patients = [Patient.model_validate(patient) for patient in db_patients]
+    return PaginatedResponse(
+        data=patients, 
+        pageNo=pageNo, 
+        pageSize=pageSize, 
+        totalRecords=totalRecords, 
+        totalPages=totalPages
+    )
+
+
+@router.get("/patients/{supervisor_id}", response_model=PaginatedResponse[Patient])
+def get_patients_by_supervisor_id(
+    supervisor_id: str,
+    request: Request,
+    require_auth: bool = Query(True, description="Require authentication"),
+    mask: bool = Query(True, description="Mask sensitive data"),
+    pageNo: int = Query(0, description="Page number (starting from 0)"),
+    pageSize: int = Query(10, description="Number of records per page"),
+    db: Session = Depends(get_db),
+):
+    """Get all patients allocated to a specific supervisor"""
+    _ = extract_jwt_payload(request, require_auth)
+    
+    db_patients, totalRecords, totalPages = crud_patient.get_patients_by_supervisor(
+        db=db, 
+        supervisor_id=supervisor_id, 
+        mask=mask, 
+        pageNo=pageNo, 
+        pageSize=pageSize
+    )
+    
+    patients = [Patient.model_validate(patient) for patient in db_patients]
+    return PaginatedResponse(
+        data=patients, 
+        pageNo=pageNo, 
+        pageSize=pageSize, 
+        totalRecords=totalRecords, 
+        totalPages=totalPages
+    )
 
 @router.post("/patients/add", response_model=SingleResponse[Patient])
 def create_patient(patient: PatientCreate, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):

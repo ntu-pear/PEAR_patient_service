@@ -1,7 +1,10 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
 from datetime import datetime
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
+
 from app.database import Base
+
 
 class PatientAllocation(Base):
     __tablename__ = "PATIENT_ALLOCATION"
@@ -13,10 +16,10 @@ class PatientAllocation(Base):
     guardianId = Column(Integer, ForeignKey('PATIENT_GUARDIAN.id'), nullable=False)
     guardian2Id = Column(Integer, ForeignKey('PATIENT_GUARDIAN.id'), nullable = True)
     # External DB, uses String for IDs
-    doctorId = Column(String, nullable=False)
-    gameTherapistId = Column(String, nullable=False)
-    supervisorId = Column(String, nullable=False)
-    caregiverId = Column(String, nullable=False)
+    doctorId = Column(String, nullable=True)
+    gameTherapistId = Column(String, nullable=True)
+    supervisorId = Column(String, nullable=True)
+    caregiverId = Column(String, nullable=True)
     tempDoctorId = Column(String)
     tempCaregiverId = Column(String)
     

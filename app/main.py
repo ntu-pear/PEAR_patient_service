@@ -1,6 +1,6 @@
+import asyncio
 import logging
 import os
-import asyncio
 import threading
 from contextlib import asynccontextmanager
 
@@ -12,13 +12,12 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError  # For handling database-related errors
 from sqlalchemy.orm import clear_mappers
 
-from app.services.background_processor import get_processor
 from app.messaging.consumer_manager import create_patient_consumer_manager
-
 from app.models import (
     patient_allergy_mapping_model,  # Import all models to ensure they are registered
 )
 from app.models import (
+    outbox_model,
     patient_allocation_model,
     patient_assigned_dementia_list_model,
     patient_assigned_dementia_mapping_model,
@@ -46,7 +45,6 @@ from app.models import (
     patient_prescription_model,
     patient_social_history_model,
     patient_vital_model,
-    outbox_model,
 )
 from app.routers import (
     allergy_reaction_type_router,
@@ -69,6 +67,8 @@ from app.routers import (
     patient_list_pet_router,
     patient_list_religion_router,
     patient_list_router,
+    patient_medical_diagnosis_list_router,
+    patient_medical_history_router,
     patient_medication_router,
     patient_mobility_mapping_router,
     patient_mobility_router,
@@ -81,6 +81,7 @@ from app.routers import (
     patient_vital_router,
     social_history_sensitive_mapping_router,
 )
+from app.services.background_processor import get_processor
 
 from .database import Base, engine
 
@@ -376,6 +377,17 @@ app.include_router(
     social_history_sensitive_mapping_router.router,
     prefix=f"{API_VERSION_PREFIX}",
     tags=["Social History Sensitive Mapping"],
+)
+app.include_router(
+    patient_medical_diagnosis_list_router.router, 
+    prefix=f"{API_VERSION_PREFIX}", 
+    tags=["Medical Diagnosis List"]
+)
+
+app.include_router(
+    patient_medical_history_router.router, 
+    prefix=f"{API_VERSION_PREFIX}", 
+    tags=["Medical History"]
 )
 
 app.include_router(

@@ -8,6 +8,8 @@ from fastapi import HTTPException, UploadFile
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session, joinedload
 
+from app.models.patient_allocation_model import PatientAllocation
+
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_model import Patient
 from ..schemas.patient import PatientCreate, PatientUpdate
@@ -23,6 +25,62 @@ def upload_photo_to_cloudinary(file: UploadFile):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Cloudinary upload failed: {str(e)}")
 
+def get_patients_by_doctor(db: Session, doctor_id: str, mask: bool = True, pageNo: int = 0, pageSize: int = 10):
+    """Get all patients allocated to a specific doctor by doctorId (found in Patient Allocation table)"""
+    offset = pageNo * pageSize
+    
+    # Query patients through the allocation relationship
+    query = db.query(Patient).options(
+        joinedload(Patient._preferred_language)
+    ).join(
+        PatientAllocation,
+        Patient.id == PatientAllocation.patientId
+    ).filter(
+        PatientAllocation.doctorId == doctor_id,
+        PatientAllocation.active == "Y",
+        PatientAllocation.isDeleted == "0",
+        Patient.isDeleted == "0"
+    )
+    
+    totalRecords = query.count()
+    totalPages = math.ceil(totalRecords / pageSize) if pageSize > 0 else 0
+    
+    db_patients = query.order_by(Patient.name.asc()).offset(offset).limit(pageSize).all()
+    
+    if db_patients and mask:
+        for db_patient in db_patients:
+            db_patient.nric = db_patient.mask_nric
+    
+    return db_patients, totalRecords, totalPages
+
+
+def get_patients_by_supervisor(db: Session, supervisor_id: str, mask: bool = True, pageNo: int = 0, pageSize: int = 10):
+    """Get all patients allocated to a specific supervisor by supervisorId (found in Patient Allocation table)"""
+    offset = pageNo * pageSize
+    
+    # Query patients through the allocation relationship
+    query = db.query(Patient).options(
+        joinedload(Patient._preferred_language)
+    ).join(
+        PatientAllocation,
+        Patient.id == PatientAllocation.patientId
+    ).filter(
+        PatientAllocation.supervisorId == supervisor_id,
+        PatientAllocation.active == "Y",
+        PatientAllocation.isDeleted == "0",
+        Patient.isDeleted == "0"
+    )
+    
+    totalRecords = query.count()
+    totalPages = math.ceil(totalRecords / pageSize) if pageSize > 0 else 0
+    
+    db_patients = query.order_by(Patient.name.asc()).offset(offset).limit(pageSize).all()
+    
+    if db_patients and mask:
+        for db_patient in db_patients:
+            db_patient.nric = db_patient.mask_nric
+    
+    return db_patients, totalRecords, totalPages
 
 def get_patient(db: Session, patient_id: int, mask: bool = True):
     db_patient = (
