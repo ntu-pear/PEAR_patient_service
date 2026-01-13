@@ -16,7 +16,7 @@ from ..schemas.response import PaginatedResponse, SingleResponse
 router = APIRouter()
 
 
-@router.get("/MedicalHistory/{patient_id}", response_model=PaginatedResponse[PatientMedicalHistory])
+@router.get("/MedicalHistory/by-patient/{patient_id}", response_model=PaginatedResponse[PatientMedicalHistory])
 def get_medical_histories_by_patient(request: Request, patient_id: int, pageNo: int = 0, pageSize: int = 10, db: Session = Depends(get_db), require_auth: bool = True):
     _ = extract_jwt_payload(request, require_auth)
 
@@ -30,7 +30,7 @@ def get_medical_histories_by_patient(request: Request, patient_id: int, pageNo: 
     return PaginatedResponse(data=histories, pageNo=pageNo, pageSize=pageSize, totalRecords=totalRecords, totalPages=totalPages)
 
 
-@router.get("/MedicalHistory/{history_id}", response_model=SingleResponse[PatientMedicalHistory])
+@router.get("/MedicalHistory/by-id/{history_id}", response_model=SingleResponse[PatientMedicalHistory])
 def get_medical_history(request: Request, history_id: int, db: Session = Depends(get_db), require_auth: bool = True):
     _ = extract_jwt_payload(request, require_auth)
 
