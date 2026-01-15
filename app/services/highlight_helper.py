@@ -27,15 +27,6 @@ def create_highlight_if_needed(
     3. If YES and highlight exists - Update existing highlight (including HighlightText)
     4. If NO and highlight exists - Delete highlight (set IsDeleted=1)
     5. If NO and no highlight exists - Do nothing
-    
-    Args:
-        db: Database session
-        source_record: The source record (with relationships loaded if needed)
-        type_code: Highlight type code (e.g., "VITAL", "MEDICATION", "PRESCRIPTION")
-        patient_id: Patient ID
-        source_table: Source table name (e.g., "PATIENT_MEDICATION")
-        source_record_id: Source record ID
-        created_by: User who triggered the action
     """
     try:
         # Get strategy for this type
