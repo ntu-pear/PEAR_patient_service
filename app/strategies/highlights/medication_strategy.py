@@ -47,7 +47,6 @@ class MedicationStrategy(HighlightStrategy):
         return " ".join(parts)
     
     def get_source_remarks(self, db, source_record_id):
-        # Implement this after confirming logic with prof
         try:
             # Query PATIENT_MEDICATION by Id
             medication = db.query(PatientMedication).filter(
@@ -66,7 +65,7 @@ class MedicationStrategy(HighlightStrategy):
         """
         Get medication-specific additional fields.
         
-        Returns:
+        Sample return:
         {
             "prescription_name": "Warfarin",              # From PATIENT_PRESCRIPTION_LIST.Value
             "dosage": "5mg",                              # From PATIENT_MEDICATION.Dosage

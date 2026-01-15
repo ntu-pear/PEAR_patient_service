@@ -228,7 +228,7 @@ class VitalStrategy(HighlightStrategy):
         """
         Generate highlight text with specific messages (Fever, Hypertension, etc.).
         
-        Uses the db session stored from should_generate_highlight() to get patient's averages or default baselines.
+        Use the db session stored from should_generate_highlight() to get patient's averages or default baselines.
         """
         parts = []
         
@@ -352,7 +352,7 @@ class VitalStrategy(HighlightStrategy):
         """
         Get vital-specific additional fields.
         
-        Returns:
+        Sample return:
         {
             "systolic_bp": 180,
             "diastolic_bp": 110,

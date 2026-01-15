@@ -72,7 +72,7 @@ class PrescriptionStrategy(HighlightStrategy):
         """
         Get prescription-specific additional fields.
         
-        Returns:
+        Sample return:
         {
             "prescription_name": "Metformin",           # From PATIENT_PRESCRIPTION_LIST.Value
             "dosage": "500mg",                          # From PATIENT_PRESCRIPTION.Dosage

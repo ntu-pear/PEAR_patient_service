@@ -65,7 +65,7 @@ class AllergyStrategy(HighlightStrategy):
         """
         Get allergy-specific additional fields.
         
-        Returns:
+        Sample return:
         {
             "allergy_type": "Penicillin",           # From ALLERGY_TYPE.Value
             "allergy_reaction_type": "Severe"       # From ALLERGY_REACTION_TYPE.Value

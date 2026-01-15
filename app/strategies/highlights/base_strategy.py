@@ -18,7 +18,7 @@ class HighlightStrategy(ABC):
     3. generate_highlight_text() - Display text
     4. get_source_value() - Raw data retrieval for details view
     5. get_additional_fields() - Get type-specific additional fields
-    Each strategy corresponds to a specific type of highlight, e.g., Vital, Allergy, Medication, etc.
+    Each strategy corresponds to a specific type of highlight, e.g. Vital, Allergy, Medication, etc.
     """
     
     @abstractmethod
@@ -38,24 +38,7 @@ class HighlightStrategy(ABC):
     @abstractmethod
     def should_generate_highlight(self, source_record: Any, db: Optional[Session] = None) -> bool:
         """
-        Determine if a source record should generate a highlight.
-        
-        *** This function determines whether a record should be highlighted or not
-        
-        Args:
-            source_record: The source record to evaluate (e.g., Vital, Allergy)
-        
-        Returns:
-            bool: True if highlight should be generated
-        
-        Examples:
-            # For vitals - check if BP is abnormal
-            if source_record.Systolic > 140:
-                return True
-            
-            # For allergies - check if active
-            if source_record.Status == "Active":
-                return True
+        Determine if a source record should generate a highlight. - Highlight logic goes here
         """
         pass
     
@@ -63,17 +46,9 @@ class HighlightStrategy(ABC):
     def generate_highlight_text(self, source_record: Any) -> str:
         """
         Generate human-readable highlight text from source record.
-        This is what the user will see in the UI.
+        Here we store important information used for display.
         
-        Args:
-            source_record: The source record
-        
-        Returns:
-            str: Highlight text for display (max 500 chars)
-        
-        Examples:
-            return f"High BP: {source_record.Systolic}/{source_record.Diastolic} mmHg"
-            return f"Allergy: {source_record.AllergyName}"
+        E.g. If patient's temperature is > threshold, then return "Fever: XX Degrees"
         """
         pass
     
@@ -92,18 +67,6 @@ class HighlightStrategy(ABC):
         """
         Get type-specific additional fields for the API response.
         
-        Each strategy can return different fields based on its type.
-        
-        Examples:
-        - AllergyStrategy returns: {"allergy_type": "Penicillin", "reaction_type": "Severe"}
-        - MedicationStrategy returns: {"prescription_name": "Warfarin", "prescription_remarks": "Monitor INR"}
-        - VitalStrategy returns: {"systolic_bp": 180, "diastolic_bp": 110, "temperature": 39.5}
-        
-        Args:
-            db: Database session
-            source_record_id: ID of the source record
-            
-        Returns:
-            Dict[str, Any]: Dictionary of additional fields specific to this type
+        Each strategy can return different fields based on its type - depends on what the front-end team needs for their front-end.
         """
         pass
