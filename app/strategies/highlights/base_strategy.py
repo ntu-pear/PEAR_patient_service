@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Dict
+from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session, joinedload
 
@@ -12,7 +12,7 @@ class HighlightStrategy(ABC):
     """
     Base strategy for generating highlights from different sources.
     
-    4 methods to implement:
+    5 methods to implement:
     1. get_type_code() - Links to database
     2. should_generate_highlight() - Core logic (is this worth highlighting?)
     3. generate_highlight_text() - Display text
