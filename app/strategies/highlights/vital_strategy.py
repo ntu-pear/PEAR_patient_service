@@ -14,7 +14,7 @@ class VitalStrategy(HighlightStrategy):
     """Strategy for generating highlights from abnormal vitals"""
     
     # FOR PATIENTS WITH <= 2 VITAL HISTORY RECORDS: Default clinical baselines for patients with no vital history
-    DEFAULT_TEMPERATURE = 36.5       # Normal body temperature (°C)
+    DEFAULT_TEMPERATURE = 36.5       # Normal body temperature (Degree Celcius)
     DEFAULT_SYSTOLIC_BP = 120        # Normal systolic BP (mmHg)
     DEFAULT_DIASTOLIC_BP = 80        # Normal diastolic BP (mmHg)
     DEFAULT_HEART_RATE = 75          # Normal resting heart rate (bpm)

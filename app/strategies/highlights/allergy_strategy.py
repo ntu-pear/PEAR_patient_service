@@ -16,7 +16,6 @@ class AllergyStrategy(HighlightStrategy):
     def should_generate_highlight(self, allergy_record, db: Optional[Session] = None) -> bool:
         """
         Check if allergy should be highlighted.
-
         """
         
         # Default: highlight all recently created or updated allergies
