@@ -36,7 +36,7 @@ def read_patients(
     patients = [Patient.model_validate(patient) for patient in db_patients]
     return PaginatedResponse(data=patients, pageNo=pageNo, pageSize=pageSize, totalRecords= totalRecords, totalPages=totalPages)
 
-@router.get("/patients/{doctor_id}", response_model=PaginatedResponse[Patient])
+@router.get("/patients/by-doctor/{doctor_id}", response_model=PaginatedResponse[Patient])
 def get_patients_by_doctor_id(
     doctor_id: str,
     request: Request,
@@ -67,7 +67,7 @@ def get_patients_by_doctor_id(
     )
 
 
-@router.get("/patients/{supervisor_id}", response_model=PaginatedResponse[Patient])
+@router.get("/patients/by-supervisor/{supervisor_id}", response_model=PaginatedResponse[Patient])
 def get_patients_by_supervisor_id(
     supervisor_id: str,
     request: Request,
@@ -83,6 +83,66 @@ def get_patients_by_supervisor_id(
     db_patients, totalRecords, totalPages = crud_patient.get_patients_by_supervisor(
         db=db, 
         supervisor_id=supervisor_id, 
+        mask=mask, 
+        pageNo=pageNo, 
+        pageSize=pageSize
+    )
+    
+    patients = [Patient.model_validate(patient) for patient in db_patients]
+    return PaginatedResponse(
+        data=patients, 
+        pageNo=pageNo, 
+        pageSize=pageSize, 
+        totalRecords=totalRecords, 
+        totalPages=totalPages
+    )
+    
+@router.get("/patients/by-caregiver/{caregiver_id}", response_model=PaginatedResponse[Patient])
+def get_patients_by_caregiver_id(
+    caregiver_id: str,
+    request: Request,
+    require_auth: bool = Query(True, description="Require authentication"),
+    mask: bool = Query(True, description="Mask sensitive data"),
+    pageNo: int = Query(0, description="Page number (starting from 0)"),
+    pageSize: int = Query(10, description="Number of records per page"),
+    db: Session = Depends(get_db),
+):
+    """Get all patients allocated to a specific caregiver"""
+    _ = extract_jwt_payload(request, require_auth)
+    
+    db_patients, totalRecords, totalPages = crud_patient.get_patients_by_caregiver(
+        db=db, 
+        caregiver_id=caregiver_id, 
+        mask=mask, 
+        pageNo=pageNo, 
+        pageSize=pageSize
+    )
+    
+    patients = [Patient.model_validate(patient) for patient in db_patients]
+    return PaginatedResponse(
+        data=patients, 
+        pageNo=pageNo, 
+        pageSize=pageSize, 
+        totalRecords=totalRecords, 
+        totalPages=totalPages
+    )
+
+@router.get("/patients/by-guardian/{guardian_application_user_id}", response_model=PaginatedResponse[Patient])
+def get_patients_by_guardian_application_user_id(
+    guardian_application_user_id: str,
+    request: Request,
+    require_auth: bool = Query(True, description="Require authentication"),
+    mask: bool = Query(True, description="Mask sensitive data"),
+    pageNo: int = Query(0, description="Page number (starting from 0)"),
+    pageSize: int = Query(10, description="Number of records per page"),
+    db: Session = Depends(get_db),
+):
+    """Get all patients allocated to a specific guardian by their application user ID"""
+    _ = extract_jwt_payload(request, require_auth)
+    
+    db_patients, totalRecords, totalPages = crud_patient.get_patients_by_guardian(
+        db=db, 
+        guardian_application_user_id=guardian_application_user_id, 
         mask=mask, 
         pageNo=pageNo, 
         pageSize=pageSize

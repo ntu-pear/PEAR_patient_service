@@ -82,6 +82,70 @@ def get_patients_by_supervisor(db: Session, supervisor_id: str, mask: bool = Tru
     
     return db_patients, totalRecords, totalPages
 
+def get_patients_by_caregiver(db: Session, caregiver_id: str, mask: bool = True, pageNo: int = 0, pageSize: int = 10):
+    """Get all patients allocated to a specific caregiver by caregiverId (found in PatientAllocation table)"""
+    offset = pageNo * pageSize
+    
+    # Query patients through the allocation relationship
+    query = db.query(Patient).options(
+        joinedload(Patient._preferred_language)
+    ).join(
+        PatientAllocation,
+        Patient.id == PatientAllocation.patientId
+    ).filter(
+        PatientAllocation.caregiverId == caregiver_id,
+        PatientAllocation.active == "Y",
+        PatientAllocation.isDeleted == "0",
+        Patient.isDeleted == "0"
+    )
+    
+    totalRecords = query.count()
+    totalPages = math.ceil(totalRecords / pageSize) if pageSize > 0 else 0
+    
+    db_patients = query.order_by(Patient.name.asc()).offset(offset).limit(pageSize).all()
+    
+    if db_patients and mask:
+        for db_patient in db_patients:
+            db_patient.nric = db_patient.mask_nric
+    
+    return db_patients, totalRecords, totalPages
+
+
+def get_patients_by_guardian(db: Session, guardian_application_user_id: str, mask: bool = True, pageNo: int = 0, pageSize: int = 10):
+    """Get all patients allocated to a specific guardian by guardianApplicationUserId (found in Patient Guardian table)"""
+    from ..models.patient_guardian_model import PatientGuardian
+    
+    offset = pageNo * pageSize
+    
+    # Query patients through the allocation and guardian relationships
+    # Need to check both guardianId and guardian2Id in PatientAllocation
+    query = db.query(Patient).options(
+        joinedload(Patient._preferred_language)
+    ).join(
+        PatientAllocation,
+        Patient.id == PatientAllocation.patientId
+    ).join(
+        PatientGuardian,
+        (PatientAllocation.guardianId == PatientGuardian.id) | (PatientAllocation.guardian2Id == PatientGuardian.id)
+    ).filter(
+        PatientGuardian.guardianApplicationUserId == guardian_application_user_id,
+        PatientAllocation.active == "Y",
+        PatientAllocation.isDeleted == "0",
+        PatientGuardian.isDeleted == "0",
+        Patient.isDeleted == "0"
+    )
+    
+    totalRecords = query.count()
+    totalPages = math.ceil(totalRecords / pageSize) if pageSize > 0 else 0
+    
+    db_patients = query.order_by(Patient.name.asc()).offset(offset).limit(pageSize).all()
+    
+    if db_patients and mask:
+        for db_patient in db_patients:
+            db_patient.nric = db_patient.mask_nric
+    
+    return db_patients, totalRecords, totalPages
+
 def get_patient(db: Session, patient_id: int, mask: bool = True):
     db_patient = (
         db.query(Patient)
