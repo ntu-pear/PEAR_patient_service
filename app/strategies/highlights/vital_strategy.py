@@ -129,8 +129,8 @@ class VitalStrategy(HighlightStrategy):
         Determine if vital should be highlighted.
         
         Logic:
-        1. If patient has >= 2 past vitals: Use personalized thresholds
-        2. If patient has < 2 past vitals: Use default clinical baselines
+        1. If patient has >= 3 past vitals: Use personalized thresholds
+        2. If patient has < 3 past vitals: Use default clinical baselines
         3. If db not provided: Use default clinical baselines
         
         Also stores db session for use in generate_highlight_text.
