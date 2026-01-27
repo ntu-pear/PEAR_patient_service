@@ -120,23 +120,40 @@ def update_prescription(
     Updates a PatientPrescription record by ID. Sets ModifiedDateTime and 
     ModifiedById. Returns the updated record.
     """
+
+    #Look for existing record first
     db_prescription = db.query(PatientPrescription).filter(
-        PatientPrescription.Id == prescription_id,
-        PatientPrescription.IsDeleted == '0'
-    ).first()
+            PatientPrescription.Id == prescription_id,
+            PatientPrescription.IsDeleted == '0'
+        ).first()
 
     if not db_prescription:
-        return None  # or raise HTTPException(404, ...)
+        return None
+    
+    #Look for matching patientId and prescription_list
+    new_patient_id = prescription_data.PatientId or db_prescription.PatientId
+    new_list_id = prescription_data.PrescriptionListId or db_prescription.PrescriptionListId
+
+    duplicate_check = db.query(PatientPrescription).filter(
+        PatientPrescription.PatientId == new_patient_id,
+        PatientPrescription.PrescriptionListId == new_list_id,
+        PatientPrescription.IsDeleted == '0',
+        PatientPrescription.Id != prescription_id  
+    ).first()
+
+    if duplicate_check:
+        raise HTTPException(
+            status_code=400, 
+            detail="Another prescription with this name already exists for this patient."
+        )
 
     try:
-        # Serialize original data for logging
         original_data_dict = {
             k: serialize_data(v) for k, v in db_prescription.__dict__.items() if not k.startswith("_")
         }
     except Exception:
         original_data_dict = "{}"
 
-    # Apply updates, excluding fields not set or that you handle manually
     update_fields = prescription_data.model_dump(exclude_unset=True)
     for key, value in update_fields.items():
         setattr(db_prescription, key, value)
