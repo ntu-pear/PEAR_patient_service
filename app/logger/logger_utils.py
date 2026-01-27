@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from .config import logger
 import json
 from enum import Enum
@@ -60,7 +60,7 @@ def log_crud_action(
 
 def serialize_data(data):
     """Serialize datetime and other objects for JSON compatibility"""
-    if isinstance(data, datetime):
+    if isinstance(data, (datetime, date)):
         return data.isoformat()
     elif isinstance(data, dict):
         return {key: serialize_data(value) for key, value in data.items()}
