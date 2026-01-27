@@ -10,7 +10,8 @@ class PatientAssignedDementiaMapping(Base):
     IsDeleted = Column(String(1), default="0", nullable=False)  # boolean 1 or 0
     PatientId = Column(Integer, ForeignKey('PATIENT.id'))  # Changed to Integer
     DementiaTypeListId = Column(Integer, ForeignKey('PATIENT_ASSIGNED_DEMENTIA_LIST.DementiaTypeListId'))  # Changed to Integer
-
+    DementiaStageId = Column(Integer, ForeignKey('PATIENT_DEMENTIA_STAGE_LIST.id'), nullable=True)
+    
     CreatedDate = Column(DateTime, nullable=False, default=DateTime)
     ModifiedDate = Column(DateTime, nullable=False, default=DateTime)
     CreatedById = Column(String, nullable=False)  # Changed to String
@@ -23,3 +24,16 @@ class PatientAssignedDementiaMapping(Base):
         backref="dementia_assignments",
         primaryjoin="PatientAssignedDementiaMapping.DementiaTypeListId == PatientAssignedDementiaList.DementiaTypeListId",
     )
+
+    _dementia_stage = relationship(
+        "PatientDementiaStageList",
+        foreign_keys=[DementiaStageId],
+        lazy="joined"
+    )
+    
+    @property
+    def dementia_stage_value(self):
+        """Return the dementia stage name as a string"""
+        if self._dementia_stage:
+            return self._dementia_stage.DementiaStage
+        return None

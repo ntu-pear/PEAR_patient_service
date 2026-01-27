@@ -21,6 +21,7 @@ from app.models import (
     patient_allocation_model,
     patient_assigned_dementia_list_model,
     patient_assigned_dementia_mapping_model,
+    patient_dementia_stage_list_model,
     patient_attendance_model,
     patient_doctor_note_model,
     patient_guardian_model,
@@ -55,6 +56,7 @@ from app.routers import (
     patient_allocation_router,
     patient_assigned_dementia_list_router,
     patient_assigned_dementia_mapping_router,
+    patient_dementia_stage_list_router,
     patient_doctor_note_router,
     patient_guardian_router,
     patient_highlight_router,
@@ -388,6 +390,12 @@ app.include_router(
     patient_medical_history_router.router, 
     prefix=f"{API_VERSION_PREFIX}", 
     tags=["Medical History"]
+)
+
+app.include_router(
+    patient_dementia_stage_list_router.router, 
+    prefix=f"{API_VERSION_PREFIX}", 
+    tags=["Dementia Stage List"]
 )
 
 app.include_router(
