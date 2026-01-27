@@ -32,5 +32,6 @@ from .patient_privacy_level_model import PatientPrivacyLevel
 from .patient_social_history_model import PatientSocialHistory
 from .patient_vital_model import PatientVital
 from .social_history_sensitive_mapping_model import SocialHistorySensitiveMapping
-
+from .patient_problem_list_model import PatientProblemList
+from .patient_problem_model import PatientProblem
 # Import other models as needed
