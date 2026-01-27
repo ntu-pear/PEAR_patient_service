@@ -16,12 +16,16 @@ class MedicationStrategy(HighlightStrategy):
     
     def should_generate_highlight(self, medication_record, db: Optional[Session] = None) -> bool:
         """
-        Check if medication is high-risk and should be highlighted.
+        Check if medication should be highlighted. By default, all recent medications are highlighted.
         
-        This function can be customized based on hospital needs. For the base code, I identified certain high risk medications that should be flagged as a highlight.
+        Logic:
+        - Highlight only active medications (IsDeleted = '0')
+        - When medication is deleted (IsDeleted = '1'), this returns False
+        
         """
         
-        # Default: highlight all recently created or updated Medications
+        if hasattr(medication_record, 'IsDeleted') and medication_record.IsDeleted == '1':
+            return False  
         return True
     
     def generate_highlight_text(self, medication_record) -> str:

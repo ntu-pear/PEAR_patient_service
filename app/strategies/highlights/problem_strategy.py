@@ -18,10 +18,15 @@ class ProblemStrategy(HighlightStrategy):
     
     def should_generate_highlight(self, problem_record, db: Optional[Session] = None) -> bool:
         """
-        Check if problem should be highlighted.
+        Check if problem should be highlighted. By default, all recent problems are highlighted.
+        
+        Logic:
+        - Highlight only active problems (IsDeleted = '0')
+        - When problem is deleted (IsDeleted = '1'), this returns False
         """
 
-        # Default: highlight all recently created or updated problems
+        if hasattr(problem_record, 'IsDeleted'):
+            return problem_record.IsDeleted == '0'
         return True
     
     def generate_highlight_text(self, problem_record) -> str:

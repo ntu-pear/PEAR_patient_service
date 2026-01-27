@@ -15,10 +15,14 @@ class PrescriptionStrategy(HighlightStrategy):
     
     def should_generate_highlight(self, prescription_record, db: Optional[Session] = None) -> bool:
         """
-        Check if prescription should be highlighted.
-
+        Check if prescription should be highlighted. By default, all recent prescriptions are highlighted.
+        
+        Logic:
+        - Highlight only active prescriptions (IsDeleted = '0')
+        - When prescription is deleted (IsDeleted = '1'), this returns False
         """
-        # Default: highlight all recently created or updated Prescriptions
+        if hasattr(prescription_record, 'IsDeleted') and prescription_record.IsDeleted == '1':
+            return False  
         return True
     
     def generate_highlight_text(self, prescription_record) -> str:
