@@ -12,6 +12,7 @@ from .patient_guardian_relationship_mapping_model import (
     PatientGuardianRelationshipMapping,
 )
 from .patient_highlight_model import PatientHighlight
+from .patient_highlight_type_model import PatientHighlightType
 from .patient_list_diet_model import PatientDietList
 from .patient_list_education_model import PatientEducationList
 from .patient_list_language_model import PatientListLanguage
@@ -32,5 +33,6 @@ from .patient_privacy_level_model import PatientPrivacyLevel
 from .patient_social_history_model import PatientSocialHistory
 from .patient_vital_model import PatientVital
 from .social_history_sensitive_mapping_model import SocialHistorySensitiveMapping
-
+from .patient_problem_list_model import PatientProblemList
+from .patient_problem_model import PatientProblem
 # Import other models as needed

@@ -1,4 +1,5 @@
 from typing import Any, Dict, Optional
+
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.patient_allergy_mapping_model import PatientAllergyMapping
@@ -15,10 +16,14 @@ class AllergyStrategy(HighlightStrategy):
     
     def should_generate_highlight(self, allergy_record, db: Optional[Session] = None) -> bool:
         """
-        Check if allergy should be highlighted.
+        Check if allergy should be highlighted. By default, all recent allergies are highlighted.
+        Logic:
+        - Highlight only active allergies (IsDeleted = '0')
+        - When allergy is deleted (IsDeleted = '1'), this returns False
         """
         
-        # Default: highlight all recently created or updated allergies
+        if hasattr(allergy_record, 'IsDeleted'):
+            return allergy_record.IsDeleted == '0'
         return True
     
     def generate_highlight_text(self, allergy_record) -> str:

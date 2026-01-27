@@ -45,9 +45,9 @@ def create_highlight_type(
         action=ActionType.CREATE,
         user=created_by,
         user_full_name=user_full_name,
-        message="Creted highlight type",
+        message="Created highlight type",
         table="HighlightType",
-        entity_id=db_highlight_type.HighlightTypeID,
+        entity_id=db_highlight_type.Id,
         original_data=None,
         updated_data=updated_data_dict,
     )  

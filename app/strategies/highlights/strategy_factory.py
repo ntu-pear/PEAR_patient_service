@@ -23,9 +23,7 @@ class HighlightStrategyFactory:
         self.register_strategy(AllergyStrategy())
         self.register_strategy(MedicationStrategy())
         self.register_strategy(PrescriptionStrategy())
-        
-        # Uncomment when ProblemStrategy is implemented
-        # self.register_strategy(ProblemStrategy())
+        self.register_strategy(ProblemStrategy())
         
         # Add more strategies:
         # self.register_strategy(LabStrategy())
