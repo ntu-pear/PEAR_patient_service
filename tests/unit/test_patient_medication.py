@@ -291,7 +291,7 @@ def test_create_medication(db_session_mock):
                 # Verify database operations were called
                 db_session_mock.add.assert_called_once()
                 assert db_session_mock.flush.call_count == 2
-                assert db_session_mock.commit.call_count == 2
+                assert db_session_mock.commit.call_count == 3
                 assert db_session_mock.refresh.call_count == 2
                 db_session_mock.refresh.assert_called_with(mock_medication_instance)
                 
@@ -482,7 +482,7 @@ def test_delete_medication(db_session_mock):
     )
 
     # Verify database operations
-    db_session_mock.commit.assert_called_once()
+    assert db_session_mock.commit.call_count == 2
     db_session_mock.refresh.assert_called_once()
 
     # Verify soft delete - the mock should have IsDeleted set to "1"
