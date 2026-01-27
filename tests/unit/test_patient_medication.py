@@ -1,18 +1,20 @@
-import pytest
-from unittest import mock
 from datetime import datetime
+from unittest import mock
+
+import pytest
+
 from app.crud.patient_medication_crud import (
+    create_medication,
+    delete_medication,
+    get_medication,
     get_medications,
     get_patient_medications,
-    get_medication,
-    create_medication,
     update_medication,
-    delete_medication,
 )
 from app.schemas.patient_medication import (
+    PatientMedication,
     PatientMedicationCreate,
     PatientMedicationUpdate,
-    PatientMedication,
 )
 from tests.utils.mock_db import get_db_session_mock
 
@@ -288,9 +290,10 @@ def test_create_medication(db_session_mock):
                 
                 # Verify database operations were called
                 db_session_mock.add.assert_called_once()
-                db_session_mock.flush.assert_called_once()
-                db_session_mock.commit.assert_called_once()
-                db_session_mock.refresh.assert_called_once_with(mock_medication_instance)
+                assert db_session_mock.flush.call_count == 2
+                assert db_session_mock.commit.call_count == 2
+                assert db_session_mock.refresh.call_count == 2
+                db_session_mock.refresh.assert_called_with(mock_medication_instance)
                 
                 # Verify outbox event was created
                 mock_outbox_service.create_event.assert_called_once()
@@ -312,17 +315,21 @@ def test_create_medication(db_session_mock):
                 # Verify logging was called
                 mock_log_crud_action.assert_called_once()
 
-import pytest
-from unittest import mock
 from datetime import datetime
+from unittest import mock
+
+import pytest
+
 from app.crud.patient_medication_crud import update_medication
 from app.schemas.patient_medication import PatientMedicationUpdate
 
 
-def test_update_medication():
-    """Test updating a medication with prescription name handling - simplified approach"""
-    
-    # Create a simple mock medication object
+def test_update_medication(db_session_mock):
+    """Test updating a medication with prescription name handling"""
+
+    # -------------------------
+    # Mock medication object
+    # -------------------------
     class MockMedication:
         def __init__(self):
             self.Id = 6
@@ -337,137 +344,111 @@ def test_update_medication():
             self.UpdatedDateTime = datetime(2023, 5, 1, 9, 0, 0)
             self.ModifiedById = "5"
             self.IsDeleted = "0"
-            
-            # Create __dict__ manually
-            self.__dict__ = {
-                'Id': 6,
-                'PatientId': 5,
-                'PrescriptionListId': 6,
-                'AdministerTime': "0930",
-                'Dosage': "2 puffs",
-                'Instruction': "Nil",
-                'StartDate': datetime(2023, 5, 1),
-                'EndDate': datetime(2023, 12, 31),
-                'PrescriptionRemarks': "None",
-                'UpdatedDateTime': datetime(2023, 5, 1, 9, 0, 0),
-                'ModifiedById': "5",
-                'IsDeleted': "0"
-            }
-    
+
+            self.__dict__ = self.__dict__
+
     mock_medication = MockMedication()
-    
-    # Create simple prescription objects
+
+    # -------------------------
+    # Mock prescriptions
+    # -------------------------
     class MockPrescription:
         def __init__(self, value):
             self.Value = value
             self.IsDeleted = "0"
-    
+
     old_prescription = MockPrescription("Old Medicine Name")
     new_prescription = MockPrescription("New Medicine Name")
 
-    # Track prescription query calls
-    prescription_call_count = [0]
-    
-    # Mock database session
-    with mock.patch('app.crud.patient_medication_crud.Session') as mock_session_class:
-        db_session_mock = mock.MagicMock()
-        mock_session_class.return_value = db_session_mock
-        
-        # Mock query method with a simple side effect
-        def mock_query(model_class):
-            model_name = str(model_class)
-            
-            if 'PatientPrescriptionList' in model_name:
-                # Prescription lookup
-                prescription_call_count[0] += 1
-                mock_query_result = mock.MagicMock()
-                mock_query_result.filter.return_value = mock_query_result
-                
-                if prescription_call_count[0] == 1:
-                    mock_query_result.first.return_value = old_prescription
-                else:
-                    mock_query_result.first.return_value = new_prescription
-                    
-                return mock_query_result
-            else:
-                # Medication lookup
-                mock_query_result = mock.MagicMock()
-                mock_query_result.filter.return_value = mock_query_result
-                mock_query_result.first.return_value = mock_medication
-                return mock_query_result
-        
-        db_session_mock.query = mock_query
-        db_session_mock.flush = mock.MagicMock()
-        db_session_mock.commit = mock.MagicMock()
-        db_session_mock.refresh = mock.MagicMock()
-        db_session_mock.rollback = mock.MagicMock()
+    # -------------------------
+    # Mock query behavior
+    # -------------------------
+    prescription_call_count = 0
 
-        # Update data with changes
-        update_data = {
-            "IsDeleted": "0",
-            "PatientId": 5,
-            "PrescriptionListId": 8,  # Changed from 6 to 8
-            "AdministerTime": "0930",
-            "Dosage": "2 puffs",
-            "Instruction": "Use as needed for breathing difficulties",  # Changed from "Nil"
-            "StartDate": datetime(2023, 5, 1),
-            "EndDate": datetime(2023, 12, 31),
-            "PrescriptionRemarks": "Updated: Use spacer device",  # Changed from "None"
-            "UpdatedDateTime": datetime(2023, 5, 15, 14, 30, 0),
-            "ModifiedById": "nurse456",
-        }
+    def mock_query(model):
+        nonlocal prescription_call_count
+        query = mock.MagicMock()
+        query.filter.return_value = query
 
-        # Mock the outbox service
-        with mock.patch('app.crud.patient_medication_crud.get_outbox_service') as mock_get_outbox_service:
-            mock_outbox_service = mock.MagicMock()
-            mock_outbox_event = mock.MagicMock()
-            mock_outbox_event.id = "test-outbox-id"
-            mock_outbox_service.create_event.return_value = mock_outbox_event
-            mock_get_outbox_service.return_value = mock_outbox_service
-            
-            # Mock the logging function
-            with mock.patch('app.crud.patient_medication_crud.log_crud_action') as mock_log_crud_action:
-                
-                # Execute the test
-                medication = update_medication(
-                    db_session_mock,
-                    6,  # medication_id
-                    PatientMedicationUpdate(**update_data),
-                    modified_by="test_user",
-                    user_full_name="Test User"
-                )
+        if "PatientPrescriptionList" in str(model):
+            prescription_call_count += 1
+            query.first.return_value = (
+                old_prescription if prescription_call_count == 1 else new_prescription
+            )
+        else:
+            query.first.return_value = mock_medication
 
-                # Assertions
-                assert medication is not None
-                assert medication.Id == 6
-                assert medication.PatientId == 5
-                
-                # Verify outbox event was created
-                mock_outbox_service.create_event.assert_called_once()
-                
-                # Get the event payload
-                call_args = mock_outbox_service.create_event.call_args
-                event_payload = call_args[1]['payload']
-                
-                # Basic payload structure checks
-                assert event_payload['event_type'] == 'PATIENT_MEDICATION_UPDATED'
-                assert event_payload['medication_id'] == 6
-                assert event_payload['patient_id'] == 5
-                
-                # Check that prescription names are included
-                old_data = event_payload['old_data']
-                new_data = event_payload['new_data']
-                
-                assert 'PrescriptionName' in old_data
-                assert 'PrescriptionName' in new_data
-                
-                # Verify prescription names are different
-                assert old_data['PrescriptionName'] == "Old Medicine Name"
-                assert new_data['PrescriptionName'] == "New Medicine Name"
-                
-                # Verify changes were tracked
-                changes = event_payload['changes']
-                assert len(changes) > 0  # Should have detected changes
+        return query
+
+    db_session_mock.query.side_effect = mock_query
+    db_session_mock.flush = mock.MagicMock()
+    db_session_mock.commit = mock.MagicMock()
+    db_session_mock.refresh = mock.MagicMock()
+    db_session_mock.rollback = mock.MagicMock()
+
+    # -------------------------
+    # Update payload
+    # -------------------------
+    update_data = {
+        "IsDeleted": "0",
+        "PatientId": 5,
+        "PrescriptionListId": 8,
+        "AdministerTime": "0930",
+        "Dosage": "2 puffs",
+        "Instruction": "Use as needed for breathing difficulties",
+        "StartDate": datetime(2023, 5, 1),
+        "EndDate": datetime(2023, 12, 31),
+        "PrescriptionRemarks": "Updated: Use spacer device",
+        "UpdatedDateTime": datetime(2023, 5, 15, 14, 30, 0),
+        "ModifiedById": "nurse456",
+    }
+
+    # -------------------------
+    # Mock outbox + logging
+    # -------------------------
+    with mock.patch(
+        "app.crud.patient_medication_crud.get_outbox_service"
+    ) as mock_get_outbox_service, mock.patch(
+        "app.crud.patient_medication_crud.log_crud_action"
+    ) as mock_log_crud_action:
+
+        mock_outbox_service = mock.MagicMock()
+        mock_outbox_event = mock.MagicMock()
+        mock_outbox_event.id = "test-outbox-id"
+        mock_outbox_service.create_event.return_value = mock_outbox_event
+        mock_get_outbox_service.return_value = mock_outbox_service
+
+        # -------------------------
+        # Execute
+        # -------------------------
+        medication = update_medication(
+            db_session_mock,
+            6,
+            PatientMedicationUpdate(**update_data),
+            modified_by="test_user",
+            user_full_name="Test User",
+        )
+
+        # -------------------------
+        # Assertions
+        # -------------------------
+        assert medication is not None
+        assert medication.Id == 6
+        assert medication.PatientId == 5
+
+        mock_outbox_service.create_event.assert_called_once()
+
+        payload = mock_outbox_service.create_event.call_args.kwargs["payload"]
+
+        assert payload["event_type"] == "PATIENT_MEDICATION_UPDATED"
+        assert payload["medication_id"] == 6
+        assert payload["patient_id"] == 5
+
+        assert payload["old_data"]["PrescriptionName"] == "Old Medicine Name"
+        assert payload["new_data"]["PrescriptionName"] == "New Medicine Name"
+        assert len(payload["changes"]) > 0
+
+        mock_log_crud_action.assert_called_once()
 
 
 def test_delete_medication(db_session_mock):
