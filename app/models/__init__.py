@@ -12,6 +12,7 @@ from .patient_guardian_relationship_mapping_model import (
     PatientGuardianRelationshipMapping,
 )
 from .patient_highlight_model import PatientHighlight
+from .patient_highlight_type_model import PatientHighlightType
 from .patient_list_diet_model import PatientDietList
 from .patient_list_education_model import PatientEducationList
 from .patient_list_language_model import PatientListLanguage
