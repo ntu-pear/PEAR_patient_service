@@ -75,6 +75,8 @@ from app.routers import (
     patient_prescription_list_router,
     patient_prescription_router,
     patient_privacy_level_router,
+    patient_problem_list_router,
+    patient_problem_router,
     patient_router,
     patient_social_history_router,
     patient_vital_router,
@@ -376,6 +378,18 @@ app.include_router(
     social_history_sensitive_mapping_router.router,
     prefix=f"{API_VERSION_PREFIX}",
     tags=["Social History Sensitive Mapping"],
+)
+
+app.include_router(
+    patient_problem_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Problem"],
+)
+
+app.include_router(
+    patient_problem_list_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Problem List"],
 )
 
 app.include_router(

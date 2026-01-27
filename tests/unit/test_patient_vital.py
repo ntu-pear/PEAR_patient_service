@@ -92,7 +92,8 @@ def test_create_patient_vital(
     )
     # Assert
     db_session_mock.add.assert_called_once()
-    db_session_mock.commit.assert_called_once()
+    # Highlight integration causes 2 commits (vital + highlight)
+    assert db_session_mock.commit.call_count == 2
     db_session_mock.refresh.assert_called_once_with(result)
     assert result.PatientId == vital_create.PatientId
     assert result.SystolicBP == vital_create.SystolicBP
@@ -120,7 +121,8 @@ def test_update_patient_vital(mock_patient_vital, db_session_mock, vital_update)
         user_full_name="Test User"     # <--- FIX
     )
     # Assert
-    db_session_mock.commit.assert_called_once()
+    # Highlight integration causes 2 commits (vital + highlight)
+    assert db_session_mock.commit.call_count == 2
     assert result.PatientId == vital_update.PatientId
     assert result.SystolicBP == vital_update.SystolicBP
     assert result.DiastolicBP == vital_update.DiastolicBP
@@ -151,7 +153,8 @@ def test_delete_patient_vital(mock_patient_vital, db_session_mock):
         user_full_name="Test User"     # <--- FIX
     )
     # Assert
-    db_session_mock.commit.assert_called_once()
+    # Highlight integration causes 2 commits (vital + highlight deletion)
+    assert db_session_mock.commit.call_count == 2
     assert result.IsDeleted == "1"
 
 

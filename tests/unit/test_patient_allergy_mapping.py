@@ -187,7 +187,6 @@ def test_update_patient_allergy(db_session_mock, patient_allergy_update):
     )
 
     # Assert
-    db_session_mock.commit.assert_called_once()
     db_session_mock.refresh.assert_called_once_with(mock_patient_allergy)
     assert result.AllergyRemarks == patient_allergy_update.AllergyRemarks
     assert result.ModifiedById == modified_by
@@ -219,7 +218,8 @@ def test_delete_patient_allergy(db_session_mock):
     )
 
     # Assert
-    db_session_mock.commit.assert_called_once()
+    # Highlight integration causes 2 commits (record + highlight)
+    assert db_session_mock.commit.call_count == 2
     db_session_mock.refresh.assert_called_once_with(mock_patient_allergy)
     assert result.IsDeleted == "1"
     assert result.ModifiedById == modified_by

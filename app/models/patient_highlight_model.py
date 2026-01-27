@@ -58,7 +58,7 @@ class PatientHighlight(Base):
     patient = relationship("Patient", back_populates="highlights")
     # highlight_type = relationship("PatientHighlightType", back_populates="highlights")
 
-    # _highlight_type = relationship("PatientHighlightType", back_populates="highlights")# NEW (Like preferred_language pattern)
+    # _highlight_type = relationship("PatientHighlightType", back_populates="highlights")
     _highlight_type = relationship(
         "PatientHighlightType",
         foreign_keys=[HighlightTypeId],

@@ -299,26 +299,31 @@ def create_medication(
             original_data=None,
             updated_data=updated_data_dict,
         )
+        db.commit()
+        db.refresh(new_medication)
+        
+        logger.info(f"Created medication {new_medication.Id} for patient {new_medication.PatientId} with outbox event {outbox_event.id} (correlation: {correlation_id})")
 
         if medication_with_prescription:
             try:
                 create_highlight_if_needed(
                     db=db,
-                    source_record=medication_with_prescription,  # Has prescription_list loaded into the Medication record.
+                    source_record=medication_with_prescription,
                     type_code="MEDICATION",
                     patient_id=new_medication.PatientId,
                     source_table="PATIENT_MEDICATION",
                     source_record_id=new_medication.Id,
                     created_by=created_by
                 )
+                # Commit the highlight separately
+                db.commit()
+                logger.info(f"Successfully created highlight for medication {new_medication.Id}")
             except Exception as e:
+                # Log the error but DON'T fail the medication creation
                 logger.error(f"Failed to create highlight for medication {new_medication.Id}: {e}")
-                
-        # Commit both medication and outbox event atomically
-        db.commit()
-        db.refresh(new_medication)
+                # Rollback only the highlight transaction
+                db.rollback()
         
-        logger.info(f"Created medication {new_medication.Id} for patient {new_medication.PatientId} with outbox event {outbox_event.id} (correlation: {correlation_id})")
         return new_medication
 
     except Exception as e:
@@ -456,6 +461,10 @@ def update_medication(
             original_data=original_data_dict,
             updated_data=updated_data_dict,
         )
+        db.commit()
+        db.refresh(db_medication)
+        
+        logger.info(f"Updated medication {db_medication.Id} for patient {db_medication.PatientId} with outbox event {outbox_event.id} (correlation: {correlation_id})")
 
         # Trigger patient highlights update after successsful update operation + logging
         medication_with_prescription = _get_medication_with_prescription_name(db, medication_id)
@@ -470,16 +479,15 @@ def update_medication(
                     source_record_id=medication_id,
                     created_by=modified_by
                 )
+                db.commit()
+                logger.info(f"Successfully updated highlight for medication {medication_id}")
             except Exception as e:
                 logger.error(f"Failed to create/update highlight for medication {medication_id}: {e}")
+                db.rollback()
+                # The medication update is already committed and safe
         else:
             logger.warning(f"Skipping highlight update for medication {medication_id} - prescription not loaded")
 
-        # Commit atomically
-        db.commit()
-        db.refresh(db_medication)
-        
-        logger.info(f"Updated medication {db_medication.Id} for patient {db_medication.PatientId} with outbox event {outbox_event.id} (correlation: {correlation_id})")
         return db_medication
 
     except Exception as e:
@@ -552,24 +560,6 @@ def delete_medication(
             correlation_id=correlation_id,
             created_by=modified_by
         )
-        
-        try:
-            highlights = db.query(PatientHighlight).filter(
-                PatientHighlight.SourceTable == "PATIENT_MEDICATION",
-                PatientHighlight.SourceRecordId == medication_id,
-                PatientHighlight.IsDeleted == 0
-            ).all()
-            
-            for highlight in highlights:
-                highlight.IsDeleted = 1
-                highlight.ModifiedDate = datetime.now()
-                highlight.ModifiedById = modified_by
-            
-            if highlights:
-                logger.info(f"Deleted {len(highlights)} highlights for medication {medication_id}")
-            
-        except Exception as e:
-            logger.error(f"Failed to delete highlights for medication {medication_id}: {e}")
 
         # Log the action
         log_crud_action(
@@ -583,11 +573,34 @@ def delete_medication(
             updated_data=serialize_data(db_medication),
         )
 
-        # Commit atomically
+        # FIX: Commit the main delete FIRST
         db.commit()
         db.refresh(db_medication)
         
         logger.info(f"Deleted medication {db_medication.Id} for patient {db_medication.PatientId} with outbox event {outbox_event.id} (correlation: {correlation_id})")
+
+        # FIX: Handle highlight deletion in SEPARATE transaction AFTER main commit
+        try:
+            highlights = db.query(PatientHighlight).filter(
+                PatientHighlight.SourceTable == "PATIENT_MEDICATION",
+                PatientHighlight.SourceRecordId == medication_id,
+                PatientHighlight.IsDeleted == 0
+            ).all()
+            
+            for highlight in highlights:
+                highlight.IsDeleted = 1
+                highlight.ModifiedDate = datetime.now()
+                highlight.ModifiedById = modified_by
+            
+            if highlights:
+                db.commit()
+                logger.info(f"Deleted {len(highlights)} highlights for medication {medication_id}")
+            
+        except Exception as e:
+            logger.error(f"Failed to delete highlights for medication {medication_id}: {e}")
+            db.rollback()
+            # The medication deletion is already committed and safe
+
         return db_medication
 
     except Exception as e:

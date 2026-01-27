@@ -267,5 +267,6 @@ def test_delete_prescription(db_session_mock):
         modified_by="test_user",      # <--- FIX
         user_full_name="Test User"    # <--- FIX
     )
-    db_session_mock.commit.assert_called_once()
+    # Highlight integration causes 2 comits (prescription + highlight)
+    assert db_session_mock.commit.call_count == 2
     assert result.IsDeleted == "1"
