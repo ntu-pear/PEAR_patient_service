@@ -37,10 +37,9 @@ class PrescriptionStrategy(HighlightStrategy):
         if hasattr(prescription_record, 'prescription_list') and prescription_record.prescription_list:
             prescription_name = prescription_record.prescription_list.Value
     
-        prefix = ["Prescription"]
         
         # # Build text
-        parts = [f"{prefix}: {prescription_name}"]
+        parts = [f"Prescription: {prescription_name}"]
         
         # Add dosage
         if hasattr(prescription_record, 'Dosage') and prescription_record.Dosage:
