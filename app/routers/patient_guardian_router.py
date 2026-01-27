@@ -41,7 +41,7 @@ def get_patient_guardian_by_patient_id(patient_id: int, db: Session = Depends(ge
     patient_patient_guardian = crud_patient_patient_guardian.get_all_patient_guardian_by_patientId(db, patient_id)
     return patient_patient_guardian
 
-@router.post("/Guardian/add", response_model=PatientGuardianCreate)
+@router.post("/Guardian/add", response_model=PatientGuardian)
 def create_patient_guardian(guardian: PatientGuardianCreate, db: Session = Depends(get_db)):
     db_relationship_id = crud_relationship.get_relationshipId_by_relationshipName(db, guardian.relationshipName)
     if not db_relationship_id:
@@ -64,7 +64,7 @@ def create_patient_guardian(guardian: PatientGuardianCreate, db: Session = Depen
         isDeleted=db_guardian.isDeleted
     )
 )
-    return guardian
+    return db_guardian
 
 
 @router.put("/Guardian/update", response_model=PatientGuardian)

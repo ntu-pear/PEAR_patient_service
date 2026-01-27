@@ -1,23 +1,26 @@
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from datetime import datetime
-from typing import Optional, List
-from .patient import Patient
+from typing import List, Optional
+
 import pytz
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+from .patient import Patient
+
 
 class PatientGuardianBase(BaseModel):
     active: Optional[str] = 'Y'
     firstName: str
     lastName: str
     preferredName: Optional[str] = None
-    gender: str
+    gender: str = 'M'
     contactNo: str
     nric: str
-    email: EmailStr
+    email: Optional[EmailStr] = None
     dateOfBirth: datetime
-    address: str
+    address: str = "Testing Address"
     tempAddress: Optional[str] = None
     status: Optional[str] = None
-    isDeleted: str
+    isDeleted: str = "0"
     guardianApplicationUserId:  Optional[str] = None
 
 
@@ -27,7 +30,7 @@ class PatientGuardianCreate(PatientGuardianBase):
     CreatedById: str = Field(json_schema_extra={"example": "1"})
     ModifiedById: str = Field(json_schema_extra={"example": "1"})
     patientId: int
-    relationshipName: str
+    relationshipName: str = "Husband"
 
 class PatientGuardianUpdate(PatientGuardianBase):
     modifiedDate: datetime = Field(default_factory=datetime.now)

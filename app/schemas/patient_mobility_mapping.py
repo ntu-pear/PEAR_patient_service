@@ -1,6 +1,8 @@
-from pydantic import BaseModel
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional
+
+from pydantic import BaseModel
+
 
 class PatientMobilityBase(BaseModel):
     PatientID: int
@@ -9,11 +11,12 @@ class PatientMobilityBase(BaseModel):
     IsRecovered: Optional[bool] = False
 
 class PatientMobilityCreate(PatientMobilityBase):
-    pass
+    RecoveryDate: Optional[date] = None # Here we allow frontend to pass in a recovery date if IsRecovered is True
 
 class PatientMobilityUpdate(BaseModel):
-    MobilityRemarks: Optional[str]
-    IsRecovered: Optional[bool]
+    MobilityRemarks: Optional[str] = None
+    IsRecovered: Optional[bool] = None
+    RecoveryDate: Optional[date] = None
 
 class PatientMobilityResponse(BaseModel):
     MobilityID: int
@@ -21,6 +24,7 @@ class PatientMobilityResponse(BaseModel):
     MobilityListId: int
     MobilityRemarks: str
     IsRecovered: bool
+    RecoveryDate: Optional[date] = None
     IsDeleted: bool
     CreatedDateTime: datetime
     ModifiedDateTime: datetime
