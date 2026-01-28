@@ -4,6 +4,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.models.patient_highlight_model import PatientHighlight
+from app.models.patient_highlight_type_model import PatientHighlightType
 from app.strategies.highlights.strategy_factory import HighlightStrategyFactory
 
 logger = logging.getLogger(__name__)
@@ -19,9 +20,13 @@ def create_highlight_if_needed(
     created_by: str
 ):
     """
-    Creates, updates, or deletes a highlight based on whether the source record qualifies.
+    Creates, updates, or deletes a highlight based on whether the source record qualifies
+    AND whether the highlight type is enabled.
     
     Logic:
+    0. Check if the highlight type is enabled (IsEnabled = 1)
+       - If NOT enabled: Delete existing highlight if it exists, then return
+       - If enabled: Continue with normal logic
     1. Check if record should generate highlight (via strategy)
     2. If YES and no highlight exists - Create new highlight
     3. If YES and highlight exists - Update existing highlight (including HighlightText)
@@ -29,6 +34,43 @@ def create_highlight_if_needed(
     5. If NO and no highlight exists - Do nothing
     """
     try:
+        # STEP 0: Check if highlight type is enabled
+        highlight_type = db.query(PatientHighlightType).filter(
+            PatientHighlightType.TypeCode == type_code,
+            PatientHighlightType.IsDeleted == False
+        ).first()
+        
+        if not highlight_type:
+            logger.warning(f"Highlight type not found for code: {type_code}")
+            return
+        
+        # Check if the type is enabled
+        if not highlight_type.IsEnabled:
+            logger.info(f"Highlight type '{type_code}' is DISABLED (IsEnabled=0). Checking for existing highlights to delete.")
+            
+            # If type is disabled, delete any existing highlight for this source
+            existing_highlight = db.query(PatientHighlight).filter(
+                PatientHighlight.SourceTable == source_table,
+                PatientHighlight.SourceRecordId == source_record_id,
+                PatientHighlight.IsDeleted == 0
+            ).first()
+            
+            if existing_highlight:
+                logger.info(f"Deleting highlight {existing_highlight.Id} because type '{type_code}' is disabled")
+                existing_highlight.IsDeleted = 1
+                existing_highlight.ModifiedDate = datetime.now()
+                existing_highlight.ModifiedById = created_by
+                db.flush()
+                db.commit()
+            else:
+                logger.debug(f"No existing highlight found for {source_table}:{source_record_id} with disabled type")
+            
+            # Exit early - don't create highlights for disabled types
+            return
+        
+        # Type is enabled - proceed with normal highlight logic
+        logger.info(f"Highlight type '{type_code}' is ENABLED. Proceeding with highlight evaluation.")
+        
         # Get strategy for this type
         factory = HighlightStrategyFactory()
         strategy = factory.get_strategy(type_code)
@@ -54,17 +96,6 @@ def create_highlight_if_needed(
         if should_highlight and not existing_highlight:
             highlight_text = strategy.generate_highlight_text(source_record)
             logger.info(f"Generating NEW highlight text: '{highlight_text}'")
-            
-            # Get highlight type ID from database
-            from app.models.patient_highlight_type_model import PatientHighlightType
-            highlight_type = db.query(PatientHighlightType).filter(
-                PatientHighlightType.TypeCode == type_code,
-                PatientHighlightType.IsDeleted == False
-            ).first()
-            
-            if not highlight_type:
-                logger.error(f"Highlight type not found for code: {type_code}")
-                return
             
             # Create new highlight
             new_highlight = PatientHighlight(

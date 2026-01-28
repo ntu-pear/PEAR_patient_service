@@ -18,6 +18,68 @@ def get_highlight_type_by_id(db: Session, highlight_type_id: int):
         .first()
     )
 
+def get_enabled_highlight_types(db: Session):
+    return (
+        db.query(PatientHighlightType)
+        .filter(
+            PatientHighlightType.IsDeleted == "0",
+            PatientHighlightType.IsEnabled == "1"
+        )
+        .order_by(PatientHighlightType.TypeName)
+        .all()
+    )
+
+# Toggle highlight type IsEnabled field - for admin's use
+def toggle_highlight_type_enabled(db: Session, highlight_type_id: int, modified_by: str, user_full_name: str):
+    db_highlight_type = (
+        db.query(PatientHighlightType)
+        .filter(PatientHighlightType.Id == highlight_type_id)
+        .first()
+    )
+    
+    if not db_highlight_type or db_highlight_type.IsDeleted:
+        raise HTTPException(status_code=404, detail="Highlight type not found")
+    
+    try:
+        original_data_dict = {
+            k: serialize_data(v) for k, v in db_highlight_type.__dict__.items() if not k.startswith("_")
+        }
+    except Exception as e:
+        original_data_dict = "{}"
+    
+    # Toggle IsEnabled
+    old_status = db_highlight_type.IsEnabled
+    new_status = not old_status
+    db_highlight_type.IsEnabled = new_status
+    
+    # Update audit fields
+    db_highlight_type.ModifiedDate = datetime.now()
+    db_highlight_type.ModifiedById = modified_by
+    
+    # Commit changes
+    db.commit()
+    db.refresh(db_highlight_type)
+    
+    # Log the action
+    updated_data_dict = {
+        "IsEnabled": new_status,
+        "toggled_from": old_status,
+        "toggled_to": new_status
+    }
+    
+    log_crud_action(
+        action=ActionType.UPDATE,
+        user=modified_by,
+        user_full_name=user_full_name,
+        message=f"Toggled highlight type IsEnabled from {old_status} to {new_status}",
+        table="HighlightType",
+        entity_id=highlight_type_id,
+        original_data=original_data_dict,
+        updated_data=updated_data_dict,
+    )
+    
+    return db_highlight_type
+
 def create_highlight_type(
     db: Session, highlight_type: HighlightTypeCreate, created_by: str, user_full_name:str
 ):
@@ -120,7 +182,7 @@ def delete_highlight_type(db: Session, highlight_type_id: int, modified_by: str,
             except Exception as e:
                 original_data_dict = "{}"
 
-            setattr(db_highlight_type, "IsDeleted", "1")
+            db_highlight_type.IsDeleted = "1"
             db_highlight_type.ModifiedById = modified_by
             db_highlight_type.ModifiedDate = datetime.now()
 

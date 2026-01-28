@@ -58,6 +58,37 @@ def get_highlights_by_patient(db: Session, patient_id: int):
     highlights = db.query(PatientHighlight).options(joinedload(PatientHighlight._highlight_type)).filter(PatientHighlight.PatientId == patient_id, PatientHighlight.IsDeleted == "0").order_by(PatientHighlight.CreatedDate.desc()).all()
     return _add_source_remarks_and_additional_fields(db, highlights)
 
+def get_enabled_highlights(db: Session):
+    highlights = (
+        db.query(PatientHighlight)
+        .join(PatientHighlightType, PatientHighlight.HighlightTypeId == PatientHighlightType.Id)
+        .options(joinedload(PatientHighlight._highlight_type))
+        .filter(
+            PatientHighlight.IsDeleted == "0",           # Highlight not deleted
+            PatientHighlightType.IsDeleted == "0",   # Type not deleted
+            PatientHighlightType.IsEnabled == "1"     # Type is enabled
+        )
+        .order_by(PatientHighlight.PatientId, PatientHighlight.CreatedDate.desc())
+        .all()
+    )
+    return _add_source_remarks_and_additional_fields(db, highlights)
+
+def get_enabled_highlights_by_patient(db: Session, patient_id: int):
+    highlights = (
+        db.query(PatientHighlight)
+        .join(PatientHighlightType, PatientHighlight.HighlightTypeId == PatientHighlightType.Id)
+        .options(joinedload(PatientHighlight._highlight_type))
+        .filter(
+            PatientHighlight.PatientId == patient_id,  # Specific patient
+            PatientHighlight.IsDeleted == "0",           # Highlight not deleted
+            PatientHighlightType.IsDeleted == "0",   # Type not deleted
+            PatientHighlightType.IsEnabled == "1"     # Type is enabled
+        )
+        .order_by(PatientHighlight.CreatedDate.desc())
+        .all()
+    )
+    return _add_source_remarks_and_additional_fields(db, highlights)
+
 def create_highlight(db: Session, highlight_data: PatientHighlightCreate, created_by: str, user_full_name:str):
     db_highlight = PatientHighlight(
         **highlight_data.model_dump(), CreatedById=created_by, ModifiedById=created_by
@@ -126,7 +157,7 @@ def delete_highlight(db: Session, highlight_id: int, modified_by: str,  user_ful
     except Exception as e:
         original_data_dict = "{}"
 
-    db_highlight.IsDeleted = "1"
+    db_highlight.IsDeleted = 1
     db_highlight.ModifiedDate = datetime.now()
     db_highlight.ModifiedById = modified_by
     db.commit()
@@ -176,8 +207,8 @@ def cleanup_old_highlights(db: Session):
     try:
         # Get all enabled highlight types
         highlight_types = db.query(PatientHighlightType).filter(
-            PatientHighlightType.IsEnabled == True,
-            PatientHighlightType.IsDeleted == False
+            PatientHighlightType.IsEnabled == "1",
+            PatientHighlightType.IsDeleted == "0"
         ).all()
         
         total_deleted = 0

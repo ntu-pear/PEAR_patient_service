@@ -50,7 +50,7 @@ class PatientHighlight(Base):
     # Audit Fields
     CreatedDate = Column(DateTime, nullable=False, default=datetime.now)
     ModifiedDate = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
-    IsDeleted = Column(Integer, default=0, nullable=False)
+    IsDeleted = Column(String(0), default="0", nullable=False)
     CreatedById = Column(String(450), nullable=False)
     ModifiedById = Column(String(450), nullable=False)
     

@@ -43,11 +43,11 @@ class PatientHighlightType(Base):
     Description = Column(String(500), nullable=True)         # Optional description
     
     # Configuration
-    IsEnabled = Column(Boolean, nullable=False, default=True, index=True)  # Admin can enable/disable
+    IsEnabled = Column(String(0), default="1", nullable=False, index=True)  # Admin can enable/disable
     
     # Audit Fields
     CreatedDate = Column(DateTime, nullable=False, default=datetime.now)
     ModifiedDate = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
-    IsDeleted = Column(Boolean, nullable=False, default=False, index=True)
+    IsDeleted = Column(String(0), nullable=False, default="0", index=True)
     CreatedById = Column(String(450), nullable=False)
     ModifiedById = Column(String(450), nullable=False)
