@@ -37,7 +37,7 @@ def get_enabled_highlight_types(
     _ = extract_jwt_payload(request, require_auth)
     return crud_highlight_type.get_enabled_highlight_types(db)
 
-@router.patch("/toggle_highlight_type_enabled/{highlight_type_id}", response_model=HighlightType, description="Toggle the IsEnabled status of a highlight type.")
+@router.patch("/HighlightType/toggle_highlight_type_enabled/{highlight_type_id}", response_model=HighlightType, description="Toggle the IsEnabled status of a highlight type.")
 def toggle_highlight_type_enabled(
     request: Request,
     highlight_type_id: int,

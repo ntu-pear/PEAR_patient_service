@@ -46,7 +46,7 @@ def get_patient_highlights(
         raise HTTPException(status_code=404, detail="No highlights found for the patient")
     return highlights
 
-@router.get("/get_enabled_highlights", response_model=list[PatientHighlight], description="Get all highlights where IsDeleted=0 and the type's IsEnabled=1.")
+@router.get("/Highlight/get_enabled_highlights", response_model=list[PatientHighlight], description="Get all highlights where IsDeleted=0 and the type's IsEnabled=1.")
 def get_all_enabled_highlights(
     request: Request,
     db: Session = Depends(get_db),
@@ -56,7 +56,7 @@ def get_all_enabled_highlights(
     _ = extract_jwt_payload(request, require_auth)
     return get_enabled_highlights(db)
 
-@router.get("/get_enabled_highlights_by_patient/{patient_id}", response_model=list[PatientHighlight], description="Get enabled highlights for a specific patient.")
+@router.get("/Highlight/get_enabled_highlights_by_patient/{patient_id}", response_model=list[PatientHighlight], description="Get enabled highlights for a specific patient.")
 def get_patient_enabled_highlights(
     request: Request,
     patient_id: int,
