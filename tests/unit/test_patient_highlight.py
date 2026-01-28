@@ -1,38 +1,43 @@
-import pytest
+from datetime import datetime
 from unittest.mock import MagicMock
+
+import pytest
+
 from app.crud.patient_highlight_crud import (
+    create_highlight,
+    delete_highlight,
     get_all_highlights,
     get_highlights_by_patient,
-    create_highlight,
     update_highlight,
-    delete_highlight,
 )
-from app.models.patient_patient_guardian_model import PatientPatientGuardian
-from app.models.patient_allergy_mapping_model import PatientAllergyMapping
-from app.models.allergy_type_model import AllergyType
 from app.models.allergy_reaction_type_model import AllergyReactionType
-from app.models.patient_doctor_note_model import PatientDoctorNote
-from app.models.patient_photo_model import PatientPhoto
-from app.models.patient_photo_list_model import PatientPhotoList
-from app.models.patient_model import Patient
+from app.models.allergy_type_model import AllergyType
+from app.models.patient_allergy_mapping_model import PatientAllergyMapping
 from app.models.patient_assigned_dementia_list_model import PatientAssignedDementiaList
-from app.models.patient_assigned_dementia_mapping_model import PatientAssignedDementiaMapping
-from app.models.patient_mobility_list_model import PatientMobilityList
-from app.models.patient_mobility_mapping_model import PatientMobility
-from app.models.patient_prescription_model import PatientPrescription
-from app.models.patient_social_history_model import PatientSocialHistory
-from app.models.patient_vital_model import PatientVital
-from app.models.patient_highlight_model import PatientHighlight
-from app.models.patient_highlight_type_model import PatientHighlightType
+from app.models.patient_dementia_stage_list_model import PatientDementiaStageList
+from app.models.patient_assigned_dementia_mapping_model import (
+    PatientAssignedDementiaMapping,
+)
+from app.models.patient_doctor_note_model import PatientDoctorNote
 from app.models.patient_guardian_relationship_mapping_model import (
     PatientGuardianRelationshipMapping,
 )
+from app.models.patient_highlight_model import PatientHighlight
+from app.models.patient_highlight_type_model import PatientHighlightType
+from app.models.patient_mobility_list_model import PatientMobilityList
+from app.models.patient_mobility_mapping_model import PatientMobility
+from app.models.patient_model import Patient
+from app.models.patient_patient_guardian_model import PatientPatientGuardian
+from app.models.patient_photo_list_model import PatientPhotoList
+from app.models.patient_photo_model import PatientPhoto
+from app.models.patient_prescription_model import PatientPrescription
+
 # ADD Problem model imports
 from app.models.patient_problem_list_model import PatientProblemList
 from app.models.patient_problem_model import PatientProblem
-
+from app.models.patient_social_history_model import PatientSocialHistory
+from app.models.patient_vital_model import PatientVital
 from app.schemas.patient_highlight import PatientHighlightCreate, PatientHighlightUpdate
-from datetime import datetime
 from tests.utils.mock_db import get_db_session_mock
 
 
@@ -185,7 +190,7 @@ def test_delete_highlight(db_session_mock):
     
     # Assert
     db_session_mock.commit.assert_called_once()
-    assert result.IsDeleted == "1"
+    assert result.IsDeleted == 1
     assert result.ModifiedById == modified_by
 
 

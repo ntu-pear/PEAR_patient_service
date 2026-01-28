@@ -18,6 +18,7 @@ from app.models.patient_assigned_dementia_list_model import PatientAssignedDemen
 from app.models.patient_assigned_dementia_mapping_model import (
     PatientAssignedDementiaMapping,
 )
+from app.models.patient_dementia_stage_list_model import PatientDementiaStageList
 from app.models.patient_doctor_note_model import PatientDoctorNote
 from app.models.patient_guardian_relationship_mapping_model import (
     PatientGuardianRelationshipMapping,
