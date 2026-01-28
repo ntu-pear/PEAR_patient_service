@@ -1,13 +1,15 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
 from datetime import datetime
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
+
 from app.database import Base
 
 
 class PatientAllergyMapping(Base):
     __tablename__ = "PATIENT_ALLERGY_MAPPING"
 
-    Patient_AllergyID = Column(Integer, primary_key=True, index=True)
+    Patient_AllergyID = Column(Integer, primary_key=True, index=True, autoincrement=True)
     PatientID = Column(Integer, ForeignKey("PATIENT.id"), nullable=False)
     AllergyTypeID = Column(Integer, ForeignKey("ALLERGY_TYPE.AllergyTypeID"), nullable=False)
     AllergyReactionTypeID = Column(Integer, ForeignKey("ALLERGY_REACTION_TYPE.AllergyReactionTypeID"), nullable=False)
