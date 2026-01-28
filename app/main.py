@@ -50,6 +50,7 @@ from app.models import (
 from app.routers import (
     allergy_reaction_type_router,
     allergy_type_router,
+    cronjob_router,
     integrity_router,
     outbox_router,
     patient_allergy_mapping_router,
@@ -78,6 +79,8 @@ from app.routers import (
     patient_prescription_list_router,
     patient_prescription_router,
     patient_privacy_level_router,
+    patient_problem_list_router,
+    patient_problem_router,
     patient_router,
     patient_social_history_router,
     patient_vital_router,
@@ -399,6 +402,18 @@ app.include_router(
 )
 
 app.include_router(
+    patient_problem_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Problem"],
+)
+
+app.include_router(
+    patient_problem_list_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Problem List"],
+)
+
+app.include_router(
     integrity_router.router,
     prefix=f"{API_VERSION_PREFIX}/integrity",
     tags=["Integrity"],
@@ -406,6 +421,10 @@ app.include_router(
 
 app.include_router(
     outbox_router.router
+)
+
+app.include_router(
+    cronjob_router.router
 )
 
 # Shift Photos route to below. Photos route catches / routes which interferes with most GET ALL routes.

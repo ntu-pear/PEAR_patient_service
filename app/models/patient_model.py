@@ -65,6 +65,8 @@ class Patient(Base):
     attendances = relationship("PatientAttendance", back_populates="patient")
     highlights = relationship("PatientHighlight", back_populates="patient")
     privacy = relationship("PatientPrivacyLevel", back_populates="patient")
+    problems = relationship("PatientProblem", back_populates="patient")
+
     medical_histories = relationship("PatientMedicalHistory", back_populates="patient")
     _preferred_language = relationship(
         PatientListLanguage,

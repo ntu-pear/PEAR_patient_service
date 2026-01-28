@@ -1,15 +1,20 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from ..database import get_db
+
+from app.services.highlight_helper import create_highlight_if_needed
+
+from ..auth.jwt_utils import extract_jwt_payload, get_full_name, get_user_id
 from ..crud import patient_vital_crud as crud_vital
+from ..database import get_db
 from ..schemas.patient_vital import (
     PatientVital,
     PatientVitalCreate,
     PatientVitalDelete,
-    PatientVitalUpdate
+    PatientVitalUpdate,
 )
-from ..schemas.response import SingleResponse, PaginatedResponse
-from ..auth.jwt_utils import extract_jwt_payload, get_user_id, get_full_name
+from ..schemas.response import PaginatedResponse, SingleResponse
 
 router = APIRouter()
 
@@ -69,6 +74,7 @@ def create_vital(
 
     db_vital = crud_vital.create_vital(db, vital, user_id, user_full_name)
     vital_data = PatientVital.model_validate(db_vital)
+    
     return SingleResponse(data=vital_data)
 
 # Update an existing vital record
@@ -89,6 +95,18 @@ def update_vital(
         raise HTTPException(status_code=404, detail="Vital record not found")
 
     vital_data = PatientVital.model_validate(db_vital)
+    
+    # Calling Highlight function to see if a highlight needs to be created
+    create_highlight_if_needed(
+        db=db,
+        source_record=vital_data,
+        type_code="VITAL",
+        patient_id=vital_data.PatientId,
+        source_table="VITAL",
+        created_by=user_id
+    )
+    
+    
     return SingleResponse(data=vital_data)
 
 # Soft delete a vital record

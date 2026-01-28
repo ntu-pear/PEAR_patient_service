@@ -1,0 +1,22 @@
+CREATE TABLE PATIENT_HIGHLIGHT (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    PatientId INT NOT NULL,
+    HighlightTypeId INT NOT NULL,
+    HighlightText NVARCHAR(500) NOT NULL,
+    SourceTable NVARCHAR(50) NOT NULL,
+    SourceRecordId INT NOT NULL,
+    CreatedDate DATETIME NOT NULL DEFAULT GETDATE(),
+    ModifiedDate DATETIME NOT NULL DEFAULT GETDATE(),
+    IsDeleted NVARCHAR(1) NOT NULL DEFAULT '0',
+    CreatedById NVARCHAR(450) NOT NULL,
+    ModifiedById NVARCHAR(450) NOT NULL,
+    
+    -- Foreign Keys
+    CONSTRAINT FK_PatientHighlight_Patient 
+        FOREIGN KEY (PatientId) REFERENCES PATIENT(id)
+        ON DELETE CASCADE,
+    
+    CONSTRAINT FK_PatientHighlight_Type 
+        FOREIGN KEY (HighlightTypeId) REFERENCES PATIENT_HIGHLIGHT_TYPE(Id)
+        ON DELETE CASCADE,
+);

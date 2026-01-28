@@ -1,16 +1,23 @@
+import logging
 import math
+from datetime import datetime
+
+from app.models.patient_highlight_model import PatientHighlight
 from fastapi import HTTPException
-from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
+
+from app.services.highlight_helper import create_highlight_if_needed
+
+from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
+from ..models.allergy_reaction_type_model import AllergyReactionType
+from ..models.allergy_type_model import AllergyType
 from ..models.patient_allergy_mapping_model import PatientAllergyMapping
 from ..schemas.patient_allergy_mapping import (
     PatientAllergyCreate,
     PatientAllergyUpdateReq,
 )
-from ..models.allergy_type_model import AllergyType
-from ..models.allergy_reaction_type_model import AllergyReactionType
-from datetime import datetime
 
+logger = logging.getLogger(__name__)
 
 def get_all_allergies(db: Session, pageNo: int = 0, pageSize: int = 10):
     offset = pageNo * pageSize
@@ -172,7 +179,7 @@ def create_patient_allergy(
         )
 
     # Create the patient allergy mapping
-    db_allergy = PatientAllergyMapping(
+    new_allergy = PatientAllergyMapping(
         PatientID=allergy_data.PatientID,
         AllergyTypeID=allergy_data.AllergyTypeID,
         AllergyReactionTypeID=allergy_data.AllergyReactionTypeID,
@@ -184,10 +191,32 @@ def create_patient_allergy(
         ModifiedById=created_by,
     )
 
-    db.add(db_allergy)
+    db.add(new_allergy)
     db.commit()
-    db.refresh(db_allergy)
+    db.refresh(new_allergy)
+    
+    # Highlight integration - perform this after successful creation of Allergy mapping
+    allergy_with_relationships = db.query(PatientAllergyMapping).options(
+        joinedload(PatientAllergyMapping.allergy_type),
+        joinedload(PatientAllergyMapping.allergy_reaction_type)
+    ).filter(
+        PatientAllergyMapping.Patient_AllergyID == new_allergy.Patient_AllergyID
+    ).first()
 
+    try:
+        create_highlight_if_needed(
+            db=db,
+            source_record=allergy_with_relationships,  # Pass the record with relationships
+            type_code="ALLERGY",
+            patient_id=new_allergy.PatientID,
+            source_table="PATIENT_ALLERGY_MAPPING",
+            source_record_id=new_allergy.Patient_AllergyID,
+            created_by=created_by
+        )
+    except Exception as e:
+        # Log error but don't fail the allergy creation
+        logger.error(f"Failed to create highlight for allergy {new_allergy.Patient_AllergyID}: {e}")
+    
     updated_data_dict = serialize_data(allergy_data.model_dump())
     log_crud_action(
         action=ActionType.CREATE,
@@ -195,11 +224,11 @@ def create_patient_allergy(
         user_full_name=user_full_name,
         table="PatientAllergyMapping",
         message = "Created patient allergy",
-        entity_id=db_allergy.Patient_AllergyID,
+        entity_id=new_allergy.Patient_AllergyID,
         original_data=None,
         updated_data=updated_data_dict,
     )
-    return db_allergy
+    return new_allergy
 
 
 def update_patient_allergy(
@@ -280,6 +309,30 @@ def update_patient_allergy(
     # Commit the changes to the database
     db.commit()
     db.refresh(db_allergy)
+    
+    # Highlight integration - perform this after updating the Allergy mapping
+    allergy_with_relationships = db.query(PatientAllergyMapping).options(
+        joinedload(PatientAllergyMapping.allergy_type),
+        joinedload(PatientAllergyMapping.allergy_reaction_type)
+    ).filter(
+        PatientAllergyMapping.Patient_AllergyID == db_allergy.Patient_AllergyID
+    ).first()
+
+    try:
+        create_highlight_if_needed(
+            db=db,
+            source_record=allergy_with_relationships,
+            type_code="ALLERGY",
+            patient_id=db_allergy.PatientID,
+            source_table="PATIENT_ALLERGY_MAPPING",
+            source_record_id=db_allergy.Patient_AllergyID,
+            created_by=modified_by
+        )
+    except Exception as e:
+        logger.error(f"Failed to create/update highlight for allergy {db_allergy.Patient_AllergyID}: {e}")
+
+    
+    
 
     updated_data_dict = serialize_data(allergy_data.model_dump())
     log_crud_action(
@@ -315,6 +368,27 @@ def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: st
 
     # Commit the changes to the database
     db.commit()
+    
+    try:
+        highlights = db.query(PatientHighlight).filter(
+            PatientHighlight.SourceTable == "PATIENT_ALLERGY_MAPPING",
+            PatientHighlight.SourceRecordId == patient_allergy_id,
+            PatientHighlight.IsDeleted == 0
+        ).all()
+        
+        for highlight in highlights:
+            highlight.IsDeleted = 1
+            highlight.ModifiedDate = datetime.now()
+            highlight.ModifiedById = modified_by
+        
+        if highlights:
+            logger.info(f"Deleted {len(highlights)} highlights for allergy {patient_allergy_id}")
+        
+        db.commit()
+        
+    except Exception as e:
+        logger.error(f"Failed to delete highlights for allergy {patient_allergy_id}: {e}")
+    
     db.refresh(db_allergy)
 
     try:
