@@ -28,7 +28,7 @@ from app.models.patient_mobility_list_model import PatientMobilityList
 from app.models.patient_mobility_mapping_model import PatientMobility
 from app.models.patient_model import Patient
 from app.models.patient_patient_guardian_model import PatientPatientGuardian
-from app.models.patient_photo_list_model import PatientPhotoList
+from app.models.patient_photo_list_album_model import PatientPhotoListAlbum
 from app.models.patient_photo_model import PatientPhoto
 from app.models.patient_prescription_model import PatientPrescription
 
