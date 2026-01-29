@@ -1,12 +1,58 @@
-from sqlalchemy.orm import Session
+import logging
+import re
+from datetime import datetime
+
 import cloudinary.uploader
+from sqlalchemy.orm import Session
+
+from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_photo_model import PatientPhoto
 from ..schemas.patient_photo import PatientPhotoCreate, PatientPhotoUpdate
-from datetime import datetime
-from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 
+logger = logging.getLogger(__name__)
 PATIENT_ID = 2  # Fixed Patient ID
 SYSTEM_USER_ID = "1"  # System-generated default user ID
+
+
+def extract_public_id_from_url(cloudinary_url: str) -> str:
+    """
+    Extract the public_id from a Cloudinary URL.
+    Example URL: https://res.cloudinary.com/demo/image/upload/v1234567890/folder/image.jpg
+    Returns: folder/image
+    """
+    try:
+        # Remove version number and extension
+        # Pattern: .../upload/v<digits>/<public_id>.<extension>
+        # or .../upload/<public_id>.<extension>
+        match = re.search(r'/upload/(?:v\d+/)?(.+)\.\w+$', cloudinary_url)
+        if match:
+            return match.group(1)
+        return None
+    except Exception as e:
+        logger.error(f"Error extracting public_id from URL {cloudinary_url}: {str(e)}")
+        return None
+
+def delete_photo_from_cloudinary(cloudinary_url: str):
+    """
+    Delete photo from Cloudinary using the photo URL.
+    Extracts the public_id from the URL and deletes it.
+    """
+    try:
+        public_id = extract_public_id_from_url(cloudinary_url)
+        if public_id:
+            result = cloudinary.uploader.destroy(public_id)
+            if result.get('result') == 'ok':
+                logger.info(f"Successfully deleted photo from Cloudinary: {public_id}")
+                return True
+            else:
+                logger.warning(f"Failed to delete photo from Cloudinary: {public_id}, Result: {result}")
+                return False
+        else:
+            logger.error(f"Could not extract public_id from URL: {cloudinary_url}")
+            return False
+    except Exception as e:
+        logger.error(f"Cloudinary deletion failed for URL {cloudinary_url}: {str(e)}")
+        return False
 
 def upload_photo_to_cloudinary(file):
     """ Upload photo to Cloudinary and return the URL """
@@ -114,6 +160,8 @@ def update_patient_photo(db: Session, patient_id: int, file, update_data: Patien
 
 def delete_patient_photo(db: Session, patient_id: int, modified_by_id: int):
     """ Soft delete all photos for a given PatientID (set IsDeleted = 1) """
+    
+    # TODO: After soft deleting in DB, we need to delete the actual photo from Cloudinary as well.
     
     # Get all photos for the patient
     db_photos = db.query(PatientPhoto).filter(
