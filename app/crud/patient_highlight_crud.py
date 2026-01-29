@@ -219,7 +219,7 @@ def cleanup_old_highlights(db: Session):
             retention_days = 3
             
             # Calculate cutoff date (N business days ago)
-            cutoff_date = calculate_business_days_ago(retention_days)
+            cutoff_date = calculate_business_days_ago(retention_days, country="SG")
             
             # Set to END of that day (23:59:59.999999)
             # This ensures any highlight created during that day is included
