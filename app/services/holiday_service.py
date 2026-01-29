@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class HolidayService:
     """
-    Simple holiday service that uses PyPI's Holiday Library.
+    Holiday service that uses PyPI's Holiday Library.
     This service is called once every highlight hard deletion cronjob execution to load holidays for the year.
     """
     def __init__(self, country: str = "SG", years: list = None):
