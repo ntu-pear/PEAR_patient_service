@@ -1,20 +1,21 @@
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
-from ..database import get_db
-from ..schemas.patient_photo import *
+
 from ..crud.patient_photo_crud import (
     create_patient_photo,
-    get_patient_photos,
+    delete_patient_photo,
     get_patient_photo_by_id,
+    get_patient_photos,
     update_patient_photo,
-    delete_patient_photo
 )
+from ..database import get_db
+from ..schemas.patient_photo import *
 
 router = APIRouter()
 
 PATIENT_ID = 2  # Fixed PatientID for all API calls
 
-@router.post("/", response_model=PatientPhotoResponse)
+@router.post("/PersonalPhoto/upload", response_model=PatientPhotoResponse)
 async def upload_patient_photo(
     file: UploadFile = File(...),
     photo_data: PatientPhotoCreate = Depends(),
@@ -24,13 +25,13 @@ async def upload_patient_photo(
     photo_data.PatientID = PATIENT_ID  # Override PatientID
     return create_patient_photo(db, file.file, photo_data)
 
-@router.get("/", response_model=list[PatientPhotoResponse])
+@router.get("/PersonalPhotos", response_model=list[PatientPhotoResponse])
 async def get_photos(db: Session = Depends(get_db)):
     """ Retrieve all active patient photos """
     photos = get_patient_photos(db)
     return photos
 
-@router.get("/{photo_id}", response_model=PatientPhotoResponse)
+@router.get("/PersonalPhotos/by-photo-id/{photo_id}", response_model=PatientPhotoResponse)
 async def get_photo(photo_id: int, db: Session = Depends(get_db)):
     """ Retrieve a specific patient photo """
     photo = get_patient_photo_by_id(db, photo_id)
@@ -38,7 +39,7 @@ async def get_photo(photo_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Photo not found or deleted")
     return photo
 
-@router.put("/{patient_id}", response_model=PatientPhotoResponse)
+@router.put("/PersonalPhoto/by-patient-id/{patient_id}", response_model=PatientPhotoResponse)
 async def update_photo(
     patient_id: int,
     file: UploadFile = File(...),
@@ -51,7 +52,7 @@ async def update_photo(
         raise HTTPException(status_code=404, detail="Photo not found")
     return photo
 
-@router.delete("/{patient_id}")
+@router.delete("/PersonalPhoto/delete/{patient_id}")
 async def delete_photo(patient_id: int, modified_by_id: int, db: Session = Depends(get_db)):
     """ Soft delete a specific patient photo """
     photo = delete_patient_photo(db, patient_id, modified_by_id)
