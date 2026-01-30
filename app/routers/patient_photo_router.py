@@ -76,7 +76,7 @@ async def get_photo_by_photo_id(
     return photo
 
 
-@router.put("/PersonalPhoto/by-patient-id/{patient_id}", response_model=PatientPhotoResponse)
+@router.put("/PersonalPhoto/update/by-patient-id/{patient_id}", response_model=PatientPhotoResponse)
 async def update_photo_by_patient_id(
     request: Request,
     patient_id: int,
@@ -96,7 +96,7 @@ async def update_photo_by_patient_id(
     return photo
 
 
-@router.put("/PersonalPhoto/by-photo-id/{photo_id}", response_model=PatientPhotoResponse)
+@router.put("/PersonalPhoto/update/by-photo-id/{photo_id}", response_model=PatientPhotoResponse)
 async def update_photo_by_photo_id(
     request: Request,
     photo_id: int,
@@ -120,7 +120,7 @@ async def update_photo_by_photo_id(
     return photo
 
 
-@router.delete("/PersonalPhoto/by-patient-id/{patient_id}")
+@router.delete("/PersonalPhoto/delete/by-patient-id/{patient_id}")
 async def delete_photo_by_patient_id(
     request: Request,
     patient_id: int,
@@ -138,7 +138,7 @@ async def delete_photo_by_patient_id(
     return {"message": "Photo(s) deleted successfully"}
 
 
-@router.delete("/PersonalPhoto/by-photo-id/{photo_id}")
+@router.delete("/PersonalPhoto/delete/by-photo-id/{photo_id}")
 async def delete_photo_by_photo_id(
     request: Request,
     photo_id: int,
