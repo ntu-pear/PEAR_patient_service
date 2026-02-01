@@ -1,11 +1,14 @@
-from fastapi import APIRouter, Query, Depends, HTTPException
-from sqlalchemy.orm import Session
-from sqlalchemy import text
 from datetime import datetime, timedelta
 from typing import List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
 from app.database import get_db
-from app.models.patient_model import Patient
+from app.models.patient_allocation_model import PatientAllocation
 from app.models.patient_medication_model import PatientMedication
+from app.models.patient_model import Patient
 
 router = APIRouter()
 
@@ -111,6 +114,57 @@ async def get_patient_medication_integrity(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Patient medication integrity check failed: {str(e)}")
 
+@router.get("/patient-allocation")
+async def get_patient_allocation_integrity(
+    hours_back: int = Query(1, ge=1, le=168, description="Hours to look back (1-168)"),
+    limit: int = Query(1000, ge=1, le=5000, description="Max records to return"),
+    offset: int = Query(0, ge=0, description="Pagination offset"),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns patient allocation IDs and their last modified timestamps.
+    """
+    try:
+        
+        cutoff_time = datetime.now() - timedelta(hours=hours_back)
+        
+        allocations = db.query(PatientAllocation).filter(
+            PatientAllocation.modifiedDate >= cutoff_time
+        ).order_by(PatientAllocation.id).limit(limit).offset(offset).all()
+        
+        records = []
+        for allocation in allocations:
+            records.append({
+                "id": allocation.id,
+                "patient_id": allocation.patientId,
+                "modified_date": allocation.modifiedDate.isoformat(),
+                "version_timestamp": int(allocation.modifiedDate.timestamp() * 1000),
+                "record_type": "patient_allocation"
+            })
+        
+        # Get total count for pagination
+        total_count = db.query(PatientAllocation).filter(
+            PatientAllocation.modifiedDate >= cutoff_time
+        ).count()
+        
+        return {
+            "service": "patient",
+            "endpoint": "/integrity/patient-allocation",
+            "window_hours": hours_back,
+            "cutoff_time": cutoff_time.isoformat(),
+            "total_count": total_count,
+            "returned_count": len(records),
+            "limit": limit,
+            "offset": offset,
+            "has_more": (offset + len(records)) < total_count,
+            "records": records,
+            "generated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Patient allocation integrity check failed: {str(e)}")
+
+
 @router.get("/summary")
 async def get_integrity_summary(
     hours_back: int = Query(1, ge=1, le=168),
@@ -132,6 +186,10 @@ async def get_integrity_summary(
             PatientMedication.UpdatedDateTime >= cutoff_time
         ).count()
         
+        patient_allocation_count = db.query(PatientAllocation).filter(
+            PatientAllocation.modifiedDate >= cutoff_time
+        ).count()
+        
         return {
             "service": "patient",
             "endpoint": "/integrity/summary",
@@ -140,7 +198,8 @@ async def get_integrity_summary(
             "record_counts": {
                 "patient": patient_count,
                 "patient_medication": patient_medication_count,
-                "total": (patient_count + patient_medication_count)
+                "patient_allocation": patient_allocation_count,
+                "total": (patient_count + patient_medication_count + patient_allocation_count)
             },
             "generated_at": datetime.now().isoformat()
         }
