@@ -260,18 +260,6 @@ def cleanup_old_highlights(db: Session):
         
         db.commit()
         
-        # Log the cleanup
-        log_crud_action(
-            action=ActionType.DELETE,
-            user="system_cronjob",
-            user_full_name="System CronJob",
-            message=f"HARD DELETED {total_deleted} old highlights across {len(details)} types",
-            table="PatientHighlight",
-            entity_id=None,
-            original_data={"details": details},
-            updated_data=None,
-        )
-        
         return {
             "status": "success",
             "deletion_type": "Hard",
