@@ -1,5 +1,6 @@
 from datetime import datetime
 from unittest import mock
+from types import SimpleNamespace
 
 import pytest
 
@@ -454,7 +455,22 @@ def test_update_medication(db_session_mock):
 def test_delete_medication(db_session_mock):
     # Create a simple mock medication
     mock_medication = mock.MagicMock()
-    
+
+    mock_columns = [
+        SimpleNamespace(name="Id"),
+        SimpleNamespace(name="PatientId"),
+        SimpleNamespace(name="IsDeleted"),
+        SimpleNamespace(name="PrescriptionListId"),
+        SimpleNamespace(name="AdministerTime"),
+        SimpleNamespace(name="Dosage"),
+        SimpleNamespace(name="Instruction"),
+        SimpleNamespace(name="StartDate"),
+        SimpleNamespace(name="EndDate"),
+        SimpleNamespace(name="PrescriptionRemarks"),
+    ]
+
+    mock_medication.__table__ = SimpleNamespace(columns=mock_columns)
+
     # Set up attributes directly
     mock_medication.Id = 1034
     mock_medication.PatientId = 7

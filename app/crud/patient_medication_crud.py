@@ -524,10 +524,11 @@ def delete_medication(
     try:
         # Capture original data with prescription name
         medication_dict = _medication_to_dict_with_prescription_name(db_medication, db)
-        
+
+        # ONLY used for logging
         original_data_dict = {
-            k: serialize_data(v) for k, v in db_medication.__dict__.items() 
-            if not k.startswith("_")
+            col.name: serialize_data(getattr(db_medication, col.name))
+            for col in db_medication.__table__.columns
         }
 
         # Perform soft delete
