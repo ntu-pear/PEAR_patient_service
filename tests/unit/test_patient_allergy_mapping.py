@@ -165,6 +165,8 @@ def test_update_patient_allergy(db_session_mock, patient_allergy_update):
     """Test case for updating a patient allergy."""
     # Arrange
     modified_by = "2"
+    mock_allergy_type = AllergyType(AllergyTypeID=3, Value="Corn", IsDeleted="0")
+    mock_reaction_type = AllergyReactionType(AllergyReactionTypeID=1, Value="Rashes", IsDeleted="0")
     mock_patient_allergy = PatientAllergyMapping(
         Patient_AllergyID=1,
         PatientID=1,
@@ -177,9 +179,12 @@ def test_update_patient_allergy(db_session_mock, patient_allergy_update):
         CreatedById="1",
         ModifiedById="1",
     )
-    db_session_mock.query.return_value.filter.return_value.first.return_value = (
-        mock_patient_allergy
-    )
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        mock_allergy_type,
+        mock_reaction_type,
+        mock_patient_allergy,
+        None
+    ]
 
     # Act
     result = update_patient_allergy(
@@ -187,8 +192,10 @@ def test_update_patient_allergy(db_session_mock, patient_allergy_update):
     )
 
     # Assert
+    db_session_mock.commit.assert_called_once()
     db_session_mock.refresh.assert_called_once_with(mock_patient_allergy)
     assert result.AllergyRemarks == patient_allergy_update.AllergyRemarks
+    assert result.PatientID == patient_allergy_update.PatientID
     assert result.ModifiedById == modified_by
 
 
@@ -246,6 +253,7 @@ def patient_allergy_create():
 def patient_allergy_update():
     """Fixture to provide a mock PatientAllergyUpdateReq object."""
     return PatientAllergyUpdateReq(
+        PatientID = 1,
         Patient_AllergyID=1,
         AllergyTypeID=3,
         AllergyReactionTypeID=1,

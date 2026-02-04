@@ -74,10 +74,10 @@ def create_patient_allergy(
     user_full_name = get_full_name(payload) or "Anonymous User"
     return patient_allergy_mapping_crud.create_patient_allergy(db, allergy_data, user_id, user_full_name)
 
-@router.put("/update_patient_allergy/{patient_id}", response_model=PatientAllergyCreateResp, description="Update an existing patient allergy record. Patient_AllergyID is the key of the patient allergy record itself.")
+@router.put("/update_patient_allergy/{patient_allergyid}", response_model=PatientAllergyCreateResp, description="Update an existing patient allergy record. Patient_AllergyID is the key of the patient allergy record itself.")
 def update_patient_allergy(
     request: Request,
-    patient_id: int,
+    patient_allergyid: int,
     allergy_data: PatientAllergyUpdateReq,
     db: Session = Depends(get_db),
     require_auth: bool = True  # Default to True
@@ -85,7 +85,7 @@ def update_patient_allergy(
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
-    return patient_allergy_mapping_crud.update_patient_allergy(db, patient_id, allergy_data, user_id, user_full_name)
+    return patient_allergy_mapping_crud.update_patient_allergy(db, patient_allergyid, allergy_data, user_id, user_full_name)
 
 @router.delete("/delete_patient_allergy/{patient_allergy_id}", response_model=PatientAllergyCreateResp, description="Soft delete a patient allergy record by marking it as inactive.")
 def delete_patient_allergy(

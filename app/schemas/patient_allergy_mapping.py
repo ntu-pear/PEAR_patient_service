@@ -27,7 +27,7 @@ class PatientAllergyCreateResp(PatientAllergyBase):
 
 
 class PatientAllergyUpdateReq(PatientAllergyBase):
-    Patient_AllergyID: int = Field(json_schema_extra={"example": 1})
+    PatientID: int = Field(json_schema_extra={"example": 1})
     AllergyTypeID: int = Field(json_schema_extra={"example": 3})
     AllergyReactionTypeID: int = Field(json_schema_extra={"example": 1})
 

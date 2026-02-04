@@ -233,7 +233,7 @@ def create_patient_allergy(
 
 def update_patient_allergy(
     db: Session,
-    patient_id: int,
+    patient_allergyid: int,
     allergy_data: PatientAllergyUpdateReq,
     modified_by: str,
     user_full_name:str
@@ -266,7 +266,7 @@ def update_patient_allergy(
     db_allergy = (
         db.query(PatientAllergyMapping)
         .filter(
-            PatientAllergyMapping.Patient_AllergyID == allergy_data.Patient_AllergyID,
+            PatientAllergyMapping.Patient_AllergyID == patient_allergyid,
             PatientAllergyMapping.IsDeleted == "0"
         )
         .first()
@@ -275,13 +275,13 @@ def update_patient_allergy(
         raise HTTPException(status_code=404, detail="Patient allergy record not found")
 
     #If any updates were made to allergy type and reaction type combination, check if it exists for the particular patient already
-    if not (db_allergy.AllergyTypeID == allergy_data.AllergyTypeID) or not (db_allergy.AllergyReactionTypeID == allergy_data.AllergyReactionTypeID):
+    if not (db_allergy.AllergyTypeID == allergy_data.AllergyTypeID) or not (db_allergy.AllergyReactionTypeID == allergy_data.AllergyReactionTypeID) or not (db_allergy.PatientID == allergy_data.PatientID):
 
         allergy_combo = (
             db.query(PatientAllergyMapping)
             .filter(
-                PatientAllergyMapping.Patient_AllergyID != allergy_data.Patient_AllergyID,
-                PatientAllergyMapping.PatientID == patient_id,
+                PatientAllergyMapping.Patient_AllergyID != patient_allergyid,
+                PatientAllergyMapping.PatientID == allergy_data.PatientID,
                 PatientAllergyMapping.AllergyTypeID == allergy_data.AllergyTypeID,
                 PatientAllergyMapping.AllergyReactionTypeID == allergy_data.AllergyReactionTypeID,
                 PatientAllergyMapping.IsDeleted == "0"
@@ -293,12 +293,13 @@ def update_patient_allergy(
         
     try:
         original_data_dict = {
-            k: serialize_data(v) for k, v in allergy_reaction_type.__dict__.items() if not k.startswith("_")
+            k: serialize_data(v) for k, v in db_allergy.__dict__.items() if not k.startswith("_")
         }
     except Exception as e:
         original_data_dict = "{}"
 
     # Update the allergy record
+    db_allergy.PatientID = allergy_data.PatientID
     db_allergy.AllergyTypeID = allergy_data.AllergyTypeID
     db_allergy.AllergyReactionTypeID = allergy_data.AllergyReactionTypeID
     db_allergy.AllergyRemarks = allergy_data.AllergyRemarks
@@ -309,7 +310,7 @@ def update_patient_allergy(
     # Commit the changes to the database
     db.commit()
     db.refresh(db_allergy)
-    
+
     # Highlight integration - perform this after updating the Allergy mapping
     allergy_with_relationships = db.query(PatientAllergyMapping).options(
         joinedload(PatientAllergyMapping.allergy_type),
@@ -341,7 +342,7 @@ def update_patient_allergy(
         user_full_name=user_full_name,
         message= "Updated patient allergy",
         table="PatientAllergyMapping",
-        entity_id=allergy_data.Patient_AllergyID,
+        entity_id=patient_allergyid,
         original_data=original_data_dict,
         updated_data=updated_data_dict,
     )
