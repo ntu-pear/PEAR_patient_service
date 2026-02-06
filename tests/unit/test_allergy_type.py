@@ -7,6 +7,7 @@ from app.crud.allergy_type_crud import (
     update_allergy_type,
     delete_allergy_type,
 )
+
 from app.schemas.allergy_type import AllergyTypeCreate, AllergyTypeUpdate
 from app.models.patient_patient_guardian_model import PatientPatientGuardian
 from app.models.patient_allergy_mapping_model import PatientAllergyMapping
