@@ -34,7 +34,11 @@ def get_diagnosis_by_id(db: Session, diagnosis_id: int):
 
 
 def create_diagnosis(db: Session, diagnosis: PatientMedicalDiagnosisListCreate, user_id: str, user_full_name: str):
-    db_diagnosis = PatientMedicalDiagnosisList(**diagnosis.model_dump())
+    db_diagnosis = PatientMedicalDiagnosisList(
+        **diagnosis.model_dump(),
+        CreatedByID=user_id,
+        ModifiedByID=user_id,
+    )
     
     if db_diagnosis:
         db_diagnosis.CreatedDate = datetime.now()
@@ -76,6 +80,7 @@ def update_diagnosis(db: Session, diagnosis_id: int, diagnosis: PatientMedicalDi
             setattr(db_diagnosis, key, value)
 
         db_diagnosis.ModifiedDate = datetime.now()
+        db_diagnosis.ModifiedById = user_id
         db.commit()
         db.refresh(db_diagnosis)
 
