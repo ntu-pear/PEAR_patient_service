@@ -1,8 +1,9 @@
 from datetime import datetime
-from unittest import mock
 from types import SimpleNamespace
+from unittest import mock
 
 import pytest
+from fastapi import HTTPException
 
 from app.crud.patient_medication_crud import (
     create_medication,
@@ -253,12 +254,29 @@ def test_create_medication(db_session_mock):
     db_session_mock.flush = mock.MagicMock()
     db_session_mock.rollback = mock.MagicMock()
     
-    # Mock the query chain for _get_medication_with_prescription_name
-    mock_query = mock.MagicMock()
-    mock_query.options.return_value = mock_query
-    mock_query.filter.return_value = mock_query
-    mock_query.first.return_value = mock_medication_instance
-    db_session_mock.query.return_value = mock_query
+    # ==================== FIX: Mock the duplicate check query ====================
+    # The duplicate check needs to return None (no existing medication)
+    call_count = 0
+    
+    def mock_query_side_effect(model):
+        nonlocal call_count
+        call_count += 1
+        
+        query = mock.MagicMock()
+        query.filter.return_value = query
+        query.options.return_value = query
+        
+        # First call: duplicate check (should return None - no duplicate)
+        if call_count == 1:
+            query.first.return_value = None
+        # Second call onwards: return the mock medication instance
+        else:
+            query.first.return_value = mock_medication_instance
+        
+        return query
+    
+    db_session_mock.query.side_effect = mock_query_side_effect
+    # ==============================================================================
 
     # Mock the PatientMedication constructor
     with mock.patch('app.crud.patient_medication_crud.PatientMedication') as mock_patient_medication:
@@ -316,6 +334,7 @@ def test_create_medication(db_session_mock):
                 # Verify logging was called
                 mock_log_crud_action.assert_called_once()
 
+
 from datetime import datetime
 from unittest import mock
 
@@ -361,13 +380,17 @@ def test_update_medication(db_session_mock):
     old_prescription = MockPrescription("Old Medicine Name")
     new_prescription = MockPrescription("New Medicine Name")
 
+    # ==================== FIX: Update mock_query to handle duplicate check ====================
     # -------------------------
     # Mock query behavior
     # -------------------------
     prescription_call_count = 0
+    query_call_count = 0
 
     def mock_query(model):
-        nonlocal prescription_call_count
+        nonlocal prescription_call_count, query_call_count
+        query_call_count += 1
+        
         query = mock.MagicMock()
         query.filter.return_value = query
 
@@ -376,10 +399,21 @@ def test_update_medication(db_session_mock):
             query.first.return_value = (
                 old_prescription if prescription_call_count == 1 else new_prescription
             )
+        elif "PatientMedication" in str(model):
+            # First call: get the medication to update
+            if query_call_count == 1:
+                query.first.return_value = mock_medication
+            # Second call: duplicate check (should return None - no duplicate)
+            elif query_call_count == 2:
+                query.first.return_value = None
+            # Third call onwards: return mock medication
+            else:
+                query.first.return_value = mock_medication
         else:
-            query.first.return_value = mock_medication
+            query.first.return_value = None
 
         return query
+    # ==============================================================================
 
     db_session_mock.query.side_effect = mock_query
     db_session_mock.flush = mock.MagicMock()
@@ -568,3 +602,320 @@ def test_delete_medication_not_found(db_session_mock):
     )
 
     assert result is None
+    
+# Duplication Checks
+
+def test_create_medication_fails_duplicate_exists(db_session_mock):
+    """Test creating medication fails when duplicate exists"""
+    # Mock existing medication (duplicate!)
+    mock_existing_medication = mock.MagicMock()
+    mock_existing_medication.Id = 999
+    mock_existing_medication.PatientId = 1
+    mock_existing_medication.PrescriptionListId = 101
+    mock_existing_medication.IsDeleted = "0"
+    
+    # Mock: Duplicate found
+    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_existing_medication
+    
+    medication_data = {
+        "PatientId": 1,
+        "PrescriptionListId": 101,  # Same prescription - duplicate!
+        "Dosage": "5mg",
+        "Instruction": "PO Daily",
+        "AdministerTime": "08:00",
+        "StartDate": datetime(2025, 1, 1),
+        "EndDate": datetime(2025, 12, 31),
+        "PrescriptionRemarks": "Take with food",  # REQUIRED field
+        "IsDeleted": "0",
+        "CreatedDateTime": datetime(2025, 1, 1, 10, 0, 0),
+        "UpdatedDateTime": datetime(2025, 1, 1, 10, 0, 0),
+        "CreatedById": "user123",
+        "ModifiedById": "user123",
+    }
+    
+    # Execute & Assert
+    with pytest.raises(HTTPException) as exc_info:
+        create_medication(
+            db_session_mock,
+            PatientMedicationCreate(**medication_data),
+            created_by="user123",
+            user_full_name="Test User"
+        )
+    
+    # Verify error (NO ID in message since you removed it)
+    assert exc_info.value.status_code == 400
+    assert "already has an active medication" in exc_info.value.detail
+    
+    # Verify no database write
+    db_session_mock.add.assert_not_called()
+
+
+def test_create_medication_different_patient_same_prescription(db_session_mock):
+    """Test different patients can have the same prescription"""
+    # Mock: No duplicate for THIS patient
+    call_count = 0
+    
+    def mock_query_side_effect(model):
+        nonlocal call_count
+        call_count += 1
+        
+        query = mock.MagicMock()
+        query.filter.return_value = query
+        query.options.return_value = query
+        
+        # First call: duplicate check (returns None - no duplicate)
+        if call_count == 1:
+            query.first.return_value = None
+        # Subsequent calls: return medication instance
+        else:
+            mock_medication_instance = mock.MagicMock()
+            mock_medication_instance.Id = 2
+            mock_medication_instance.PatientId = 2
+            mock_prescription = mock.MagicMock()
+            mock_prescription.Value = "Warfarin"
+            mock_medication_instance.prescription_list = mock_prescription
+            query.first.return_value = mock_medication_instance
+        
+        return query
+    
+    db_session_mock.query.side_effect = mock_query_side_effect
+    db_session_mock.flush = mock.MagicMock()
+    db_session_mock.commit = mock.MagicMock()
+    
+    medication_data = {
+        "PatientId": 2,  # Different patient
+        "PrescriptionListId": 101,  # Same prescription
+        "Dosage": "5mg",
+        "Instruction": "PO Daily",
+        "AdministerTime": "08:00",
+        "StartDate": datetime(2025, 1, 1),
+        "EndDate": datetime(2025, 12, 31),
+        "PrescriptionRemarks": "None",  # REQUIRED field - added
+        "IsDeleted": "0",
+        "CreatedDateTime": datetime(2025, 1, 1, 10, 0, 0),
+        "UpdatedDateTime": datetime(2025, 1, 1, 10, 0, 0),
+        "CreatedById": "user123",
+        "ModifiedById": "user123",
+    }
+    
+    with mock.patch('app.crud.patient_medication_crud.PatientMedication') as mock_patient_medication:
+        mock_instance = mock.MagicMock()
+        mock_instance.Id = 2
+        mock_patient_medication.return_value = mock_instance
+        
+        with mock.patch('app.crud.patient_medication_crud.get_outbox_service') as mock_get_outbox:
+            mock_outbox = mock.MagicMock()
+            mock_event = mock.MagicMock()
+            mock_event.id = "test-id"
+            mock_outbox.create_event.return_value = mock_event
+            mock_get_outbox.return_value = mock_outbox
+            
+            with mock.patch('app.crud.patient_medication_crud.log_crud_action'):
+                result = create_medication(
+                    db_session_mock,
+                    PatientMedicationCreate(**medication_data),
+                    created_by="user123",
+                    user_full_name="Test User"
+                )
+    
+    assert result is not None
+    db_session_mock.add.assert_called_once()
+
+
+def test_create_medication_same_patient_different_prescription(db_session_mock):
+    """Test same patient can have multiple different medications"""
+    # Mock: No duplicate
+    call_count = 0
+    
+    def mock_query_side_effect(model):
+        nonlocal call_count
+        call_count += 1
+        
+        query = mock.MagicMock()
+        query.filter.return_value = query
+        query.options.return_value = query
+        
+        if call_count == 1:
+            query.first.return_value = None
+        else:
+            mock_medication_instance = mock.MagicMock()
+            mock_medication_instance.Id = 3
+            mock_prescription = mock.MagicMock()
+            mock_prescription.Value = "Aspirin"
+            mock_medication_instance.prescription_list = mock_prescription
+            query.first.return_value = mock_medication_instance
+        
+        return query
+    
+    db_session_mock.query.side_effect = mock_query_side_effect
+    db_session_mock.flush = mock.MagicMock()
+    db_session_mock.commit = mock.MagicMock()
+    
+    medication_data = {
+        "PatientId": 1,  # Same patient
+        "PrescriptionListId": 102,  # Different prescription
+        "Dosage": "100mg",
+        "Instruction": "PO Daily",
+        "AdministerTime": "08:00",
+        "StartDate": datetime(2025, 1, 1),
+        "EndDate": datetime(2025, 12, 31),
+        "PrescriptionRemarks": "None",  # REQUIRED field - added
+        "IsDeleted": "0",
+        "CreatedDateTime": datetime(2025, 1, 1, 10, 0, 0),
+        "UpdatedDateTime": datetime(2025, 1, 1, 10, 0, 0),
+        "CreatedById": "user123",
+        "ModifiedById": "user123",
+    }
+    
+    with mock.patch('app.crud.patient_medication_crud.PatientMedication') as mock_patient_medication:
+        mock_instance = mock.MagicMock()
+        mock_instance.Id = 3
+        mock_patient_medication.return_value = mock_instance
+        
+        with mock.patch('app.crud.patient_medication_crud.get_outbox_service') as mock_get_outbox:
+            mock_outbox = mock.MagicMock()
+            mock_event = mock.MagicMock()
+            mock_event.id = "test-id"
+            mock_outbox.create_event.return_value = mock_event
+            mock_get_outbox.return_value = mock_outbox
+            
+            with mock.patch('app.crud.patient_medication_crud.log_crud_action'):
+                result = create_medication(
+                    db_session_mock,
+                    PatientMedicationCreate(**medication_data),
+                    created_by="user123",
+                    user_full_name="Test User"
+                )
+    
+    assert result is not None
+    db_session_mock.add.assert_called_once()
+
+
+def test_create_medication_after_deleted(db_session_mock):
+    """Test can create medication if previous one was soft-deleted"""
+    # Mock: No active duplicate (deleted one filtered out)
+    call_count = 0
+    
+    def mock_query_side_effect(model):
+        nonlocal call_count
+        call_count += 1
+        
+        query = mock.MagicMock()
+        query.filter.return_value = query
+        query.options.return_value = query
+        
+        if call_count == 1:
+            query.first.return_value = None
+        else:
+            mock_medication_instance = mock.MagicMock()
+            mock_medication_instance.Id = 4
+            mock_prescription = mock.MagicMock()
+            mock_prescription.Value = "Warfarin"
+            mock_medication_instance.prescription_list = mock_prescription
+            query.first.return_value = mock_medication_instance
+        
+        return query
+    
+    db_session_mock.query.side_effect = mock_query_side_effect
+    db_session_mock.flush = mock.MagicMock()
+    db_session_mock.commit = mock.MagicMock()
+    
+    medication_data = {
+        "PatientId": 1,
+        "PrescriptionListId": 101,  # Same as deleted medication
+        "Dosage": "5mg",
+        "Instruction": "PO Daily",
+        "AdministerTime": "08:00",
+        "StartDate": datetime(2025, 1, 1),
+        "EndDate": datetime(2025, 12, 31),
+        "PrescriptionRemarks": "None",  # REQUIRED field
+        "IsDeleted": "0",
+        "CreatedDateTime": datetime(2025, 1, 1, 10, 0, 0),
+        "UpdatedDateTime": datetime(2025, 1, 1, 10, 0, 0),
+        "CreatedById": "user123",
+        "ModifiedById": "user123",
+    }
+    
+    with mock.patch('app.crud.patient_medication_crud.PatientMedication') as mock_patient_medication:
+        mock_instance = mock.MagicMock()
+        mock_instance.Id = 4
+        mock_patient_medication.return_value = mock_instance
+        
+        with mock.patch('app.crud.patient_medication_crud.get_outbox_service') as mock_get_outbox:
+            mock_outbox = mock.MagicMock()
+            mock_event = mock.MagicMock()
+            mock_event.id = "test-id"
+            mock_outbox.create_event.return_value = mock_event
+            mock_get_outbox.return_value = mock_outbox
+            
+            with mock.patch('app.crud.patient_medication_crud.log_crud_action'):
+                result = create_medication(
+                    db_session_mock,
+                    PatientMedicationCreate(**medication_data),
+                    created_by="user123",
+                    user_full_name="Test User"
+                )
+    
+    assert result is not None
+    db_session_mock.add.assert_called_once()
+
+
+def test_update_medication_fails_duplicate_exists(db_session_mock):
+    """Test updating to create duplicate fails"""
+    # Mock existing medication to update
+    mock_medication = mock.MagicMock()
+    mock_medication.Id = 999
+    mock_medication.PatientId = 1
+    mock_medication.PrescriptionListId = 102  # Aspirin
+    mock_medication.IsDeleted = "0"
+    
+    # Mock duplicate medication
+    duplicate_medication = mock.MagicMock()
+    duplicate_medication.Id = 888
+    duplicate_medication.PatientId = 1
+    duplicate_medication.PrescriptionListId = 101  # Warfarin
+    duplicate_medication.IsDeleted = "0"
+    
+    call_count = 0
+    
+    def mock_first():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return mock_medication  # Get medication to update
+        else:
+            return duplicate_medication  # Duplicate found!
+    
+    # Set up the mock query chain
+    mock_query = mock.MagicMock()
+    mock_query.filter.return_value = mock_query
+    mock_query.first = mock_first
+    db_session_mock.query.return_value = mock_query
+    
+    # All fields are REQUIRED in Update schema
+    update_data = {
+        "PatientId": 1,
+        "PrescriptionListId": 101,  # Change to Warfarin (duplicate!)
+        "Dosage": "5mg",
+        "Instruction": "PO Daily",
+        "AdministerTime": "08:00",
+        "StartDate": datetime(2025, 1, 1),
+        "EndDate": datetime(2025, 12, 31),
+        "PrescriptionRemarks": "None",  # REQUIRED field
+        "IsDeleted": "0",
+        "UpdatedDateTime": datetime(2025, 1, 2, 10, 0, 0),
+        "ModifiedById": "user123",
+    }
+    
+    with pytest.raises(HTTPException) as exc_info:
+        update_medication(
+            db_session_mock,
+            999,
+            PatientMedicationUpdate(**update_data),
+            modified_by="user123",
+            user_full_name="Test User"
+        )
+    
+    # Verify error
+    assert exc_info.value.status_code == 400
+    assert "Another active medication" in exc_info.value.detail
