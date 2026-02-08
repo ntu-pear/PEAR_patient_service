@@ -1,16 +1,14 @@
+import logging
+import math
+from datetime import datetime
+
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
-from datetime import datetime
-import math
-import logging
 
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
-from ..models.patient_problem_model import PatientProblem
 from ..models.patient_problem_list_model import PatientProblemList
-from ..schemas.patient_problem import (
-    PatientProblemCreate,
-    PatientProblemUpdate,
-)
+from ..models.patient_problem_model import PatientProblem
+from ..schemas.patient_problem import PatientProblemCreate, PatientProblemUpdate
 from ..services.highlight_helper import create_highlight_if_needed
 
 logger = logging.getLogger(__name__)
@@ -102,6 +100,19 @@ def create_problem(
                 detail=f"Problem list with ID {problem_data.ProblemListID} not found"
             )
 
+        # Check for duplicate problem (same patient + same problem type)
+        existing_problem = db.query(PatientProblem).filter(
+            PatientProblem.PatientID == problem_data.PatientID,
+            PatientProblem.ProblemListID == problem_data.ProblemListID,
+            PatientProblem.IsDeleted == '0'
+        ).first()
+        
+        if existing_problem:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Patient already has this problem recorded"
+            )
+        
         # Create problem record
         new_problem = PatientProblem(
             **problem_data.model_dump(),
@@ -175,6 +186,36 @@ def update_problem(
 
     if not db_problem:
         return None
+
+    # Check if the update would create a duplicate
+    # Get the update fields
+    update_dict = problem_data.model_dump(exclude_unset=True)
+    
+    # Determine the new patient ID (use updated value if provided, otherwise keep existing)
+    if 'PatientID' in update_dict:
+        new_patient_id = update_dict['PatientID']
+    else:
+        new_patient_id = db_problem.PatientID
+    
+    # Determine the new problem list ID (use updated value if provided, otherwise keep existing)
+    if 'ProblemListID' in update_dict:
+        new_problem_list_id = update_dict['ProblemListID']
+    else:
+        new_problem_list_id = db_problem.ProblemListID
+    
+    # Check for duplicate (excluding the current record)
+    duplicate_check = db.query(PatientProblem).filter(
+        PatientProblem.PatientID == new_patient_id,
+        PatientProblem.ProblemListID == new_problem_list_id,
+        PatientProblem.IsDeleted == '0',
+        PatientProblem.Id != problem_id  # Exclude current record
+    ).first()
+    
+    if duplicate_check:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Another problem record with this condition already exists for this patient"
+        )
 
     try:
         # Verify problem list if being updated
