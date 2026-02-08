@@ -32,7 +32,7 @@ def db_session_mock():
 )  # Ensure AllergyReactionType is mocked
 @mock.patch("app.models.patient_doctor_note_model.PatientDoctorNote")
 @mock.patch("app.models.patient_photo_model.PatientPhoto")
-@mock.patch("app.models.patient_photo_list_model.PatientPhotoList")
+@mock.patch("app.models.patient_photo_list_album_model.PatientPhotoListAlbum")  # Mock PatientPhotoListAlbum
 @mock.patch(
     "app.models.patient_assigned_dementia_list_model.PatientAssignedDementiaList"
 )

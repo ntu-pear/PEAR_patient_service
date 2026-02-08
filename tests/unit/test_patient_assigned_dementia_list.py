@@ -42,7 +42,7 @@ def get_mock_dementia_list_entry():
 @mock.patch("app.models.patient_allergy_mapping_model.PatientAllergyMapping")
 @mock.patch("app.models.patient_doctor_note_model.PatientDoctorNote")  # Mock PatientDoctorNote
 @mock.patch("app.models.patient_photo_model.PatientPhoto")  # Mock PatientPhoto
-@mock.patch("app.models.patient_photo_list_model.PatientPhotoList")  # Mock PatientPhoto
+@mock.patch("app.models.patient_photo_list_album_model.PatientPhotoListAlbum")  # Mock PatientPhotoListAlbum
 @mock.patch("app.models.patient_mobility_list_model.PatientMobilityList")
 @mock.patch("app.models.patient_mobility_mapping_model.PatientMobility")
 @mock.patch("app.models.patient_prescription_model.PatientPrescription")
