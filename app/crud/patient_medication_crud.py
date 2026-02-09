@@ -224,6 +224,19 @@ def create_medication(
     """
     Creates a new PatientMedication record with outbox pattern support.
     """
+    
+    existing_medication = db.query(PatientMedication).filter(
+        PatientMedication.PatientId == medication_data.PatientId,
+        PatientMedication.PrescriptionListId == medication_data.PrescriptionListId,
+        PatientMedication.IsDeleted == '0'
+    ).first()
+    
+    if existing_medication:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Patient already has an active medication for this prescription"
+        )
+    
     # Generate correlation ID if not provided
     if not correlation_id:
         correlation_id = generate_correlation_id()
@@ -352,6 +365,34 @@ def update_medication(
 
     if not db_medication:
         return None
+
+    # Check if the update would create a duplicate
+    
+    # Determine the new patient ID (use updated value if provided, otherwise keep existing)
+    if hasattr(medication_data, 'PatientId') and medication_data.PatientId is not None:
+        new_patient_id = medication_data.PatientId
+    else:
+        new_patient_id = db_medication.PatientId
+    
+    # Determine the new prescription list ID (use updated value if provided, otherwise keep existing)
+    if hasattr(medication_data, 'PrescriptionListId') and medication_data.PrescriptionListId is not None:
+        new_prescription_list_id = medication_data.PrescriptionListId
+    else:
+        new_prescription_list_id = db_medication.PrescriptionListId
+    
+    # Check for duplicate (excluding the current record)
+    duplicate_check = db.query(PatientMedication).filter(
+        PatientMedication.PatientId == new_patient_id,
+        PatientMedication.PrescriptionListId == new_prescription_list_id,
+        PatientMedication.IsDeleted == '0',
+        PatientMedication.Id != medication_id  # Exclude current record
+    ).first()
+    
+    if duplicate_check:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Another active medication with this prescription already exists for this patient"
+        )
 
     # Generate correlation ID if not provided
     if not correlation_id:
