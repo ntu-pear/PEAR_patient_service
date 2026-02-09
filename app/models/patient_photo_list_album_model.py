@@ -1,10 +1,9 @@
-from app.models.patient_photo_model import PatientPhoto
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
 
-class PatientPhotoList(Base):
+class PatientPhotoListAlbum(Base):
     __tablename__ = "PATIENT_PHOTO_LIST_ALBUM"
 
     AlbumCategoryListID = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -13,12 +12,11 @@ class PatientPhotoList(Base):
 
     CreatedDateTime = Column(DateTime, default=datetime.utcnow, nullable=False)
     UpdatedDateTime = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    CreatedById = Column(String, nullable=False)  # Changed to String
-    ModifiedById = Column(String, nullable=False)  # Changed to String
+    CreatedById = Column(String, nullable=False)
+    ModifiedById = Column(String, nullable=False)
 
-    # Corrected Relationship
+    # Relationship with PatientPhoto
     photos = relationship(
         "PatientPhoto",
-        back_populates="album_category",
-        foreign_keys=[PatientPhoto.AlbumCategoryListID]
+        back_populates="album_category"
     )

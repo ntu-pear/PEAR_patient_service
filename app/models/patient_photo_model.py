@@ -1,7 +1,10 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
 from datetime import datetime
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
+
 from app.database import Base
+
 
 class PatientPhoto(Base):
     __tablename__ = "PATIENT_PHOTO"
@@ -21,9 +24,9 @@ class PatientPhoto(Base):
     # Relationship with Patient
     patient = relationship("Patient", back_populates="photos")
 
-    # Fix: Ensure album_category refers to PatientPhotoList, not PatientList
+    # Fix: Ensure album_category refers to PatientPhotoListAlbum
     album_category = relationship(
-        "PatientPhotoList",
+        "PatientPhotoListAlbum",
         back_populates="photos",
         foreign_keys=[AlbumCategoryListID]
     )
