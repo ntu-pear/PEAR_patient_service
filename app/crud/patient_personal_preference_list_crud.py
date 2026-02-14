@@ -1,7 +1,3 @@
-"""
-CRUD operations for Patient Personal Preference List (reference/lookup table).
-"""
-
 import logging
 import math
 from datetime import datetime
@@ -20,11 +16,6 @@ from ..schemas.patient_personal_preference_list import (
 logger = logging.getLogger(__name__)
 
 VALID_PREFERENCE_TYPES = ("LikesDislikes", "Habit", "Hobby")
-
-
-# ---------------------------------------------------------------------------
-# READ
-# ---------------------------------------------------------------------------
 
 def get_preference_lists(
     db: Session,
@@ -73,11 +64,6 @@ def get_preference_list_by_id(db: Session, preference_list_id: int):
         )
         .first()
     )
-
-
-# ---------------------------------------------------------------------------
-# CREATE
-# ---------------------------------------------------------------------------
 
 def create_preference_list(
     db: Session,
@@ -145,11 +131,6 @@ def create_preference_list(
         db.rollback()
         logger.error(f"Failed to create preference list: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-
-
-# ---------------------------------------------------------------------------
-# UPDATE
-# ---------------------------------------------------------------------------
 
 def update_preference_list(
     db: Session,
@@ -237,11 +218,6 @@ def update_preference_list(
         db.rollback()
         logger.error(f"Failed to update preference list {preference_list_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-
-
-# ---------------------------------------------------------------------------
-# DELETE (soft)
-# ---------------------------------------------------------------------------
 
 def delete_preference_list(
     db: Session,

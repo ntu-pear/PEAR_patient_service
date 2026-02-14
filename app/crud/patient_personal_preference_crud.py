@@ -1,7 +1,3 @@
-"""
-CRUD operations for Patient Personal Preference (patient-level mapping).
-"""
-
 import logging
 import math
 from datetime import datetime
@@ -84,11 +80,6 @@ def _verify_preference_list_exists(db: Session, preference_list_id: int):
         )
     return pref_list
 
-
-# ---------------------------------------------------------------------------
-# READ
-# ---------------------------------------------------------------------------
-
 def get_preferences(
     db: Session,
     pageNo: int = 0,
@@ -167,11 +158,6 @@ def get_preference(db: Session, preference_id: int):
         )
         .first()
     )
-
-
-# ---------------------------------------------------------------------------
-# CREATE
-# ---------------------------------------------------------------------------
 
 def create_preference(
     db: Session,
@@ -262,10 +248,6 @@ def create_preference(
             status_code=500, detail=f"Failed to create personal preference: {str(e)}"
         )
 
-
-# ---------------------------------------------------------------------------
-# UPDATE
-# ---------------------------------------------------------------------------
 
 def update_preference(
     db: Session,
@@ -389,10 +371,6 @@ def update_preference(
             status_code=500, detail=f"Failed to update personal preference: {str(e)}"
         )
 
-
-# ---------------------------------------------------------------------------
-# DELETE (soft)
-# ---------------------------------------------------------------------------
 
 def delete_preference(
     db: Session,
