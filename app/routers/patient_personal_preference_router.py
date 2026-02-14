@@ -10,28 +10,15 @@ from ..schemas.patient_personal_preference import (
     PatientPersonalPreference,
     PatientPersonalPreferenceCreate,
     PatientPersonalPreferenceUpdate,
-    PatientPersonalPreferenceWithDetails,
 )
 from ..schemas.response import PaginatedResponse, SingleResponse
 
 router = APIRouter()
 
 
-def _build_with_details(db_pref) -> PatientPersonalPreferenceWithDetails:
-    """Merge base fields with denormalised list fields from relationship."""
-    base = PatientPersonalPreference.model_validate(db_pref).model_dump()
-    base["PreferenceType"] = (
-        db_pref.preference_list.PreferenceType if db_pref.preference_list else None
-    )
-    base["PreferenceName"] = (
-        db_pref.preference_list.PreferenceName if db_pref.preference_list else None
-    )
-    return PatientPersonalPreferenceWithDetails(**base)
-
-
 @router.get(
     "/PersonalPreferences",
-    response_model=PaginatedResponse[PatientPersonalPreferenceWithDetails],
+    response_model=PaginatedResponse[PatientPersonalPreference],
 )
 def get_preferences(
     request: Request,
@@ -47,7 +34,7 @@ def get_preferences(
     )
 
     return PaginatedResponse(
-        data=[_build_with_details(i) for i in items],
+        data=[PatientPersonalPreference.model_validate(i) for i in items],
         pageNo=pageNo,
         pageSize=pageSize,
         totalRecords=totalRecords,
@@ -57,7 +44,7 @@ def get_preferences(
 
 @router.get(
     "/PersonalPreferences/by-patient-id/{patient_id}",
-    response_model=PaginatedResponse[PatientPersonalPreferenceWithDetails],
+    response_model=PaginatedResponse[PatientPersonalPreference],
 )
 def get_patient_preferences(
     request: Request,
@@ -66,7 +53,7 @@ def get_patient_preferences(
     pageSize: int = Query(default=100, ge=1, le=500),
     preferenceType: Optional[str] = Query(
         default=None,
-        description="Filter by preference type: LikesDislikes | Habit | Hobby",
+        description="Filter by preference type: LikesDislikes | Habit | Hobby. Leaving blank returns all types.",
     ),
     db: Session = Depends(get_db),
     require_auth: bool = True,
@@ -82,7 +69,7 @@ def get_patient_preferences(
     )
 
     return PaginatedResponse(
-        data=[_build_with_details(i) for i in items],
+        data=[PatientPersonalPreference.model_validate(i) for i in items],
         pageNo=pageNo,
         pageSize=pageSize,
         totalRecords=totalRecords,
@@ -92,7 +79,7 @@ def get_patient_preferences(
 
 @router.get(
     "/PersonalPreferences/by-preference-id/{preference_id}",
-    response_model=SingleResponse[PatientPersonalPreferenceWithDetails],
+    response_model=SingleResponse[PatientPersonalPreference],
 )
 def get_preference(
     request: Request,
@@ -106,12 +93,12 @@ def get_preference(
     if not db_pref:
         raise HTTPException(status_code=404, detail="Personal preference not found")
 
-    return SingleResponse(data=_build_with_details(db_pref))
+    return SingleResponse(data=PatientPersonalPreference.model_validate(db_pref))
 
 
 @router.post(
     "/PersonalPreferences/add",
-    response_model=SingleResponse[PatientPersonalPreferenceWithDetails],
+    response_model=SingleResponse[PatientPersonalPreference],
     status_code=201,
 )
 def create_preference(
@@ -126,12 +113,12 @@ def create_preference(
 
     db_pref = crud_pref.create_preference(db, preference, user_id, user_full_name)
 
-    return SingleResponse(data=_build_with_details(db_pref))
+    return SingleResponse(data=PatientPersonalPreference.model_validate(db_pref))
 
 
 @router.put(
     "/PersonalPreferences/update/{preference_id}",
-    response_model=SingleResponse[PatientPersonalPreferenceWithDetails],
+    response_model=SingleResponse[PatientPersonalPreference],
 )
 def update_preference(
     request: Request,
@@ -151,12 +138,12 @@ def update_preference(
     if not db_pref:
         raise HTTPException(status_code=404, detail="Personal preference not found")
 
-    return SingleResponse(data=_build_with_details(db_pref))
+    return SingleResponse(data=PatientPersonalPreference.model_validate(db_pref))
 
 
 @router.delete(
     "/PersonalPreferences/delete/{preference_id}",
-    response_model=SingleResponse[PatientPersonalPreferenceWithDetails],
+    response_model=SingleResponse[PatientPersonalPreference],
 )
 def delete_preference(
     request: Request,
@@ -175,4 +162,4 @@ def delete_preference(
     if not db_pref:
         raise HTTPException(status_code=404, detail="Personal preference not found")
 
-    return SingleResponse(data=_build_with_details(db_pref))
+    return SingleResponse(data=PatientPersonalPreference.model_validate(db_pref))

@@ -74,13 +74,7 @@ class PatientPersonalPreference(PatientPersonalPreferenceBase):
     ModifiedDate: datetime
     CreatedByID: str
     ModifiedByID: str
-
-    model_config = {"from_attributes": True}
-
-
-class PatientPersonalPreferenceWithDetails(PatientPersonalPreference):
-    """Extended schema that includes denormalised list fields."""
-    PreferenceType: Optional[str] = None
-    PreferenceName: Optional[str] = None
+    preference_name: Optional[str] = None
+    preference_type: Optional[str] = None
 
     model_config = {"from_attributes": True}

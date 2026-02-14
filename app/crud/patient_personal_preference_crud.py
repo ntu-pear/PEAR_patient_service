@@ -12,7 +12,9 @@ from sqlalchemy.orm import Session, joinedload
 
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_model import Patient
-from ..models.patient_personal_preference_list_model import PatientPersonalPreferenceList
+from ..models.patient_personal_preference_list_model import (
+    PatientPersonalPreferenceList,
+)
 from ..models.patient_personal_preference_model import PatientPersonalPreference
 from ..schemas.patient_personal_preference import (
     PatientPersonalPreferenceCreate,
@@ -97,7 +99,7 @@ def get_preferences(
 
     query = (
         db.query(PatientPersonalPreference)
-        .options(joinedload(PatientPersonalPreference.preference_list))
+        .options(joinedload(PatientPersonalPreference._preference_list))
         .filter(PatientPersonalPreference.IsDeleted == "0")
     )
 
@@ -126,7 +128,7 @@ def get_patient_preferences(
 
     query = (
         db.query(PatientPersonalPreference)
-        .options(joinedload(PatientPersonalPreference.preference_list))
+        .options(joinedload(PatientPersonalPreference._preference_list))
         .filter(
             PatientPersonalPreference.PatientID == patient_id,
             PatientPersonalPreference.IsDeleted == "0",
@@ -158,7 +160,7 @@ def get_preference(db: Session, preference_id: int):
     """Return a single active patient preference by primary key."""
     return (
         db.query(PatientPersonalPreference)
-        .options(joinedload(PatientPersonalPreference.preference_list))
+        .options(joinedload(PatientPersonalPreference._preference_list))
         .filter(
             PatientPersonalPreference.Id == preference_id,
             PatientPersonalPreference.IsDeleted == "0",
@@ -240,7 +242,7 @@ def create_preference(
 
         result = (
             db.query(PatientPersonalPreference)
-            .options(joinedload(PatientPersonalPreference.preference_list))
+            .options(joinedload(PatientPersonalPreference._preference_list))
             .filter(PatientPersonalPreference.Id == new_pref.Id)
             .first()
         )
@@ -308,7 +310,6 @@ def update_preference(
         pref_list = _verify_preference_list_exists(db, new_list_id)
         effective_type = pref_list.PreferenceType
     else:
-        # Load the current list item to get its type
         current_list = (
             db.query(PatientPersonalPreferenceList)
             .filter(PatientPersonalPreferenceList.Id == db_pref.PersonalPreferenceListID)
@@ -368,7 +369,7 @@ def update_preference(
 
         result = (
             db.query(PatientPersonalPreference)
-            .options(joinedload(PatientPersonalPreference.preference_list))
+            .options(joinedload(PatientPersonalPreference._preference_list))
             .filter(PatientPersonalPreference.Id == db_pref.Id)
             .first()
         )
@@ -439,7 +440,7 @@ def delete_preference(
 
         result = (
             db.query(PatientPersonalPreference)
-            .options(joinedload(PatientPersonalPreference.preference_list))
+            .options(joinedload(PatientPersonalPreference._preference_list))
             .filter(PatientPersonalPreference.Id == db_pref.Id)
             .first()
         )

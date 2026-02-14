@@ -12,7 +12,7 @@ class PatientPersonalPreferenceList(Base):
     __tablename__ = "PATIENT_PERSONAL_PREFERENCE_LIST"
 
     Id = Column(Integer, primary_key=True, index=True)
-    PreferenceType = Column(String(50), nullable=False)   # LikesDislikes,  Habit or Hobby
+    PreferenceType = Column(String(50), nullable=False)  # LikesDislikes, Habit or Hobby
     PreferenceName = Column(String(255), nullable=False)
     IsDeleted = Column(String(1), default='0', nullable=False)
     CreatedDate = Column(DateTime, nullable=False, default=datetime.now)
@@ -21,11 +21,11 @@ class PatientPersonalPreferenceList(Base):
     ModifiedByID = Column(String(450), nullable=False)
 
     __table_args__ = (
-        UniqueConstraint("PreferenceType", "PreferenceName", name="UQ_PersonalPreferenceList_TypeName"), # This constraint ensures that the combination of preference list type and name is unique.
+        UniqueConstraint("PreferenceType", "PreferenceName", name="UQ_PersonalPreferenceList_TypeName"),
     )
 
     # Relationship back to patient preference mappings
     patient_preferences = relationship(
         "PatientPersonalPreference",
-        back_populates="preference_list"
+        back_populates="_preference_list"
     )
