@@ -70,41 +70,41 @@ def get_patient_enabled_highlights(
         raise HTTPException(status_code=404, detail="No enabled highlights found for the patient")
     return highlights
 
-@router.post("/Highlight/create_highlight", response_model=PatientHighlight, description="Create a new highlight.")
-def create_patient_highlight(
-    request: Request,
-    highlight_data: PatientHighlightCreate,
-    db: Session = Depends(get_db),
-    require_auth: bool = True  # Default to True
-):
-    payload = extract_jwt_payload(request, require_auth)
-    user_id = get_user_id(payload) or "anonymous"
-    user_full_name = get_full_name(payload) or "Anonymous User"
-    return create_highlight(db, highlight_data, user_id, user_full_name)
+# @router.post("/Highlight/create_highlight", response_model=PatientHighlight, description="Create a new highlight.")
+# def create_patient_highlight(
+#     request: Request,
+#     highlight_data: PatientHighlightCreate,
+#     db: Session = Depends(get_db),
+#     require_auth: bool = True  # Default to True
+# ):
+#     payload = extract_jwt_payload(request, require_auth)
+#     user_id = get_user_id(payload) or "anonymous"
+#     user_full_name = get_full_name(payload) or "Anonymous User"
+#     return create_highlight(db, highlight_data, user_id, user_full_name)
 
-@router.put("/Highlight/update_highlight/{highlight_id}", response_model=PatientHighlight, description="Update an existing highlight.")
-def update_patient_highlight(
-    request: Request,
-    highlight_id: int,
-    highlight_data: PatientHighlightUpdate,
-    db: Session = Depends(get_db),
-    require_auth: bool = True  # Default to True
-):
-    payload = extract_jwt_payload(request, require_auth)
-    user_id = get_user_id(payload) or "anonymous"
-    user_full_name = get_full_name(payload) or "Anonymous User"
+# @router.put("/Highlight/update_highlight/{highlight_id}", response_model=PatientHighlight, description="Update an existing highlight.")
+# def update_patient_highlight(
+#     request: Request,
+#     highlight_id: int,
+#     highlight_data: PatientHighlightUpdate,
+#     db: Session = Depends(get_db),
+#     require_auth: bool = True  # Default to True
+# ):
+#     payload = extract_jwt_payload(request, require_auth)
+#     user_id = get_user_id(payload) or "anonymous"
+#     user_full_name = get_full_name(payload) or "Anonymous User"
     
-    return update_highlight(db, highlight_id, highlight_data, user_id, user_full_name)
+#     return update_highlight(db, highlight_id, highlight_data, user_id, user_full_name)
 
-@router.delete("/Highlight/delete_highlight/{highlight_id}", response_model=PatientHighlight, description="Soft delete a highlight by ID.")
-def delete_patient_highlight(
-    request: Request,
-    highlight_id: int,
-    db: Session = Depends(get_db),
-    require_auth: bool = True  # Default to True
-):
-    payload = extract_jwt_payload(request, require_auth)
-    user_id = get_user_id(payload) or "anonymous"
-    user_full_name = get_full_name(payload) or "Anonymous User"
+# @router.delete("/Highlight/delete_highlight/{highlight_id}", response_model=PatientHighlight, description="Soft delete a highlight by ID.")
+# def delete_patient_highlight(
+#     request: Request,
+#     highlight_id: int,
+#     db: Session = Depends(get_db),
+#     require_auth: bool = True  # Default to True
+# ):
+#     payload = extract_jwt_payload(request, require_auth)
+#     user_id = get_user_id(payload) or "anonymous"
+#     user_full_name = get_full_name(payload) or "Anonymous User"
     
-    return delete_highlight(db, highlight_id, user_id, user_full_name)
+#     return delete_highlight(db, highlight_id, user_id, user_full_name)
