@@ -61,12 +61,12 @@ def get_patient_photos(db: Session):
         PatientPhoto.IsDeleted == 0
     ).all()
 
-def get_patient_photo_by_id(db: Session, patienti_id: int):
-    """ Retrieve a single patient photo by ID (only if not deleted) """
+def get_patient_photo_by_patient_id(db: Session, patient_id: int):
+    """ Retrieve patient photos by based on patient ID (only if not deleted) """
     return db.query(PatientPhoto).filter(
-        PatientPhoto.PatientID == patienti_id,
+        PatientPhoto.PatientID == patient_id,
         PatientPhoto.IsDeleted == 0
-    ).first()
+    ).all()
     
 def get_patient_photo_by_photo_id(db: Session, patient_photo_id: int):
     """ Retrieve a single patient photo by PatientPhotoID (only if not deleted) """
