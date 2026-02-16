@@ -34,7 +34,7 @@ async def upload_patient_photo(
     return create_patient_photo(db, file.file, photo_data, user_id, user_full_name)
 
 
-@router.get("/PersonalPhotos", response_model=list[PatientPhotoResponse])
+@router.get("/PersonalPhoto", response_model=list[PatientPhotoResponse])
 async def get_photos(
     request: Request,
     db: Session = Depends(get_db),
@@ -46,7 +46,7 @@ async def get_photos(
     return photos
 
 
-@router.get("/PersonalPhotos/by-patient-id/{patient_id}", response_model=list[PatientPhotoResponse])
+@router.get("/PersonalPhoto/by-patient-id/{patient_id}", response_model=list[PatientPhotoResponse])
 async def get_photo_by_patient_id(
     request: Request,
     patient_id: int,
@@ -61,7 +61,7 @@ async def get_photo_by_patient_id(
     return photo
 
 
-@router.get("/PersonalPhotos/by-photo-id/{photo_id}", response_model=PatientPhotoResponse)
+@router.get("/PersonalPhoto/by-photo-id/{photo_id}", response_model=PatientPhotoResponse)
 async def get_photo_by_photo_id(
     request: Request,
     photo_id: int,
