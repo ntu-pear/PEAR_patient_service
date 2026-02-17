@@ -71,7 +71,7 @@ def create_preference_list(
     created_by: str,
     user_full_name: str,
 ):
-    """Create a new preference list item. Raises 400 if (type, name) already exists."""
+    """Create a new preference list item with duplicate check and uppercase transformation. Raises 400 if (type, name) already exists."""
 
     # Validate preference type
     if preference_list.PreferenceType not in VALID_PREFERENCE_TYPES:
@@ -80,12 +80,15 @@ def create_preference_list(
             detail=f"PreferenceType must be one of: {', '.join(VALID_PREFERENCE_TYPES)}",
         )
 
+    # Convert PreferenceName to UPPERCASE before checking and inserting
+    uppercase_preference_name = preference_list.PreferenceName.strip().upper()
+
     # Duplicate check: same type + same name (case-insensitive) among active records
     existing = (
         db.query(PatientPersonalPreferenceList)
         .filter(
             PatientPersonalPreferenceList.PreferenceType == preference_list.PreferenceType,
-            PatientPersonalPreferenceList.PreferenceName.ilike(preference_list.PreferenceName.strip()),
+            PatientPersonalPreferenceList.PreferenceName == uppercase_preference_name,
             PatientPersonalPreferenceList.IsDeleted == "0",
         )
         .first()
@@ -94,13 +97,16 @@ def create_preference_list(
         raise HTTPException(
             status_code=400,
             detail=f"A preference list entry with type '{preference_list.PreferenceType}' "
-                   f"and name '{preference_list.PreferenceName}' already exists",
+                   f"and name '{uppercase_preference_name}' already exists",
         )
 
     try:
         now = datetime.now()
+        data = preference_list.model_dump()
+        data["PreferenceName"] = uppercase_preference_name
+        
         db_item = PatientPersonalPreferenceList(
-            **preference_list.model_dump(),
+            **data,
             CreatedDate=now,
             ModifiedDate=now,
             CreatedByID=created_by,
@@ -119,7 +125,7 @@ def create_preference_list(
             table="PatientPersonalPreferenceList",
             entity_id=db_item.Id,
             original_data=None,
-            updated_data=serialize_data(preference_list.model_dump()),
+            updated_data=serialize_data(data),
         )
 
         return db_item
@@ -139,7 +145,7 @@ def update_preference_list(
     modified_by: str,
     user_full_name: str,
 ):
-    """Update a preference list item. Returns None if not found."""
+    """Update a preference list item with uppercase transformation. Returns None if not found."""
     db_item = (
         db.query(PatientPersonalPreferenceList)
         .filter(
@@ -152,6 +158,10 @@ def update_preference_list(
         return None
 
     update_data = preference_list.model_dump(exclude_unset=True)
+
+    # Convert PreferenceName to UPPERCASE if it's being updated
+    if "PreferenceName" in update_data and update_data["PreferenceName"] is not None:
+        update_data["PreferenceName"] = update_data["PreferenceName"].strip().upper()
 
     # Resolve effective values after update for validation + duplicate check
     new_type = update_data.get("PreferenceType", db_item.PreferenceType)
@@ -170,7 +180,7 @@ def update_preference_list(
         .filter(
             PatientPersonalPreferenceList.Id != preference_list_id,
             PatientPersonalPreferenceList.PreferenceType == new_type,
-            PatientPersonalPreferenceList.PreferenceName.ilike(new_name.strip()),
+            PatientPersonalPreferenceList.PreferenceName == new_name,
             PatientPersonalPreferenceList.IsDeleted == "0",
         )
         .first()

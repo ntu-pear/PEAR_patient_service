@@ -18,7 +18,7 @@ def get_prescription_lists(db: Session, pageNo: int = 0, pageSize: int = 100):
     totalPages = (totalRecords + pageSize - 1) // pageSize if pageSize > 0 else 0
     
     offset = pageNo * pageSize
-    db_prescription_lists = query.order_by(PatientPrescriptionList.Id.desc()).offset(offset).limit(pageSize).all()
+    db_prescription_lists = query.order_by(PatientPrescriptionList.Value.asc()).offset(offset).limit(pageSize).all()
     
     return db_prescription_lists, totalRecords, totalPages
 
@@ -34,21 +34,30 @@ def create_prescription_list(
     created_by: str,
     user_full_name: str
 ):
-    # Check for duplicate Value
+    """Create a new prescription list item with duplicate check and uppercase transformation"""
+    # Convert Value to UPPERCASE before checking and inserting
+    uppercase_value = prescription_list.Value.upper()
+    
+    # Check for duplicate Value (case-insensitive by comparing uppercase)
     existing_prescription_list = db.query(PatientPrescriptionList).filter(
-        PatientPrescriptionList.Value == prescription_list.Value,
+        PatientPrescriptionList.Value == uppercase_value,
         PatientPrescriptionList.IsDeleted == '0'
     ).first()
     
     if existing_prescription_list:
-        raise HTTPException(status_code=400, detail="A prescription list record with this name already exists")
+        raise HTTPException(
+            status_code=400, 
+            detail="A prescription list record with this name already exists"
+        )
     
     try:
-        # Ensure timestamps exist even if frontend didn’t send them
+        # Ensure timestamps exist even if frontend didn't send them
         now = datetime.now()
         data = prescription_list.model_dump()
         data["CreatedDateTime"] = data.get("CreatedDateTime") or now
         data["UpdatedDateTime"] = data.get("UpdatedDateTime") or now
+        # Apply UPPERCASE transformation to Value
+        data["Value"] = uppercase_value
 
         # Create the record
         db_prescription_list = PatientPrescriptionList(**data)
@@ -83,36 +92,44 @@ def update_prescription_list(
     modified_by: str,
     user_full_name: str
 ):
-    """Update an existing prescription list item"""
+    """Update an existing prescription list item with uppercase transformation"""
     db_prescription_list = db.query(PatientPrescriptionList).filter(
         PatientPrescriptionList.Id == prescription_list_id
     ).first()
 
-    if db_prescription_list:
-        try:
-            original_data_dict = {
-                k: serialize_data(v) for k, v in db_prescription_list.__dict__.items() if not k.startswith("_")
-            }
-        except Exception as e:
-            original_data_dict = "{}"
+    if not db_prescription_list:
+        return None
 
-        for key, value in prescription_list.model_dump().items():
-            setattr(db_prescription_list, key, value)
-        
-        db.commit()
-        db.refresh(db_prescription_list)
+    try:
+        original_data_dict = {
+            k: serialize_data(v) for k, v in db_prescription_list.__dict__.items() if not k.startswith("_")
+        }
+    except Exception as e:
+        original_data_dict = "{}"
 
-        updated_data_dict = serialize_data(prescription_list.model_dump())
-        log_crud_action(
-            action=ActionType.UPDATE,
-            user=modified_by,
-            user_full_name=user_full_name,
-            message="Updated prescription list record",
-            table="PatientPrescriptionList",
-            entity_id=db_prescription_list.Id,
-            original_data=original_data_dict,
-            updated_data=updated_data_dict
-        )
+    # Convert Value to UPPERCASE if it's being updated
+    update_data = prescription_list.model_dump(exclude_unset=True)
+    if "Value" in update_data and update_data["Value"] is not None:
+        update_data["Value"] = update_data["Value"].upper()
+
+    for key, value in update_data.items():
+        setattr(db_prescription_list, key, value)
+    
+    db.commit()
+    db.refresh(db_prescription_list)
+
+    updated_data_dict = serialize_data(update_data)
+    log_crud_action(
+        action=ActionType.UPDATE,
+        user=modified_by,
+        user_full_name=user_full_name,
+        message="Updated prescription list record",
+        table="PatientPrescriptionList",
+        entity_id=db_prescription_list.Id,
+        original_data=original_data_dict,
+        updated_data=updated_data_dict
+    )
+    
     return db_prescription_list
 
 def delete_prescription_list(

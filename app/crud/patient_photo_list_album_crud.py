@@ -1,14 +1,19 @@
-from sqlalchemy.orm import Session
-from fastapi import HTTPException
-from ..models.patient_photo_list_album_model import PatientPhotoListAlbum
-from ..schemas.patient_photo_list_album import PatientPhotoListAlbumCreate, PatientPhotoListAlbumUpdate
 from datetime import datetime
-from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
+
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+
+from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
+from ..models.patient_photo_list_album_model import PatientPhotoListAlbum
+from ..schemas.patient_photo_list_album import (
+    PatientPhotoListAlbumCreate,
+    PatientPhotoListAlbumUpdate,
+)
 
 
 def get_all_photo_list_albums(db: Session):
     """Get all active photo list albums"""
-    return db.query(PatientPhotoListAlbum).filter(PatientPhotoListAlbum.IsDeleted == 0).all()
+    return db.query(PatientPhotoListAlbum).filter(PatientPhotoListAlbum.IsDeleted == 0).order_by(PatientPhotoListAlbum.Value.asc()).all()
 
 
 def get_photo_list_album_by_id(db: Session, album_id: int):
@@ -21,22 +26,25 @@ def get_photo_list_album_by_id(db: Session, album_id: int):
 
 
 def create_photo_list_album(db: Session, album: PatientPhotoListAlbumCreate, created_by: str, user_full_name: str):
-    """Create a new photo list album"""
+    """Create a new photo list album with duplicate check and uppercase transformation"""
+    
+    # Convert Value to UPPERCASE before checking and inserting
+    uppercase_value = album.Value.upper()
     
     # Check if Value already exists in the DB (duplicate validation)
     existing = db.query(PatientPhotoListAlbum).filter(
-        PatientPhotoListAlbum.Value == album.Value,
+        PatientPhotoListAlbum.Value == uppercase_value,
         PatientPhotoListAlbum.IsDeleted == 0
     ).first()
     
     if existing:
         raise HTTPException(
             status_code=400,
-            detail=f"Photo list album with name '{album.Value}' already exists"
+            detail=f"Photo list album with name '{uppercase_value}' already exists"
         )
     
     db_album = PatientPhotoListAlbum(
-        Value=album.Value,
+        Value=uppercase_value,
         IsDeleted=album.IsDeleted,
         CreatedDateTime=datetime.now(),
         UpdatedDateTime=datetime.now(),
@@ -44,7 +52,7 @@ def create_photo_list_album(db: Session, album: PatientPhotoListAlbumCreate, cre
         ModifiedById=created_by
     )
     
-    updated_data_dict = serialize_data(album.model_dump())
+    updated_data_dict = serialize_data({"Value": uppercase_value, "IsDeleted": album.IsDeleted})
     db.add(db_album)
     db.commit()
     db.refresh(db_album)
@@ -66,7 +74,7 @@ def create_photo_list_album(db: Session, album: PatientPhotoListAlbumCreate, cre
 def update_photo_list_album(
     db: Session, album_id: int, album: PatientPhotoListAlbumUpdate, modified_by: str, user_full_name: str
 ):
-    """Update photo list album by ID"""
+    """Update photo list album by ID with uppercase transformation"""
     db_album = (
         db.query(PatientPhotoListAlbum)
         .filter(PatientPhotoListAlbum.AlbumCategoryListID == album_id)
@@ -79,19 +87,26 @@ def update_photo_list_album(
     if db_album.IsDeleted == 1:
         raise HTTPException(status_code=404, detail="Photo list album not found")
     
-    # Check for duplicate Value if it's being updated
-    if album.Value is not None and album.Value != db_album.Value:
-        existing = db.query(PatientPhotoListAlbum).filter(
-            PatientPhotoListAlbum.Value == album.Value,
-            PatientPhotoListAlbum.IsDeleted == 0,
-            PatientPhotoListAlbum.AlbumCategoryListID != album_id
-        ).first()
+    # Convert Value to UPPERCASE if it's being updated
+    update_data = album.model_dump(exclude_unset=True)
+    if "Value" in update_data and update_data["Value"] is not None:
+        uppercase_value = update_data["Value"].upper()
         
-        if existing:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Photo list album with name '{album.Value}' already exists"
-            )
+        # Check for duplicate Value if it's being updated
+        if uppercase_value != db_album.Value:
+            existing = db.query(PatientPhotoListAlbum).filter(
+                PatientPhotoListAlbum.Value == uppercase_value,
+                PatientPhotoListAlbum.IsDeleted == 0,
+                PatientPhotoListAlbum.AlbumCategoryListID != album_id
+            ).first()
+            
+            if existing:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Photo list album with name '{uppercase_value}' already exists"
+                )
+        
+        update_data["Value"] = uppercase_value
     
     try:
         original_data_dict = {
@@ -100,7 +115,7 @@ def update_photo_list_album(
     except Exception as e:
         original_data_dict = "{}"
     
-    for key, value in album.model_dump(exclude_unset=True).items():
+    for key, value in update_data.items():
         setattr(db_album, key, value)
 
     # Set UpdatedDateTime to the current datetime
@@ -112,7 +127,7 @@ def update_photo_list_album(
     db.commit()
     db.refresh(db_album)
     
-    updated_data_dict = serialize_data(album.model_dump())
+    updated_data_dict = serialize_data(update_data)
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
@@ -125,6 +140,7 @@ def update_photo_list_album(
     )
     
     return db_album
+
 
 
 def delete_photo_list_album(db: Session, album_id: int, modified_by: str, user_full_name: str):

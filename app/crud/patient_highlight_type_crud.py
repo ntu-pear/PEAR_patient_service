@@ -9,7 +9,7 @@ from ..schemas.patient_highlight_type import HighlightTypeCreate, HighlightTypeU
 
 
 def get_all_highlight_types(db: Session):
-    return db.query(PatientHighlightType).filter(PatientHighlightType.IsDeleted == "0").order_by(PatientHighlightType.TypeName).all()
+    return db.query(PatientHighlightType).filter(PatientHighlightType.IsDeleted == "0").order_by(PatientHighlightType.TypeName.asc()).all()
 
 def get_highlight_type_by_id(db: Session, highlight_type_id: int):
     return (
@@ -25,7 +25,7 @@ def get_enabled_highlight_types(db: Session):
             PatientHighlightType.IsDeleted == "0",
             PatientHighlightType.IsEnabled == "1"
         )
-        .order_by(PatientHighlightType.TypeName)
+        .order_by(PatientHighlightType.TypeName.asc())
         .all()
     )
 
@@ -83,22 +83,30 @@ def toggle_highlight_type_enabled(db: Session, highlight_type_id: int, modified_
 def create_highlight_type(
     db: Session, highlight_type: HighlightTypeCreate, created_by: str, user_full_name:str
 ):
+    """Create a new highlight type with duplicate check and uppercase transformation"""
+    # Convert TypeCode to UPPERCASE before checking and inserting
+    uppercase_type_code = highlight_type.TypeCode.upper()
     
-    # Check if TypeCode already exists in the DB
+    # Check if TypeCode already exists in the DB (case-insensitive by comparing uppercase)
     existing = db.query(PatientHighlightType).filter(
-        PatientHighlightType.TypeCode == highlight_type.TypeCode
+        PatientHighlightType.TypeCode == uppercase_type_code,
+        PatientHighlightType.IsDeleted == "0"
     ).first()
     
     if existing:
         raise HTTPException(
-            status_code=400,detail=f"Highlight type with code '{highlight_type.TypeCode}' already exists"
+            status_code=400,
+            detail=f"Highlight type with code '{uppercase_type_code}' already exists"
         )
     
+    # Create highlight type with UPPERCASE TypeCode
+    data = highlight_type.model_dump()
+    data["TypeCode"] = uppercase_type_code
     
     db_highlight_type = PatientHighlightType(
-        **highlight_type.model_dump(), CreatedById=created_by, ModifiedById=created_by
+        **data, CreatedById=created_by, ModifiedById=created_by
     )
-    updated_data_dict = serialize_data(highlight_type.model_dump())
+    updated_data_dict = serialize_data(data)
     db.add(db_highlight_type)
     db.commit()
     db.refresh(db_highlight_type)
@@ -122,6 +130,7 @@ def update_highlight_type(
     modified_by: str,
     user_full_name: str
 ):
+    """Update an existing highlight type with uppercase transformation"""
     db_highlight_type = (
         db.query(PatientHighlightType)
         .filter(PatientHighlightType.Id == highlight_type_id)
@@ -136,8 +145,13 @@ def update_highlight_type(
         except Exception as e:
             original_data_dict = "{}"
 
+        # Convert TypeCode to UPPERCASE if it's being updated
+        update_data = highlight_type.model_dump(exclude_unset=True)
+        if "TypeCode" in update_data and update_data["TypeCode"] is not None:
+            update_data["TypeCode"] = update_data["TypeCode"].upper()
+
         # Update other fields from the request body
-        for key, value in highlight_type.model_dump(exclude_unset=True).items():
+        for key, value in update_data.items():
             setattr(db_highlight_type, key, value)
 
         # Set UpdatedDateTime to the current datetime
@@ -150,7 +164,7 @@ def update_highlight_type(
         db.commit()
         db.refresh(db_highlight_type)
 
-        updated_data_dict = serialize_data(highlight_type.model_dump())
+        updated_data_dict = serialize_data(update_data)
         log_crud_action(
             action=ActionType.UPDATE,
             user=modified_by,

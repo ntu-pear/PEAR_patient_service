@@ -12,7 +12,7 @@ def get_all_dementia_stage_list_entries(db: Session):
     try:
         entries = db.query(PatientDementiaStageList).filter(
             PatientDementiaStageList.IsDeleted == "0"
-        ).all()
+        ).order_by(PatientDementiaStageList.DementiaStage.asc()).all()
         if not entries:
             raise HTTPException(status_code=404, detail="No dementia stage list entries found.")
         return entries
@@ -37,20 +37,24 @@ def create_dementia_stage_list_entry(
     created_by: str, 
     user_full_name: str
 ):
-    # Check if a stage with the same name already exists
+    """Create a new dementia stage with duplicate check and uppercase transformation"""
+    # Convert DementiaStage to UPPERCASE before checking and inserting
+    uppercase_stage = stage_data.DementiaStage.upper()
+    
+    # Check if a stage with the same name already exists (case-insensitive)
     existing_stage = db.query(PatientDementiaStageList).filter(
-        PatientDementiaStageList.DementiaStage == stage_data.DementiaStage,
+        PatientDementiaStageList.DementiaStage == uppercase_stage,
         PatientDementiaStageList.IsDeleted == "0"
     ).first()
     
     if existing_stage:
         raise HTTPException(
             status_code=400, 
-            detail=f"Dementia stage '{stage_data.DementiaStage}' already exists."
+            detail=f"Dementia stage '{uppercase_stage}' already exists."
         )
     
     new_entry = PatientDementiaStageList(
-        DementiaStage=stage_data.DementiaStage,
+        DementiaStage=uppercase_stage,
         IsDeleted="0",
         CreatedDate=datetime.now(),
         ModifiedDate=datetime.now(),
@@ -58,7 +62,7 @@ def create_dementia_stage_list_entry(
         ModifiedById=created_by,
     )
     
-    updated_data_dict = serialize_data(stage_data.model_dump())
+    updated_data_dict = serialize_data({"DementiaStage": uppercase_stage})
     db.add(new_entry)
     db.commit()
     db.refresh(new_entry)
@@ -82,6 +86,7 @@ def update_dementia_stage_list_entry(
     modified_by: str, 
     user_full_name: str
 ):
+    """Update an existing dementia stage with uppercase transformation"""
     # Query the database for the entry to update
     db_entry = db.query(PatientDementiaStageList).filter(
         PatientDementiaStageList.id == stage_id,
@@ -91,10 +96,13 @@ def update_dementia_stage_list_entry(
     if not db_entry:
         return None
 
-    # Check if updating to a stage name that already exists
+    # Convert DementiaStage to UPPERCASE if it's being updated
     if stage_data.DementiaStage:
+        uppercase_stage = stage_data.DementiaStage.upper()
+        
+        # Check if updating to a stage name that already exists
         existing_stage = db.query(PatientDementiaStageList).filter(
-            PatientDementiaStageList.DementiaStage == stage_data.DementiaStage,
+            PatientDementiaStageList.DementiaStage == uppercase_stage,
             PatientDementiaStageList.id != stage_id,
             PatientDementiaStageList.IsDeleted == "0"
         ).first()
@@ -102,11 +110,15 @@ def update_dementia_stage_list_entry(
         if existing_stage:
             raise HTTPException(
                 status_code=400, 
-                detail=f"Dementia stage '{stage_data.DementiaStage}' already exists."
+                detail=f"Dementia stage '{uppercase_stage}' already exists."
             )
+    else:
+        uppercase_stage = None
 
     # Update the fields of the entry
     update_data = stage_data.model_dump(exclude={"id"}, exclude_unset=True)
+    if uppercase_stage:
+        update_data["DementiaStage"] = uppercase_stage
 
     try: 
         original_data_dict = {
@@ -126,7 +138,7 @@ def update_dementia_stage_list_entry(
         db.commit()
         db.refresh(db_entry)
 
-        updated_data_dict = serialize_data(stage_data.model_dump())
+        updated_data_dict = serialize_data(update_data)
         log_crud_action(
             action=ActionType.UPDATE,
             user=modified_by,

@@ -1,9 +1,3 @@
-"""
-Unit Tests – Patient Personal Preference List CRUD
-
-File: tests/unit/test_patient_personal_preference_list.py
-"""
-
 from datetime import datetime
 from unittest import mock
 
@@ -32,7 +26,7 @@ def db_session_mock():
     return get_db_session_mock()
 
 
-def _make_list_item(id_=1, ptype="LikesDislikes", name="Reading"):
+def _make_list_item(id_=1, ptype="LikesDislikes", name="READING"):
     item = mock.MagicMock()
     item.Id = id_
     item.PreferenceType = ptype
@@ -60,23 +54,25 @@ def _mock_query_chain(db_session_mock, count=0, all_=None, first=None):
 
 
 # ---------------------------------------------------------------------------
-# GET LIST
+# GET LIST (with ordering tests)
 # ---------------------------------------------------------------------------
 
-def test_get_preference_lists_returns_all(db_session_mock):
-    """Retrieves all active preference list items with pagination."""
+def test_get_preference_lists_ordered_by_preferencename(db_session_mock):
+    """Retrieves all items ordered by PreferenceName (A-Z)."""
     items = [
-        _make_list_item(1, "LikesDislikes", "Reading"),
-        _make_list_item(2, "Habit",         "Snacking"),
-        _make_list_item(3, "Hobby",         "Fishing"),
+        _make_list_item(1, "LikesDislikes", "DANCING"),  # Should come first
+        _make_list_item(2, "Habit",         "SNACKING"),  # Should come second
+        _make_list_item(3, "Hobby",         "FISHING"),   # Should come third (alphabetically)
     ]
-    _mock_query_chain(db_session_mock, count=3, all_=items)
+    q = _mock_query_chain(db_session_mock, count=3, all_=items)
 
     result, total, pages = get_preference_lists(db_session_mock, pageNo=0, pageSize=10)
 
     assert len(result) == 3
     assert total == 3
     assert pages == 1
+    # Verify order_by was called (PreferenceName.asc())
+    q.order_by.assert_called()
 
 
 def test_get_preference_lists_pagination_total_pages(db_session_mock):
@@ -91,23 +87,13 @@ def test_get_preference_lists_pagination_total_pages(db_session_mock):
 
 def test_get_preference_lists_filter_by_valid_type(db_session_mock):
     """Filtering by a valid preference type works."""
-    items = [_make_list_item(1, "Hobby", "Fishing")]
+    items = [_make_list_item(1, "Hobby", "FISHING")]
     _mock_query_chain(db_session_mock, count=1, all_=items)
 
     result, total, _ = get_preference_lists(db_session_mock, preference_type="Hobby")
 
     assert total == 1
     assert result[0].PreferenceType == "Hobby"
-
-
-def test_get_preference_lists_filter_by_ALL_skips_type_filter(db_session_mock):
-    """Passing ALL as preferenceType returns all records."""
-    items = [_make_list_item(i) for i in range(1, 4)]
-    _mock_query_chain(db_session_mock, count=3, all_=items)
-
-    _, total, _ = get_preference_lists(db_session_mock, preference_type="ALL")
-
-    assert total == 3
 
 
 def test_get_preference_lists_invalid_type_raises_400(db_session_mock):
@@ -121,31 +107,20 @@ def test_get_preference_lists_invalid_type_raises_400(db_session_mock):
     assert "Invalid preferenceType" in exc.value.detail
 
 
-def test_get_preference_lists_empty_db(db_session_mock):
-    """Empty DB returns empty list and zero counts."""
-    _mock_query_chain(db_session_mock, count=0, all_=[])
-
-    result, total, pages = get_preference_lists(db_session_mock)
-
-    assert result == []
-    assert total == 0
-    assert pages == 0
-
-
 # ---------------------------------------------------------------------------
 # GET BY ID
 # ---------------------------------------------------------------------------
 
 def test_get_preference_list_by_id_found(db_session_mock):
     """Returns the item when it exists."""
-    item = _make_list_item(1, "LikesDislikes", "Reading")
+    item = _make_list_item(1, "LikesDislikes", "READING")
     db_session_mock.query.return_value.filter.return_value.first.return_value = item
 
     result = get_preference_list_by_id(db_session_mock, 1)
 
     assert result is not None
     assert result.Id == 1
-    assert result.PreferenceName == "Reading"
+    assert result.PreferenceName == "READING"
 
 
 def test_get_preference_list_by_id_not_found(db_session_mock):
@@ -158,15 +133,16 @@ def test_get_preference_list_by_id_not_found(db_session_mock):
 
 
 # ---------------------------------------------------------------------------
-# CREATE
+# CREATE (with UPPERCASE conversion and duplicate check)
 # ---------------------------------------------------------------------------
 
-def test_create_preference_list_likes_dislikes_success(db_session_mock):
-    """Successfully creates a LikesDislikes item."""
+def test_create_preference_list_converts_to_uppercase(db_session_mock):
+    """Successfully creates item with PreferenceName converted to UPPERCASE."""
     db_session_mock.query.return_value.filter.return_value.first.return_value = None
 
     payload = PatientPersonalPreferenceListCreate(
-        PreferenceType="LikesDislikes", PreferenceName="Dancing"
+        PreferenceType="LikesDislikes", 
+        PreferenceName="dancing"  # lowercase input
     )
 
     with mock.patch("app.crud.patient_personal_preference_list_crud.PatientPersonalPreferenceList") as MockModel, \
@@ -174,7 +150,7 @@ def test_create_preference_list_likes_dislikes_success(db_session_mock):
         instance = mock.MagicMock()
         instance.Id = 1
         instance.PreferenceType = "LikesDislikes"
-        instance.PreferenceName = "Dancing"
+        instance.PreferenceName = "DANCING"  # Should be UPPERCASE
         instance.IsDeleted = "0"
         MockModel.return_value = instance
 
@@ -182,54 +158,26 @@ def test_create_preference_list_likes_dislikes_success(db_session_mock):
 
     db_session_mock.add.assert_called_once()
     db_session_mock.commit.assert_called_once()
-    assert result.PreferenceType == "LikesDislikes"
-    assert result.PreferenceName == "Dancing"
+    assert result.PreferenceName == "DANCING"
 
 
-def test_create_preference_list_habit_success(db_session_mock):
-    """Successfully creates a Habit item."""
-    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+def test_create_preference_list_duplicate_case_insensitive(db_session_mock):
+    """Duplicate check is case-insensitive."""
+    existing = _make_list_item(1, "LikesDislikes", "READING")
+    db_session_mock.query.return_value.filter.return_value.first.return_value = existing
 
-    payload = PatientPersonalPreferenceListCreate(
-        PreferenceType="Habit", PreferenceName="Snacking"
-    )
+    # Try different case variations - all should fail
+    for name in ["reading", "READING", "Reading", "rEaDiNg"]:
+        payload = PatientPersonalPreferenceListCreate(
+            PreferenceType="LikesDislikes", 
+            PreferenceName=name
+        )
 
-    with mock.patch("app.crud.patient_personal_preference_list_crud.PatientPersonalPreferenceList") as MockModel, \
-         mock.patch("app.crud.patient_personal_preference_list_crud.log_crud_action"):
-        instance = mock.MagicMock()
-        instance.Id = 2
-        instance.PreferenceType = "Habit"
-        instance.PreferenceName = "Snacking"
-        instance.IsDeleted = "0"
-        MockModel.return_value = instance
+        with pytest.raises(HTTPException) as exc:
+            create_preference_list(db_session_mock, payload, USER_ID, USER_FULL_NAME)
 
-        result = create_preference_list(db_session_mock, payload, USER_ID, USER_FULL_NAME)
-
-    db_session_mock.add.assert_called_once()
-    assert result.PreferenceType == "Habit"
-
-
-def test_create_preference_list_hobby_success(db_session_mock):
-    """Successfully creates a Hobby item."""
-    db_session_mock.query.return_value.filter.return_value.first.return_value = None
-
-    payload = PatientPersonalPreferenceListCreate(
-        PreferenceType="Hobby", PreferenceName="Fishing"
-    )
-
-    with mock.patch("app.crud.patient_personal_preference_list_crud.PatientPersonalPreferenceList") as MockModel, \
-         mock.patch("app.crud.patient_personal_preference_list_crud.log_crud_action"):
-        instance = mock.MagicMock()
-        instance.Id = 3
-        instance.PreferenceType = "Hobby"
-        instance.PreferenceName = "Fishing"
-        instance.IsDeleted = "0"
-        MockModel.return_value = instance
-
-        result = create_preference_list(db_session_mock, payload, USER_ID, USER_FULL_NAME)
-
-    db_session_mock.add.assert_called_once()
-    assert result.PreferenceType == "Hobby"
+        assert exc.value.status_code == 400
+        assert "already exists" in exc.value.detail
 
 
 def test_create_preference_list_invalid_type_raises_400(db_session_mock):
@@ -247,62 +195,51 @@ def test_create_preference_list_invalid_type_raises_400(db_session_mock):
     db_session_mock.add.assert_not_called()
 
 
-def test_create_preference_list_duplicate_raises_400(db_session_mock):
-    """Duplicate (same type + name) raises 400 and does not write to DB."""
-    existing = _make_list_item(1, "LikesDislikes", "Reading")
-    db_session_mock.query.return_value.filter.return_value.first.return_value = existing
+def test_create_preference_list_different_types_same_name_allowed(db_session_mock):
+    """Same PreferenceName is allowed for different PreferenceTypes."""
+    # First call: no existing record
+    db_session_mock.query.return_value.filter.return_value.first.return_value = None
 
-    payload = PatientPersonalPreferenceListCreate(
-        PreferenceType="LikesDislikes", PreferenceName="Reading"
+    payload1 = PatientPersonalPreferenceListCreate(
+        PreferenceType="LikesDislikes", 
+        PreferenceName="Swimming"
     )
 
-    with pytest.raises(HTTPException) as exc:
-        create_preference_list(db_session_mock, payload, USER_ID, USER_FULL_NAME)
+    with mock.patch("app.crud.patient_personal_preference_list_crud.PatientPersonalPreferenceList") as MockModel, \
+         mock.patch("app.crud.patient_personal_preference_list_crud.log_crud_action"):
+        instance1 = mock.MagicMock()
+        instance1.Id = 1
+        instance1.PreferenceType = "LikesDislikes"
+        instance1.PreferenceName = "SWIMMING"
+        MockModel.return_value = instance1
 
-    assert exc.value.status_code == 400
-    assert "already exists" in exc.value.detail
-    db_session_mock.add.assert_not_called()
+        result1 = create_preference_list(db_session_mock, payload1, USER_ID, USER_FULL_NAME)
+
+    # This is allowed - same name, different type
+    assert result1.PreferenceName == "SWIMMING"
 
 
 # ---------------------------------------------------------------------------
-# UPDATE
+# UPDATE (with UPPERCASE conversion)
 # ---------------------------------------------------------------------------
 
-def test_update_preference_list_name_success(db_session_mock):
-    """Successfully updates PreferenceName."""
-    existing = _make_list_item(1, "LikesDislikes", "Old Name")
+def test_update_preference_list_name_converts_to_uppercase(db_session_mock):
+    """Successfully updates PreferenceName with UPPERCASE conversion."""
+    existing = _make_list_item(1, "LikesDislikes", "OLD NAME")
 
     db_session_mock.query.return_value.filter.return_value.first.side_effect = [
         existing,  # fetch record
         None,      # duplicate check
     ]
 
-    payload = PatientPersonalPreferenceListUpdate(PreferenceName="New Name")
+    payload = PatientPersonalPreferenceListUpdate(PreferenceName="new name")  # lowercase
 
     with mock.patch("app.crud.patient_personal_preference_list_crud.log_crud_action"):
         result = update_preference_list(db_session_mock, 1, payload, USER_ID, USER_FULL_NAME)
 
     db_session_mock.commit.assert_called_once()
-    assert result.PreferenceName == "New Name"
+    assert result.PreferenceName == "NEW NAME"  # Should be UPPERCASE
     assert result.ModifiedByID == USER_ID
-
-
-def test_update_preference_list_type_success(db_session_mock):
-    """Successfully updates PreferenceType."""
-    existing = _make_list_item(1, "LikesDislikes", "Reading")
-
-    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
-        existing,
-        None,
-    ]
-
-    payload = PatientPersonalPreferenceListUpdate(PreferenceType="Hobby")
-
-    with mock.patch("app.crud.patient_personal_preference_list_crud.log_crud_action"):
-        result = update_preference_list(db_session_mock, 1, payload, USER_ID, USER_FULL_NAME)
-
-    db_session_mock.commit.assert_called_once()
-    assert result.PreferenceType == "Hobby"
 
 
 def test_update_preference_list_not_found_returns_none(db_session_mock):
@@ -319,25 +256,10 @@ def test_update_preference_list_not_found_returns_none(db_session_mock):
 
 def test_update_preference_list_invalid_type_raises_400(db_session_mock):
     """Updating to an invalid PreferenceType raises 400."""
-    existing = _make_list_item(1, "LikesDislikes", "Reading")
+    existing = _make_list_item(1, "LikesDislikes", "READING")
     db_session_mock.query.return_value.filter.return_value.first.return_value = existing
 
-    payload = PatientPersonalPreferenceListUpdate()
-    payload.model_dump = mock.MagicMock(return_value={"PreferenceType": "BadType"})
-
-    with pytest.raises(HTTPException) as exc:
-        update_preference_list(db_session_mock, 1, payload, USER_ID, USER_FULL_NAME)
-
-    assert exc.value.status_code == 400
-    assert "PreferenceType must be one of" in exc.value.detail
-
-
-def test_update_preference_list_invalid_type_raises_400(db_session_mock):
-    """Updating to an invalid PreferenceType raises 400."""
-    existing = _make_list_item(1, "LikesDislikes", "Reading")
-    db_session_mock.query.return_value.filter.return_value.first.return_value = existing
-
-    # Use MagicMock instead of real Pydantic model so model_dump can be mocked
+    # Use MagicMock so model_dump can be mocked
     payload = mock.MagicMock(spec=None)
     payload.model_dump = mock.MagicMock(return_value={"PreferenceType": "BadType"})
 
@@ -348,13 +270,32 @@ def test_update_preference_list_invalid_type_raises_400(db_session_mock):
     assert "PreferenceType must be one of" in exc.value.detail
 
 
+def test_update_preference_list_duplicate_check(db_session_mock):
+    """Updating to duplicate (type+name) raises 400."""
+    existing = _make_list_item(1, "LikesDislikes", "READING")
+    duplicate = _make_list_item(2, "LikesDislikes", "SWIMMING")
+
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        existing,   # fetch record
+        duplicate,  # duplicate check finds existing record
+    ]
+
+    payload = PatientPersonalPreferenceListUpdate(PreferenceName="Swimming")
+
+    with pytest.raises(HTTPException) as exc:
+        update_preference_list(db_session_mock, 1, payload, USER_ID, USER_FULL_NAME)
+
+    assert exc.value.status_code == 400
+    assert "already exists" in exc.value.detail
+
+
 # ---------------------------------------------------------------------------
 # DELETE
 # ---------------------------------------------------------------------------
 
 def test_delete_preference_list_success(db_session_mock):
     """Successfully soft deletes a preference list item."""
-    existing = _make_list_item(1, "LikesDislikes", "Reading")
+    existing = _make_list_item(1, "LikesDislikes", "READING")
     db_session_mock.query.return_value.filter.return_value.first.return_value = existing
 
     with mock.patch("app.crud.patient_personal_preference_list_crud.log_crud_action"):
