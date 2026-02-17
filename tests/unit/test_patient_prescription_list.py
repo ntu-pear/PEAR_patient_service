@@ -225,16 +225,15 @@ def test_update_prescription_list_partial_update(db_session_mock):
 
     db_session_mock.query.return_value.filter.return_value.first.return_value = mock_data
 
-    # Update only IsDeleted, not Value
-    data = {
-        "IsDeleted": '1'
-    }
+    # Update only IsDeleted, not Value - use mock instead of real Pydantic
+    update_obj = mock.MagicMock()
+    update_obj.model_dump.return_value = {"IsDeleted": '1'}
     
     with mock.patch('app.crud.patient_prescription_list_crud.log_crud_action'):
         prescription_list = update_prescription_list(
             db_session_mock,
             1,
-            PatientPrescriptionListUpdate(**data),
+            update_obj,
             modified_by="test_user",
             user_full_name="Test User"
         )

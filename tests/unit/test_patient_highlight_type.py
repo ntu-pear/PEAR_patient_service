@@ -266,10 +266,10 @@ def test_toggle_highlight_type_enabled(db_session_mock):
     
     mock_highlight_type = PatientHighlightType(
         Id=1,
-        TypeName="PRESCRIPTION ALERT",
+        TypeName="Prescription Alert",
         TypeCode="PRESCRIPTION",
         IsEnabled="1",
-        IsDeleted="0",
+        IsDeleted="0",  # String "0", not False
         CreatedById="1",
         ModifiedById="1",
         CreatedDate=datetime.now(),
@@ -301,11 +301,11 @@ def test_delete_highlight_type(db_session_mock):
     
     mock_highlight_type = PatientHighlightType(
         Id=1,
-        TypeName="PRESCRIPTION ALERT",
+        TypeName="Prescription Alert",
         TypeCode="PRESCRIPTION",
         Description="Test description",
         IsEnabled="1",
-        IsDeleted="0",
+        IsDeleted="0",  # String "0", not False
         CreatedById="1",
         ModifiedById="1",
         CreatedDate=datetime.now(),

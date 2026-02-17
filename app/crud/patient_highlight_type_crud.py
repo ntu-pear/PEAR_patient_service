@@ -37,7 +37,7 @@ def toggle_highlight_type_enabled(db: Session, highlight_type_id: int, modified_
         .first()
     )
     
-    if not db_highlight_type or db_highlight_type.IsDeleted:
+    if not db_highlight_type or db_highlight_type.IsDeleted == "1":
         raise HTTPException(status_code=404, detail="Highlight type not found")
     
     try:
@@ -185,7 +185,7 @@ def delete_highlight_type(db: Session, highlight_type_id: int, modified_by: str,
         .first()
     )
     
-    if not db_highlight_type or db_highlight_type.IsDeleted:
+    if not db_highlight_type or db_highlight_type.IsDeleted == "1":
         raise HTTPException(status_code=404, detail="Highlight type not found")
     else:
         if db_highlight_type:
