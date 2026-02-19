@@ -130,7 +130,6 @@ def update_highlight_type(
     modified_by: str,
     user_full_name: str
 ):
-    """Update an existing highlight type with uppercase transformation"""
     db_highlight_type = (
         db.query(PatientHighlightType)
         .filter(PatientHighlightType.Id == highlight_type_id)
@@ -145,22 +144,30 @@ def update_highlight_type(
         except Exception as e:
             original_data_dict = "{}"
 
-        # Convert TypeCode to UPPERCASE if it's being updated
         update_data = highlight_type.model_dump(exclude_unset=True)
         if "TypeCode" in update_data and update_data["TypeCode"] is not None:
             update_data["TypeCode"] = update_data["TypeCode"].upper()
 
-        # Update other fields from the request body
+            # Only check for duplicates if the TypeCode is actually changing
+            if update_data["TypeCode"] != db_highlight_type.TypeCode:
+                existing = db.query(PatientHighlightType).filter(
+                    PatientHighlightType.TypeCode == update_data["TypeCode"],
+                    PatientHighlightType.IsDeleted == "0",
+                    PatientHighlightType.Id != highlight_type_id
+                ).first()
+
+                if existing:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Highlight type with code '{update_data['TypeCode']}' already exists"
+                    )
+
         for key, value in update_data.items():
             setattr(db_highlight_type, key, value)
 
-        # Set UpdatedDateTime to the current datetime
         db_highlight_type.UpdatedDateTime = datetime.now()
-
-        # Update the ModifiedById field
         db_highlight_type.ModifiedById = modified_by
 
-        # Commit and refresh the object
         db.commit()
         db.refresh(db_highlight_type)
 

@@ -91,13 +91,12 @@ def create_problem_list(
 
 
 def update_problem_list(
-    db: Session, 
-    problem_list_id: int, 
+    db: Session,
+    problem_list_id: int,
     problem_list: PatientProblemListUpdate,
     modified_by: str,
     user_full_name: str
 ):
-    """Update an existing problem list item with uppercase transformation"""
     db_problem_list = db.query(PatientProblemList).filter(
         PatientProblemList.Id == problem_list_id,
         PatientProblemList.IsDeleted == '0'
@@ -106,24 +105,38 @@ def update_problem_list(
     if not db_problem_list:
         return None
 
+    update_data = problem_list.model_dump(exclude_unset=True)
+
+    # Convert ProblemName to UPPERCASE if it's being updated
+    if "ProblemName" in update_data and update_data["ProblemName"] is not None:
+        update_data["ProblemName"] = update_data["ProblemName"].upper()
+
+        # Only check for duplicates if the ProblemName is actually changing
+        if update_data["ProblemName"] != db_problem_list.ProblemName:
+            existing = db.query(PatientProblemList).filter(
+                PatientProblemList.ProblemName == update_data["ProblemName"],
+                PatientProblemList.IsDeleted == '0',
+                PatientProblemList.Id != problem_list_id
+            ).first()
+
+            if existing:
+                raise HTTPException(
+                    status_code=400,
+                    detail="A problem list entry with this name already exists"
+                )
+
     try:
         original_data_dict = {
-            k: serialize_data(v) for k, v in db_problem_list.__dict__.items() 
+            k: serialize_data(v) for k, v in db_problem_list.__dict__.items()
             if not k.startswith("_")
         }
-        
-        # Convert ProblemName to UPPERCASE if it's being updated
-        update_data = problem_list.model_dump(exclude_unset=True)
-        if "ProblemName" in update_data and update_data["ProblemName"] is not None:
-            update_data["ProblemName"] = update_data["ProblemName"].upper()
-        
-        # Update fields
+
         for key, value in update_data.items():
             setattr(db_problem_list, key, value)
-        
+
         db_problem_list.ModifiedDate = datetime.now()
         db_problem_list.ModifiedByID = modified_by
-        
+
         db.commit()
         db.refresh(db_problem_list)
 
@@ -138,9 +151,9 @@ def update_problem_list(
             original_data=original_data_dict,
             updated_data=updated_data_dict
         )
-        
+
         return db_problem_list
-        
+
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))

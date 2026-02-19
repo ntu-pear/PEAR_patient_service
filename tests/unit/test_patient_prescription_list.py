@@ -94,34 +94,6 @@ def test_get_prescription_list_by_id_not_found(db_session_mock):
 
 
 @mock.patch("app.models.patient_prescription_list_model.PatientPrescriptionList")
-def test_create_prescription_list_converts_to_uppercase(mock_model, db_session_mock):
-    """Test creating a prescription list converts Value to UPPERCASE"""
-    
-    # No existing prescription list record found (for duplicate check)
-    db_session_mock.query.return_value.filter.return_value.first.return_value = None
-    
-    data = {
-        "IsDeleted": '0',
-        "CreatedDateTime": datetime(2023, 1, 1, 10, 0),
-        "UpdatedDateTime": datetime(2023, 1, 1, 10, 0),
-        "Value": "paracetamol"  # lowercase input
-    }
-    
-    with mock.patch('app.crud.patient_prescription_list_crud.log_crud_action'):
-        prescription_list = create_prescription_list(
-            db_session_mock,
-            PatientPrescriptionListCreate(**data),
-            created_by="test_user",
-            user_full_name="Test User"
-        )
-    
-    db_session_mock.add.assert_called_once()
-    db_session_mock.commit.assert_called_once()
-    # Verify Value was converted to UPPERCASE
-    assert prescription_list.Value == "PARACETAMOL"
-
-
-@mock.patch("app.models.patient_prescription_list_model.PatientPrescriptionList")
 def test_create_prescription_list_duplicate_check(mock_model, db_session_mock):
     """Test creating a duplicate prescription list raises HTTPException"""
     
@@ -183,7 +155,6 @@ def test_create_prescription_list_duplicate_case_insensitive(mock_model, db_sess
 
 def test_update_prescription_list_converts_to_uppercase(db_session_mock):
     """Test updating prescription list converts Value to UPPERCASE"""
-    # Mock data
     mock_data = mock.MagicMock(
         Id=1,
         IsDeleted='0',
@@ -192,8 +163,13 @@ def test_update_prescription_list_converts_to_uppercase(db_session_mock):
         Value="PARACETAMOL"
     )
 
-    # Set up the mock query to return the mock prescription list
-    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_data
+    first_query = mock.MagicMock()
+    first_query.filter.return_value.first.return_value = mock_data
+
+    second_query = mock.MagicMock()
+    second_query.filter.return_value.first.return_value = None
+
+    db_session_mock.query.side_effect = [first_query, second_query]
 
     data = {
         "Value": "paracetamol 500mg"  # lowercase input

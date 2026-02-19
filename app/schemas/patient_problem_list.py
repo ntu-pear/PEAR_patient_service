@@ -1,11 +1,9 @@
 from datetime import datetime
-from typing import Optional
-
 from pydantic import BaseModel, Field
 
 
 class PatientProblemListBase(BaseModel):
-    ProblemName: str
+    ProblemName: str = Field(min_length=1)
 
 
 class PatientProblemListCreate(PatientProblemListBase):
@@ -13,7 +11,7 @@ class PatientProblemListCreate(PatientProblemListBase):
 
 
 class PatientProblemListUpdate(BaseModel):
-    ProblemName: Optional[str] = None
+    ProblemName: str = Field(min_length=1)
 
 
 class PatientProblemList(PatientProblemListBase):

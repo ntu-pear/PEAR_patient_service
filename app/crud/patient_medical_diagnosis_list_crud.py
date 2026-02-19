@@ -85,7 +85,6 @@ def create_diagnosis(db: Session, diagnosis: PatientMedicalDiagnosisListCreate, 
 
 
 def update_diagnosis(db: Session, diagnosis_id: int, diagnosis: PatientMedicalDiagnosisListUpdate, user_id: str, user_full_name: str):
-    """Update an existing diagnosis with uppercase transformation"""
     db_diagnosis = db.query(PatientMedicalDiagnosisList).filter(
         PatientMedicalDiagnosisList.Id == diagnosis_id
     ).first()
@@ -98,10 +97,23 @@ def update_diagnosis(db: Session, diagnosis_id: int, diagnosis: PatientMedicalDi
         except Exception as e:
             original_data_dict = "{}"
 
-        # Convert DiagnosisName to UPPERCASE if it's being updated
         update_data = diagnosis.model_dump(exclude_unset=True)
         if "DiagnosisName" in update_data and update_data["DiagnosisName"] is not None:
             update_data["DiagnosisName"] = update_data["DiagnosisName"].upper()
+
+            # Only check for duplicates if the DiagnosisName is actually changing
+            if update_data["DiagnosisName"] != db_diagnosis.DiagnosisName:
+                existing = db.query(PatientMedicalDiagnosisList).filter(
+                    PatientMedicalDiagnosisList.DiagnosisName == update_data["DiagnosisName"],
+                    PatientMedicalDiagnosisList.IsDeleted == "0",
+                    PatientMedicalDiagnosisList.Id != diagnosis_id
+                ).first()
+
+                if existing:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="A medical diagnosis with this name already exists"
+                    )
 
         for key, value in update_data.items():
             setattr(db_diagnosis, key, value)
@@ -112,7 +124,6 @@ def update_diagnosis(db: Session, diagnosis_id: int, diagnosis: PatientMedicalDi
         db.refresh(db_diagnosis)
 
         updated_data_dict = serialize_data(update_data)
-
         log_crud_action(
             action=ActionType.UPDATE,
             user=user_id,
