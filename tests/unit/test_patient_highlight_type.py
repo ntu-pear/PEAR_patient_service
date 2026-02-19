@@ -178,8 +178,6 @@ def test_get_highlight_type_by_id(db_session_mock):
 
 # Test: Update Highlight Type with UPPERCASE conversion
 def test_update_highlight_type_converts_typecode_to_uppercase(db_session_mock):
-    """Test case for updating a highlight type with TypeCode converted to UPPERCASE."""
-    # Arrange
     modified_by = "2"
     highlight_type_update = HighlightTypeUpdate(
         TypeCode="updated_prescription"  # lowercase TypeCode input
@@ -188,7 +186,7 @@ def test_update_highlight_type_converts_typecode_to_uppercase(db_session_mock):
     mock_highlight_type = PatientHighlightType(
         Id=1,
         TypeName="Prescription Alert",
-        TypeCode="PRESCRIPTION",
+        TypeCode="PRESCRIPTION",  # Current value is different from UPDATED_PRESCRIPTION
         Description="Test description",
         IsEnabled="1",
         IsDeleted="0",
@@ -197,12 +195,13 @@ def test_update_highlight_type_converts_typecode_to_uppercase(db_session_mock):
         CreatedDate=datetime.now(),
         ModifiedDate=datetime.now(),
     )
-    
-    db_session_mock.query.return_value.filter.return_value.first.return_value = (
-        mock_highlight_type
-    )
 
-    # Act
+    # First call returns the existing record, second call (duplicate check) returns None
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        mock_highlight_type,  # fetch existing record
+        None,                 # duplicate check finds nothing
+    ]
+
     with mock.patch('app.crud.patient_highlight_type_crud.log_crud_action'):
         result = update_highlight_type(
             db_session_mock,
@@ -212,10 +211,8 @@ def test_update_highlight_type_converts_typecode_to_uppercase(db_session_mock):
             "USER"
         )
 
-    # Assert
     db_session_mock.commit.assert_called_once()
     db_session_mock.refresh.assert_called_once_with(mock_highlight_type)
-    # Verify TypeCode was converted to UPPERCASE
     assert result.TypeCode == "UPDATED_PRESCRIPTION"
     assert result.ModifiedById == modified_by
 

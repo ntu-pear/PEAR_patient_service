@@ -86,13 +86,12 @@ def create_prescription_list(
         raise HTTPException(status_code=500, detail=str(e))
 
 def update_prescription_list(
-    db: Session, 
-    prescription_list_id: int, 
+    db: Session,
+    prescription_list_id: int,
     prescription_list: PatientPrescriptionListUpdate,
     modified_by: str,
     user_full_name: str
 ):
-    """Update an existing prescription list item with uppercase transformation"""
     db_prescription_list = db.query(PatientPrescriptionList).filter(
         PatientPrescriptionList.Id == prescription_list_id
     ).first()
@@ -107,14 +106,27 @@ def update_prescription_list(
     except Exception as e:
         original_data_dict = "{}"
 
-    # Convert Value to UPPERCASE if it's being updated
     update_data = prescription_list.model_dump(exclude_unset=True)
     if "Value" in update_data and update_data["Value"] is not None:
         update_data["Value"] = update_data["Value"].upper()
 
+        # Only check for duplicates if the Value is actually changing
+        if update_data["Value"] != db_prescription_list.Value:
+            existing = db.query(PatientPrescriptionList).filter(
+                PatientPrescriptionList.Value == update_data["Value"],
+                PatientPrescriptionList.IsDeleted == "0",
+                PatientPrescriptionList.Id != prescription_list_id
+            ).first()
+
+            if existing:
+                raise HTTPException(
+                    status_code=400,
+                    detail="A prescription list record with this name already exists"
+                )
+
     for key, value in update_data.items():
         setattr(db_prescription_list, key, value)
-    
+
     db.commit()
     db.refresh(db_prescription_list)
 
@@ -129,7 +141,7 @@ def update_prescription_list(
         original_data=original_data_dict,
         updated_data=updated_data_dict
     )
-    
+
     return db_prescription_list
 
 def delete_prescription_list(

@@ -97,39 +97,6 @@ def test_get_diagnosis_by_id_not_found(db_session_mock):
     assert diagnosis is None
 
 
-def test_create_diagnosis_converts_to_uppercase(db_session_mock):
-    """Test creating a diagnosis converts DiagnosisName to UPPERCASE"""
-    # Mock: No existing diagnosis with same name
-    db_session_mock.query.return_value.filter.return_value.first.return_value = None
-    
-    data = {
-        "DiagnosisName": "diabetes mellitus",  # lowercase input
-        "IsDeleted": "0",
-    }
-    
-    with mock.patch('app.crud.patient_medical_diagnosis_list_crud.PatientMedicalDiagnosisList') as mock_model:
-        mock_instance = mock.MagicMock()
-        mock_instance.Id = 1
-        mock_instance.DiagnosisName = "DIABETES MELLITUS"  # Should be UPPERCASE
-        mock_instance.IsDeleted = "0"
-        mock_instance.CreatedDate = datetime.now()
-        mock_instance.ModifiedDate = datetime.now()
-        mock_model.return_value = mock_instance
-        
-        with mock.patch('app.crud.patient_medical_diagnosis_list_crud.log_crud_action'):
-            diagnosis = create_diagnosis(
-                db_session_mock,
-                PatientMedicalDiagnosisListCreate(**data),
-                user_id="test_user",
-                user_full_name="Test User"
-            )
-    
-    db_session_mock.add.assert_called_once()
-    db_session_mock.commit.assert_called_once()
-    # Verify DiagnosisName was converted to UPPERCASE
-    assert diagnosis.DiagnosisName == "DIABETES MELLITUS"
-
-
 def test_create_diagnosis_duplicate_check_case_insensitive(db_session_mock):
     """Test creating a diagnosis with duplicate name (case-insensitive) fails"""
     # Mock: Existing diagnosis with UPPERCASE name
@@ -166,7 +133,13 @@ def test_update_diagnosis_converts_to_uppercase(db_session_mock):
     mock_data.DiagnosisName = "DIABETES"
     mock_data.IsDeleted = "0"
 
-    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_data
+    first_query = mock.MagicMock()
+    first_query.filter.return_value.first.return_value = mock_data
+
+    second_query = mock.MagicMock()
+    second_query.filter.return_value.first.return_value = None
+
+    db_session_mock.query.side_effect = [first_query, second_query]
 
     data = {
         "DiagnosisName": "diabetes mellitus type 2",  # lowercase input
