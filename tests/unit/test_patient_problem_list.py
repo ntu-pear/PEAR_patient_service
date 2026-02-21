@@ -232,6 +232,130 @@ def test_delete_problem_list_not_found(db_session_mock):
         modified_by="test_user",
         user_full_name="Test User"
     )
-    
+
     assert result is None
     db_session_mock.commit.assert_not_called()
+
+
+def test_create_problem_list_success(db_session_mock):
+    """Test creating a problem list item successfully converts name to UPPERCASE"""
+    # No existing duplicate
+    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+
+    data = {"ProblemName": "diabetes type 2"}
+
+    with mock.patch('app.crud.patient_problem_list_crud.PatientProblemList') as mock_model:
+        mock_instance = mock.MagicMock()
+        mock_instance.Id = 1
+        mock_instance.ProblemName = "DIABETES TYPE 2"
+        mock_instance.IsDeleted = '0'
+        mock_instance.CreatedByID = "test_user"
+        mock_instance.ModifiedByID = "test_user"
+        mock_model.return_value = mock_instance
+
+        with mock.patch('app.crud.patient_problem_list_crud.log_crud_action'):
+            result = create_problem_list(
+                db_session_mock,
+                PatientProblemListCreate(**data),
+                created_by="test_user",
+                user_full_name="Test User"
+            )
+
+    db_session_mock.add.assert_called_once()
+    db_session_mock.commit.assert_called_once()
+    assert result is not None
+    assert result.ProblemName == "DIABETES TYPE 2"
+
+
+def test_get_problem_lists_pagination(db_session_mock):
+    """Test retrieving problem lists with non-zero pageNo applies correct offset"""
+    mock_problem_lists = [
+        mock.MagicMock(Id=4, ProblemName="PAGE 2 ITEM", IsDeleted='0'),
+    ]
+
+    mock_query = mock.MagicMock()
+    mock_query.filter.return_value = mock_query
+    mock_query.count.return_value = 4  # 4 total records
+    mock_query.order_by.return_value = mock_query
+    mock_query.offset.return_value = mock_query
+    mock_query.limit.return_value = mock_query
+    mock_query.all.return_value = mock_problem_lists
+    db_session_mock.query.return_value = mock_query
+
+    _, totalRecords, totalPages = get_problem_lists(db_session_mock, pageNo=1, pageSize=3)
+
+    assert totalRecords == 4
+    assert totalPages == 2  # ceil(4/3) = 2
+    mock_query.offset.assert_called_with(3)  # pageNo=1 * pageSize=3
+
+
+def test_get_problem_lists_empty(db_session_mock):
+    """Test retrieving problem lists returns empty list and zero totals when no records exist"""
+    mock_query = mock.MagicMock()
+    mock_query.filter.return_value = mock_query
+    mock_query.count.return_value = 0
+    mock_query.order_by.return_value = mock_query
+    mock_query.offset.return_value = mock_query
+    mock_query.limit.return_value = mock_query
+    mock_query.all.return_value = []
+    db_session_mock.query.return_value = mock_query
+
+    problem_lists, totalRecords, totalPages = get_problem_lists(db_session_mock, pageNo=0, pageSize=10)
+
+    assert len(problem_lists) == 0
+    assert totalRecords == 0
+    assert totalPages == 0
+
+
+def test_update_problem_list_duplicate_check(db_session_mock):
+    """Test updating to an already-existing ProblemName raises 400"""
+    mock_existing = mock.MagicMock(Id=1, ProblemName="DIABETES TYPE 2", IsDeleted='0')
+    mock_duplicate = mock.MagicMock(Id=2, ProblemName="HYPERTENSION", IsDeleted='0')
+
+    first_query = mock.MagicMock()
+    first_query.filter.return_value.first.return_value = mock_existing
+
+    second_query = mock.MagicMock()
+    second_query.filter.return_value.first.return_value = mock_duplicate  # duplicate found
+
+    db_session_mock.query.side_effect = [first_query, second_query]
+
+    data = {"ProblemName": "Hypertension"}  # Different case of an existing name
+
+    with pytest.raises(HTTPException) as exc_info:
+        update_problem_list(
+            db_session_mock,
+            1,
+            PatientProblemListUpdate(**data),
+            modified_by="test_user",
+            user_full_name="Test User"
+        )
+
+    assert exc_info.value.status_code == 400
+    assert "already exists" in exc_info.value.detail
+
+
+def test_update_problem_list_same_name_no_duplicate_check(db_session_mock):
+    """Test updating to the same ProblemName (different case) does not trigger duplicate check"""
+    mock_data = mock.MagicMock()
+    mock_data.Id = 1
+    mock_data.ProblemName = "DIABETES TYPE 2"
+    mock_data.IsDeleted = '0'
+
+    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_data
+
+    data = {"ProblemName": "diabetes type 2"}  # Same name as existing, just different case
+
+    with mock.patch('app.crud.patient_problem_list_crud.log_crud_action'):
+        result = update_problem_list(
+            db_session_mock,
+            1,
+            PatientProblemListUpdate(**data),
+            modified_by="test_user",
+            user_full_name="Test User"
+        )
+
+    # Only one query (fetch) — no duplicate check query
+    assert db_session_mock.query.call_count == 1
+    db_session_mock.commit.assert_called_once()
+    assert result is not None
