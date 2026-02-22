@@ -77,14 +77,14 @@ class PrescriptionStrategy(HighlightStrategy):
         
         Sample return:
         {
-            "prescription_name": "Metformin",           # From PATIENT_PRESCRIPTION_LIST.Value
-            "dosage": "500mg",                          # From PATIENT_PRESCRIPTION.Dosage
-            "frequency_per_day": 2,                     # From PATIENT_PRESCRIPTION.FrequencyPerDay
-            "instruction": "Take with food",            # From PATIENT_PRESCRIPTION.Instruction
-            "is_after_meal": "1",                       # From PATIENT_PRESCRIPTION.IsAfterMeal
-            "status": "Chronic",                        # From PATIENT_PRESCRIPTION.Status
-            "start_date": "2025-01-01T00:00:00",       # From PATIENT_PRESCRIPTION.StartDate
-            "end_date": null                            # From PATIENT_PRESCRIPTION.EndDate
+            "prescription_name": "Metformin", # From PATIENT_PRESCRIPTION_LIST.Value
+            "dosage": "500mg", # From PATIENT_PRESCRIPTION.Dosage
+            "frequency_per_day": 2, # From PATIENT_PRESCRIPTION.FrequencyPerDay
+            "instruction": "Take with food", # From PATIENT_PRESCRIPTION.Instruction
+            "is_after_meal": "1", # From PATIENT_PRESCRIPTION.IsAfterMeal
+            "status": "Chronic", # From PATIENT_PRESCRIPTION.Status
+            "start_date": "2025-01-01T00:00:00", # From PATIENT_PRESCRIPTION.StartDate
+            "end_date": null # From PATIENT_PRESCRIPTION.EndDate
         }
         """
         try:

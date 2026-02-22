@@ -89,8 +89,8 @@ class AllergyStrategy(HighlightStrategy):
         
         Sample return:
         {
-            "allergy_type": "Penicillin",           # From ALLERGY_TYPE.Value
-            "allergy_reaction_type": "Severe"       # From ALLERGY_REACTION_TYPE.Value
+            "allergy_type": "Penicillin", # From ALLERGY_TYPE.Value
+            "allergy_reaction_type": "Severe" # From ALLERGY_REACTION_TYPE.Value
         }
         """
         try:

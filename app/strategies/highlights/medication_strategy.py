@@ -71,12 +71,12 @@ class MedicationStrategy(HighlightStrategy):
         
         Sample return:
         {
-            "prescription_name": "Warfarin",              # From PATIENT_PRESCRIPTION_LIST.Value
-            "dosage": "5mg",                              # From PATIENT_MEDICATION.Dosage
-            "instruction": "PO Daily",                    # From PATIENT_MEDICATION.Instruction
-            "administer_time": "08:00",                   # From PATIENT_MEDICATION.AdministerTime
-            "start_date": "2025-01-01",                   # From PATIENT_MEDICATION.StartDate
-            "end_date": "2025-12-31"                      # From PATIENT_MEDICATION.EndDate
+            "prescription_name": "Warfarin", # From PATIENT_PRESCRIPTION_LIST.Value
+            "dosage": "5mg", # From PATIENT_MEDICATION.Dosage
+            "instruction": "PO Daily", # From PATIENT_MEDICATION.Instruction
+            "administer_time": "08:00", # From PATIENT_MEDICATION.AdministerTime
+            "start_date": "2025-01-01", # From PATIENT_MEDICATION.StartDate
+            "end_date": "2025-12-31" # From PATIENT_MEDICATION.EndDate
         }
         """
         try:
