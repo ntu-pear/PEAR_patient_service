@@ -150,6 +150,12 @@ jobs:
 
           kubectl rollout status deployment/patient-service-dev --timeout=300s
 
+      - name: Deploy Highlight Cleanup CronJob (highlight_cleanup_cronjob.yaml)
+        run: |
+          echo "Deploying highlight cleanup CronJob..."
+          kubectl apply -f './k8s/highlight_cleanup_cronjob.yaml'
+          echo "CronJob deployed successfully"
+
       - name: Deploy filebeat DaemonSet to Kubernetes
         if: ${{ inputs.filebeat-daemonset-file != '' }}
         run: |

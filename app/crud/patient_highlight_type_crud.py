@@ -1,26 +1,112 @@
-from sqlalchemy.orm import Session
-from ..models.patient_highlight_type_model import HighlightType
-from ..schemas.patient_highlight_type import HighlightTypeCreate, HighlightTypeUpdate
 from datetime import datetime
-from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
+
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+
+from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
+from ..models.patient_highlight_type_model import PatientHighlightType
+from ..schemas.patient_highlight_type import HighlightTypeCreate, HighlightTypeUpdate
+
 
 def get_all_highlight_types(db: Session):
-    return db.query(HighlightType).filter(HighlightType.IsDeleted == "0").all()
+    return db.query(PatientHighlightType).filter(PatientHighlightType.IsDeleted == "0").order_by(PatientHighlightType.TypeName.asc()).all()
 
 def get_highlight_type_by_id(db: Session, highlight_type_id: int):
     return (
-        db.query(HighlightType)
-        .filter(HighlightType.HighlightTypeID == highlight_type_id, HighlightType.IsDeleted == "0")
+        db.query(PatientHighlightType)
+        .filter(PatientHighlightType.Id == highlight_type_id, PatientHighlightType.IsDeleted == "0")
         .first()
     )
+
+def get_enabled_highlight_types(db: Session):
+    return (
+        db.query(PatientHighlightType)
+        .filter(
+            PatientHighlightType.IsDeleted == "0",
+            PatientHighlightType.IsEnabled == "1"
+        )
+        .order_by(PatientHighlightType.TypeName.asc())
+        .all()
+    )
+
+# Toggle highlight type IsEnabled field - for admin's use
+def toggle_highlight_type_enabled(db: Session, highlight_type_id: int, modified_by: str, user_full_name: str):
+    db_highlight_type = (
+        db.query(PatientHighlightType)
+        .filter(PatientHighlightType.Id == highlight_type_id)
+        .first()
+    )
+    
+    if not db_highlight_type or db_highlight_type.IsDeleted == "1":
+        raise HTTPException(status_code=404, detail="Highlight type not found")
+    
+    try:
+        original_data_dict = {
+            k: serialize_data(v) for k, v in db_highlight_type.__dict__.items() if not k.startswith("_")
+        }
+    except Exception as e:
+        original_data_dict = "{}"
+    
+    # Toggle IsEnabled
+    old_status = db_highlight_type.IsEnabled
+    new_status = not old_status
+    db_highlight_type.IsEnabled = new_status
+    
+    # Update audit fields
+    db_highlight_type.ModifiedDate = datetime.now()
+    db_highlight_type.ModifiedById = modified_by
+    
+    # Commit changes
+    db.commit()
+    db.refresh(db_highlight_type)
+    
+    # Log the action
+    updated_data_dict = {
+        "IsEnabled": new_status,
+        "toggled_from": old_status,
+        "toggled_to": new_status
+    }
+    
+    log_crud_action(
+        action=ActionType.UPDATE,
+        user=modified_by,
+        user_full_name=user_full_name,
+        message=f"Toggled highlight type IsEnabled from {old_status} to {new_status}",
+        table="HighlightType",
+        entity_id=highlight_type_id,
+        original_data=original_data_dict,
+        updated_data=updated_data_dict,
+    )
+    
+    return db_highlight_type
 
 def create_highlight_type(
     db: Session, highlight_type: HighlightTypeCreate, created_by: str, user_full_name:str
 ):
-    db_highlight_type = HighlightType(
-        **highlight_type.model_dump(), CreatedById=created_by, ModifiedById=created_by
+    """Create a new highlight type with duplicate check and uppercase transformation"""
+    # Convert TypeCode to UPPERCASE before checking and inserting
+    uppercase_type_code = highlight_type.TypeCode.upper()
+    
+    # Check if TypeCode already exists in the DB (case-insensitive by comparing uppercase)
+    existing = db.query(PatientHighlightType).filter(
+        PatientHighlightType.TypeCode == uppercase_type_code,
+        PatientHighlightType.IsDeleted == "0"
+    ).first()
+    
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Highlight type with code '{uppercase_type_code}' already exists"
+        )
+    
+    # Create highlight type with UPPERCASE TypeCode
+    data = highlight_type.model_dump()
+    data["TypeCode"] = uppercase_type_code
+    
+    db_highlight_type = PatientHighlightType(
+        **data, CreatedById=created_by, ModifiedById=created_by
     )
-    updated_data_dict = serialize_data(highlight_type.model_dump())
+    updated_data_dict = serialize_data(data)
     db.add(db_highlight_type)
     db.commit()
     db.refresh(db_highlight_type)
@@ -29,9 +115,9 @@ def create_highlight_type(
         action=ActionType.CREATE,
         user=created_by,
         user_full_name=user_full_name,
-        message="Creted highlight type",
+        message="Created highlight type",
         table="HighlightType",
-        entity_id=db_highlight_type.HighlightTypeID,
+        entity_id=db_highlight_type.Id,
         original_data=None,
         updated_data=updated_data_dict,
     )  
@@ -45,8 +131,8 @@ def update_highlight_type(
     user_full_name: str
 ):
     db_highlight_type = (
-        db.query(HighlightType)
-        .filter(HighlightType.HighlightTypeID == highlight_type_id)
+        db.query(PatientHighlightType)
+        .filter(PatientHighlightType.Id == highlight_type_id)
         .first()
     )
 
@@ -58,21 +144,34 @@ def update_highlight_type(
         except Exception as e:
             original_data_dict = "{}"
 
-        # Update other fields from the request body
-        for key, value in highlight_type.model_dump(exclude_unset=True).items():
+        update_data = highlight_type.model_dump(exclude_unset=True)
+        if "TypeCode" in update_data and update_data["TypeCode"] is not None:
+            update_data["TypeCode"] = update_data["TypeCode"].upper()
+
+            # Only check for duplicates if the TypeCode is actually changing
+            if update_data["TypeCode"] != db_highlight_type.TypeCode:
+                existing = db.query(PatientHighlightType).filter(
+                    PatientHighlightType.TypeCode == update_data["TypeCode"],
+                    PatientHighlightType.IsDeleted == "0",
+                    PatientHighlightType.Id != highlight_type_id
+                ).first()
+
+                if existing:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Highlight type with code '{update_data['TypeCode']}' already exists"
+                    )
+
+        for key, value in update_data.items():
             setattr(db_highlight_type, key, value)
 
-        # Set UpdatedDateTime to the current datetime
         db_highlight_type.UpdatedDateTime = datetime.now()
-
-        # Update the ModifiedById field
         db_highlight_type.ModifiedById = modified_by
 
-        # Commit and refresh the object
         db.commit()
         db.refresh(db_highlight_type)
 
-        updated_data_dict = serialize_data(highlight_type.model_dump())
+        updated_data_dict = serialize_data(update_data)
         log_crud_action(
             action=ActionType.UPDATE,
             user=modified_by,
@@ -88,33 +187,37 @@ def update_highlight_type(
 
 def delete_highlight_type(db: Session, highlight_type_id: int, modified_by: str, user_full_name:str):
     db_highlight_type = (
-        db.query(HighlightType)
-        .filter(HighlightType.HighlightTypeID == highlight_type_id)
+        db.query(PatientHighlightType)
+        .filter(PatientHighlightType.Id == highlight_type_id)
         .first()
     )
+    
+    if not db_highlight_type or db_highlight_type.IsDeleted == "1":
+        raise HTTPException(status_code=404, detail="Highlight type not found")
+    else:
+        if db_highlight_type:
+            try:
+                original_data_dict = {
+                    k: serialize_data(v) for k, v in db_highlight_type.__dict__.items() if not k.startswith("_")
+                }
+            except Exception as e:
+                original_data_dict = "{}"
 
-    if db_highlight_type:
-        try:
-            original_data_dict = {
-                k: serialize_data(v) for k, v in db_highlight_type.__dict__.items() if not k.startswith("_")
-            }
-        except Exception as e:
-            original_data_dict = "{}"
+            db_highlight_type.IsDeleted = "1"
+            db_highlight_type.ModifiedById = modified_by
+            db_highlight_type.ModifiedDate = datetime.now()
 
-        setattr(db_highlight_type, "IsDeleted", "1")
-        db_highlight_type.ModifiedById = modified_by
+            db.commit()
 
-        db.commit()
-
-        log_crud_action(
-            action=ActionType.DELETE,
-            user=modified_by,
-            user_full_name=user_full_name,
-            message="Deleted highlight type",
-            table="HighlightType",
-            entity_id=highlight_type_id,
-            original_data=original_data_dict,
-            updated_data=None,
-        )
-        return db_highlight_type
+            log_crud_action(
+                action=ActionType.DELETE,
+                user=modified_by,
+                user_full_name=user_full_name,
+                message="Deleted highlight type",
+                table="HighlightType",
+                entity_id=highlight_type_id,
+                original_data=original_data_dict,
+                updated_data=None,
+            )
+            return db_highlight_type
     return None

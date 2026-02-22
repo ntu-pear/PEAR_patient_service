@@ -17,7 +17,7 @@ from app.models.allergy_reaction_type_model import AllergyReactionType
 from app.models.patient_patient_guardian_model import PatientPatientGuardian
 from app.models.patient_doctor_note_model import PatientDoctorNote
 from app.models.patient_photo_model import PatientPhoto
-from app.models.patient_photo_list_model import PatientPhotoList
+from app.models.patient_photo_list_album_model import PatientPhotoListAlbum
 from app.models.patient_model import Patient
 from app.models.patient_assigned_dementia_list_model import PatientAssignedDementiaList
 from app.models.patient_assigned_dementia_mapping_model import PatientAssignedDementiaMapping
@@ -165,6 +165,8 @@ def test_update_patient_allergy(db_session_mock, patient_allergy_update):
     """Test case for updating a patient allergy."""
     # Arrange
     modified_by = "2"
+    mock_allergy_type = AllergyType(AllergyTypeID=3, Value="Corn", IsDeleted="0")
+    mock_reaction_type = AllergyReactionType(AllergyReactionTypeID=1, Value="Rashes", IsDeleted="0")
     mock_patient_allergy = PatientAllergyMapping(
         Patient_AllergyID=1,
         PatientID=1,
@@ -177,9 +179,12 @@ def test_update_patient_allergy(db_session_mock, patient_allergy_update):
         CreatedById="1",
         ModifiedById="1",
     )
-    db_session_mock.query.return_value.filter.return_value.first.return_value = (
-        mock_patient_allergy
-    )
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        mock_allergy_type,
+        mock_reaction_type,
+        mock_patient_allergy,
+        None
+    ]
 
     # Act
     result = update_patient_allergy(
@@ -190,6 +195,7 @@ def test_update_patient_allergy(db_session_mock, patient_allergy_update):
     db_session_mock.commit.assert_called_once()
     db_session_mock.refresh.assert_called_once_with(mock_patient_allergy)
     assert result.AllergyRemarks == patient_allergy_update.AllergyRemarks
+    assert result.PatientID == patient_allergy_update.PatientID
     assert result.ModifiedById == modified_by
 
 
@@ -219,7 +225,8 @@ def test_delete_patient_allergy(db_session_mock):
     )
 
     # Assert
-    db_session_mock.commit.assert_called_once()
+    # Highlight integration causes 2 commits (record + highlight)
+    assert db_session_mock.commit.call_count == 2
     db_session_mock.refresh.assert_called_once_with(mock_patient_allergy)
     assert result.IsDeleted == "1"
     assert result.ModifiedById == modified_by
@@ -246,6 +253,7 @@ def patient_allergy_create():
 def patient_allergy_update():
     """Fixture to provide a mock PatientAllergyUpdateReq object."""
     return PatientAllergyUpdateReq(
+        PatientID = 1,
         Patient_AllergyID=1,
         AllergyTypeID=3,
         AllergyReactionTypeID=1,

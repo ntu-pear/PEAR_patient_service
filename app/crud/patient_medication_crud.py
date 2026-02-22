@@ -1,18 +1,23 @@
+import logging
+import math
 from datetime import datetime
-from sqlalchemy.orm import Session, joinedload
+from typing import Any, Dict, Optional
+
+from fastapi import HTTPException
 from sqlalchemy import func
+from sqlalchemy.orm import Session, joinedload
+
+from app.models.patient_highlight_model import PatientHighlight
+from app.services.highlight_helper import create_highlight_if_needed
+
+from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_medication_model import PatientMedication
 from ..models.patient_prescription_list_model import PatientPrescriptionList
 from ..schemas.patient_medication import (
     PatientMedicationCreate,
-    PatientMedicationUpdate
+    PatientMedicationUpdate,
 )
-from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
-from ..services.outbox_service import get_outbox_service, generate_correlation_id
-import math
-import logging
-from fastapi import HTTPException
-from typing import Dict, Any, Optional
+from ..services.outbox_service import generate_correlation_id, get_outbox_service
 
 logger = logging.getLogger(__name__)
 
@@ -219,6 +224,19 @@ def create_medication(
     """
     Creates a new PatientMedication record with outbox pattern support.
     """
+    
+    existing_medication = db.query(PatientMedication).filter(
+        PatientMedication.PatientId == medication_data.PatientId,
+        PatientMedication.PrescriptionListId == medication_data.PrescriptionListId,
+        PatientMedication.IsDeleted == '0'
+    ).first()
+    
+    if existing_medication:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Patient already has an active medication for this prescription"
+        )
+    
     # Generate correlation ID if not provided
     if not correlation_id:
         correlation_id = generate_correlation_id()
@@ -294,12 +312,31 @@ def create_medication(
             original_data=None,
             updated_data=updated_data_dict,
         )
-
-        # Commit both medication and outbox event atomically
         db.commit()
         db.refresh(new_medication)
         
         logger.info(f"Created medication {new_medication.Id} for patient {new_medication.PatientId} with outbox event {outbox_event.id} (correlation: {correlation_id})")
+
+        if medication_with_prescription:
+            try:
+                create_highlight_if_needed(
+                    db=db,
+                    source_record=medication_with_prescription,
+                    type_code="MEDICATION",
+                    patient_id=new_medication.PatientId,
+                    source_table="PATIENT_MEDICATION",
+                    source_record_id=new_medication.Id,
+                    created_by=created_by
+                )
+                # Commit the highlight separately
+                db.commit()
+                logger.info(f"Successfully created highlight for medication {new_medication.Id}")
+            except Exception as e:
+                # Log the error but DON'T fail the medication creation
+                logger.error(f"Failed to create highlight for medication {new_medication.Id}: {e}")
+                # Rollback only the highlight transaction
+                db.rollback()
+        
         return new_medication
 
     except Exception as e:
@@ -328,6 +365,34 @@ def update_medication(
 
     if not db_medication:
         return None
+
+    # Check if the update would create a duplicate
+    
+    # Determine the new patient ID (use updated value if provided, otherwise keep existing)
+    if hasattr(medication_data, 'PatientId') and medication_data.PatientId is not None:
+        new_patient_id = medication_data.PatientId
+    else:
+        new_patient_id = db_medication.PatientId
+    
+    # Determine the new prescription list ID (use updated value if provided, otherwise keep existing)
+    if hasattr(medication_data, 'PrescriptionListId') and medication_data.PrescriptionListId is not None:
+        new_prescription_list_id = medication_data.PrescriptionListId
+    else:
+        new_prescription_list_id = db_medication.PrescriptionListId
+    
+    # Check for duplicate (excluding the current record)
+    duplicate_check = db.query(PatientMedication).filter(
+        PatientMedication.PatientId == new_patient_id,
+        PatientMedication.PrescriptionListId == new_prescription_list_id,
+        PatientMedication.IsDeleted == '0',
+        PatientMedication.Id != medication_id  # Exclude current record
+    ).first()
+    
+    if duplicate_check:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Another active medication with this prescription already exists for this patient"
+        )
 
     # Generate correlation ID if not provided
     if not correlation_id:
@@ -391,6 +456,9 @@ def update_medication(
             db, db_medication, target_prescription_id
         )
 
+        # Need this for patient highlight integration
+        medication_with_prescription = _get_medication_with_prescription_name(db, medication_id)
+
         # Debug logging
         logger.info(f"Original prescription ID: {original_prescription_list_id}, name: '{original_medication_dict.get('PrescriptionName')}'")
         logger.info(f"New prescription ID: {target_prescription_id}, name: '{updated_medication_dict.get('PrescriptionName')}'")
@@ -434,12 +502,33 @@ def update_medication(
             original_data=original_data_dict,
             updated_data=updated_data_dict,
         )
-
-        # Commit atomically
         db.commit()
         db.refresh(db_medication)
         
         logger.info(f"Updated medication {db_medication.Id} for patient {db_medication.PatientId} with outbox event {outbox_event.id} (correlation: {correlation_id})")
+
+        # Trigger patient highlights update after successsful update operation + logging
+        medication_with_prescription = _get_medication_with_prescription_name(db, medication_id)
+        if medication_with_prescription:
+            try:
+                create_highlight_if_needed(
+                    db=db,
+                    source_record=medication_with_prescription,
+                    type_code="MEDICATION",
+                    patient_id=db_medication.PatientId,
+                    source_table="PATIENT_MEDICATION",
+                    source_record_id=medication_id,
+                    created_by=modified_by
+                )
+                db.commit()
+                logger.info(f"Successfully updated highlight for medication {medication_id}")
+            except Exception as e:
+                logger.error(f"Failed to create/update highlight for medication {medication_id}: {e}")
+                db.rollback()
+                # The medication update is already committed and safe
+        else:
+            logger.warning(f"Skipping highlight update for medication {medication_id} - prescription not loaded")
+
         return db_medication
 
     except Exception as e:
@@ -476,10 +565,11 @@ def delete_medication(
     try:
         # Capture original data with prescription name
         medication_dict = _medication_to_dict_with_prescription_name(db_medication, db)
-        
+
+        # ONLY used for logging
         original_data_dict = {
-            k: serialize_data(v) for k, v in db_medication.__dict__.items() 
-            if not k.startswith("_")
+            col.name: serialize_data(getattr(db_medication, col.name))
+            for col in db_medication.__table__.columns
         }
 
         # Perform soft delete
@@ -525,11 +615,34 @@ def delete_medication(
             updated_data=serialize_data(db_medication),
         )
 
-        # Commit atomically
+        # FIX: Commit the main delete FIRST
         db.commit()
         db.refresh(db_medication)
         
         logger.info(f"Deleted medication {db_medication.Id} for patient {db_medication.PatientId} with outbox event {outbox_event.id} (correlation: {correlation_id})")
+
+        # FIX: Handle highlight deletion in SEPARATE transaction AFTER main commit
+        try:
+            highlights = db.query(PatientHighlight).filter(
+                PatientHighlight.SourceTable == "PATIENT_MEDICATION",
+                PatientHighlight.SourceRecordId == medication_id,
+                PatientHighlight.IsDeleted == 0
+            ).all()
+            
+            for highlight in highlights:
+                highlight.IsDeleted = 1
+                highlight.ModifiedDate = datetime.now()
+                highlight.ModifiedById = modified_by
+            
+            if highlights:
+                db.commit()
+                logger.info(f"Deleted {len(highlights)} highlights for medication {medication_id}")
+            
+        except Exception as e:
+            logger.error(f"Failed to delete highlights for medication {medication_id}: {e}")
+            db.rollback()
+            # The medication deletion is already committed and safe
+
         return db_medication
 
     except Exception as e:

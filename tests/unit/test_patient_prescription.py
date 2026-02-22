@@ -1,5 +1,6 @@
 from datetime import datetime
 from unittest import mock
+from fastapi import HTTPException
 
 import pytest
 
@@ -97,7 +98,7 @@ def db_session_mock():
 )  # Ensure AllergyReactionType is mocked
 @mock.patch("app.models.patient_doctor_note_model.PatientDoctorNote")
 @mock.patch("app.models.patient_photo_model.PatientPhoto")
-@mock.patch("app.models.patient_photo_list_model.PatientPhotoList")
+@mock.patch("app.models.patient_photo_list_album_model.PatientPhotoListAlbum")  # Mock PatientPhotoListAlbum
 @mock.patch(
     "app.models.patient_assigned_dementia_list_model.PatientAssignedDementiaList"
 )
@@ -181,6 +182,7 @@ def test_update_prescription(db_session_mock):
     mock_data = mock.MagicMock(
         Id=1,
         PatientId=1,
+        PrescriptionListId=1, 
         Dosage="500mg",
         FrequencyPerDay=3,
         Instruction="Take after meal",
@@ -195,7 +197,8 @@ def test_update_prescription(db_session_mock):
     
 
     # Set up the mock query to return the mock prescriptions
-    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_data
+    #db_session_mock.query.return_value.filter.return_value.first.return_value = mock_data
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [mock_data, None]
 
     data = {
         "Active": "1",
@@ -232,6 +235,57 @@ def test_update_prescription(db_session_mock):
     assert prescription.UpdatedDateTime == datetime(2023, 1, 1, 10, 0)
     assert prescription.ModifiedById == "test_user"
 
+def test_update_prescription_duplicate_error(db_session_mock):
+    #Mock
+    mock_existing = mock.MagicMock(
+        Id=1, 
+        PatientId=1, 
+        PrescriptionListId=1, 
+        IsDeleted='0'
+    )
+    
+    #Mock a dupe
+    mock_duplicate = mock.MagicMock(
+        Id=2, 
+        PatientId=1, 
+        PrescriptionListId=5, 
+        IsDeleted='0'
+    )
+
+    # Mock query
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        mock_existing, 
+        mock_duplicate
+    ]
+
+    data = {
+        "PatientId": 1,
+        "PrescriptionListId": 5, 
+        "Dosage": "500mg",
+        "FrequencyPerDay": 3,
+        "Instruction": "Take after meal",
+        "StartDate": datetime(2023, 1, 1),
+        "PrescriptionRemarks": "Duplicate attempt",
+        "Status": "Active",
+        "IsAfterMeal": "1",                
+        "UpdatedDateTime": datetime.now(), 
+        "ModifiedById": "1"
+    }
+
+    # Checking for error
+    with pytest.raises(HTTPException) as excinfo:
+        update_prescription(
+            db_session_mock,
+            1,
+            PatientPrescriptionUpdate(**data),
+            modified_by="test_user",
+            user_full_name="Test User"
+        )
+    
+    assert excinfo.value.status_code == 400
+    assert "Another prescription with this name already exists" in excinfo.value.detail
+    db_session_mock.commit.assert_not_called()
+
 
 def test_delete_prescription(db_session_mock):
     # Mock data
@@ -267,5 +321,6 @@ def test_delete_prescription(db_session_mock):
         modified_by="test_user",      # <--- FIX
         user_full_name="Test User"    # <--- FIX
     )
-    db_session_mock.commit.assert_called_once()
+    # Highlight integration causes 2 comits (prescription + highlight)
+    assert db_session_mock.commit.call_count == 2
     assert result.IsDeleted == "1"

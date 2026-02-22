@@ -1,6 +1,7 @@
 import math
 from datetime import datetime
 
+from fastapi import HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
@@ -42,6 +43,19 @@ def get_medical_history_by_id(db: Session, history_id: int):
 def create_medical_history(db: Session, medical_history: PatientMedicalHistoryCreate, user_id: str, user_full_name: str):
     db_medical_history = PatientMedicalHistory(**medical_history.model_dump())
     
+    existing = db.query(PatientMedicalHistory).filter(
+        PatientMedicalHistory.PatientID == medical_history.PatientID,
+        PatientMedicalHistory.MedicalDiagnosisID == medical_history.MedicalDiagnosisID,
+        PatientMedicalHistory.IsDeleted == "0"
+    ).first()
+
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="This patient already has a medical history record for this diagnosis"
+        )
+    
+    
     if db_medical_history:
         db_medical_history.CreatedDate = datetime.now()
         db_medical_history.ModifiedDate = datetime.now()
@@ -77,6 +91,26 @@ def update_medical_history(db: Session, history_id: int, medical_history: Patien
             }
         except Exception as e:
             original_data_dict = "{}"
+
+        update_data = medical_history.model_dump(exclude_unset=True)
+
+        # Duplicate check if PatientID or MedicalDiagnosisID is being changed
+        new_patient_id = update_data.get("PatientID", db_medical_history.PatientID)
+        new_diagnosis_id = update_data.get("MedicalDiagnosisID", db_medical_history.MedicalDiagnosisID)
+
+        if "PatientID" in update_data or "MedicalDiagnosisID" in update_data:
+            existing = db.query(PatientMedicalHistory).filter(
+                PatientMedicalHistory.PatientID == new_patient_id,
+                PatientMedicalHistory.MedicalDiagnosisID == new_diagnosis_id,
+                PatientMedicalHistory.IsDeleted == "0",
+                PatientMedicalHistory.Id != history_id
+            ).first()
+
+            if existing:
+                raise HTTPException(
+                    status_code=400,
+                    detail="This patient already has a medical history record for this diagnosis"
+                )
 
         for key, value in medical_history.model_dump(exclude_unset=True).items():
             if value is not None:

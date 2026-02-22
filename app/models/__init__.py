@@ -6,12 +6,14 @@ from .patient_allocation_model import PatientAllocation
 from .patient_assigned_dementia_list_model import PatientAssignedDementiaList
 from .patient_assigned_dementia_mapping_model import PatientAssignedDementiaMapping
 from .patient_attendance_model import PatientAttendance
+from .patient_dementia_stage_list_model import PatientDementiaStageList
 from .patient_doctor_note_model import PatientDoctorNote
 from .patient_guardian_model import PatientGuardian
 from .patient_guardian_relationship_mapping_model import (
     PatientGuardianRelationshipMapping,
 )
 from .patient_highlight_model import PatientHighlight
+from .patient_highlight_type_model import PatientHighlightType
 from .patient_list_diet_model import PatientDietList
 from .patient_list_education_model import PatientEducationList
 from .patient_list_language_model import PatientListLanguage
@@ -26,13 +28,17 @@ from .patient_mobility_list_model import PatientMobilityList
 from .patient_mobility_mapping_model import PatientMobility
 from .patient_model import Patient
 from .patient_patient_guardian_model import PatientPatientGuardian
-from .patient_photo_list_model import PatientPhotoList
+from .patient_photo_list_album_model import PatientPhotoListAlbum
 from .patient_photo_model import PatientPhoto
 from .patient_prescription_list_model import PatientPrescriptionList
 from .patient_prescription_model import PatientPrescription
 from .patient_privacy_level_model import PatientPrivacyLevel
+from .patient_problem_list_model import PatientProblemList
+from .patient_problem_model import PatientProblem
 from .patient_social_history_model import PatientSocialHistory
 from .patient_vital_model import PatientVital
 from .social_history_sensitive_mapping_model import SocialHistorySensitiveMapping
+from .patient_personal_preference_list_model import PatientPersonalPreferenceList
+from .patient_personal_preference_model import PatientPersonalPreference
 
 # Import other models as needed

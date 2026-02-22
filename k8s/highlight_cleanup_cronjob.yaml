@@ -1,0 +1,25 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: patient-highlight-cleanup
+spec:
+  # Every day at 00:00 SGT (midnight)
+  schedule: "0 0 * * *"
+  timeZone: "Asia/Singapore"
+  jobTemplate:
+    spec:
+      # After job completion, keep for 5 minutes, then cleanup
+      ttlSecondsAfterFinished: 300
+      template:
+        spec:
+          containers:
+          - name: curl-job
+            image: curlimages/curl:8.9.0
+            args:
+              - /bin/sh
+              - -c
+              - |
+                echo "Triggering patient-service highlight cleanup..."
+                curl -X POST http://patient-service-dev.default.svc.cluster.local:8000/cronjobs/highlight-cleanup/run || exit 1
+          restartPolicy: OnFailure

@@ -25,7 +25,15 @@ def upload_photo_to_cloudinary(file: UploadFile):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Cloudinary upload failed: {str(e)}")
 
-def get_patients_by_doctor(db: Session, doctor_id: str, mask: bool = True, pageNo: int = 0, pageSize: int = 10):
+def get_patients_by_doctor(
+    db: Session, 
+    doctor_id: str, 
+    mask: bool = True, 
+    pageNo: int = 0, 
+    pageSize: int = 10,
+    name: Optional[str] = None,
+    isActive: Optional[str] = None
+):
     """Get all patients allocated to a specific doctor by doctorId (found in Patient Allocation table)"""
     offset = pageNo * pageSize
     
@@ -42,6 +50,13 @@ def get_patients_by_doctor(db: Session, doctor_id: str, mask: bool = True, pageN
         Patient.isDeleted == "0"
     )
     
+    # Apply name filter if provided (non-exact, case-insensitive match)
+    if name:
+        query = query.filter(Patient.name.ilike(f"%{name}%"))
+    
+    if isActive in ["0", "1"]:
+        query = query.filter(Patient.isActive == isActive)
+    
     totalRecords = query.count()
     totalPages = math.ceil(totalRecords / pageSize) if pageSize > 0 else 0
     
@@ -54,7 +69,15 @@ def get_patients_by_doctor(db: Session, doctor_id: str, mask: bool = True, pageN
     return db_patients, totalRecords, totalPages
 
 
-def get_patients_by_supervisor(db: Session, supervisor_id: str, mask: bool = True, pageNo: int = 0, pageSize: int = 10):
+def get_patients_by_supervisor(
+    db: Session, 
+    supervisor_id: str, 
+    mask: bool = True, 
+    pageNo: int = 0, 
+    pageSize: int = 10,
+    name: Optional[str] = None,
+    isActive: Optional[str] = None
+):
     """Get all patients allocated to a specific supervisor by supervisorId (found in Patient Allocation table)"""
     offset = pageNo * pageSize
     
@@ -70,6 +93,107 @@ def get_patients_by_supervisor(db: Session, supervisor_id: str, mask: bool = Tru
         PatientAllocation.isDeleted == "0",
         Patient.isDeleted == "0"
     )
+    
+    # Apply name filter if provided (non-exact, case-insensitive match)
+    if name:
+        query = query.filter(Patient.name.ilike(f"%{name}%"))
+    
+    if isActive in ["0", "1"]:
+        query = query.filter(Patient.isActive == isActive)
+    
+    totalRecords = query.count()
+    totalPages = math.ceil(totalRecords / pageSize) if pageSize > 0 else 0
+    
+    db_patients = query.order_by(Patient.name.asc()).offset(offset).limit(pageSize).all()
+    
+    if db_patients and mask:
+        for db_patient in db_patients:
+            db_patient.nric = db_patient.mask_nric
+    
+    return db_patients, totalRecords, totalPages
+
+
+def get_patients_by_caregiver(
+    db: Session, 
+    caregiver_id: str, 
+    mask: bool = True, 
+    pageNo: int = 0, 
+    pageSize: int = 10,
+    name: Optional[str] = None,
+    isActive: Optional[str] = None
+):
+    """Get all patients allocated to a specific caregiver by caregiverId (found in PatientAllocation table)"""
+    offset = pageNo * pageSize
+    
+    # Query patients through the allocation relationship
+    query = db.query(Patient).options(
+        joinedload(Patient._preferred_language)
+    ).join(
+        PatientAllocation,
+        Patient.id == PatientAllocation.patientId
+    ).filter(
+        PatientAllocation.caregiverId == caregiver_id,
+        PatientAllocation.active == "Y",
+        PatientAllocation.isDeleted == "0",
+        Patient.isDeleted == "0"
+    )
+    
+    if name:
+        query = query.filter(Patient.name.ilike(f"%{name}%"))
+    
+    # Apply exact match for isActive (only accepts "0" or "1")
+    if isActive in ["0", "1"]:
+        query = query.filter(Patient.isActive == isActive)
+    
+    totalRecords = query.count()
+    totalPages = math.ceil(totalRecords / pageSize) if pageSize > 0 else 0
+    
+    db_patients = query.order_by(Patient.name.asc()).offset(offset).limit(pageSize).all()
+    
+    if db_patients and mask:
+        for db_patient in db_patients:
+            db_patient.nric = db_patient.mask_nric
+    
+    return db_patients, totalRecords, totalPages
+
+
+def get_patients_by_guardian(
+    db: Session, 
+    guardian_application_user_id: str, 
+    mask: bool = True, 
+    pageNo: int = 0, 
+    pageSize: int = 10,
+    name: Optional[str] = None,
+    isActive: Optional[str] = None
+):
+    """Get all patients allocated to a specific guardian by guardianApplicationUserId (found in Patient Guardian table)"""
+    from ..models.patient_guardian_model import PatientGuardian
+    
+    offset = pageNo * pageSize
+    
+    # Query patients through the allocation and guardian relationships
+    # Need to check both guardianId and guardian2Id in PatientAllocation
+    query = db.query(Patient).options(
+        joinedload(Patient._preferred_language)
+    ).join(
+        PatientAllocation,
+        Patient.id == PatientAllocation.patientId
+    ).join(
+        PatientGuardian,
+        (PatientAllocation.guardianId == PatientGuardian.id) | (PatientAllocation.guardian2Id == PatientGuardian.id)
+    ).filter(
+        PatientGuardian.guardianApplicationUserId == guardian_application_user_id,
+        PatientAllocation.active == "Y",
+        PatientAllocation.isDeleted == "0",
+        PatientGuardian.isDeleted == "0",
+        Patient.isDeleted == "0"
+    )
+    
+    if name:
+        query = query.filter(Patient.name.ilike(f"%{name}%"))
+    
+    if isActive in ["0", "1"]:
+        query = query.filter(Patient.isActive == isActive)
     
     totalRecords = query.count()
     totalPages = math.ceil(totalRecords / pageSize) if pageSize > 0 else 0

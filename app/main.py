@@ -14,14 +14,16 @@ from sqlalchemy.orm import clear_mappers
 
 from app.messaging.consumer_manager import create_patient_consumer_manager
 from app.models import (
-    patient_allergy_mapping_model,  # Import all models to ensure they are registered
+    patient_photo_list_album_model,  # Import all models to ensure they are registered
 )
 from app.models import (
     outbox_model,
+    patient_allergy_mapping_model,
     patient_allocation_model,
     patient_assigned_dementia_list_model,
     patient_assigned_dementia_mapping_model,
     patient_attendance_model,
+    patient_dementia_stage_list_model,
     patient_doctor_note_model,
     patient_guardian_model,
     patient_guardian_relationship_mapping_model,
@@ -39,7 +41,6 @@ from app.models import (
     patient_mobility_mapping_model,
     patient_model,
     patient_patient_guardian_model,
-    patient_photo_list_model,
     patient_photo_model,
     patient_prescription_list_model,
     patient_prescription_model,
@@ -49,12 +50,14 @@ from app.models import (
 from app.routers import (
     allergy_reaction_type_router,
     allergy_type_router,
+    cronjob_router,
     integrity_router,
     outbox_router,
     patient_allergy_mapping_router,
     patient_allocation_router,
     patient_assigned_dementia_list_router,
     patient_assigned_dementia_mapping_router,
+    patient_dementia_stage_list_router,
     patient_doctor_note_router,
     patient_guardian_router,
     patient_highlight_router,
@@ -72,10 +75,15 @@ from app.routers import (
     patient_medication_router,
     patient_mobility_mapping_router,
     patient_mobility_router,
+    patient_personal_preference_list_router,
+    patient_personal_preference_router,
+    patient_photo_list_album_router,
     patient_photo_router,
     patient_prescription_list_router,
     patient_prescription_router,
     patient_privacy_level_router,
+    patient_problem_list_router,
+    patient_problem_router,
     patient_router,
     patient_social_history_router,
     patient_vital_router,
@@ -391,6 +399,24 @@ app.include_router(
 )
 
 app.include_router(
+    patient_dementia_stage_list_router.router, 
+    prefix=f"{API_VERSION_PREFIX}", 
+    tags=["Dementia Stage List"]
+)
+
+app.include_router(
+    patient_problem_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Problem"],
+)
+
+app.include_router(
+    patient_problem_list_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Problem List"],
+)
+
+app.include_router(
     integrity_router.router,
     prefix=f"{API_VERSION_PREFIX}/integrity",
     tags=["Integrity"],
@@ -400,9 +426,31 @@ app.include_router(
     outbox_router.router
 )
 
+app.include_router(
+    cronjob_router.router
+)
+
 # Shift Photos route to below. Photos route catches / routes which interferes with most GET ALL routes.
 app.include_router(
-    patient_photo_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Photos"]
+    patient_photo_router.router, prefix=f"{API_VERSION_PREFIX}", tags=["Personal Photos"]
+)
+
+app.include_router(
+    patient_photo_list_album_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Photo List Album"],
+)
+
+app.include_router(
+    patient_personal_preference_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Personal Preferences"],
+)
+
+app.include_router(
+    patient_personal_preference_list_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Personal Preference List"],
 )
 
 @app.get("/")
