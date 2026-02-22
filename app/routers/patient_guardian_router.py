@@ -52,7 +52,6 @@ def create_patient_guardian(guardian: PatientGuardianCreate, db: Session = Depen
     db_patient = crud_patient.get_patient(db, guardian.patientId, mask=False)
     if not db_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
-    print(PatientPatientGuardianCreate.model_fields)
     db_patient_patient_guardian = crud_patient_patient_guardian.create_patient_patient_guardian(
     db,
     PatientPatientGuardianCreate(
@@ -63,7 +62,7 @@ def create_patient_guardian(guardian: PatientGuardianCreate, db: Session = Depen
         ModifiedById= db_guardian.ModifiedById,
         isDeleted=db_guardian.isDeleted
     )
-)
+    )
     return db_guardian
 
 
@@ -82,7 +81,10 @@ def delete_patient_guardian(guardian_id: int, db: Session = Depends(get_db)):
     db_patient_patient_guardian = crud_patient_patient_guardian.delete_patient_patient_guardian_by_guardianId(db, guardian_id)
     if not db_patient_patient_guardian:
         raise HTTPException(status_code=404, detail="No patient patient guardian relationship found")
-    relationshipName = crud_relationship.get_relationship_mapping(db, db_patient_patient_guardian.relationshipId).relationshipName
+    
+    mapping = crud_relationship.get_relationship_mapping(db, db_patient_patient_guardian.relationshipId)
+    relationshipName = mapping.relationshipName if mapping else "Unknown/Deleted"
+
     return PatientGuardianUpdate(
             id=db_guardian.id,
             active=db_guardian.active,
