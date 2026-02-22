@@ -50,14 +50,6 @@ class VitalStrategy(HighlightStrategy):
     def _get_patient_vital_averages(self, db: Session, patient_id: int, current_vital_id: int) -> Optional[Dict[str, float]]:
         """
         Calculate average vital signs for a patient based on their historical records.
-        
-        Args:
-            db: Database session
-            patient_id: Patient ID
-            current_vital_id: Current vital ID to exclude from calculation
-            
-        Returns:
-            Dict with average values for each vital sign, or None if not enough data
         """
         try:
             # Get all past vitals for this patient (Excluding current one and deleted records)
