@@ -30,7 +30,7 @@ class VitalStrategy(HighlightStrategy):
     SPO2_TOLERANCE = 3               # -3% from patient's average
     
     # Minimum number of historical records needed to calculate personalized thresholds
-    MIN_RECORDS_FOR_AVERAGE = 2
+    MIN_RECORDS_FOR_AVERAGE = 3
     
     _db_session: Optional[Session] = None
     
