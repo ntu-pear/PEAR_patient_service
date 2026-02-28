@@ -5,6 +5,7 @@ from typing import List, Dict
 from concurrent.futures import ThreadPoolExecutor
 
 from .drift_consumer import DriftConsumer
+from .user_configuration_consumer import UserConsumer
 
 logger = logging.getLogger(__name__)
 
@@ -182,6 +183,7 @@ def create_patient_consumer_manager() -> ConsumerManager:
     
     # Register all available consumers
     manager.register_consumer("drift", DriftConsumer)
+    manager.register_consumer("user", UserConsumer)
     
     return manager
 
