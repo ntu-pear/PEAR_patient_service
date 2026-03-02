@@ -42,17 +42,12 @@ def create_ref_userconfig(
 
             logger.info(f"Creating new user config {userconfig.UserConfigId}")
 
-            # Use raw SQL for IDENTITY INSERT to handle specific ID
             query = text("""
-                SET IDENTITY_INSERT [REF_USERCONFIG] ON;
-
                 INSERT INTO [REF_USERCONFIG] (
                     UserConfigID, configBlob, modifiedDate, modifiedById
                 ) VALUES (
                     :UserConfigID, :configBlob, :modifiedDate, :modifiedById
-                );
-
-                SET IDENTITY_INSERT [REF_USERCONFIG] OFF;
+                )
             """)
 
             params = {
