@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -21,10 +21,6 @@ class PatientPersonalPreference(Base):
     ModifiedDate = Column(DateTime, nullable=False, default=datetime.now)
     CreatedByID = Column(String(450), nullable=False)
     ModifiedByID = Column(String(450), nullable=False)
-
-    __table_args__ = (
-        UniqueConstraint("PatientID", "PersonalPreferenceListID", name="UQ_PatientPersonalPreference_PatientPref"),
-    )
 
     # Relationships
     patient = relationship("Patient", back_populates="personal_preferences")
