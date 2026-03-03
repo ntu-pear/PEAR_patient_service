@@ -45,10 +45,12 @@ def create_patient_list_language(
         table="PatientListLanguage",
         user="1",
         user_full_name="None",
-        message="Create patient list language",
+        message=f"Create patient list language {db_language_item.value}",
         entity_id=db_language_item.id,
         original_data=None,
         updated_data=updated_data_dict,
+        is_system_config=True,
+        log_type="config_patient_list",
     )
     return db_language_item
 
@@ -93,11 +95,13 @@ def update_patient_list_language(
         action=ActionType.UPDATE,
         user="1",
         user_full_name="None",
-        message="Update patient list language",
+        message=f"Update patient list language: {db_patient_language.value}",
         table="PatientListLanguage",
         entity_id=db_patient_language.id,
         original_data=original_data_dict,
         updated_data=serialize_data(patient_language.model_dump()),
+        is_system_config=True,
+        log_type="config_patient_list",
     )
     return db_patient_language
 
@@ -127,11 +131,13 @@ def delete_patient_list_language(db: Session, patient_language_id: int):
         action=ActionType.DELETE,
         user="1",
         user_full_name="None",
-        message="Delete patient list language",
+        message=f"Delete patient list language {db_patient_language.value}",
         table="PatientListLanguage",
         entity_id=db_patient_language.id,
         original_data=original_data_dict,
         updated_data=None,
+        is_system_config=True,
+        log_type="config_patient_list",
     )
     return db_patient_language
 

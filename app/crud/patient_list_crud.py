@@ -24,10 +24,14 @@ def create_list_item(db: Session, list_item: PatientListCreate):
     log_crud_action(
         action=ActionType.CREATE,
         user=SYSTEM_USER_ID,
+        user_full_name="None",
+        message=f"Created list item: {db_list_item.value} ({db_list_item.type})",
         table="PatientList",
         entity_id=db_list_item.id,
         original_data=None,
         updated_data=updated_data_dict,
+        is_system_config=True,
+        log_type="config_patient_list",
     )
     return db_list_item
 
@@ -59,10 +63,14 @@ def update_list_item(
         log_crud_action(
             action=ActionType.UPDATE,
             user=SYSTEM_USER_ID,
+            user_full_name="None",
             table="PatientList",
+            message=f"Updated list item: {db_list_item.value}",
             entity_id=db_list_item.id,
             original_data=original_data_dict,
-            updated_data=updated_data_dict
+            updated_data=updated_data_dict,
+            is_system_config=True,
+            log_type="config_patient_list",
         )
     return db_list_item
 
@@ -82,9 +90,13 @@ def delete_list_item(db: Session, item_id: int):
         log_crud_action(
             action=ActionType.DELETE,
             user=SYSTEM_USER_ID,
+            user_full_name="None",
             table="PatientList",
+            message=f"Deleted list item: {db_list_item.value}",
             entity_id=item_id,
             original_data=original_data_dict,
-            updated_data=None
+            updated_data=None,
+            is_system_config=True,
+            log_type="config_patient_list",
         )
     return db_list_item
