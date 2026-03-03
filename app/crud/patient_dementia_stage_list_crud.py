@@ -67,15 +67,21 @@ def create_dementia_stage_list_entry(
     db.commit()
     db.refresh(new_entry)
 
+    # Retrieve the name of the dementia stage
+    dementia_stage_name = stage_data.DementiaStage if stage_data else None
+
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
         user_full_name=user_full_name,
-        message="Created dementia stage list entry",
+        message=f"Created dementia stage: {dementia_stage_name}",
         table="PatientDementiaStageList",
         entity_id=new_entry.id,
         original_data=None,
         updated_data=updated_data_dict,
+        log_type = "config_dementia_stage",
+        dementia_stage_name=dementia_stage_name,
+        is_system_config=True
     )
     return new_entry
 
@@ -127,6 +133,9 @@ def update_dementia_stage_list_entry(
     except Exception as e:
         original_data_dict = "{}"
 
+    # Store the old dementia stage for message field in log
+    old_dementia_stage_name = db_entry.DementiaStage
+
     for key, value in update_data.items():
         setattr(db_entry, key, value)
 
@@ -143,11 +152,14 @@ def update_dementia_stage_list_entry(
             action=ActionType.UPDATE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Updated dementia stage list entry",
+            message=f"Updated dementia stage - {old_dementia_stage_name} -> {db_entry.Value}",
             table="PatientDementiaStageList",
             entity_id=stage_id,
             original_data=original_data_dict,
             updated_data=updated_data_dict,
+            log_type="config_dementia_stage",
+            dementia_stage_name=old_dementia_stage_name,
+            is_system_config=True
         )
     except Exception as e:
         db.rollback()
@@ -182,6 +194,9 @@ def delete_dementia_stage_list_entry(
     except Exception as e:
         original_data_dict = "{}"
 
+    # Capture dementia stage name before deletion
+    dementia_stage_name = db_entry.Value
+
     # Soft delete the entry by setting IsDeleted to "1"
     db_entry.IsDeleted = "1"
     db_entry.ModifiedDate = datetime.now()
@@ -195,10 +210,13 @@ def delete_dementia_stage_list_entry(
         action=ActionType.DELETE,
         user=modified_by,
         user_full_name=user_full_name,
-        message="Deleted dementia stage list entry",
+        message=f"Deleted dementia stage: {dementia_stage_name}",
         table="PatientDementiaStageList",
         entity_id=stage_id,
         original_data=original_data_dict,
         updated_data=serialize_data(db_entry),
+        log_type="config_dementia_stage",
+        dementia_stage_name=dementia_stage_name,
+        is_system_config=True
     )
     return db_entry

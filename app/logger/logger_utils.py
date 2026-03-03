@@ -39,6 +39,7 @@ def log_crud_action(
         reaction_name: Optional[str] = None,
         dementia_type_name: Optional[str] = None,
         dementia_stage_name: Optional[str] = None,
+        guardian_name: Optional[str] = None,
         is_system_config: bool = False,
 ):
     """
@@ -76,6 +77,7 @@ def log_crud_action(
         "reaction_name": reaction_name,
         "dementia_type_name": dementia_type_name,
         "dementia_stage_name": dementia_stage_name,
+        "guardian_name": guardian_name,
         "is_system_config": is_system_config,
     }
 

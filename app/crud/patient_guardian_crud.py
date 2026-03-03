@@ -8,6 +8,7 @@ from app.models.patient_patient_guardian_model import PatientPatientGuardian
 from ..crud import patient_guardian_relationship_mapping_crud
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_guardian_model import PatientGuardian
+from ..models.patient_model import Patient
 from ..schemas.patient_guardian import PatientGuardianCreate, PatientGuardianUpdate
 
 SYSTEM_USER_ID = "1"
@@ -51,7 +52,10 @@ def create_guardian(
         original_data=None,
         updated_data=updated_data_dict,
         user_full_name="None",
-        message="create new guardian"
+        message=f"create new guardian {db_guardian.first_name} {db_guardian.last_name}",
+        is_system_config= True,
+        log_type= "config_guardian_info",
+        guardian_name = db_guardian.preferredName,
     )
     return db_guardian
 
@@ -98,7 +102,10 @@ def update_guardian(
         original_data=original_data_dict,
         updated_data=updated_data_dict,
         user_full_name="None",
-        message="Update guardian"
+        message=f"Update guardian {db_guardian.first_name} {db_guardian.last_name}",
+        is_system_config= True,
+        log_type= "config_guardian_info",
+        guardian_name = db_guardian.preferredName,
     )
     
     # 4. Update the relationship mapping in PATIENT_PATIENT_GUARDIAN table
@@ -132,7 +139,10 @@ def update_guardian(
         db_patient_guardian_relationship.ModifiedById = guardian.ModifiedById
         db.commit()
         db.refresh(db_patient_guardian_relationship)
-        
+
+        patient = db.query(Patient).filter(Patient.id == db_patient_guardian_relationship.patientId).first()
+        patient_name = patient.name if patient else None
+
         log_crud_action(
             action=ActionType.UPDATE,
             user=SYSTEM_USER_ID,
@@ -141,7 +151,11 @@ def update_guardian(
             original_data=original_relationship_data,
             updated_data={"relationshipId": relationship_mapping.id},
             user_full_name="None",
-            message="Updated guardian-patient relationship"
+            message=f"Updated relationship: {db_guardian.first_name} {db_guardian.last_name} is now {guardian.relationshipName} of {patient_name}",
+            patient_id = guardian.patientId,
+            patient_full_name = patient_name,
+            guardian_name = db_guardian.preferredName,
+            log_type= "guardian_relationship",
         )
     
     return db_guardian
@@ -169,6 +183,9 @@ def delete_guardian(db: Session, guardian_id: int):
             original_data=original_data_dict,
             updated_data=None,
             user_full_name="None",
-            message="Delete guardian"
+            message=f"Delete guardian {db_guardian.first_name} {db_guardian.last_name}",
+            is_system_config= True,
+            log_type= "config_guardian_info",
+            guardian_name = db_guardian.preferredName,
         )
     return db_guardian
