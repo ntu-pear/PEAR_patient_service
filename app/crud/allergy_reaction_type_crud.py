@@ -136,8 +136,6 @@ def delete_reaction_type(db: Session, allergy_reaction_type_id: int, modified_by
 
         setattr(db_reaction_type, "IsDeleted", "1")
         db_reaction_type.ModifiedById = modified_by
-        setattr(db_reaction_type, "IsDeleted", "1")
-        db_reaction_type.ModifiedById = modified_by
 
         db.commit()
 
