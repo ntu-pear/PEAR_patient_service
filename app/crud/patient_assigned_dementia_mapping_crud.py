@@ -214,8 +214,6 @@ def create_assigned_dementia(
         patient_id=dementia_data.PatientId,
         patient_full_name=patient_name,
         log_type = "dementia_assignment",
-        dementia_type_name=dementia_type_name,
-        dementia_stage_name=dementia_stage_name,
         is_system_config=False,
     )
     return new_assignment
@@ -337,8 +335,6 @@ def update_assigned_dementia(
         patient_id= db_assignment.PatientId,
         patient_full_name= patient_name,
         log_type= "dementia_assignment",
-        dementia_type_name= new_type_name,
-        dementia_stage_name= new_stage_name,
         is_system_config=False,
     )
     return db_assignment
@@ -400,8 +396,6 @@ def delete_assigned_dementia(db: Session, dementia_id: int, modified_by: str, us
         patient_id= db_assignment.PatientId,
         patient_full_name= patient_name,
         log_type= "dementia_assignment",
-        dementia_type_name= dementia_type_name,
-        dementia_stage_name= dementia_stage_name,
         is_system_config= False,
     )
     return db_assignment

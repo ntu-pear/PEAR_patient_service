@@ -238,8 +238,6 @@ def create_patient_allergy(
         patient_id=allergy_data.Patient_AllergyID,
         patient_full_name=patient_name,
         log_type="allergy",
-        allergy_name = allergy_type_name,
-        reaction_name= allergy_reaction_type_name,
     )
     return new_allergy
 
@@ -365,8 +363,6 @@ def update_patient_allergy(
         patient_id=allergy_data.PatientID,
         patient_full_name= patient_name,
         log_type= "allergy",
-        allergy_name = allergy_type_name,
-        reaction_name= allergy_reaction_type_name,
     )
     return db_allergy
 
@@ -441,7 +437,5 @@ def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: st
         patient_id=db_allergy.PatientID,
         patient_full_name= patient_name,
         log_type= "allergy",
-        allergy_name = allergy_type_name,
-        reaction_name= allergy_reaction_type_name,
     )
     return db_allergy

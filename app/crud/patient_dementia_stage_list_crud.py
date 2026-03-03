@@ -80,7 +80,6 @@ def create_dementia_stage_list_entry(
         original_data=None,
         updated_data=updated_data_dict,
         log_type = "config_dementia_stage",
-        dementia_stage_name=dementia_stage_name,
         is_system_config=True
     )
     return new_entry
@@ -158,7 +157,6 @@ def update_dementia_stage_list_entry(
             original_data=original_data_dict,
             updated_data=updated_data_dict,
             log_type="config_dementia_stage",
-            dementia_stage_name=old_dementia_stage_name,
             is_system_config=True
         )
     except Exception as e:
@@ -216,7 +214,6 @@ def delete_dementia_stage_list_entry(
         original_data=original_data_dict,
         updated_data=serialize_data(db_entry),
         log_type="config_dementia_stage",
-        dementia_stage_name=dementia_stage_name,
         is_system_config=True
     )
     return db_entry

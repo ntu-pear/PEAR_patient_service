@@ -31,15 +31,6 @@ def log_crud_action(
         patient_id: Optional[int] = None,
         patient_full_name: Optional[str] = None,
         log_type: Optional[str] = None,
-        prescription_name: Optional[str] = None,
-        allergy_name: Optional[str] = None,
-        medicine_name: Optional[str] = None,
-        problem_name: Optional[str] = None,
-        preference_name: Optional[str] = None,
-        reaction_name: Optional[str] = None,
-        dementia_type_name: Optional[str] = None,
-        dementia_stage_name: Optional[str] = None,
-        guardian_name: Optional[str] = None,
         is_system_config: bool = False,
 ):
     """
@@ -69,15 +60,9 @@ def log_crud_action(
         "action": action.value,  # This maps to "method" in log service
         "user_full_name": user_full_name,
         "log_text": message,
-        "prescription_name": prescription_name,
-        "allergy_name": allergy_name,
-        "medicine_name": medicine_name,
-        "problem_name": problem_name,
-        "preference_name": preference_name,
-        "reaction_name": reaction_name,
-        "dementia_type_name": dementia_type_name,
-        "dementia_stage_name": dementia_stage_name,
-        "guardian_name": guardian_name,
+        "patient_id": patient_id,
+        "patient_full_name": patient_full_name,
+        "log_type": log_type,
         "is_system_config": is_system_config,
     }
 

@@ -47,7 +47,6 @@ def create_allergy_type(db: Session, allergy_type: AllergyTypeCreate, created_by
         original_data=None,
         updated_data=updated_data_dict,
         log_type= "config_allergy_type",
-        allergy_name=allergy_type_name,
         is_system_config=True,
     )
     return db_allergy_type
@@ -94,7 +93,6 @@ def update_allergy_type(
             original_data=original_data_dict,
             updated_data=updated_data_dict,
             log_type= "config_allergy_type",
-            allergy_name = db_allergy_type.Value,
             is_system_config=True,
         )
         return db_allergy_type
@@ -135,7 +133,6 @@ def delete_allergy_type(db: Session, allergy_type_id: int, modified_by: str, use
             original_data=original_data_dict,
             updated_data=None,
             log_type= "config_allergy_type",
-            allergy_name = allergy_type_name,
             is_system_config=True,
         )
         return db_allergy_type

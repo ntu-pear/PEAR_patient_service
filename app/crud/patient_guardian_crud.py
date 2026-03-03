@@ -55,7 +55,6 @@ def create_guardian(
         message=f"create new guardian {db_guardian.first_name} {db_guardian.last_name}",
         is_system_config= True,
         log_type= "config_guardian_info",
-        guardian_name = db_guardian.preferredName,
     )
     return db_guardian
 
@@ -105,7 +104,6 @@ def update_guardian(
         message=f"Update guardian {db_guardian.first_name} {db_guardian.last_name}",
         is_system_config= True,
         log_type= "config_guardian_info",
-        guardian_name = db_guardian.preferredName,
     )
     
     # 4. Update the relationship mapping in PATIENT_PATIENT_GUARDIAN table
@@ -154,7 +152,6 @@ def update_guardian(
             message=f"Updated relationship: {db_guardian.first_name} {db_guardian.last_name} is now {guardian.relationshipName} of {patient_name}",
             patient_id = guardian.patientId,
             patient_full_name = patient_name,
-            guardian_name = db_guardian.preferredName,
             log_type= "guardian_relationship",
         )
     
@@ -186,6 +183,5 @@ def delete_guardian(db: Session, guardian_id: int):
             message=f"Delete guardian {db_guardian.first_name} {db_guardian.last_name}",
             is_system_config= True,
             log_type= "config_guardian_info",
-            guardian_name = db_guardian.preferredName,
         )
     return db_guardian

@@ -29,10 +29,14 @@ def create_relationship_mapping(
     log_crud_action(
         action=ActionType.CREATE,
         user=user,
+        user_full_name=user,
         table="PatientGuardianRelationshipMapping",
         entity_id=db_relationship.id,
         original_data=None,
-        updated_data=updated_data_dict
+        updated_data=updated_data_dict,
+        message=f"Guardian relationship created: {db_relationship.relationshipName}",
+        is_system_config=True,
+        log_type="config_guardian_relationship",
     )
     return db_relationship
 
@@ -58,6 +62,8 @@ def update_relationship_mapping(
         for key, value in relationship.model_dump().items():
             setattr(db_relationship, key, value)
 
+        old_relationship_name = db_relationship.relationshipName
+
         db.commit()
         db.refresh(db_relationship)
 
@@ -65,10 +71,14 @@ def update_relationship_mapping(
         log_crud_action(
             action=ActionType.UPDATE,
             user=user,
+            user_full_name=user,
             table="PatientGuardianRelationshipMapping",
             entity_id=db_relationship.id,
             original_data=original_data_dict,
-            updated_data=updated_data_dict
+            updated_data=updated_data_dict,
+            message=f"Guardian relationship updated: {old_relationship_name} -> {db_relationship.relationshipName}",
+            is_system_config=True,
+            log_type="config_guardian_relationship",
         )
     return db_relationship
 
@@ -90,15 +100,21 @@ def delete_relationship_mapping(db: Session, id: int):
         except Exception as e:
             original_data_dict = "{}"
 
+        old_relationship_name = db_relationship.relationshipName
+
         setattr(db_relationship, "isDeleted", "1")
         db.commit()
 
         log_crud_action(
             action=ActionType.DELETE,
+            user_full_name=user,
             user=user,
             table="PatientGuardianRelationshipMapping",
             entity_id=id,
             original_data=original_data_dict,
-            updated_data=None
+            updated_data=None,
+            message=f"Guardian relationship deleted: {old_relationship_name}",
+            is_system_config=True,
+            log_type="config_guardian_relationship",
         )
     return db_relationship
