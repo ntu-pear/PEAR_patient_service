@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from ..models.patient_allocation_model import PatientAllocation
 from ..models.patient_guardian_model import PatientGuardian
+from ..models.patient_model import Patient
 from ..schemas.patient_allocation import PatientAllocationCreate, PatientAllocationUpdate
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..services.outbox_service import generate_correlation_id, get_outbox_service
@@ -175,6 +176,31 @@ def create_allocation(db: Session, allocation: PatientAllocationCreate, user_id:
             correlation_id=correlation_id,
             created_by=user_id
         )
+
+        # Retrieve patient name for log message
+        patient = db.query(Patient).filter(Patient.id == db_allocation.patientId).first()
+        patient_name = patient.name if patient else None
+
+        # Build the log message showing who was assigned to the patient
+        assignments = []
+        if allocation.doctorId:
+            assignments.append(f"doctor {allocation.doctorId}")
+        if allocation.guardianId:
+            assignments.append(f"guardian {allocation.guardianId}")
+        if allocation.guardian2Id:
+            assignments.append(f"guardian 2 {allocation.guardian2Id}")
+        if allocation.gameTherapistId:
+            assignments.append(f"game therapist {allocation.gameTherapistId}")
+        if allocation.supervisorId:
+            assignments.append(f"supervisor {allocation.supervisorId}")
+        if allocation.caregiverId:
+            assignments.append(f"caregiver {allocation.caregiverId}")
+        if allocation.tempDoctorId:
+            assignments.append(f"temp doctor {allocation.tempDoctorId}")
+        if allocation.tempCaregiverId:
+            assignments.append(f"temp caregiver {allocation.tempCaregiverId}")
+
+        assignment_str = ", ".join(assignments) if assignments else "no staff"
         
         # 3. Log the action
         allocation_data_dict = {
@@ -187,11 +213,14 @@ def create_allocation(db: Session, allocation: PatientAllocationCreate, user_id:
             action=ActionType.CREATE,
             user=user_id,
             user_full_name=user_full_name,
-            message="Created Patient Allocation",
+            message=f"Created Allocation: assigned {assignment_str} to patient: {patient_name}",
             table="PatientAllocation",
             entity_id=db_allocation.id,
             original_data=None,
             updated_data=allocation_data_dict,
+            patient_id=db_allocation.patientId,
+            patient_full_name=patient_name,
+            log_type = "patient_allocation",
         )
         
         # 4. Commit both allocation and outbox event atomically
@@ -297,17 +326,55 @@ def update_allocation(db: Session, allocation_id: int, allocation: PatientAlloca
                 correlation_id=correlation_id,
                 created_by=user_id
             )
-            
+
+            # Build the change description
+            FIELD_LABELS = {
+                'guardianId': 'guardian',
+                'guardian2Id': 'guardian 2',
+                'doctorId': 'doctor',
+                'gameTherapistId': 'game therapist',
+                'supervisorId': 'supervisor',
+                'caregiverId': 'caregiver',
+                'tempDoctorId': 'temp doctor',
+                'tempCaregiverId': 'temp caregiver',
+                'active': 'status',
+            }
+
+            change_parts = []
+            for field, values in changes.items():
+                old_val = values['old']
+                new_val = values['new']
+                label = FIELD_LABELS.get(field, field)
+
+                # Handle 'removed' case
+                if old_val and not new_val:
+                    change_parts.append(f'removed {label}')
+                # Handle 'added' case
+                elif not old_val and new_val:
+                    change_parts.append(f'added {label}')
+                # Handle 'changed' case
+                else:
+                    change_parts.append(f'changed {label}')
+
+            change_str = ", ".join(change_parts) if change_parts else "no changes"
+
+            # Fetch patient name
+            patient = db.query(Patient).filter(Patient.id == db_allocation.patientId).first()
+            patient_name = patient.name if patient else None
+
             # 5. Log the action
             log_crud_action(
                 action=ActionType.UPDATE,
                 user=user_id,
                 user_full_name=user_full_name,
-                message="Updated Patient Allocation",
+                message=f"Updated allocation for {patient_name} - {change_str}",
                 table="PatientAllocation",
                 entity_id=db_allocation.id,
                 original_data=original_data_dict,
                 updated_data=serialize_data(allocation_update_dict),
+                patient_id=db_allocation.patientId,
+                patient_full_name=patient_name,
+                log_type = "patient_allocation",
             )
             
             # 6. Commit atomically
@@ -382,17 +449,24 @@ def delete_allocation(db: Session, allocation_id: int, user_id: str, user_full_n
             correlation_id=correlation_id,
             created_by=user_id
         )
+
+        # Retrieve patient name for log message
+        patient = db.query(Patient).filter(Patient.id == db_allocation.patientId).first()
+        patient_name = patient.name if patient else None
         
         # 4. Log the action
         log_crud_action(
             action=ActionType.DELETE,
             user=user_id,
             user_full_name=user_full_name,
-            message="Deleted Patient Allocation",
+            message=f"Deleted Patient Allocation: {patient_name}",
             table="PatientAllocation",
             entity_id=db_allocation.id,
             original_data=original_data_dict,
             updated_data=None,
+            patient_id=db_allocation.patientId,
+            patient_full_name=patient_name,
+            log_type = "patient_allocation",
         )
         
         # 5. Commit atomically

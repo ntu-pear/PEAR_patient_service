@@ -12,6 +12,8 @@ from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.allergy_reaction_type_model import AllergyReactionType
 from ..models.allergy_type_model import AllergyType
 from ..models.patient_allergy_mapping_model import PatientAllergyMapping
+from ..models.patient_model import Patient
+from ..schemas import allergy_reaction_type
 from ..schemas.patient_allergy_mapping import (
     PatientAllergyCreate,
     PatientAllergyUpdateReq,
@@ -216,17 +218,28 @@ def create_patient_allergy(
     except Exception as e:
         # Log error but don't fail the allergy creation
         logger.error(f"Failed to create highlight for allergy {new_allergy.Patient_AllergyID}: {e}")
-    
+
+    # Fetch patient name and allergy name for logging
+    patient = db.query(Patient).filter(Patient.id == allergy_data.PatientID).first()
+    patient_name = patient.name if patient else None
+    allergy_type_name = allergy_type.Value if allergy_type else None
+    allergy_reaction_type_name = allergy_reaction_type.Value if allergy_reaction_type else None
+
     updated_data_dict = serialize_data(allergy_data.model_dump())
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
         user_full_name=user_full_name,
         table="PatientAllergyMapping",
-        message = "Created patient allergy",
+        message = f"Created patient allergy: {allergy_type_name} ({allergy_reaction_type_name}) for patient: {patient_name}",
         entity_id=new_allergy.Patient_AllergyID,
         original_data=None,
         updated_data=updated_data_dict,
+        patient_id=allergy_data.Patient_AllergyID,
+        patient_full_name=patient_name,
+        log_type="allergy",
+        allergy_name = allergy_type_name,
+        reaction_name= allergy_reaction_type_name,
     )
     return new_allergy
 
@@ -333,18 +346,27 @@ def update_patient_allergy(
         logger.error(f"Failed to create/update highlight for allergy {db_allergy.Patient_AllergyID}: {e}")
 
     
-    
+    # Fetch patient name and allergy name for logging
+    patient = db.query(Patient).filter(Patient.id == allergy_data.PatientID).first()
+    patient_name = patient.name if patient else None
+    allergy_type_name = allergy_type.Value if allergy_type else None
+    allergy_reaction_type_name = allergy_reaction_type.Value if allergy_reaction_type else None
 
     updated_data_dict = serialize_data(allergy_data.model_dump())
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
         user_full_name=user_full_name,
-        message= "Updated patient allergy",
+        message= f"Updated patient allergy: {allergy_type_name} ({allergy_reaction_type_name}) for patient: {patient_name}",
         table="PatientAllergyMapping",
         entity_id=patient_allergyid,
         original_data=original_data_dict,
         updated_data=updated_data_dict,
+        patient_id=allergy_data.PatientID,
+        patient_full_name= patient_name,
+        log_type= "allergy",
+        allergy_name = allergy_type_name,
+        reaction_name= allergy_reaction_type_name,
     )
     return db_allergy
 
@@ -399,14 +421,27 @@ def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: st
     except Exception as e:
         original_data_dict = "{}"
 
+    # Fetch patient name and allergy name for logging
+    patient = db.query(Patient).filter(Patient.id == db_allergy.PatientID).first()
+    patient_name = patient.name if patient else None
+    allergy_type = db.query(AllergyType).filter(AllergyType.AllergyTypeID == db_allergy.AllergyTypeID).first()
+    allergy_type_name = allergy_type.Value if allergy_type else None
+    allergy_reaction_type = db.query(AllergyReactionType).filter(AllergyReactionType.AllergyReactionTypeID == db_allergy.AllergyReactionTypeID).first()
+    allergy_reaction_type_name = allergy_reaction_type.Value if allergy_reaction_type else None
+
     log_crud_action(
         action=ActionType.DELETE,
         user=modified_by,
         user_full_name=user_full_name,
-        message="Deleted patient allergy",
+        message=f"Deleted patient allergy: {allergy_type_name} ({allergy_reaction_type_name}) for patient: {patient_name}",
         table="PatientAllergyMapping",
         entity_id=patient_allergy_id,
         original_data=original_data_dict,
         updated_data=None,
+        patient_id=db_allergy.PatientID,
+        patient_full_name= patient_name,
+        log_type= "allergy",
+        allergy_name = allergy_type_name,
+        reaction_name= allergy_reaction_type_name,
     )
     return db_allergy
