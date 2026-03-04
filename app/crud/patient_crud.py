@@ -264,7 +264,6 @@ def _patient_to_dict(patient) -> Dict[str, Any]:
                 if not key.startswith('_'):
                     # Skip SQLAlchemy relationship objects - for language relationship object
                     if hasattr(value, '__tablename__'):
-                        continue
                         continue  # Skip this - it's a relationship object
                     # Convert datetime objects to ISO format strings
                     elif hasattr(value, 'isoformat'):
