@@ -3,6 +3,7 @@ from typing import List
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from app.models.patient_model import Patient
 from app.models.patient_patient_guardian_model import PatientPatientGuardian
 
 from ..crud import patient_guardian_relationship_mapping_crud
@@ -24,6 +25,10 @@ def get_guardian_by_nric(db: Session, nric: str):
 def create_guardian(
     db: Session, guardian: PatientGuardianCreate
 ):
+    db_patient = db.query(Patient).filter(Patient.id == guardian.patientId).first()
+    if db_patient and db_patient.nric == guardian.nric:
+        raise HTTPException(status_code=400, detail="Guardian NRIC cannot match the Patient's NRIC")
+
     guardian_data = guardian.model_dump(exclude={'patientId', 'relationshipName'})
     db_guardian = PatientGuardian(**guardian_data)
     updated_data_dict = serialize_data(guardian_data)
@@ -46,6 +51,10 @@ def create_guardian(
 def update_guardian(
     db: Session, guardian_id: int, guardian: PatientGuardianUpdate
 ):
+    db_patient = db.query(Patient).filter(Patient.id == guardian.patientId).first()
+    if db_patient and db_patient.nric == guardian.nric:
+        raise HTTPException(status_code=400, detail="Guardian NRIC cannot match the Patient's NRIC")
+
     # 1. Get the guardian
     db_guardian = (
         db.query(PatientGuardian)

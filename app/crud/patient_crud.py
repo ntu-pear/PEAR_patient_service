@@ -264,8 +264,7 @@ def _patient_to_dict(patient) -> Dict[str, Any]:
                 if not key.startswith('_'):
                     # Skip SQLAlchemy relationship objects - for language relationship object
                     if hasattr(value, '__tablename__'):
-                        continue  # Skip this - it's a relationship object
-                    # Convert datetime objects to ISO format strings
+                        continue
                     elif hasattr(value, 'isoformat'):
                         patient_dict[key] = value.isoformat()
                     else:
@@ -436,7 +435,22 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
         if existing_patient:
             raise HTTPException(status_code=400, detail="NRIC must be unique for active records")
 
-        # 3. Track BUSINESS LOGIC changes only (exclude audit fields)
+        if patient.nric:
+            from ..models.patient_guardian_model import PatientGuardian
+            from ..models.patient_patient_guardian_model import PatientPatientGuardian
+            
+            matching_guardian = db.query(PatientGuardian).join(
+                PatientPatientGuardian, PatientGuardian.id == PatientPatientGuardian.guardianId
+            ).filter(
+                PatientPatientGuardian.patientId == patient_id,
+                PatientPatientGuardian.isDeleted == '0',       
+                PatientGuardian.nric == patient.nric,          
+                PatientGuardian.isDeleted == '0'               
+            ).first()
+
+            if matching_guardian:
+                raise HTTPException(status_code=400, detail="Patient NRIC cannot match any associated Guardian's NRIC")
+
         changes = {}
         patient_update_dict = patient.model_dump(exclude_unset=True)
         
@@ -483,10 +497,10 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
                 'patient_id': db_patient.id,
                 'old_data': original_patient_dict,
                 'new_data': _patient_to_dict(db_patient),
-                'changes': changes,  # Only includes business field changes
+                'changes': changes,
                 'modified_by': user,
                 'modified_by_name': user_full_name,
-                'timestamp': timestamp.isoformat(),  # Use same timestamp as db_patient.modifiedDate
+                'timestamp': timestamp.isoformat(),
                 'correlation_id': correlation_id
             }
             
@@ -521,6 +535,8 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
 
         return db_patient
 
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to update patient: {str(e)}")

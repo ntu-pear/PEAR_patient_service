@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 from ..auth.jwt_utils import extract_jwt_payload, get_full_name, get_user_id
 from ..crud import patient_crud as crud_patient
 from ..database import get_db
+from ..models.patient_guardian_model import PatientGuardian
+from ..models.patient_patient_guardian_model import PatientPatientGuardian
 from ..schemas.patient import Patient, PatientCreate, PatientUpdate
 from ..schemas.response import PaginatedResponse, SingleResponse
 
@@ -186,6 +188,20 @@ def update_patient(patient_id: int, patient: PatientUpdate, request: Request, re
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "1"
     user_full_name = get_full_name(payload) or "Anonymous User"
+
+    if getattr(patient, "nric", None):
+        matching_guardian = db.query(PatientGuardian).join(
+            PatientPatientGuardian, PatientGuardian.id == PatientPatientGuardian.guardianId
+        ).filter(
+            PatientPatientGuardian.patientId == patient_id,
+            PatientPatientGuardian.isDeleted == '0',
+            PatientGuardian.nric == patient.nric,
+            PatientGuardian.isDeleted == '0'
+        ).first()
+
+        if matching_guardian:
+            raise HTTPException(status_code=400, detail="Patient NRIC cannot match any associated Guardian's NRIC")
+
     db_patient = crud_patient.update_patient(db, patient_id, patient, user_id, user_full_name)
     if db_patient is None:
         raise HTTPException(status_code=404, detail="Patient not found")

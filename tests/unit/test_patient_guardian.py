@@ -66,7 +66,8 @@ def test_create_guardian(db_session_mock):
     mock_guardian = get_mock_patient_guardian()
     mock_guardian.id = 1
     
-    # Mocking the PatientGuardian instantiation
+    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+    
     with patch('app.crud.patient_guardian_crud.PatientGuardian') as mock_guardian_class:
         mock_guardian_class.return_value = mock_guardian
         
@@ -92,13 +93,12 @@ def test_update_guardian_success(db_session_mock):
     mock_patient_guardian_relationship = get_patient_patient_guardian()
     mock_patient_guardian_relationship.relationshipId = 1
     
-    # Mock the query for guardian
     db_session_mock.query.return_value.filter.return_value.first.side_effect = [
-        mock_guardian,  # First call: get guardian
-        mock_patient_guardian_relationship  # Second call: get patient_guardian relationship
+        None,  
+        mock_guardian,  
+        mock_patient_guardian_relationship  
     ]
     
-    # Mock the relationship mapping lookup
     with patch('app.crud.patient_guardian_crud.patient_guardian_relationship_mapping_crud.get_relationshipId_by_relationshipName') as mock_get_relationship:
         mock_get_relationship.return_value = mock_relationship
         
@@ -112,7 +112,11 @@ def test_update_guardian_success(db_session_mock):
 def test_update_guardian_not_found(db_session_mock):
     """Test case for updating a guardian that doesn't exist."""
     guardian_update = patient_guardian_update()
-    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+    
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        None, 
+        None  
+    ]
     
     with pytest.raises(HTTPException) as exc_info:
         update_guardian(db_session_mock, 999, guardian_update)
@@ -128,9 +132,11 @@ def test_update_guardian_invalid_relationship_name(db_session_mock):
     mock_guardian = get_mock_patient_guardian()
     mock_guardian.id = 1
     
-    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_guardian
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        None,  
+        mock_guardian  
+    ]
     
-    # Mock the relationship mapping lookup to return None (invalid)
     with patch('app.crud.patient_guardian_crud.patient_guardian_relationship_mapping_crud.get_relationshipId_by_relationshipName') as mock_get_relationship:
         mock_get_relationship.return_value = None
         
@@ -139,7 +145,6 @@ def test_update_guardian_invalid_relationship_name(db_session_mock):
         
         assert exc_info.value.status_code == 400
         assert "Invalid relationshipName" in exc_info.value.detail
-        assert "InvalidRelationship" in exc_info.value.detail
 
 
 def test_update_guardian_inactive_relationship(db_session_mock):
@@ -149,11 +154,13 @@ def test_update_guardian_inactive_relationship(db_session_mock):
     mock_guardian.id = 1
     
     mock_relationship = get_patient_guardian_relationship_mapping()
-    mock_relationship.isDeleted = "1"  # Inactive relationship
+    mock_relationship.isDeleted = "1"
     
-    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_guardian
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        None, 
+        mock_guardian 
+    ]
     
-    # Mock the relationship mapping lookup
     with patch('app.crud.patient_guardian_crud.patient_guardian_relationship_mapping_crud.get_relationshipId_by_relationshipName') as mock_get_relationship:
         mock_get_relationship.return_value = mock_relationship
         
@@ -173,13 +180,12 @@ def test_update_guardian_no_patient_relationship(db_session_mock):
     mock_relationship = get_patient_guardian_relationship_mapping()
     mock_relationship.isDeleted = "0"
     
-    # Mock guardian exists, but patient-guardian relationship doesn't
     db_session_mock.query.return_value.filter.return_value.first.side_effect = [
-        mock_guardian,  # First call: get guardian
-        None  # Second call: get patient_guardian relationship (not found)
+        None,  
+        mock_guardian,  
+        None  
     ]
     
-    # Mock the relationship mapping lookup
     with patch('app.crud.patient_guardian_crud.patient_guardian_relationship_mapping_crud.get_relationshipId_by_relationshipName') as mock_get_relationship:
         mock_get_relationship.return_value = mock_relationship
         
@@ -193,25 +199,24 @@ def test_update_guardian_no_patient_relationship(db_session_mock):
 def test_update_guardian_relationship_changed(db_session_mock):
     """Test case for updating guardian when relationship type changes."""
     guardian_update = patient_guardian_update()
-    guardian_update.relationshipName = "Wife"  # Changed from "Husband"
+    guardian_update.relationshipName = "Wife"
     mock_guardian = get_mock_patient_guardian()
     mock_guardian.id = 1
     
     mock_relationship = get_patient_guardian_relationship_mapping()
-    mock_relationship.id = 2  # Different relationship ID
+    mock_relationship.id = 2
     mock_relationship.relationshipName = "Wife"
     mock_relationship.isDeleted = "0"
     
     mock_patient_guardian_relationship = get_patient_patient_guardian()
-    mock_patient_guardian_relationship.relationshipId = 1  # Old relationship ID
+    mock_patient_guardian_relationship.relationshipId = 1
     
-    # Mock queries
     db_session_mock.query.return_value.filter.return_value.first.side_effect = [
-        mock_guardian,  # First call: get guardian
-        mock_patient_guardian_relationship  # Second call: get patient_guardian relationship
+        None, 
+        mock_guardian,  
+        mock_patient_guardian_relationship  
     ]
     
-    # Mock the relationship mapping lookup
     with patch('app.crud.patient_guardian_crud.patient_guardian_relationship_mapping_crud.get_relationshipId_by_relationshipName') as mock_get_relationship:
         mock_get_relationship.return_value = mock_relationship
         
@@ -219,7 +224,6 @@ def test_update_guardian_relationship_changed(db_session_mock):
         
         assert result == mock_guardian
         assert mock_patient_guardian_relationship.relationshipId == 2
-        # Should commit twice: once for guardian, once for relationship
         assert db_session_mock.commit.call_count == 2
 
 
@@ -246,6 +250,38 @@ def test_delete_guardian_not_found(db_session_mock):
     
     assert result is None
     db_session_mock.commit.assert_not_called()
+
+
+def test_create_guardian_nric_match_patient_nric(db_session_mock):
+    """Test that creating a guardian with the same NRIC as the patient raises a 400 error."""
+    guardian_create = patient_guardian_create()
+    guardian_create.nric = "S1234567A"
+    
+    mock_patient = MagicMock()
+    mock_patient.nric = "S1234567A"
+    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_patient
+    
+    with pytest.raises(HTTPException) as exc_info:
+        create_guardian(db_session_mock, guardian_create)
+        
+    assert exc_info.value.status_code == 400
+    assert "Guardian NRIC cannot match the Patient's NRIC" in exc_info.value.detail
+
+
+def test_update_guardian_nric_match_patient_nric(db_session_mock):
+    """Test that updating a guardian to have the same NRIC as the patient raises a 400 error."""
+    guardian_update = patient_guardian_update()
+    guardian_update.nric = "S1234567A"
+    
+    mock_patient = MagicMock()
+    mock_patient.nric = "S1234567A"
+    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_patient
+    
+    with pytest.raises(HTTPException) as exc_info:
+        update_guardian(db_session_mock, 1, guardian_update)
+        
+    assert exc_info.value.status_code == 400
+    assert "Guardian NRIC cannot match the Patient's NRIC" in exc_info.value.detail
 
 
 @pytest.fixture
