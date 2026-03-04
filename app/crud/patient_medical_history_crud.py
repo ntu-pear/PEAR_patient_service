@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, joinedload
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_medical_history_model import PatientMedicalHistory
 from ..models.patient_model import Patient
-from ..schemas.patient_medical_diagnosis_list import PatientMedicalDiagnosisList
+from ..models.patient_medical_diagnosis_list_model import PatientMedicalDiagnosisList
 from ..schemas.patient_medical_history import (
     PatientMedicalHistoryCreate,
     PatientMedicalHistoryUpdate,
@@ -66,7 +66,7 @@ def create_medical_history(db: Session, medical_history: PatientMedicalHistoryCr
         db.refresh(db_medical_history)
 
         # Fetch names for logging
-        patient = db.query(Patient).filter(Patient.PatientId == medical_history.PatientID).first()
+        patient = db.query(Patient).filter(Patient.id == medical_history.PatientID).first()
         patient_name = patient.name if patient else None
 
         diagnosis = db.query(PatientMedicalDiagnosisList).filter(

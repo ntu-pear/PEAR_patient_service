@@ -232,10 +232,10 @@ def create_patient_allergy(
         user_full_name=user_full_name,
         table="PatientAllergyMapping",
         message = f"Created patient allergy: {allergy_type_name} ({allergy_reaction_type_name}) for patient: {patient_name}",
-        entity_id=new_allergy.Patient_AllergyID,
+        entity_id=new_allergy.AllergyTypeID,
         original_data=None,
         updated_data=updated_data_dict,
-        patient_id=allergy_data.Patient_AllergyID,
+        patient_id=allergy_data.AllergyTypeID,
         patient_full_name=patient_name,
         log_type="allergy",
     )

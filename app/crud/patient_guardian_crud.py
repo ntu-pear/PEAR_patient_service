@@ -52,7 +52,7 @@ def create_guardian(
         original_data=None,
         updated_data=updated_data_dict,
         user_full_name="None",
-        message=f"create new guardian {db_guardian.first_name} {db_guardian.last_name}",
+        message=f"create new guardian {db_guardian.firstName} {db_guardian.lastName}",
         is_system_config= True,
         log_type= "config_guardian_info",
     )
@@ -101,7 +101,7 @@ def update_guardian(
         original_data=original_data_dict,
         updated_data=updated_data_dict,
         user_full_name="None",
-        message=f"Update guardian {db_guardian.first_name} {db_guardian.last_name}",
+        message=f"Update guardian {db_guardian.firstName} {db_guardian.lastName}",
         is_system_config= True,
         log_type= "config_guardian_info",
     )
@@ -149,7 +149,7 @@ def update_guardian(
             original_data=original_relationship_data,
             updated_data={"relationshipId": relationship_mapping.id},
             user_full_name="None",
-            message=f"Updated relationship: {db_guardian.first_name} {db_guardian.last_name} is now {guardian.relationshipName} of {patient_name}",
+            message=f"Updated relationship: {db_guardian.firstName} {db_guardian.lastName} is now {guardian.relationshipName} of {patient_name}",
             patient_id = guardian.patientId,
             patient_full_name = patient_name,
             log_type= "guardian_relationship",
@@ -180,7 +180,7 @@ def delete_guardian(db: Session, guardian_id: int):
             original_data=original_data_dict,
             updated_data=None,
             user_full_name="None",
-            message=f"Delete guardian {db_guardian.first_name} {db_guardian.last_name}",
+            message=f"Delete guardian {db_guardian.firstName} {db_guardian.lastName}",
             is_system_config= True,
             log_type= "config_guardian_info",
         )

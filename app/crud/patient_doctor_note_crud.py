@@ -28,7 +28,7 @@ def create_doctor_note(db: Session, doctor_note: PatientDoctorNoteCreate, user_i
         db.refresh(db_doctor_note)
 
         # Fetch names for logging
-        patient = db.query(Patient).filter(Patient.PatientId == db_doctor_note.patientId).first()
+        patient = db.query(Patient).filter(Patient.id == db_doctor_note.patientId).first()
         patient_name = patient.name if patient else None
 
         updated_data_dict = serialize_data(doctor_note.model_dump())
@@ -64,7 +64,7 @@ def update_doctor_note(db: Session, note_id: int, doctor_note: PatientDoctorNote
             setattr(db_doctor_note, key, value)
 
         # Fetch patient name
-        patient = db.query(Patient).filter(Patient.PatientId == db_doctor_note.patientId).first()
+        patient = db.query(Patient).filter(Patient.id == db_doctor_note.patientId).first()
         patient_name = patient.name if patient else None
 
         db_doctor_note.modifiedDate = datetime.now()

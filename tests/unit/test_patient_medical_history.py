@@ -387,13 +387,12 @@ def test_update_medical_history_duplicate_raises_400_when_diagnosis_changes(db_s
     mock_duplicate.MedicalDiagnosisID = 2
     mock_duplicate.IsDeleted = '0'
 
-    first_query = mock.MagicMock()
-    first_query.filter.return_value.first.return_value = mock_existing
-
-    second_query = mock.MagicMock()
-    second_query.filter.return_value.first.return_value = mock_duplicate  # duplicate found
-
-    db_session_mock.query.side_effect = [first_query, second_query]
+    # Queries: 1. get record, 2. old diagnosis, 3. duplicate check
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        mock_existing,  # 1. Get record
+        mock.MagicMock(DiagnosisName="Old Diagnosis"),  # 2. Old diagnosis name
+        mock_duplicate,  # 3. Duplicate check (found)
+    ]
 
     update_data = PatientMedicalHistoryUpdate(
         MedicalDiagnosisID=2,
@@ -415,7 +414,13 @@ def test_update_medical_history_no_duplicate_check_when_diagnosis_unchanged(db_s
     mock_data.MedicalDiagnosisID = 1
     mock_data.IsDeleted = '0'
 
-    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_data
+    # Queries: 1. get record, 2. old diagnosis, 3. patient, 4. new diagnosis (no duplicate check since diagnosis unchanged)
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        mock_data,  # 1. Get record
+        mock.MagicMock(DiagnosisName="Same Diagnosis"),  # 2. Old diagnosis name
+        mock.MagicMock(name="Test Patient"),  # 3. Patient name
+        mock.MagicMock(DiagnosisName="Same Diagnosis"),  # 4. New diagnosis name
+    ]
 
     # No MedicalDiagnosisID in update — duplicate check must be skipped
     update_data = PatientMedicalHistoryUpdate(
@@ -426,11 +431,10 @@ def test_update_medical_history_no_duplicate_check_when_diagnosis_unchanged(db_s
     with mock.patch('app.crud.patient_medical_history_crud.log_crud_action'):
         result = update_medical_history(db_session_mock, 1, update_data, "test_user", "Test User")
 
-    # Only one db.query call (the fetch) — no second call for duplicate check
-    assert db_session_mock.query.call_count == 1
+    # Should have 4 queries: fetch, old diagnosis, patient, new diagnosis (no duplicate check)
+    assert db_session_mock.query.call_count == 4
     db_session_mock.commit.assert_called_once()
     assert result is not None
-
 
 def test_update_medical_history_new_diagnosis_no_duplicate_succeeds(db_session_mock):
     """Test that changing MedicalDiagnosisID to an unused one succeeds."""
@@ -440,13 +444,14 @@ def test_update_medical_history_new_diagnosis_no_duplicate_succeeds(db_session_m
     mock_existing.MedicalDiagnosisID = 1
     mock_existing.IsDeleted = '0'
 
-    first_query = mock.MagicMock()
-    first_query.filter.return_value.first.return_value = mock_existing
-
-    second_query = mock.MagicMock()
-    second_query.filter.return_value.first.return_value = None  # no duplicate
-
-    db_session_mock.query.side_effect = [first_query, second_query]
+    # Queries: 1. get record, 2. old diagnosis, 3. duplicate check (None), 4. patient, 5. new diagnosis
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        mock_existing,  # 1. Get record
+        mock.MagicMock(DiagnosisName="Old Diagnosis"),  # 2. Old diagnosis name
+        None,  # 3. Duplicate check (no duplicate)
+        mock.MagicMock(name="Test Patient"),  # 4. Patient name
+        mock.MagicMock(DiagnosisName="New Diagnosis"),  # 5. New diagnosis name
+    ]
 
     update_data = PatientMedicalHistoryUpdate(
         MedicalDiagnosisID=3,
@@ -459,7 +464,6 @@ def test_update_medical_history_new_diagnosis_no_duplicate_succeeds(db_session_m
     db_session_mock.commit.assert_called_once()
     assert result is not None
     assert result.MedicalDiagnosisID == 3
-
 
 # ---------------------------------------------------------------------------
 # delete_medical_history
