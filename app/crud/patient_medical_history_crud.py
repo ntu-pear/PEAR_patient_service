@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session, joinedload
 
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_medical_history_model import PatientMedicalHistory
+from ..models.patient_model import Patient
+from ..schemas.patient_medical_diagnosis_list import PatientMedicalDiagnosisList
 from ..schemas.patient_medical_history import (
     PatientMedicalHistoryCreate,
     PatientMedicalHistoryUpdate,
@@ -63,17 +65,30 @@ def create_medical_history(db: Session, medical_history: PatientMedicalHistoryCr
         db.commit()
         db.refresh(db_medical_history)
 
+        # Fetch names for logging
+        patient = db.query(Patient).filter(Patient.PatientId == medical_history.PatientID).first()
+        patient_name = patient.name if patient else None
+
+        diagnosis = db.query(PatientMedicalDiagnosisList).filter(
+            PatientMedicalDiagnosisList.Id == medical_history.MedicalDiagnosisID
+        ).first()
+        diagnosis_name = diagnosis.DiagnosisName if diagnosis else None
+
         updated_data_dict = serialize_data(medical_history.model_dump())
 
         log_crud_action(
             action=ActionType.CREATE,
             user=user_id,
             user_full_name=user_full_name,
-            message="Created patient medical history",
-            table="Patient Medical History",
-            entity_id=None,
+            message=f"Created medical history: {diagnosis_name} for {patient_name}",
+            table="PatientMedicalHistory",
+            entity_id=db_medical_history.Id,
             original_data=None,
-            updated_data=updated_data_dict
+            updated_data=updated_data_dict,
+            patient_id=medical_history.PatientID,
+            patient_full_name=patient_name,
+            log_type = "medical_history",
+            is_system_config=False,
         )
     
     return db_medical_history
@@ -91,6 +106,12 @@ def update_medical_history(db: Session, history_id: int, medical_history: Patien
             }
         except Exception as e:
             original_data_dict = "{}"
+
+        # Fetch old diagnosis name before update
+        old_diagnosis = db.query(PatientMedicalDiagnosisList).filter(
+            PatientMedicalDiagnosisList.Id == db_medical_history.MedicalDiagnosisID
+        ).first()
+        old_diagnosis_name = old_diagnosis.DiagnosisName if old_diagnosis else None
 
         update_data = medical_history.model_dump(exclude_unset=True)
 
@@ -120,17 +141,38 @@ def update_medical_history(db: Session, history_id: int, medical_history: Patien
         db.commit()
         db.refresh(db_medical_history)
 
+        # Fetch patient and new diagnosis names
+        patient = db.query(Patient).filter(
+            Patient.id == db_medical_history.PatientID
+        ).first()
+        patient_name = patient.name if patient else None
+
+        new_diagnosis = db.query(PatientMedicalDiagnosisList).filter(
+            PatientMedicalDiagnosisList.Id == db_medical_history.MedicalDiagnosisID
+        ).first()
+        new_diagnosis_name = new_diagnosis.DiagnosisName if new_diagnosis else None
+
+        # Build change description
+        if old_diagnosis_name != new_diagnosis_name:
+            change_desc = f"changed diagnosis from {old_diagnosis_name} -> {new_diagnosis_name}"
+        else:
+            change_desc = "updated details"
+
         updated_data_dict = serialize_data(medical_history.model_dump())
 
         log_crud_action(
             action=ActionType.UPDATE,
             user=user_id,
             user_full_name=user_full_name,
-            message="Updated patient medical history",
-            table="Patient Medical History",
+            message=f"Updated medical history: {new_diagnosis_name} for {patient_name} ({change_desc})",
+            table="PatientMedicalHistory",
             entity_id=history_id,
             original_data=original_data_dict,
-            updated_data=updated_data_dict
+            updated_data=updated_data_dict,
+            patient_id = db_medical_history.PatientID,
+            patient_full_name = patient_name,
+            log_type="medical_history",
+            is_system_config=False,
         )
 
     return db_medical_history
@@ -149,6 +191,17 @@ def delete_medical_history(db: Session, history_id: int, user_id: str, user_full
         except Exception as e:
             original_data_dict = "{}"
 
+        # Fetch names before deletion
+        patient = db.query(Patient).filter(
+            Patient.id == db_medical_history.PatientID
+        ).first()
+        patient_name = patient.name if patient else None
+
+        diagnosis = db.query(PatientMedicalDiagnosisList).filter(
+            PatientMedicalDiagnosisList.Id == db_medical_history.MedicalDiagnosisID
+        ).first()
+        diagnosis_name = diagnosis.DiagnosisName if diagnosis else None
+
         db_medical_history.IsDeleted = '1'
         db_medical_history.ModifiedDate = datetime.now()
         db.commit()
@@ -158,11 +211,15 @@ def delete_medical_history(db: Session, history_id: int, user_id: str, user_full
             action=ActionType.DELETE,
             user=user_id,
             user_full_name=user_full_name,
-            message="Deleted patient medical history",
-            table="Patient Medical History",
+            message=f"Deleted medical history: {diagnosis_name} for {patient_name}",
+            table="PatientMedicalHistory",
             entity_id=history_id,
             original_data=original_data_dict,
-            updated_data=None
+            updated_data=None,
+            patient_id = db_medical_history.PatientID,
+            patient_full_name = patient_name,
+            log_type="medical_history",
+            is_system_config=False,
         )
 
     return db_medical_history

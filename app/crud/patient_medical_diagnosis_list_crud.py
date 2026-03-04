@@ -70,15 +70,20 @@ def create_diagnosis(db: Session, diagnosis: PatientMedicalDiagnosisListCreate, 
 
         updated_data_dict = serialize_data(data)
 
+        # Retrieve the name of the medical diagnosis
+        diagnosis_name = diagnosis.DiagnosisName if diagnosis else None
+
         log_crud_action(
             action=ActionType.CREATE,
             user=user_id,
             user_full_name=user_full_name,
-            message="Created medical diagnosis",
-            table="Medical Diagnosis List",
+            message=f"Created medical diagnosis: {diagnosis_name}",
+            table="MedicalDiagnosisList",
             entity_id=db_diagnosis.Id,
             original_data=None,
-            updated_data=updated_data_dict
+            updated_data=updated_data_dict,
+            is_system_config=True,
+            log_type="config_diagnosis_list",
         )
     
     return db_diagnosis
@@ -115,6 +120,9 @@ def update_diagnosis(db: Session, diagnosis_id: int, diagnosis: PatientMedicalDi
                         detail="A medical diagnosis with this name already exists"
                     )
 
+        # Store the old diagnosis for message field in log
+        old_diagnosis_name = db_diagnosis.DiagnosisName if db_diagnosis else None
+
         for key, value in update_data.items():
             setattr(db_diagnosis, key, value)
 
@@ -128,11 +136,13 @@ def update_diagnosis(db: Session, diagnosis_id: int, diagnosis: PatientMedicalDi
             action=ActionType.UPDATE,
             user=user_id,
             user_full_name=user_full_name,
-            message="Updated medical diagnosis",
-            table="Medical Diagnosis List",
+            message=f"Updated medical diagnosis: {old_diagnosis_name} -> {db_diagnosis.DiagnosisName}",
+            table="MedicalDiagnosisList",
             entity_id=diagnosis_id,
             original_data=original_data_dict,
-            updated_data=updated_data_dict
+            updated_data=updated_data_dict,
+            is_system_config=True,
+            log_type="config_diagnosis_list",
         )
 
     return db_diagnosis
@@ -151,6 +161,9 @@ def delete_diagnosis(db: Session, diagnosis_id: int, user_id: str, user_full_nam
         except Exception as e:
             original_data_dict = "{}"
 
+        # Capture diagnosis name before deletion
+        old_diagnosis_name = db_diagnosis.DiagnosisName
+
         db_diagnosis.IsDeleted = "1"
         db_diagnosis.ModifiedDate = datetime.now()
         db.commit()
@@ -160,11 +173,13 @@ def delete_diagnosis(db: Session, diagnosis_id: int, user_id: str, user_full_nam
             action=ActionType.DELETE,
             user=user_id,
             user_full_name=user_full_name,
-            message="Deleted medical diagnosis",
-            table="Medical Diagnosis List",
+            message=f"Deleted medical diagnosis: {old_diagnosis_name}",
+            table="MedicalDiagnosisList",
             entity_id=diagnosis_id,
             original_data=original_data_dict,
-            updated_data=None
+            updated_data=None,
+            is_system_config=True,
+            log_type="config_diagnosis_list",
         )
 
     return db_diagnosis
