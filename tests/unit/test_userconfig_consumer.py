@@ -11,7 +11,6 @@ import pytest
 
 from app.models.processed_events_model import MessageProcessingResult
 
-
 def make_created_message(userconfig_id=1, correlation_id=None):
     return {
         'timestamp': datetime.now().isoformat(),
@@ -154,6 +153,7 @@ class TestProcessMessageRouting:
     def test_routes_created_event_to_created_handler(self, user_consumer):
         """USERCONFIG_CREATED must reach _handle_userconfig_created"""
         user_consumer._handle_userconfig_created = MagicMock(return_value=MessageProcessingResult.SUCCESS)
+        user_consumer.is_event_already_processed = MagicMock(side_effect=[False, True]) 
 
         result = user_consumer._process_userconfig_message(make_created_message())
 
@@ -163,6 +163,7 @@ class TestProcessMessageRouting:
     def test_routes_updated_event_to_updated_handler(self, user_consumer):
         """USERCONFIG_UPDATED must reach _handle_userconfig_updated"""
         user_consumer._handle_userconfig_updated = MagicMock(return_value=MessageProcessingResult.SUCCESS)
+        user_consumer.is_event_already_processed = MagicMock(side_effect=[False, True]) 
 
         result = user_consumer._process_userconfig_message(make_updated_message())
 
