@@ -131,17 +131,57 @@ def update_guardian(
     
     # Update the relationshipId if it changed
     if db_patient_guardian_relationship.relationshipId != relationship_mapping.id:
+        try:
+            original_relationship_data = {
+                k: serialize_data(v)
+                for k, v in db_patient_guardian_relationship.__dict__.items()
+                if not k.startswith("_")
+            }
+        except Exception:
+            original_relationship_data = "{}"
+
         db_patient_guardian_relationship.relationshipId = relationship_mapping.id
         db_patient_guardian_relationship.ModifiedById = guardian.ModifiedById
         db.commit()
-    
+        db.refresh(db_patient_guardian_relationship)
+
+        log_crud_action(
+            action=ActionType.UPDATE,
+            user=SYSTEM_USER_ID,
+            table="PatientPatientGuardian",
+            entity_id=db_patient_guardian_relationship.id,
+            original_data=original_relationship_data,
+            updated_data={"relationshipId": relationship_mapping.id},
+            user_full_name="None",
+            message="Updated guardian-patient relationship"
+        )
+
     return db_guardian
 
 def delete_guardian(db: Session, guardian_id: int):
     db_guardian = get_guardian(db, guardian_id)
 
     if db_guardian:
+        try:
+            original_data_dict = {
+                k: serialize_data(v) for k, v in db_guardian.__dict__.items() if not k.startswith("_")
+            }
+        except Exception:
+            original_data_dict = "{}"
+
         setattr(db_guardian, 'isDeleted', '1')
         db.commit()
         db.refresh(db_guardian)
+
+        log_crud_action(
+            action=ActionType.DELETE,
+            user=SYSTEM_USER_ID,
+            table="PatientGuardian",
+            entity_id=db_guardian.id,
+            original_data=original_data_dict,
+            updated_data=None,
+            user_full_name="None",
+            message="Delete guardian"
+        )
+
     return db_guardian
