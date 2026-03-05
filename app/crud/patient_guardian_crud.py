@@ -177,4 +177,4 @@ def delete_guardian(db: Session, guardian_id: int):
             user_full_name="None",
             message="Delete guardian"
         )
-    return db_guardian
+    return db_guardian  
