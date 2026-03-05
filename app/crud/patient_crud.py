@@ -289,6 +289,23 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
     if existing_patient:
         raise HTTPException(status_code=400, detail="NRIC must be unique for active records")
 
+    # Reject if an active guardian already holds this NRIC
+    from ..models.patient_guardian_model import PatientGuardian as PatientGuardianModel
+    existing_guardian = (
+        db.query(PatientGuardianModel)
+        .filter(
+            PatientGuardianModel.nric == patient.nric,
+            PatientGuardianModel.isDeleted == "0",
+            PatientGuardianModel.active == "Y",
+        )
+        .first()
+    )
+    if existing_guardian:
+        raise HTTPException(
+            status_code=400,
+            detail="Patient NRIC conflicts with an existing active guardian record"
+        )
+
     # Generate correlation ID if not provided
     if not correlation_id:
         correlation_id = generate_correlation_id()
@@ -435,6 +452,23 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
         )
         if existing_patient:
             raise HTTPException(status_code=400, detail="NRIC must be unique for active records")
+
+        # Check NRIC doesn't conflict with an active guardian
+        from ..models.patient_guardian_model import PatientGuardian as PatientGuardianModel
+        existing_guardian = (
+            db.query(PatientGuardianModel)
+            .filter(
+                PatientGuardianModel.nric == patient.nric,
+                PatientGuardianModel.isDeleted == "0",
+                PatientGuardianModel.active == "Y",
+            )
+            .first()
+        )
+        if existing_guardian:
+            raise HTTPException(
+                status_code=400,
+                detail="Patient NRIC conflicts with an existing active guardian record"
+            )
 
         # 3. Track BUSINESS LOGIC changes only (exclude audit fields)
         changes = {}
