@@ -387,3 +387,32 @@ def get_patient_guardian_relationship_mapping():
         CreatedById="1",
         ModifiedById="1",
     )
+
+def test_create_guardian_nric_matches_active_patient(db_session_mock):
+    """Should fail if NRIC matches an active patient."""
+    from app.models.patient_model import Patient
+    guardian_create = patient_guardian_create() # NRIC: S1234567Z
+    
+    mock_patient = MagicMock(spec=Patient)
+    mock_patient.nric = "S1234567Z"
+    mock_patient.isDeleted = "0"
+    
+    # Mocking the NRIC check query
+    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_patient
+    
+    with pytest.raises(HTTPException) as exc_info:
+        create_guardian(db_session_mock, guardian_create)
+    assert exc_info.value.status_code == 400
+
+def test_create_guardian_nric_matches_deleted_patient(db_session_mock):
+    """Should pass if the patient with matching NRIC is soft-deleted."""
+    guardian_create = patient_guardian_create()
+    
+    # Query returns None because Patient.isDeleted == "0" filter excludes the deleted record
+    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+    
+    with patch('app.crud.patient_guardian_crud.PatientGuardian') as mock_guardian_class:
+        mock_guardian_class.return_value = get_mock_patient_guardian()
+        result = create_guardian(db_session_mock, guardian_create)
+        assert result is not None
+        db_session_mock.commit.assert_called_once()

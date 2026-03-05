@@ -14,18 +14,31 @@ from ..schemas.patient_guardian import PatientGuardianCreate, PatientGuardianUpd
 SYSTEM_USER_ID = "1"
 
 def get_guardian(db: Session, guardian_id: int):
-    return db.query(PatientGuardian).filter(PatientGuardian.id == guardian_id).first()
+    return db.query(PatientGuardian).filter(
+        PatientGuardian.id == guardian_id,
+        PatientGuardian.isDeleted == "0", 
+        PatientGuardian.active == "Y"      
+    ).first()
 
 def get_guardian_by_id_list(db: Session, guardian_ids: List[int]):
-  return db.query(PatientGuardian).filter(PatientGuardian.id.in_(guardian_ids)).all()
+    return db.query(PatientGuardian).filter(
+        PatientGuardian.id.in_(guardian_ids),
+        PatientGuardian.isDeleted == "0",
+        PatientGuardian.active == "Y"
+    ).all()
   
 def get_guardian_by_nric(db: Session, nric: str):
-    return db.query(PatientGuardian).filter(PatientGuardian.nric == nric).first()
+    return db.query(PatientGuardian).filter(
+        PatientGuardian.nric == nric,
+        PatientGuardian.isDeleted == "0",
+        PatientGuardian.active == "Y"
+    ).first()
 
 def create_guardian(
     db: Session, guardian: PatientGuardianCreate
 ):
-    db_patient = db.query(Patient).filter(Patient.id == guardian.patientId).first()
+    # Check if Guardian NRIC matches the Patient's NRIC (only for active patients)
+    db_patient = db.query(Patient).filter(Patient.id == guardian.patientId, Patient.isDeleted == "0").first()
     if db_patient and db_patient.nric == guardian.nric:
         raise HTTPException(status_code=400, detail="Guardian NRIC cannot match the Patient's NRIC")
 
@@ -51,21 +64,18 @@ def create_guardian(
 def update_guardian(
     db: Session, guardian_id: int, guardian: PatientGuardianUpdate
 ):
-    db_patient = db.query(Patient).filter(Patient.id == guardian.patientId).first()
-    if db_patient and db_patient.nric == guardian.nric:
-        raise HTTPException(status_code=400, detail="Guardian NRIC cannot match the Patient's NRIC")
-
     # 1. Get the guardian
-    db_guardian = (
-        db.query(PatientGuardian)
-        .filter(PatientGuardian.id == guardian_id)
-        .first()
-    )
+    db_guardian = get_guardian(db, guardian_id) 
     
     if not db_guardian:
         raise HTTPException(status_code=404, detail="Guardian not found")
+
+    # 2. Check if updated Guardian NRIC matches the Patient's NRIC (only for active patients)
+    db_patient = db.query(Patient).filter(Patient.id == guardian.patientId, Patient.isDeleted == "0").first()
+    if db_patient and db_patient.nric == guardian.nric:
+        raise HTTPException(status_code=400, detail="Guardian NRIC cannot match the Patient's NRIC")
     
-    # 2. Validate relationshipName exists in PATIENT_GUARDIAN_RELATIONSHIP_MAPPING table
+    # 3. Validate relationshipName exists in PATIENT_GUARDIAN_RELATIONSHIP_MAPPING table
     relationship_mapping = patient_guardian_relationship_mapping_crud.get_relationshipId_by_relationshipName(
         db, guardian.relationshipName
     )
@@ -75,12 +85,6 @@ def update_guardian(
             detail=f"Invalid relationshipName: '{guardian.relationshipName}'"
         )
     
-    if relationship_mapping.isDeleted == "1":
-        raise HTTPException(
-            status_code=400,
-            detail=f"Inactive relationshipName: '{guardian.relationshipName}'"
-        )
-    
     try:
         original_data_dict = {
             k: serialize_data(v) for k, v in db_guardian.__dict__.items() if not k.startswith("_")
@@ -88,7 +92,7 @@ def update_guardian(
     except Exception as e:
         original_data_dict = "{}"
     
-    # 3. Update guardian info (excluding patientId and relationshipName)
+    # 4. Update guardian info (excluding patientId and relationshipName)
     guardian_data = guardian.model_dump(exclude={'patientId', 'relationshipName'})
     for key, value in guardian_data.items():
         setattr(db_guardian, key, value)
@@ -108,13 +112,13 @@ def update_guardian(
         message="Update guardian"
     )
     
-    # 4. Update the relationship mapping in PATIENT_PATIENT_GUARDIAN table
+    # 5. Update the relationship mapping in PATIENT_PATIENT_GUARDIAN table
     db_patient_guardian_relationship = (
         db.query(PatientPatientGuardian)
         .filter(
             PatientPatientGuardian.guardianId == guardian_id,
             PatientPatientGuardian.patientId == guardian.patientId,
-            PatientPatientGuardian.isDeleted == "0"
+            PatientPatientGuardian.isDeleted == "0" 
         )
         .first()
     )
@@ -154,7 +158,9 @@ def update_guardian(
     return db_guardian
 
 def delete_guardian(db: Session, guardian_id: int):
-    db_guardian = db.query(PatientGuardian).filter(PatientGuardian.id == guardian_id).first()
+    # Note: Using get_guardian ensures we only delete someone who is active/not deleted
+    db_guardian = get_guardian(db, guardian_id)
+
     if db_guardian:
         try:
             original_data_dict = {
@@ -177,4 +183,4 @@ def delete_guardian(db: Session, guardian_id: int):
             user_full_name="None",
             message="Delete guardian"
         )
-    return db_guardian  
+    return db_guardian
