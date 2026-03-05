@@ -289,6 +289,15 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
     if existing_patient:
         raise HTTPException(status_code=400, detail="NRIC must be unique for active records")
 
+    # Check that the new Patient NRIC does not match any active Guardian NRIC
+    from ..models.patient_guardian_model import PatientGuardian
+    matching_guardian = db.query(PatientGuardian).filter(
+        PatientGuardian.nric == patient.nric,
+        PatientGuardian.isDeleted == "0"
+    ).first()
+    if matching_guardian:
+        raise HTTPException(status_code=400, detail="Patient NRIC cannot match any existing Guardian's NRIC")
+
     # Generate correlation ID if not provided
     if not correlation_id:
         correlation_id = generate_correlation_id()

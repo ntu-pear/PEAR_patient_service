@@ -64,17 +64,17 @@ def create_guardian(
 def update_guardian(
     db: Session, guardian_id: int, guardian: PatientGuardianUpdate
 ):
-    # 1. Get the guardian (filters for active/not deleted)
-    db_guardian = get_guardian(db, guardian_id) 
-    
-    if not db_guardian:
-        raise HTTPException(status_code=404, detail="Guardian not found")
-
-    # 2. Check if updated Guardian NRIC matches the Patient's NRIC (only for active patients)
+    # 1. Check if updated Guardian NRIC matches the Patient's NRIC (only for active patients)
     db_patient = db.query(Patient).filter(Patient.id == guardian.patientId, Patient.isDeleted == "0").first()
     if db_patient and db_patient.nric == guardian.nric:
         raise HTTPException(status_code=400, detail="Guardian NRIC cannot match the Patient's NRIC")
-    
+
+    # 2. Get the guardian (filters for active/not deleted)
+    db_guardian = get_guardian(db, guardian_id)
+
+    if not db_guardian:
+        raise HTTPException(status_code=404, detail="Guardian not found")
+
     # 3. Validate relationshipName exists
     relationship_mapping = patient_guardian_relationship_mapping_crud.get_relationshipId_by_relationshipName(
         db, guardian.relationshipName
