@@ -13,13 +13,25 @@ from ..schemas.patient_guardian import PatientGuardianCreate, PatientGuardianUpd
 SYSTEM_USER_ID = "1"
 
 def get_guardian(db: Session, guardian_id: int):
-    return db.query(PatientGuardian).filter(PatientGuardian.id == guardian_id).first()
+    return db.query(PatientGuardian).filter(
+        PatientGuardian.id == guardian_id,
+        PatientGuardian.isDeleted == "0", 
+        PatientGuardian.active == "Y"     
+    ).first()
 
 def get_guardian_by_id_list(db: Session, guardian_ids: List[int]):
-  return db.query(PatientGuardian).filter(PatientGuardian.id.in_(guardian_ids)).all()
+    return db.query(PatientGuardian).filter(
+        PatientGuardian.id.in_(guardian_ids),
+        PatientGuardian.isDeleted == "0",
+        PatientGuardian.active == "Y"
+    ).all()
   
 def get_guardian_by_nric(db: Session, nric: str):
-    return db.query(PatientGuardian).filter(PatientGuardian.nric == nric).first()
+    return db.query(PatientGuardian).filter(
+        PatientGuardian.nric == nric,
+        PatientGuardian.isDeleted == "0",
+        PatientGuardian.active == "Y"
+    ).first()
 
 def create_guardian(
     db: Session, guardian: PatientGuardianCreate
@@ -47,11 +59,7 @@ def update_guardian(
     db: Session, guardian_id: int, guardian: PatientGuardianUpdate
 ):
     # 1. Get the guardian
-    db_guardian = (
-        db.query(PatientGuardian)
-        .filter(PatientGuardian.id == guardian_id)
-        .first()
-    )
+    db_guardian = get_guardian(db, guardian_id) 
     
     if not db_guardian:
         raise HTTPException(status_code=404, detail="Guardian not found")
@@ -64,12 +72,6 @@ def update_guardian(
         raise HTTPException(
             status_code=400, 
             detail=f"Invalid relationshipName: '{guardian.relationshipName}'"
-        )
-    
-    if relationship_mapping.isDeleted == "1":
-        raise HTTPException(
-            status_code=400,
-            detail=f"Inactive relationshipName: '{guardian.relationshipName}'"
         )
     
     try:
@@ -105,7 +107,7 @@ def update_guardian(
         .filter(
             PatientPatientGuardian.guardianId == guardian_id,
             PatientPatientGuardian.patientId == guardian.patientId,
-            PatientPatientGuardian.isDeleted == "0"
+            PatientPatientGuardian.isDeleted == "0" 
         )
         .first()
     )
@@ -145,7 +147,8 @@ def update_guardian(
     return db_guardian
 
 def delete_guardian(db: Session, guardian_id: int):
-    db_guardian = db.query(PatientGuardian).filter(PatientGuardian.id == guardian_id).first()
+    db_guardian = get_guardian(db, guardian_id)
+
     if db_guardian:
         try:
             original_data_dict = {

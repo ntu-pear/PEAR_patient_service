@@ -29,5 +29,4 @@ class PatientPhotoResponse(PatientPhotoBase):
     CreatedById: str = Field(json_schema_extra={"example": "user-123"})
     ModifiedById: str = Field(json_schema_extra={"example": "user-123"})
 
-    class Config:
-        model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True}

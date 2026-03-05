@@ -77,6 +77,8 @@ from app.routers import (
     patient_medication_router,
     patient_mobility_mapping_router,
     patient_mobility_router,
+    patient_personal_preference_list_router,
+    patient_personal_preference_router,
     patient_photo_list_album_router,
     patient_photo_router,
     patient_prescription_list_router,
@@ -439,6 +441,18 @@ app.include_router(
     patient_photo_list_album_router.router,
     prefix=f"{API_VERSION_PREFIX}",
     tags=["Photo List Album"],
+)
+
+app.include_router(
+    patient_personal_preference_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Personal Preferences"],
+)
+
+app.include_router(
+    patient_personal_preference_list_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Personal Preference List"],
 )
 
 @app.get("/")

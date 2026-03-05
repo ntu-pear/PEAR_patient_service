@@ -6,7 +6,7 @@ from ..crud.patient_photo_crud import (
     create_patient_photo,
     delete_patient_photo,
     delete_patient_photo_by_photo_id,
-    get_patient_photo_by_id,
+    get_patient_photo_by_patient_id,
     get_patient_photo_by_photo_id,
     get_patient_photos,
     update_patient_photo,
@@ -34,7 +34,7 @@ async def upload_patient_photo(
     return create_patient_photo(db, file.file, photo_data, user_id, user_full_name)
 
 
-@router.get("/PersonalPhotos", response_model=list[PatientPhotoResponse])
+@router.get("/PersonalPhoto", response_model=list[PatientPhotoResponse])
 async def get_photos(
     request: Request,
     db: Session = Depends(get_db),
@@ -46,22 +46,22 @@ async def get_photos(
     return photos
 
 
-@router.get("/PersonalPhotos/by-patient-id/{patient_id}", response_model=PatientPhotoResponse)
+@router.get("/PersonalPhoto/by-patient-id/{patient_id}", response_model=list[PatientPhotoResponse])
 async def get_photo_by_patient_id(
     request: Request,
     patient_id: int,
     db: Session = Depends(get_db),
     require_auth: bool = True
 ):
-    """ Retrieve a specific patient photo by PatientID """
+    """ Retrieve patient photos by PatientID (can return multiple photos) """
     _ = extract_jwt_payload(request, require_auth)
-    photo = get_patient_photo_by_id(db, patient_id)
+    photo = get_patient_photo_by_patient_id(db, patient_id)
     if not photo:
         raise HTTPException(status_code=404, detail="Photo not found or deleted")
     return photo
 
 
-@router.get("/PersonalPhotos/by-photo-id/{photo_id}", response_model=PatientPhotoResponse)
+@router.get("/PersonalPhoto/by-photo-id/{photo_id}", response_model=PatientPhotoResponse)
 async def get_photo_by_photo_id(
     request: Request,
     photo_id: int,
@@ -76,24 +76,24 @@ async def get_photo_by_photo_id(
     return photo
 
 
-@router.put("/PersonalPhoto/update/by-patient-id/{patient_id}", response_model=PatientPhotoResponse)
-async def update_photo_by_patient_id(
-    request: Request,
-    patient_id: int,
-    file: UploadFile = File(...),
-    update_data: PatientPhotoUpdate = Depends(),
-    db: Session = Depends(get_db),
-    require_auth: bool = True
-):
-    """ Update a patient's photo by PatientID (replace `PhotoPath` with latest) """
-    payload = extract_jwt_payload(request, require_auth)
-    user_id = get_user_id(payload) or "anonymous"
-    user_full_name = get_full_name(payload) or "Anonymous User"
+# @router.put("/PersonalPhoto/update/by-patient-id/{patient_id}", response_model=PatientPhotoResponse)
+# async def update_photo_by_patient_id(
+#     request: Request,
+#     patient_id: int,
+#     file: UploadFile = File(...),
+#     update_data: PatientPhotoUpdate = Depends(),
+#     db: Session = Depends(get_db),
+#     require_auth: bool = True
+# ):
+#     """ Update a patient's photo by PatientID (replace `PhotoPath` with latest) """
+#     payload = extract_jwt_payload(request, require_auth)
+#     user_id = get_user_id(payload) or "anonymous"
+#     user_full_name = get_full_name(payload) or "Anonymous User"
     
-    photo = update_patient_photo(db, patient_id, file.file, update_data, user_id, user_full_name)
-    if not photo:
-        raise HTTPException(status_code=404, detail="Photo not found")
-    return photo
+#     photo = update_patient_photo(db, patient_id, file.file, update_data, user_id, user_full_name)
+#     if not photo:
+#         raise HTTPException(status_code=404, detail="Photo not found")
+#     return photo
 
 
 @router.put("/PersonalPhoto/update/by-photo-id/{photo_id}", response_model=PatientPhotoResponse)
@@ -120,22 +120,22 @@ async def update_photo_by_photo_id(
     return photo
 
 
-@router.delete("/PersonalPhoto/delete/by-patient-id/{patient_id}")
-async def delete_photo_by_patient_id(
-    request: Request,
-    patient_id: int,
-    db: Session = Depends(get_db),
-    require_auth: bool = True
-):
-    """ Soft delete all photos for a specific patient by PatientID """
-    payload = extract_jwt_payload(request, require_auth)
-    user_id = get_user_id(payload) or "anonymous"
-    user_full_name = get_full_name(payload) or "Anonymous User"
+# @router.delete("/PersonalPhoto/delete/by-patient-id/{patient_id}")
+# async def delete_photo_by_patient_id(
+#     request: Request,
+#     patient_id: int,
+#     db: Session = Depends(get_db),
+#     require_auth: bool = True
+# ):
+#     """ Soft delete all photos for a specific patient by PatientID """
+#     payload = extract_jwt_payload(request, require_auth)
+#     user_id = get_user_id(payload) or "anonymous"
+#     user_full_name = get_full_name(payload) or "Anonymous User"
     
-    photo = delete_patient_photo(db, patient_id, user_id, user_full_name)
-    if not photo:
-        raise HTTPException(status_code=404, detail="Photo not found")
-    return {"message": "Photo(s) deleted successfully"}
+#     photo = delete_patient_photo(db, patient_id, user_id, user_full_name)
+#     if not photo:
+#         raise HTTPException(status_code=404, detail="Photo not found")
+#     return {"message": "Photo(s) deleted successfully"}
 
 
 @router.delete("/PersonalPhoto/delete/by-photo-id/{photo_id}")

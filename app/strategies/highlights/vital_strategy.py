@@ -13,24 +13,24 @@ logger = logging.getLogger(__name__)
 class VitalStrategy(HighlightStrategy):
     """Strategy for generating highlights from abnormal vitals"""
     
-    # FOR PATIENTS WITH <= 2 VITAL HISTORY RECORDS: Default clinical baselines for patients with no vital history
-    DEFAULT_TEMPERATURE = 36.5       # Normal body temperature (Degree Celcius)
-    DEFAULT_SYSTOLIC_BP = 120        # Normal systolic BP (mmHg)
-    DEFAULT_DIASTOLIC_BP = 80        # Normal diastolic BP (mmHg)
-    DEFAULT_HEART_RATE = 75          # Normal resting heart rate (bpm)
-    DEFAULT_BLOOD_SUGAR = 7.0        # Normal blood sugar (mmol/L)
-    DEFAULT_SPO2 = 97                # Normal oxygen saturation (%)
+    # FOR PATIENTS WITH <= 3 VITAL HISTORY RECORDS: Default clinical baselines for patients with no vital history
+    DEFAULT_TEMPERATURE = 36.5 # Normal body temperature (Degree Celcius)
+    DEFAULT_SYSTOLIC_BP = 120 # Normal systolic BP (mmHg)
+    DEFAULT_DIASTOLIC_BP = 80 # Normal diastolic BP (mmHg)
+    DEFAULT_HEART_RATE = 75 # Normal resting heart rate (bpm)
+    DEFAULT_BLOOD_SUGAR = 7.0 # Normal blood sugar (mmol/L)
+    DEFAULT_SPO2 = 97 # Normal oxygen saturation (%)
     
     # FOR PATIENTS WITH > 2 VITAL HISTORY RECORDS: Define tolerances for personalized thresholds based on patient vital history
-    TEMPERATURE_TOLERANCE = 1.0      # +- 1.0 Degree Celcius from patient's average
-    SYSTOLIC_BP_TOLERANCE = 20       # +- 20 mmHg from patient's average
-    DIASTOLIC_BP_TOLERANCE = 15      # +- 15 mmHg from patient's average
-    HEART_RATE_TOLERANCE = 20        # +- 20 bpm from patient's average
-    BLOOD_SUGAR_TOLERANCE = 3.0      # +- 3.0 mmol/L from patient's average
-    SPO2_TOLERANCE = 3               # -3% from patient's average
+    TEMPERATURE_TOLERANCE = 1.0 # +- 1.0 Degree Celcius from patient's average
+    SYSTOLIC_BP_TOLERANCE = 20 # +- 20 mmHg from patient's average
+    DIASTOLIC_BP_TOLERANCE = 15 # +- 15 mmHg from patient's average
+    HEART_RATE_TOLERANCE = 20 # +- 20 bpm from patient's average
+    BLOOD_SUGAR_TOLERANCE = 3.0 # +- 3.0 mmol/L from patient's average
+    SPO2_TOLERANCE = 3 # -3% from patient's average
     
     # Minimum number of historical records needed to calculate personalized thresholds
-    MIN_RECORDS_FOR_AVERAGE = 2
+    MIN_RECORDS_FOR_AVERAGE = 3
     
     _db_session: Optional[Session] = None
     
@@ -50,14 +50,6 @@ class VitalStrategy(HighlightStrategy):
     def _get_patient_vital_averages(self, db: Session, patient_id: int, current_vital_id: int) -> Optional[Dict[str, float]]:
         """
         Calculate average vital signs for a patient based on their historical records.
-        
-        Args:
-            db: Database session
-            patient_id: Patient ID
-            current_vital_id: Current vital ID to exclude from calculation
-            
-        Returns:
-            Dict with average values for each vital sign, or None if not enough data
         """
         try:
             # Get all past vitals for this patient (Excluding current one and deleted records)

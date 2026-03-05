@@ -50,7 +50,7 @@ def get_problems(
     )
 
 
-@router.get("/Patient/{patient_id}/Problems", response_model=PaginatedResponse[PatientProblemWithDetails])
+@router.get("/Problems/by-patient/{patient_id}", response_model=PaginatedResponse[PatientProblemWithDetails])
 def get_patient_problems(
     request: Request,
     patient_id: int,
@@ -85,7 +85,7 @@ def get_patient_problems(
     )
 
 
-@router.get("/Problems/{problem_id}", response_model=SingleResponse[PatientProblemWithDetails])
+@router.get("/Problems/by-problem-id/{problem_id}", response_model=SingleResponse[PatientProblemWithDetails])
 def get_problem(
     request: Request,
     problem_id: int,

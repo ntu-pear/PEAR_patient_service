@@ -1,6 +1,7 @@
 import math
 from datetime import datetime
 
+from fastapi import HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -34,8 +35,28 @@ def get_diagnosis_by_id(db: Session, diagnosis_id: int):
 
 
 def create_diagnosis(db: Session, diagnosis: PatientMedicalDiagnosisListCreate, user_id: str, user_full_name: str):
+    """Create a new diagnosis with duplicate check and uppercase transformation"""
+    # Convert DiagnosisName to UPPERCASE before checking and inserting
+    uppercase_diagnosis_name = diagnosis.DiagnosisName.upper()
+    
+    # Check for duplicate DiagnosisName (case-insensitive by comparing uppercase)
+    existing_diagnosis = db.query(PatientMedicalDiagnosisList).filter(
+        PatientMedicalDiagnosisList.DiagnosisName == uppercase_diagnosis_name,
+        PatientMedicalDiagnosisList.IsDeleted == "0"
+    ).first()
+    
+    if existing_diagnosis:
+        raise HTTPException(
+            status_code=400,
+            detail="A medical diagnosis with this name already exists"
+        )
+    
+    # Create diagnosis with UPPERCASE DiagnosisName
+    data = diagnosis.model_dump()
+    data["DiagnosisName"] = uppercase_diagnosis_name
+    
     db_diagnosis = PatientMedicalDiagnosisList(
-        **diagnosis.model_dump(),
+        **data,
         CreatedByID=user_id,
         ModifiedByID=user_id,
     )
@@ -47,7 +68,7 @@ def create_diagnosis(db: Session, diagnosis: PatientMedicalDiagnosisListCreate, 
         db.commit()
         db.refresh(db_diagnosis)
 
-        updated_data_dict = serialize_data(diagnosis.model_dump())
+        updated_data_dict = serialize_data(data)
 
         log_crud_action(
             action=ActionType.CREATE,
@@ -55,7 +76,7 @@ def create_diagnosis(db: Session, diagnosis: PatientMedicalDiagnosisListCreate, 
             user_full_name=user_full_name,
             message="Created medical diagnosis",
             table="Medical Diagnosis List",
-            entity_id=None,
+            entity_id=db_diagnosis.Id,
             original_data=None,
             updated_data=updated_data_dict
         )
@@ -76,7 +97,25 @@ def update_diagnosis(db: Session, diagnosis_id: int, diagnosis: PatientMedicalDi
         except Exception as e:
             original_data_dict = "{}"
 
-        for key, value in diagnosis.model_dump(exclude_unset=True).items():
+        update_data = diagnosis.model_dump(exclude_unset=True)
+        if "DiagnosisName" in update_data and update_data["DiagnosisName"] is not None:
+            update_data["DiagnosisName"] = update_data["DiagnosisName"].upper()
+
+            # Only check for duplicates if the DiagnosisName is actually changing
+            if update_data["DiagnosisName"] != db_diagnosis.DiagnosisName:
+                existing = db.query(PatientMedicalDiagnosisList).filter(
+                    PatientMedicalDiagnosisList.DiagnosisName == update_data["DiagnosisName"],
+                    PatientMedicalDiagnosisList.IsDeleted == "0",
+                    PatientMedicalDiagnosisList.Id != diagnosis_id
+                ).first()
+
+                if existing:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="A medical diagnosis with this name already exists"
+                    )
+
+        for key, value in update_data.items():
             setattr(db_diagnosis, key, value)
 
         db_diagnosis.ModifiedDate = datetime.now()
@@ -84,8 +123,7 @@ def update_diagnosis(db: Session, diagnosis_id: int, diagnosis: PatientMedicalDi
         db.commit()
         db.refresh(db_diagnosis)
 
-        updated_data_dict = serialize_data(diagnosis.model_dump())
-
+        updated_data_dict = serialize_data(update_data)
         log_crud_action(
             action=ActionType.UPDATE,
             user=user_id,

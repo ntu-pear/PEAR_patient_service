@@ -38,5 +38,7 @@ from .patient_problem_model import PatientProblem
 from .patient_social_history_model import PatientSocialHistory
 from .patient_vital_model import PatientVital
 from .social_history_sensitive_mapping_model import SocialHistorySensitiveMapping
+from .patient_personal_preference_list_model import PatientPersonalPreferenceList
+from .patient_personal_preference_model import PatientPersonalPreference
 
 # Import other models as needed
