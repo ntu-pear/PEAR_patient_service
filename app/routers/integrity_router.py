@@ -9,6 +9,7 @@ from app.database import get_db
 from app.models.patient_allocation_model import PatientAllocation
 from app.models.patient_medication_model import PatientMedication
 from app.models.patient_model import Patient
+from app.models.ref_userconfig_model import RefUserConfig
 
 router = APIRouter()
 
@@ -164,6 +165,56 @@ async def get_patient_allocation_integrity(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Patient allocation integrity check failed: {str(e)}")
 
+@router.get("/ref-userconfig")
+async def get_userconfig_patient_integrity(
+    hours_back: int = Query(1, ge=1, le=168, description="Hours to look back (1-168)"),
+    limit: int = Query(1000, ge=1, le=5000, description="Max records to return"),
+    offset: int = Query(0, ge=0, description="Pagination offset"),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns ref userconfig IDs and their last modified timestamps.
+    """
+    try:
+        
+        cutoff_time = datetime.now() - timedelta(hours=hours_back)
+        
+        userconfigs = db.query(RefUserConfig).filter(
+            RefUserConfig.modifiedDate >= cutoff_time
+        ).order_by(RefUserConfig.UserConfigID).limit(limit).offset(offset).all()
+
+        records = []
+        for userconfig in userconfigs:
+            records.append({
+                "UserConfigID": userconfig.UserConfigID,
+                "modified_date": userconfig.modifiedDate.isoformat(),
+                "version_timestamp": int(userconfig.modifiedDate.timestamp() * 1000),
+                "record_type": "ref_userconfig"
+            })
+        
+        # Get total count for pagination
+        total_count = db.query(RefUserConfig).filter(
+            RefUserConfig.modifiedDate >= cutoff_time
+        ).count()
+        
+        return {
+            "service": "patient",
+            "endpoint": "/integrity/ref-userconfig",
+            "window_hours": hours_back,
+            "cutoff_time": cutoff_time.isoformat(),
+            "total_count": total_count,
+            "returned_count": len(records),
+            "limit": limit,
+            "offset": offset,
+            "has_more": (offset + len(records)) < total_count,
+            "records": records,
+            "generated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ref userconfig integrity check failed: {str(e)}")
+
+
 
 @router.get("/summary")
 async def get_integrity_summary(
@@ -189,6 +240,10 @@ async def get_integrity_summary(
         patient_allocation_count = db.query(PatientAllocation).filter(
             PatientAllocation.modifiedDate >= cutoff_time
         ).count()
+
+        userconfig_count = db.query(RefUserConfig).filter(
+            RefUserConfig.modifiedDate >= cutoff_time
+        ).count()
         
         return {
             "service": "patient",
@@ -199,7 +254,8 @@ async def get_integrity_summary(
                 "patient": patient_count,
                 "patient_medication": patient_medication_count,
                 "patient_allocation": patient_allocation_count,
-                "total": (patient_count + patient_medication_count + patient_allocation_count)
+                "ref_userconfig": userconfig_count,
+                "total": (patient_count + patient_medication_count + patient_allocation_count + userconfig_count)
             },
             "generated_at": datetime.now().isoformat()
         }
