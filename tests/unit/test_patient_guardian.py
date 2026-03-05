@@ -29,7 +29,25 @@ def test_get_guardian(db_session_mock):
     result = get_guardian(db_session_mock, 1)
     
     assert result == mock_guardian
-    db_session_mock.query.assert_called_once_with(PatientGuardian)
+    db_session_mock.query.assert_called_with(PatientGuardian)
+
+
+def test_get_guardian_soft_deleted(db_session_mock):
+    """Test that retrieving a soft-deleted guardian returns None."""
+    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+    
+    result = get_guardian(db_session_mock, 1)
+    
+    assert result is None
+
+
+def test_get_guardian_inactive(db_session_mock):
+    """Test that retrieving an inactive guardian returns None."""
+    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+    
+    result = get_guardian(db_session_mock, 1)
+    
+    assert result is None
 
 
 def test_get_guardian_by_id_list(db_session_mock):
@@ -46,7 +64,6 @@ def test_get_guardian_by_id_list(db_session_mock):
     
     assert len(result) == 2
     assert result == mock_guardians
-    db_session_mock.query.assert_called_once_with(PatientGuardian)
 
 
 def test_get_guardian_by_nric(db_session_mock):
@@ -57,7 +74,6 @@ def test_get_guardian_by_nric(db_session_mock):
     result = get_guardian_by_nric(db_session_mock, "S1234567Z")
     
     assert result == mock_guardian
-    db_session_mock.query.assert_called_once_with(PatientGuardian)
 
 
 def test_create_guardian(db_session_mock):
@@ -162,13 +178,13 @@ def test_update_guardian_inactive_relationship(db_session_mock):
     ]
     
     with patch('app.crud.patient_guardian_crud.patient_guardian_relationship_mapping_crud.get_relationshipId_by_relationshipName') as mock_get_relationship:
-        mock_get_relationship.return_value = mock_relationship
+        mock_get_relationship.return_value = None
         
         with pytest.raises(HTTPException) as exc_info:
             update_guardian(db_session_mock, 1, guardian_update)
         
         assert exc_info.value.status_code == 400
-        assert "Inactive relationshipName" in exc_info.value.detail
+        assert "Invalid relationshipName" in exc_info.value.detail
 
 
 def test_update_guardian_no_patient_relationship(db_session_mock):

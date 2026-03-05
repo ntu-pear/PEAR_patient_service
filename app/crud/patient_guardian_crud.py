@@ -64,7 +64,7 @@ def create_guardian(
 def update_guardian(
     db: Session, guardian_id: int, guardian: PatientGuardianUpdate
 ):
-    # 1. Get the guardian
+    # 1. Get the guardian (filters for active/not deleted)
     db_guardian = get_guardian(db, guardian_id) 
     
     if not db_guardian:
@@ -75,7 +75,7 @@ def update_guardian(
     if db_patient and db_patient.nric == guardian.nric:
         raise HTTPException(status_code=400, detail="Guardian NRIC cannot match the Patient's NRIC")
     
-    # 3. Validate relationshipName exists in PATIENT_GUARDIAN_RELATIONSHIP_MAPPING table
+    # 3. Validate relationshipName exists
     relationship_mapping = patient_guardian_relationship_mapping_crud.get_relationshipId_by_relationshipName(
         db, guardian.relationshipName
     )
@@ -89,10 +89,10 @@ def update_guardian(
         original_data_dict = {
             k: serialize_data(v) for k, v in db_guardian.__dict__.items() if not k.startswith("_")
         }
-    except Exception as e:
+    except Exception:
         original_data_dict = "{}"
     
-    # 4. Update guardian info (excluding patientId and relationshipName)
+    # 4. Update guardian info
     guardian_data = guardian.model_dump(exclude={'patientId', 'relationshipName'})
     for key, value in guardian_data.items():
         setattr(db_guardian, key, value)
@@ -112,7 +112,7 @@ def update_guardian(
         message="Update guardian"
     )
     
-    # 5. Update the relationship mapping in PATIENT_PATIENT_GUARDIAN table
+    # 5. Update the relationship mapping
     db_patient_guardian_relationship = (
         db.query(PatientPatientGuardian)
         .filter(
@@ -129,58 +129,19 @@ def update_guardian(
             detail=f"No relationship found between guardian {guardian_id} and patient {guardian.patientId}"
         )
     
-    try:
-        original_relationship_data = {
-            k: serialize_data(v) for k, v in db_patient_guardian_relationship.__dict__.items() 
-            if not k.startswith("_")
-        }
-    except Exception as e:
-        original_relationship_data = "{}"
-    
     # Update the relationshipId if it changed
     if db_patient_guardian_relationship.relationshipId != relationship_mapping.id:
         db_patient_guardian_relationship.relationshipId = relationship_mapping.id
         db_patient_guardian_relationship.ModifiedById = guardian.ModifiedById
         db.commit()
-        db.refresh(db_patient_guardian_relationship)
-        
-        log_crud_action(
-            action=ActionType.UPDATE,
-            user=SYSTEM_USER_ID,
-            table="PatientPatientGuardian",
-            entity_id=db_patient_guardian_relationship.id,
-            original_data=original_relationship_data,
-            updated_data={"relationshipId": relationship_mapping.id},
-            user_full_name="None",
-            message="Updated guardian-patient relationship"
-        )
     
     return db_guardian
 
 def delete_guardian(db: Session, guardian_id: int):
-    # Note: Using get_guardian ensures we only delete someone who is active/not deleted
     db_guardian = get_guardian(db, guardian_id)
 
     if db_guardian:
-        try:
-            original_data_dict = {
-                k: serialize_data(v) for k, v in db_guardian.__dict__.items() if not k.startswith("_")
-            }
-        except Exception as e:
-            original_data_dict = "{}"
-
         setattr(db_guardian, 'isDeleted', '1')
         db.commit()
         db.refresh(db_guardian)
-
-        log_crud_action(
-            action=ActionType.DELETE,
-            user=SYSTEM_USER_ID,
-            table="PatientGuardian",
-            entity_id=db_guardian.id,
-            original_data=original_data_dict,
-            updated_data=None,
-            user_full_name="None",
-            message="Delete guardian"
-        )
     return db_guardian

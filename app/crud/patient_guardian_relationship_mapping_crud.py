@@ -6,10 +6,16 @@ from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 user="1"
 
 def get_relationship_mapping(db: Session, id: int):
-    return db.query(PatientGuardianRelationshipMapping).filter(PatientGuardianRelationshipMapping.id == id).first()
+    return db.query(PatientGuardianRelationshipMapping).filter(
+        PatientGuardianRelationshipMapping.id == id,
+        PatientGuardianRelationshipMapping.isDeleted == "0" 
+    ).first()
 
 def get_relationshipId_by_relationshipName(db: Session, relationshipName: str):
-    return db.query(PatientGuardianRelationshipMapping).filter(PatientGuardianRelationshipMapping.relationshipName == relationshipName).first()
+    return db.query(PatientGuardianRelationshipMapping).filter(
+        PatientGuardianRelationshipMapping.relationshipName == relationshipName,
+        PatientGuardianRelationshipMapping.isDeleted == "0" 
+    ).first()
 
 def create_relationship_mapping(
         db: Session, relationship: PatientGuardianRelationshipMappingCreate
@@ -31,11 +37,13 @@ def create_relationship_mapping(
     return db_relationship
 
 def update_relationship_mapping(
-        db: Session, id: int, relationship: PatientGuardianRelationshipMappingUpdate
-):
+    db: Session, id: int, relationship: PatientGuardianRelationshipMappingUpdate):
     db_relationship = (
         db.query(PatientGuardianRelationshipMapping)
-        .filter(PatientGuardianRelationshipMapping.id == id)
+        .filter(
+            PatientGuardianRelationshipMapping.id == id,
+            PatientGuardianRelationshipMapping.isDeleted == "0" # <<< CHANGED
+        )
         .first()
     )
 
@@ -67,7 +75,10 @@ def update_relationship_mapping(
 def delete_relationship_mapping(db: Session, id: int):
     db_relationship = (
         db.query(PatientGuardianRelationshipMapping)
-        .filter(PatientGuardianRelationshipMapping.id == id)
+        .filter(
+            PatientGuardianRelationshipMapping.id == id,
+            PatientGuardianRelationshipMapping.isDeleted == "0" # <<< CHANGED
+        )
         .first()
     )
 
