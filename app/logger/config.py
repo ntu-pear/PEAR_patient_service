@@ -34,7 +34,7 @@ class ConditionalFormatter(logging.Formatter):
 
 
 # Detailed format for CRUD operations (when user context is available)
-detailed_format = '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "user": "%(user)s", "user_full_name": "%(user_full_name)s", "table": "%(table)s", "action": "%(action)s", "log_text": "%(log_text)s", "message": %(message)s}'
+detailed_format = '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "user": "%(user)s", "user_full_name": "%(user_full_name)s", "table": "%(table)s", "action": "%(action)s", "log_text": "%(log_text)s", "patient_id": "%(patient_id)s", "patient_full_name": "%(patient_full_name)s", "log_type": "%(log_type)s", "is_system_config": %(is_system_config)s, "message": %(message)s}'
 
 # Simple format for general logging (when user context is not available)
 simple_format = '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": "%(message)s"}'
