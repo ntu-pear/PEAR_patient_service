@@ -157,15 +157,25 @@ def create_patient_patient_guardian(db: Session, patientPatientGuradian: Patient
     db.commit()
     db.refresh(db_patient_patient_guardian)
 
+    # Fetch names for logging
+    patient = db.query(Patient).filter(Patient.id == db_patient_patient_guardian.patientId).first()
+    guardian = db.query(PatientGuardian).filter(PatientGuardian.id == db_patient_patient_guardian.guardianId).first()
+    patient_name = patient.name if patient else None
+    guardian_name = f"{guardian.firstName} {guardian.lastName}" if guardian else None
+
     log_crud_action(
         action=ActionType.CREATE,
         user=SYSTEM_USER_ID,
+        user_full_name= "None",
         table="PatientPatientGuardian",
         entity_id=db_patient_patient_guardian.id,
         original_data=None,
         updated_data=updated_data_dict,
-        user_full_name="None",
-        message="Create patient patient_guardian"
+        message=f"Linked guardian {guardian_name or 'Unknown'} to patient {patient_name or 'Unknown'}",
+        patient_id = db_patient_patient_guardian.patientId,
+        patient_full_name = patient_name,
+        log_type = 'guardian_relationship',
+        is_system_config = False,
     )
     return db_patient_patient_guardian
 
@@ -192,7 +202,18 @@ def update_patient_patient_guardian(db: Session, id: int, patientPatientGuradian
         db.commit()
         db.refresh(db_relationship)
 
+        # Fetch names for logging
+        patient = db.query(Patient).filter(Patient.id == db_relationship.patientId).first()
+        guardian = db.query(PatientGuardian).filter(PatientGuardian.id == db_relationship.guardianId).first()
+        patient_name = patient.name if patient else None
+        guardian_name = f"{guardian.firstName} {guardian.lastName}" if guardian else None
+
         updated_data_dict = serialize_data(patientPatientGuradian.model_dump())
+        updated_data_dict['PatientName'] = patient_name
+        updated_data_dict['GuardianName'] = guardian_name
+
+        original_data_dict['PatientName'] = patient_name
+        updated_data_dict['GuardianName'] = guardian_name
         log_crud_action(
             action=ActionType.UPDATE,
             user=SYSTEM_USER_ID,
@@ -201,7 +222,11 @@ def update_patient_patient_guardian(db: Session, id: int, patientPatientGuradian
             original_data=original_data_dict,
             updated_data=updated_data_dict,
             user_full_name="None",
-            message="Update patient patient_guardian"
+            message=f"Update guardian relationship: {guardian_name or 'Unknown'} to patient {patient_name or 'Unknown'}",
+            patient_id = db_relationship.patientId,
+            patient_full_name= patient_name,
+            log_type = 'guardian_relationship',
+            is_system_config = False,
         )
     return db_relationship
 
@@ -226,6 +251,16 @@ def delete_patient_patient_guardian_by_guardianId(db: Session, guardianId: int):
         db.commit()
         db.refresh(db_relationship)
 
+        # Fetch names for logging
+        patient = db.query(Patient).filter(Patient.id == db_relationship.patientId).first()
+        guardian = db.query(PatientGuardian).filter(PatientGuardian.id == db_relationship.guardianId).first()
+
+        patient_name = patient.name if patient else None
+        guardian_name = f"{guardian.firstName} {guardian.lastName}" if guardian else None
+
+        original_data_dict['PatientName'] = patient_name
+        original_data_dict['GuardianName'] = guardian_name
+
         log_crud_action(
             action=ActionType.DELETE,
             user=SYSTEM_USER_ID,
@@ -234,7 +269,11 @@ def delete_patient_patient_guardian_by_guardianId(db: Session, guardianId: int):
             original_data=original_data_dict,
             updated_data=None,
             user_full_name="None",
-            message="Delete patient patient_guardian"
+            message=f"Unlinked guardian {guardian_name or 'Unknown'} from patient {patient_name or 'Unknown'}",
+            patient_id = db_relationship.patientId,
+            patient_full_name= patient_name,
+            log_type = 'guardian_relationship',
+            is_system_config = False,
         )
     return db_relationship
 
@@ -258,6 +297,15 @@ def delete_relationship(db: Session, id: int):
         setattr(db_relationship, "isDeleted", "1")
         db.commit()
 
+        # Fetch names for logging
+        patient = db.query(Patient).filter(Patient.id == db_relationship.patientId).first()
+        guardian = db.query(PatientGuardian).filter(PatientGuardian.id == db_relationship.guardianId).first()
+        patient_name = patient.name if patient else None
+        guardian_name = f"{guardian.firstName} {guardian.lastName}" if guardian else None
+
+        original_data_dict['PatientName'] = patient_name
+        original_data_dict['GuardianName'] = guardian_name
+
         log_crud_action(
             action=ActionType.DELETE,
             user=SYSTEM_USER_ID,
@@ -265,5 +313,10 @@ def delete_relationship(db: Session, id: int):
             entity_id=db_relationship.id,
             original_data=original_data_dict,
             updated_data=None,
+            message= f"Unlinked guardian {guardian_name or 'Unknown'} from patient {patient_name or 'Unknown'}",
+            patient_id = db_relationship.patientId,
+            patient_full_name= patient_name,
+            log_type = 'guardian_relationship',
+            is_system_config = False,
         )
     return db_relationship

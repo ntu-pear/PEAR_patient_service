@@ -50,7 +50,7 @@ def create_patient_list_language(
         original_data=None,
         updated_data=updated_data_dict,
         is_system_config=True,
-        log_type="config_patient_list",
+        log_type="system",
     )
     return db_language_item
 
@@ -101,7 +101,7 @@ def update_patient_list_language(
         original_data=original_data_dict,
         updated_data=serialize_data(patient_language.model_dump()),
         is_system_config=True,
-        log_type="config_patient_list",
+        log_type="system",
     )
     return db_patient_language
 
@@ -137,7 +137,7 @@ def delete_patient_list_language(db: Session, patient_language_id: int):
         original_data=original_data_dict,
         updated_data=None,
         is_system_config=True,
-        log_type="config_patient_list",
+        log_type="system",
     )
     return db_patient_language
 

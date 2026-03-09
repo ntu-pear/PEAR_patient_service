@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, joinedload
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_problem_list_model import PatientProblemList
 from ..models.patient_problem_model import PatientProblem
+from ..models.patient_model import Patient
 from ..schemas.patient_problem import PatientProblemCreate, PatientProblemUpdate
 from ..services.highlight_helper import create_highlight_if_needed
 
@@ -137,17 +138,30 @@ def create_problem(
             created_by=created_by
         )
 
+        # Fetch patient name for logging
+        try:
+            patient = db.query(Patient).filter(Patient.id == new_problem.PatientID).first()
+            patient_name = patient.name if patient else None
+        except Exception:
+            patient_name = None
+
         # Log action
         updated_data_dict = serialize_data(problem_data.model_dump())
+        updated_data_dict["PatientName"] = patient_name
+
         log_crud_action(
             action=ActionType.CREATE,
             user=created_by,
             user_full_name=user_full_name,
-            message="Created patient problem record",
+            message=f"Added problem for patient: {patient_name or 'Unknown'}",
             table="PatientProblem",
             entity_id=new_problem.Id,
             original_data=None,
             updated_data=updated_data_dict,
+            patient_id = new_problem.PatientID,
+            patient_full_name= patient_name,
+            log_type = "problem",
+            is_system_config = False
         )
 
         db.commit()
@@ -258,17 +272,31 @@ def update_problem(
             created_by=modified_by
         )
 
+        # Fetch patient name for logging
+        try:
+            patient = db.query(Patient).filter(Patient.id == db_problem.PatientID).first()
+            patient_name = patient.name if patient else None
+        except Exception:
+            patient_name = None
+
         # Log action
         updated_data_dict = serialize_data(update_data)
+        updated_data_dict['PatientName'] = patient_name
+        original_data_dict['PatientName'] = patient_name
+
         log_crud_action(
             action=ActionType.UPDATE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Updated patient problem record",
+            message=f"Updated problem for patient: {patient_name or 'Unknown'}",
             table="PatientProblem",
             entity_id=db_problem.Id,
             original_data=original_data_dict,
-            updated_data=updated_data_dict
+            updated_data=updated_data_dict,
+            patient_id=db_problem.PatientID,
+            patient_full_name= patient_name,
+            log_type = "problem",
+            is_system_config= False
         )
 
         db.commit()
@@ -332,16 +360,29 @@ def delete_problem(
             created_by=modified_by
         )
 
+        # Fetch patient name
+        try:
+            patient = db.query(Patient).filter(Patient.id == db_problem.PatientID).first()
+            patient_name = patient.name if patient else None
+        except Exception:
+            patient_name = None
+
+        original_data_dict['PatientName'] = patient_name
+
         # Log action
         log_crud_action(
             action=ActionType.DELETE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Soft deleted patient problem record",
+            message=f"Deleted problem for patient: {patient_name or 'Unknown'}",
             table="PatientProblem",
             entity_id=problem_id,
             original_data=original_data_dict,
-            updated_data={"IsDeleted": "1"}
+            updated_data={"IsDeleted": "1"},
+            patient_id=db_problem.PatientID,
+            patient_full_name= patient_name,
+            log_type = "problem",
+            is_system_config = False
         )
 
         db.commit()

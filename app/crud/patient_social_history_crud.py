@@ -1,3 +1,4 @@
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from datetime import datetime
@@ -257,16 +258,29 @@ def create_patient_social_history(db: Session, social_data: PatientSocialHistory
     db.commit()
     db.refresh(new_record)
 
+    # Fetch patient name for logging
+    try:
+        patient = db.query(Patient).filter(Patient.id == new_record.patientId).first()
+        patient_name = patient.name if patient else None
+    except Exception as e:
+        patient_name = None
+
     updated_data_dict = serialize_data(social_data.model_dump())
+    updated_data_dict['PatientName'] = patient_name
+
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
         user_full_name=user_full_name,
-        message="Created Patient Social history",
-        table="Patient Social history",
-        entity_id=None,
+        message=f"Created social history for patient: {patient_name or 'Unknown'}",
+        table="PatientSocialHistory",
+        entity_id=new_record.id,
         original_data=None,
         updated_data= updated_data_dict,
+        patient_id = new_record.patientId,
+        patient_full_name= patient_name,
+        log_type = "patient_info",
+        is_system_config = False,
     )
 
     return new_record
@@ -338,6 +352,13 @@ def update_patient_social_history(db: Session, social_data: PatientSocialHistory
     db.commit()
     db.refresh(record)
 
+    # Fetch patient name
+    try:
+        patient = db.query(Patient).filter(Patient.id == record.patientId).first()
+        patient_name = patient.name if patient else None
+    except Exception:
+        patient_name = None
+
     try:
         updated_data_dict = {
             k: serialize_data(v)
@@ -346,15 +367,22 @@ def update_patient_social_history(db: Session, social_data: PatientSocialHistory
         }
     except Exception:
         updated_data_dict = "{}"
+
+    original_data_dict['PatientName'] = patient_name
+    updated_data_dict['PatientName'] = patient_name
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
         user_full_name=user_full_name,
-        message="Updated Patient Social History",
-        table="Patient Social History",
+        message=f"Updated social history for patient: {patient_name or 'Unknown'}",
+        table="PatientSocialHistory",
         entity_id=record.id,
         original_data=original_data_dict,
         updated_data=updated_data_dict,
+        patient_id=record.patientId,
+        patient_full_name= patient_name,
+        log_type = "patient_info",
+        is_system_config = False,
     )
 
     return record
@@ -385,14 +413,26 @@ def delete_patient_social_history(db: Session, patient_id: int, modified_by: str
     except Exception:
         original_data_dict = "{}"
 
+    try:
+        patient = db.query(Patient).filter(Patient.id == record.patientId).first()
+        patient_name = patient.name if patient else None
+    except Exception:
+        patient_name = None
+
+    original_data_dict['PatientName'] = patient_name
+
     log_crud_action(
         action=ActionType.DELETE,
         user=modified_by,
         user_full_name=user_full_name,
-        message="Deleted Patient Social History",
-        table="Patient Social History",
+        message=f"Deleted social history for patient: {patient_name or 'Unknown'}",
+        table="PatientSocialHistory",
         entity_id=record.id,
         original_data=original_data_dict,
-        updated_data= None,
+        updated_data={"isDeleted": "1"},
+        patient_id=record.patientId,
+        patient_full_name= patient_name,
+        log_type = "patient_info",
+        is_system_config = False,
     )
     return record

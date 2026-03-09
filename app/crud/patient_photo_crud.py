@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_photo_model import PatientPhoto
+from ..models.patient_model import Patient
 from ..schemas.patient_photo import PatientPhotoCreate, PatientPhotoUpdate
 
 logger = logging.getLogger(__name__)
@@ -94,11 +95,20 @@ def create_patient_photo(db: Session, file, photo_data: PatientPhotoCreate, crea
         ModifiedById=created_by
     )
 
-    updated_data_dict = serialize_data(photo_data.model_dump())
     # Save to DB
     db.add(db_photo)
     db.commit()
     db.refresh(db_photo)
+
+    # Fetch patient name for logging
+    try:
+        patient = db.query(Patient).filter(Patient.id == photo_data.PatientID).first()
+        patient_name = patient.name if patient else None
+    except Exception:
+        patient_name = None
+
+    updated_data_dict = serialize_data(photo_data.model_dump())
+    updated_data_dict['PatientName'] = patient_name
 
     log_crud_action(
         action=ActionType.CREATE,
@@ -108,7 +118,11 @@ def create_patient_photo(db: Session, file, photo_data: PatientPhotoCreate, crea
         original_data=None,
         updated_data=updated_data_dict,
         user_full_name=user_full_name,
-        message=f"Create patient photo for PatientID {photo_data.PatientID}",
+        message=f"Added photo for patient: {patient_name or 'Unknown'}",
+        patient_id= photo_data.PatientID,
+        patient_full_name= patient_name,
+        log_type = 'patient_info',
+        is_system_config = False,
     )
     return db_photo
 
@@ -150,7 +164,17 @@ def update_patient_photo(db: Session, patient_id: int, file, update_data: Patien
     db.commit()
     db.refresh(db_photo)
 
+    # Fetch patient name for logging
+    try:
+        patient = db.query(Patient).filter(Patient.id == patient_id).first()
+        patient_name = patient.name if patient else None
+    except Exception:
+        patient_name = None
+
     updated_data_dict = serialize_data(update_data.model_dump())
+    updated_data_dict['PatientName'] = patient_name
+    original_data_dict['PatientName'] = patient_name
+
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
@@ -159,7 +183,11 @@ def update_patient_photo(db: Session, patient_id: int, file, update_data: Patien
         original_data=original_data_dict,
         updated_data=updated_data_dict,
         user_full_name=user_full_name,
-        message="Update patient photo",
+        message=f"Updated photo for patient: {patient_name or 'Unknown'}",
+        patient_id= patient_id,
+        patient_full_name= patient_name,
+        log_type = 'patient_info',
+        is_system_config = False,
     )
     return db_photo
 
@@ -203,7 +231,17 @@ def update_patient_photo_by_photo_id(db: Session, patient_photo_id: int, file, u
     db.commit()
     db.refresh(db_photo)
 
+    # Fetch patient name for logging
+    try:
+        patient = db.query(Patient).filter(Patient.id == db_photo.PatientID).first()
+        patient_name = patient.name if patient else None
+    except Exception:
+        patient_name = None
+
     updated_data_dict = serialize_data(update_data.model_dump())
+    updated_data_dict['PatientName'] = patient_name
+    original_data_dict['PatientName'] = patient_name
+
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
@@ -212,7 +250,11 @@ def update_patient_photo_by_photo_id(db: Session, patient_photo_id: int, file, u
         original_data=original_data_dict,
         updated_data=updated_data_dict,
         user_full_name=user_full_name,
-        message="Update patient photo by PatientPhotoID",
+        message=f"Update photo for patient: {patient_name or 'Unknown'}",
+        patient_id = db_photo.PatientID,
+        patient_full_name= patient_name,
+        log_type = 'patient_info',
+        is_system_config = False,
     )
     return db_photo
 
@@ -228,6 +270,13 @@ def delete_patient_photo(db: Session, patient_id: int, modified_by: str, user_fu
 
     if not db_photos:
         return None  # No photos found for this patient
+
+    # Fetch patient name for logging
+    try:
+        patient = db.query(Patient).filter(Patient.id == patient_id).first()
+        patient_name = patient.name if patient else None
+    except Exception:
+        patient_name = None
 
     cloudinary_deletion_results = []
     
@@ -255,6 +304,8 @@ def delete_patient_photo(db: Session, patient_id: int, modified_by: str, user_fu
         db_photo.IsDeleted = 1
         db_photo.ModifiedById = modified_by
         db_photo.UpdatedDateTime = datetime.now()
+
+        original_data_dict['PatientName'] = patient_name
         
         # Log each photo deletion
         log_crud_action(
@@ -265,7 +316,11 @@ def delete_patient_photo(db: Session, patient_id: int, modified_by: str, user_fu
             original_data=original_data_dict,
             updated_data=None,
             user_full_name=user_full_name,
-            message=f"Delete patient photo for PatientID {patient_id} (Cloudinary deletion: {cloudinary_deleted})",
+            message=f"Delete patient photo for {patient_name or 'Unknown'} (Cloudinary deletion: {cloudinary_deleted})",
+            patient_id= patient_id,
+            patient_full_name= patient_name,
+            log_type = 'patient_info',
+            is_system_config = False,
         )
     
     db.commit()
@@ -308,6 +363,15 @@ def delete_patient_photo_by_photo_id(db: Session, patient_photo_id: int, modifie
     
     db.commit()
 
+    # Fetch patient name for logging
+    try:
+        patient = db.query(Patient).filter(Patient.id == db_photo.PatientID).first()
+        patient_name = patient.name if patient else None
+    except Exception:
+        patient_name = None
+
+    original_data_dict['PatientName'] = patient_name
+
     log_crud_action(
         action=ActionType.DELETE,
         user=modified_by,
@@ -316,6 +380,10 @@ def delete_patient_photo_by_photo_id(db: Session, patient_photo_id: int, modifie
         original_data=original_data_dict,
         updated_data=None,
         user_full_name=user_full_name,
-        message=f"Soft delete patient photo by PatientPhotoID (Cloudinary deletion: {cloudinary_deleted})",
+        message=f"Deleted photo for patient: {patient_name or 'Unknown'} (Cloudinary deletion: {cloudinary_deleted})",
+        patient_id = db_photo.PatientID,
+        patient_full_name= patient_name,
+        log_type = 'patient_info',
+        is_system_config = False,
     )
     return db_photo

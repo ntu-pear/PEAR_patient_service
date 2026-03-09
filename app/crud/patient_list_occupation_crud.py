@@ -36,7 +36,7 @@ def create_occupation_type(db: Session, occupation_type: PatientOccupationListTy
         original_data=None,
         updated_data=updated_data_dict,
         is_system_config=True,
-        log_type="config_patient_list",
+        log_type="system",
     )
     return db_occupation_type
 
@@ -81,7 +81,7 @@ def update_occupation_type(
             original_data=original_data_dict,
             updated_data=updated_data_dict,
             is_system_config=True,
-            log_type="config_patient_list",
+            log_type="system",
         )
         return db_occupation_type
     return None
@@ -117,7 +117,7 @@ def delete_occupation_type(db: Session, occupation_type_id: int, modified_by: st
             original_data=original_data_dict,
             updated_data=None,
             is_system_config=True,
-            log_type="config_patient_list",
+            log_type="system",
         )
         return db_occupation_type
     return None

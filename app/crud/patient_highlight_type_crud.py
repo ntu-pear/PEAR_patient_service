@@ -77,7 +77,7 @@ def toggle_highlight_type_enabled(db: Session, highlight_type_id: int, modified_
         original_data=original_data_dict,
         updated_data=updated_data_dict,
         is_system_config= True,
-        log_type="config_highlight_type",
+        log_type="system",
     )
     
     return db_highlight_type
@@ -123,7 +123,7 @@ def create_highlight_type(
         original_data=None,
         updated_data=updated_data_dict,
         is_system_config= True,
-        log_type="config_highlight_type",
+        log_type="system",
     )  
     return db_highlight_type
 
@@ -185,7 +185,7 @@ def update_highlight_type(
             entity_id=highlight_type_id,
             original_data=original_data_dict,
             updated_data=updated_data_dict,
-            log_type="config_highlight_type",
+            log_type="system",
             is_system_config= True,
         )
         return db_highlight_type
@@ -224,7 +224,7 @@ def delete_highlight_type(db: Session, highlight_type_id: int, modified_by: str,
                 entity_id=highlight_type_id,
                 original_data=original_data_dict,
                 updated_data=None,
-                log_type="config_highlight_type",
+                log_type="system",
                 is_system_config= True,
             )
             return db_highlight_type

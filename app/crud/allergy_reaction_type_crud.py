@@ -56,7 +56,7 @@ def create_reaction_type(
         entity_id=db_reaction_type.AllergyReactionTypeID,
         original_data=None,
         updated_data=updated_data_dict,
-        log_type = "config_allergy_reaction",
+        log_type = "system",
         is_system_config=True,
     )
     return db_reaction_type
@@ -108,7 +108,7 @@ def update_reaction_type(
             entity_id=allergy_reaction_type_id,
             original_data=original_data_dict,
             updated_data=updated_data_dict,
-            log_type = "config_allergy_reaction",
+            log_type = "system",
             is_system_config=True,
         )
         return db_reaction_type
@@ -146,7 +146,7 @@ def delete_reaction_type(db: Session, allergy_reaction_type_id: int, modified_by
             entity_id=allergy_reaction_type_id,
             original_data=original_data_dict,
             updated_data=None,
-            log_type = "config_allergy_reaction",
+            log_type = "system",
             is_system_config=True,
         )
         return db_reaction_type

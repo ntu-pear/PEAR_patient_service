@@ -54,11 +54,13 @@ def create_mobility_list_entry(db: Session, mobility_list_data: PatientMobilityL
         action=ActionType.CREATE,
         user=created_by,
         user_full_name=user_full_name,
-        message="Created mobility list entry",
+        message=f"Created mobility type: {new_entry.Value}",
         table="PatientMobilityList",
         entity_id=new_entry.MobilityListId,
         original_data=None,
         updated_data=updated_data_dict,
+        log_type= 'system',
+        is_system_config = True
     )
     return new_entry
 
@@ -103,11 +105,13 @@ def update_mobility_list_entry(
             action=ActionType.UPDATE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Updated mobility list entry",
+            message=f"Updated mobility type: {db_entry.Value}",
             table="PatientMobilityList",
             entity_id=mobility_list_id,
             original_data=original_data_dict,
             updated_data=updated_data_dict,
+            log_type ='system',
+            is_system_config = True
         )
     except Exception as e:
         # Rollback in case of an error
@@ -153,10 +157,12 @@ def delete_mobility_list_entry(db: Session, mobility_list_id: int, modified_by: 
         action=ActionType.DELETE,
         user=modified_by,
         user_full_name=user_full_name,
-        message="Deleted mobility list entry",
+        message=f"Deleted mobility type: {db_entry.Value}",
         table="PatientMobilityList",
         entity_id=mobility_list_id,
         original_data=original_data_dict,
-        updated_data=serialize_data(db_entry),
+        updated_data=None,
+        log_type ='system',
+        is_system_config = True
     )
     return db_entry

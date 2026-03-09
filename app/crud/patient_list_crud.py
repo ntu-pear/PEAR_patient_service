@@ -31,7 +31,7 @@ def create_list_item(db: Session, list_item: PatientListCreate):
         original_data=None,
         updated_data=updated_data_dict,
         is_system_config=True,
-        log_type="config_patient_list",
+        log_type="system",
     )
     return db_list_item
 
@@ -70,7 +70,7 @@ def update_list_item(
             original_data=original_data_dict,
             updated_data=updated_data_dict,
             is_system_config=True,
-            log_type="config_patient_list",
+            log_type="system",
         )
     return db_list_item
 
@@ -97,6 +97,6 @@ def delete_list_item(db: Session, item_id: int):
             original_data=original_data_dict,
             updated_data=None,
             is_system_config=True,
-            log_type="config_patient_list",
+            log_type="system",
         )
     return db_list_item

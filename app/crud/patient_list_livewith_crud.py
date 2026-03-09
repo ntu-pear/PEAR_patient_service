@@ -36,7 +36,7 @@ def create_livewith_type(db: Session, livewith_type: PatientLiveWithListTypeCrea
         original_data=None,
         updated_data=updated_data_dict,
         is_system_config=True,
-        log_type="config_patient_list",
+        log_type="system",
     )
     return db_livewith_type
 
@@ -82,7 +82,7 @@ def update_livewith_type(
             original_data=original_data_dict,
             updated_data=updated_data_dict,
             is_system_config=True,
-            log_type="config_patient_list",
+            log_type="system",
         )
         return db_livewith_type
     return None
@@ -119,7 +119,7 @@ def delete_livewith_type(db: Session, livewith_type_id: int, modified_by: str):
             original_data=original_data_dict,
             updated_data=None,
             is_system_config=True,
-            log_type="config_patient_list",
+            log_type="system",
         )
         return db_livewith_type
     return None

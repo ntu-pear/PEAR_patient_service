@@ -48,7 +48,7 @@ def create_dementia_list_entry(db: Session, dementia_list_data: PatientAssignedD
         entity_id=new_entry.DementiaTypeListId,
         original_data=None,
         updated_data=updated_data_dict,
-        log_type= "config_dementia_type",
+        log_type= "system",
         is_system_config=True
     )
     return new_entry
@@ -93,7 +93,7 @@ def update_dementia_list_entry(
             entity_id=dementia_list_id,
             original_data=original_data_dict,
             updated_data=updated_data_dict,
-            log_type= "config_dementia_type",
+            log_type= "system",
             is_system_config=True,
         )
         return db_entry
@@ -133,7 +133,7 @@ def delete_dementia_list_entry(db: Session, dementia_list_id: int, modified_by: 
             entity_id=dementia_list_id,
             original_data=original_data_dict,
             updated_data=None,
-            log_type= "config_dementia_type",
+            log_type= "system",
             is_system_config=True
         )
         return db_entry

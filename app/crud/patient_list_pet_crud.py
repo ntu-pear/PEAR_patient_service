@@ -36,7 +36,7 @@ def create_pet_type(db: Session, pet_type: PatientPetListTypeCreate, created_by:
         original_data=None,
         updated_data=updated_data_dict,
         is_system_config=True,
-        log_type="config_patient_list",
+        log_type="system",
     )
     return db_pet_type
 
@@ -81,7 +81,7 @@ def update_pet_type(
             original_data=original_data_dict,
             updated_data=updated_data_dict,
             is_system_config=True,
-            log_type="config_patient_list",
+            log_type="system",
         )
         return db_pet_type
     return None
@@ -117,7 +117,7 @@ def delete_pet_type(db: Session, pet_type_id: int, modified_by: str):
             original_data=original_data_dict,
             updated_data=None,
             is_system_config=True,
-            log_type="config_patient_list",
+            log_type="system",
         )
         return db_pet_type
     return None

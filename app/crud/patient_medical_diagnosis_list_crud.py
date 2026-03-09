@@ -83,7 +83,7 @@ def create_diagnosis(db: Session, diagnosis: PatientMedicalDiagnosisListCreate, 
             original_data=None,
             updated_data=updated_data_dict,
             is_system_config=True,
-            log_type="config_diagnosis_list",
+            log_type="system",
         )
     
     return db_diagnosis
@@ -142,7 +142,7 @@ def update_diagnosis(db: Session, diagnosis_id: int, diagnosis: PatientMedicalDi
             original_data=original_data_dict,
             updated_data=updated_data_dict,
             is_system_config=True,
-            log_type="config_diagnosis_list",
+            log_type="system",
         )
 
     return db_diagnosis
@@ -179,7 +179,7 @@ def delete_diagnosis(db: Session, diagnosis_id: int, user_id: str, user_full_nam
             original_data=original_data_dict,
             updated_data=None,
             is_system_config=True,
-            log_type="config_diagnosis_list",
+            log_type="system",
         )
 
     return db_diagnosis

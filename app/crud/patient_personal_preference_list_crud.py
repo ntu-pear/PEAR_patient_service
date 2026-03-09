@@ -121,11 +121,13 @@ def create_preference_list(
             action=ActionType.CREATE,
             user=created_by,
             user_full_name=user_full_name,
-            message="Created personal preference list record",
+            message=f"Created preference list item: {db_item.PreferenceName} ({db_item.PreferenceType})",
             table="PatientPersonalPreferenceList",
             entity_id=db_item.Id,
             original_data=None,
             updated_data=serialize_data(data),
+            log_type = "system",
+            is_system_config = True
         )
 
         return db_item
@@ -208,15 +210,21 @@ def update_preference_list(
         db.commit()
         db.refresh(db_item)
 
+        updated_data_dict = serialize_data(update_data)
+        updated_data_dict["PreferenceName"] = db_item.PreferenceName
+        updated_data_dict["PreferenceType"] = db_item.PreferenceType
+
         log_crud_action(
             action=ActionType.UPDATE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Updated personal preference list record",
+            message=f"Updated preference list item: {db_item.PreferenceName} ({db_item.PreferenceType})",
             table="PatientPersonalPreferenceList",
             entity_id=db_item.Id,
             original_data=original_data,
             updated_data=serialize_data(update_data),
+            log_type = "system",
+            is_system_config = True,
         )
 
         return db_item
@@ -260,16 +268,20 @@ def delete_preference_list(
 
         db.commit()
         db.refresh(db_item)
+        original_data['PreferenceName'] = db_item.PreferenceName
+        original_data['PreferenceType'] = db_item.PreferenceType
 
         log_crud_action(
             action=ActionType.DELETE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Soft deleted personal preference list record",
+            message=f"Deleted preference list item: {db_item.PreferenceName} ({db_item.PreferenceType})",
             table="PatientPersonalPreferenceList",
             entity_id=preference_list_id,
             original_data=original_data,
             updated_data={"IsDeleted": "1"},
+            log_type = "system",
+            is_system_config = True,
         )
 
         return db_item

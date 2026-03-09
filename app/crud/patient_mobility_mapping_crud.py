@@ -107,15 +107,22 @@ def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, cre
     db.refresh(new_entry)
 
     updated_data_dict = serialize_data(mobility_data.model_dump())
+    updated_data_dict['PatientName'] = patient.Name if patient else None
+    updated_data_dict['MobilityType'] = mobility_list.Value if mobility_list else None
+
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
         user_full_name=user_full_name,
-        message="Created mobility mapping entry",
+        message=f"Added mobility aid: {mobility_list.Value if mobility_list else 'Unknown'} for {patient.name if patient else None}",
         table="PatientMobility",
         entity_id=new_entry.MobilityID,
         original_data=None,
         updated_data=updated_data_dict,
+        patient_id=new_entry.PatientID,
+        patient_full_name=patient.name if patient else None,
+        log_type = "mobility",
+        is_system_config = False,
     )
     return new_entry
 
@@ -150,18 +157,39 @@ def update_mobility_entry(db: Session, mobility_id: int, mobility_data: PatientM
     db.commit()
     db.refresh(db_entry)
 
+    # Fetch names for logging purpose
+    try:
+        patient = db.query(Patient).filter(Patient.id == db_entry.PatientID).first()
+        patient_name = patient.name if patient else None
+    except Exception:
+        patient_name = None
+    try:
+        mobility_list = db.query(PatientMobilityList).filter(PatientMobilityList.MobilityListId == db_entry.MobilityListID).first()
+        mobility_name = mobility_list.Value if mobility_list else None
+    except Exception:
+        mobility_name = None
+
     updated_data_dict = {
         k: serialize_data(v) for k, v in db_entry.__dict__.items() if not k.startswith("_")
     }
+    updated_data_dict['PatientName'] = patient_name
+    updated_data_dict['MobilityType'] = mobility_name
+
+    original_data_dict['PatientName'] = patient_name
+    original_data_dict['MobilityType'] = mobility_name
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
         user_full_name=user_full_name,
-        message="Updated mobility mapping entry",
+        message=f"Updated mobility aid: {mobility_name or 'Unknown'} for {patient_name or 'Unknown'}",
         table="PatientMobility",
         entity_id=db_entry.MobilityID,
         original_data=original_data_dict,
         updated_data=updated_data_dict,
+        patient_id = db_entry.PatientID,
+        patient_full_name = patient_name,
+        log_type = "mobility",
+        is_system_config = False,
     )
     return db_entry
 
@@ -189,14 +217,31 @@ def delete_mobility_entry(db: Session, mobility_id: int, modified_by: str, user_
     db.commit()
     db.refresh(db_entry)
 
+    # Fetch names for logging
+    try:
+        patient = db.query(Patient).filter(Patient.id == db_entry.PatientID).first()
+        patient_name = patient.name if patient else None
+    except Exception as e:
+        patient_name = None
+
+    try:
+        mobility_list = db.query(PatientMobilityList).filter(PatientMobilityList.MobilityListId == db_entry.MobilityListId).first()
+        mobility_name = mobility_list.Value if mobility_list else None
+    except Exception as e:
+        mobility_name = None
+
     log_crud_action(
         action=ActionType.DELETE,
         user=modified_by,
         user_full_name=user_full_name,
-        message="Deleted mobility mapping entry",
+        message=f"Deleted mobility aid: {mobility_name or 'Unknown'} for {patient_name or 'Unknown'}",
         table="PatientMobility",
         entity_id=db_entry.MobilityID,
         original_data=original_data_dict,
         updated_data=None,
+        patient_id = db_entry.PatientID,
+        patient_full_name = patient_name,
+        log_type = "mobility",
+        is_system_config = False,
     )
     return db_entry

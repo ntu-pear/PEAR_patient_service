@@ -257,6 +257,7 @@ def test_create_preference_likes_dislikes_with_islike_y(
         mock_patient,           # _verify_patient_exists
         mock_pref_list_likes,   # _verify_preference_list_exists
         None,                   # duplicate check
+        mock_patient,           # Fetch patient name for logging (after flush)
         created,                # reload after commit
     ])
     db_session_mock.flush = mock.MagicMock()
@@ -290,6 +291,7 @@ def test_create_preference_likes_dislikes_with_islike_n(
         mock_patient,
         mock_pref_list_likes,
         None,
+        mock_patient,
         created,
     ])
     db_session_mock.flush = mock.MagicMock()
@@ -559,10 +561,17 @@ def test_update_preference_remarks_success(db_session_mock, mock_pref_list_likes
     updated = _make_preference(1, patient_id=1, list_id=10, is_like="Y")
     updated.PreferenceRemarks = "Updated remark"
 
+    # Create mock patient for logging queries
+    mock_patient = mock.MagicMock()
+    mock_patient.id = 1
+    mock_patient.name = "Test patient"
+
     _setup_query_sequence(db_session_mock, [
         existing,            # fetch record
         mock_pref_list_likes, # load current list type
         None,                # duplicate check
+        mock_patient,        # fetch patient name for logging
+        mock_pref_list_likes, # fetch pref list name for logging
         updated,             # reload after commit
     ])
     db_session_mock.flush = mock.MagicMock()
@@ -582,10 +591,16 @@ def test_update_preference_islike_success(db_session_mock, mock_pref_list_likes)
     existing = _make_preference(1, patient_id=1, list_id=10, is_like="Y")
     updated = _make_preference(1, patient_id=1, list_id=10, is_like="N")
 
+    mock_patient = mock.MagicMock()
+    mock_patient.id = 1
+    mock_patient.name = "Test patient"
+
     _setup_query_sequence(db_session_mock, [
         existing,
         mock_pref_list_likes,
         None,
+        mock_patient,
+        mock_pref_list_likes,
         updated,
     ])
     db_session_mock.flush = mock.MagicMock()
@@ -685,15 +700,21 @@ def test_update_preference_duplicate_raises_400(db_session_mock, mock_pref_list_
 # DELETE
 # ---------------------------------------------------------------------------
 
-def test_delete_preference_success(db_session_mock):
+def test_delete_preference_success(db_session_mock, mock_pref_list_likes):
     """Successfully soft deletes a preference."""
-    existing = _make_preference(1)
-    deleted = _make_preference(1)
+    existing = _make_preference(1, patient_id=1, list_id=10)
+    deleted = _make_preference(1,patient_id=1, list_id=10)
     deleted.IsDeleted = "1"
     deleted.ModifiedByID = USER_ID
 
+    mock_patient = mock.MagicMock()
+    mock_patient.id = 1
+    mock_patient.name = "Test patient"
+
     _setup_query_sequence(db_session_mock, [
         existing,  # fetch record
+        mock_patient,
+        mock_pref_list_likes,
         deleted,   # reload after commit
     ])
     db_session_mock.flush = mock.MagicMock()

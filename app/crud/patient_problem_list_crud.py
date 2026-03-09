@@ -76,11 +76,13 @@ def create_problem_list(
             action=ActionType.CREATE,
             user=created_by,
             user_full_name=user_full_name,
-            message="Created problem list record",
+            message=f"Created problem list item: {db_problem_list.ProblemName}",
             table="PatientProblemList",
             entity_id=db_problem_list.Id,
             original_data=None,
             updated_data=updated_data_dict,
+            log_type = "system",
+            is_system_config = True,
         )
         
         return db_problem_list
@@ -141,15 +143,20 @@ def update_problem_list(
         db.refresh(db_problem_list)
 
         updated_data_dict = serialize_data(update_data)
+        updated_data_dict["ProblemName"] = db_problem_list.ProblemName
+        original_data_dict["ProblemName"] = db_problem_list.ProblemName
+
         log_crud_action(
             action=ActionType.UPDATE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Updated problem list record",
+            message=f"Updated problem list item: {db_problem_list.ProblemName}",
             table="PatientProblemList",
             entity_id=db_problem_list.Id,
             original_data=original_data_dict,
-            updated_data=updated_data_dict
+            updated_data=updated_data_dict,
+            log_type = "system",
+            is_system_config = True,
         )
 
         return db_problem_list
@@ -186,15 +193,19 @@ def delete_problem_list(
         db.commit()
         db.refresh(db_problem_list)
 
+        original_data_dict["ProblemName"] = db_problem_list.ProblemName
+
         log_crud_action(
             action=ActionType.DELETE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Soft deleted problem list record",
+            message=f"Deleted problem list item: {db_problem_list.ProblemName}",
             table="PatientProblemList",
             entity_id=problem_list_id,
             original_data=original_data_dict,
-            updated_data={"IsDeleted": "1"}
+            updated_data={"IsDeleted": "1"},
+            log_type = "system",
+            is_system_config = True,
         )
         
         return db_problem_list

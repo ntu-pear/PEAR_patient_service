@@ -36,7 +36,7 @@ def create_relationship_mapping(
         updated_data=updated_data_dict,
         message=f"Guardian relationship created: {db_relationship.relationshipName}",
         is_system_config=True,
-        log_type="config_guardian_relationship",
+        log_type="system",
     )
     return db_relationship
 
@@ -78,7 +78,7 @@ def update_relationship_mapping(
             updated_data=updated_data_dict,
             message=f"Guardian relationship updated: {old_relationship_name} -> {db_relationship.relationshipName}",
             is_system_config=True,
-            log_type="config_guardian_relationship",
+            log_type="system",
         )
     return db_relationship
 
@@ -115,6 +115,6 @@ def delete_relationship_mapping(db: Session, id: int):
             updated_data=None,
             message=f"Guardian relationship deleted: {old_relationship_name}",
             is_system_config=True,
-            log_type="config_guardian_relationship",
+            log_type="system",
         )
     return db_relationship

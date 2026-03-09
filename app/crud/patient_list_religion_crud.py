@@ -35,7 +35,7 @@ def create_religion_type(db: Session, religion_type: PatientReligionListTypeCrea
         original_data=None,
         updated_data=updated_data_dict,
         is_system_config=True,
-        log_type="config_patient_list",
+        log_type="system",
     )
     return db_religion_type
 
@@ -80,7 +80,7 @@ def update_religion_type(
             original_data=original_data_dict,
             updated_data=updated_data_dict,
             is_system_config=True,
-            log_type="config_patient_list",
+            log_type="system",
         )
         return db_religion_type
     return None
@@ -115,7 +115,7 @@ def delete_religion_type(db: Session, religion_type_id: int, modified_by: str):
             original_data=original_data_dict,
             updated_data=None,
             is_system_config=True,
-            log_type="config_patient_list",
+            log_type="system",
         )
         return db_religion_type
     return None
