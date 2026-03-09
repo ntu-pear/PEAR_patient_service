@@ -71,11 +71,13 @@ def toggle_highlight_type_enabled(db: Session, highlight_type_id: int, modified_
         action=ActionType.UPDATE,
         user=modified_by,
         user_full_name=user_full_name,
-        message=f"Toggled highlight type IsEnabled from {old_status} to {new_status}",
+        message=f"Toggled highlight type {db_highlight_type.TypeName} from {old_status} to {new_status}",
         table="HighlightType",
         entity_id=highlight_type_id,
         original_data=original_data_dict,
         updated_data=updated_data_dict,
+        is_system_config= True,
+        log_type="system",
     )
     
     return db_highlight_type
@@ -115,11 +117,13 @@ def create_highlight_type(
         action=ActionType.CREATE,
         user=created_by,
         user_full_name=user_full_name,
-        message="Created highlight type",
+        message=f"Created highlight type: {db_highlight_type.TypeName} ({db_highlight_type.TypeCode})",
         table="HighlightType",
         entity_id=db_highlight_type.Id,
         original_data=None,
         updated_data=updated_data_dict,
+        is_system_config= True,
+        log_type="system",
     )  
     return db_highlight_type
 
@@ -176,11 +180,13 @@ def update_highlight_type(
             action=ActionType.UPDATE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Updated highlight type",
+            message=f"Updated highlight type {db_highlight_type.TypeName}",
             table="HighlightType",
             entity_id=highlight_type_id,
             original_data=original_data_dict,
             updated_data=updated_data_dict,
+            log_type="system",
+            is_system_config= True,
         )
         return db_highlight_type
     return None
@@ -213,11 +219,13 @@ def delete_highlight_type(db: Session, highlight_type_id: int, modified_by: str,
                 action=ActionType.DELETE,
                 user=modified_by,
                 user_full_name=user_full_name,
-                message="Deleted highlight type",
+                message=f"Deleted highlight type {db_highlight_type.TypeName}",
                 table="HighlightType",
                 entity_id=highlight_type_id,
                 original_data=original_data_dict,
                 updated_data=None,
+                log_type="system",
+                is_system_config= True,
             )
             return db_highlight_type
     return None

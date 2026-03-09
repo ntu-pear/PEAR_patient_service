@@ -384,11 +384,14 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
             action=ActionType.CREATE,
             user=user,
             user_full_name=user_full_name,
-            message="Created Patient",
+            message=f"Created Patient: {new_patient.name}",
             table="Patient",
             entity_id=new_patient.id,
             original_data=None,
             updated_data=patient_data_dict,
+            patient_id=new_patient.id,
+            patient_full_name= new_patient.name,
+            log_type= "patient_info",
         )
 
         # 6. Commit both patient and outbox event atomically
@@ -505,11 +508,14 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
                 action=ActionType.UPDATE,
                 user=user,
                 user_full_name=user_full_name,
-                message="Updated Patient",
+                message=f"Updated Patient: {db_patient.name}",
                 table="Patient",
                 entity_id=db_patient.id,
                 original_data=original_data_dict,
                 updated_data=serialize_data(patient_update_dict),
+                patient_id=db_patient.id,
+                patient_full_name= db_patient.name,
+                log_type= "patient_info"
             )
 
             # 7. Commit atomically
@@ -564,11 +570,14 @@ def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFil
         action=ActionType.UPDATE,
         user=user_id,
         user_full_name=user_full_name,
-        message="Updated Patient Photo",
+        message=f"Updated Patient Photo for patient : {db_patient.name}",
         table="Patient",
         entity_id=db_patient.id,
         original_data=original_data_dict,
         updated_data=updated_data_dict,
+        patient_id=db_patient.id,
+        patient_full_name= db_patient.name,
+        log_type= "patient_info"
     )
 
     return db_patient
@@ -628,11 +637,14 @@ def delete_patient(db: Session, patient_id: int, user_id: str, user_full_name: s
             action=ActionType.DELETE,
             user=user_id,
             user_full_name=user_full_name,
-            message="Deleted Patient",
+            message=f"Deleted Patient: {db_patient.name}",
             table="Patient",
             entity_id=db_patient.id,
             original_data=original_data_dict,
             updated_data=None,
+            patient_id=db_patient.id,
+            patient_full_name= db_patient.name,
+            log_type= "patient_info"
         )
 
         # 5. Commit atomically
@@ -681,11 +693,14 @@ def delete_patient_profile_picture(db: Session, patient_id: int, user_id: str, u
         action=ActionType.UPDATE,
         user=user_id,
         user_full_name=user_full_name,
-        message="Deleted Patient Photo",
+        message=f"Deleted Patient Photo for patient: {db_patient.name}",
         table="Patient",
         entity_id=db_patient.id,
         original_data=original_data_dict,
         updated_data=updated_data_dict,
+        patient_id=db_patient.id,
+        patient_full_name= db_patient.name,
+        log_type= "patient_info"
     )
 
     return db_patient

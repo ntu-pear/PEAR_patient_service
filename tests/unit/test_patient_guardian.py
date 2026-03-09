@@ -19,6 +19,7 @@ from app.models.patient_guardian_relationship_mapping_model import (
 from app.models.patient_patient_guardian_model import PatientPatientGuardian
 from app.schemas.patient_guardian import PatientGuardianCreate, PatientGuardianUpdate
 from tests.utils.mock_db import get_db_session_mock
+from tests.utils.mock_models import get_mock_patient
 
 
 def test_get_guardian(db_session_mock):
@@ -215,11 +216,14 @@ def test_update_guardian_relationship_changed(db_session_mock):
     
     mock_patient_guardian_relationship = get_patient_patient_guardian()
     mock_patient_guardian_relationship.relationshipId = 1  # Old relationship ID
+
+    mock_patient = get_mock_patient()
     
     # Mock queries
     db_session_mock.query.return_value.filter.return_value.first.side_effect = [
         mock_guardian,  # First call: get guardian
-        mock_patient_guardian_relationship  # Second call: get patient_guardian relationship
+        mock_patient_guardian_relationship,  # Second call: get patient_guardian relationship
+        mock_patient # Third call: get patient for logging
     ]
     
     # Mock the relationship mapping lookup

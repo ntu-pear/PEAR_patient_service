@@ -35,15 +35,21 @@ def create_dementia_list_entry(db: Session, dementia_list_data: PatientAssignedD
     db.refresh(new_entry)
 
     updated_data_dict = serialize_data(dementia_list_data.model_dump())
+
+    # Retrieve the name of the dementia type
+    dementia_type_name = new_entry.Value if new_entry else None
+
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
         user_full_name=user_full_name,
-        message="Created patient assigned dementia",
+        message=f"Created dementia type: {dementia_type_name}",
         table="PatientAssignedDementiaList",
         entity_id=new_entry.DementiaTypeListId,
         original_data=None,
         updated_data=updated_data_dict,
+        log_type= "system",
+        is_system_config=True
     )
     return new_entry
 
@@ -64,6 +70,9 @@ def update_dementia_list_entry(
         except Exception as e:
             original_data_dict = "{}"
 
+        # Store the old dementia type for message field in log
+        old_dementia_type_name = db_entry.Value
+
         for key, value in dementia_list_data.model_dump(exclude_unset=True).items():
             setattr(db_entry, key, value)
 
@@ -79,11 +88,13 @@ def update_dementia_list_entry(
             action=ActionType.UPDATE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Updated patient assigned dementia",
+            message=f"Updated dementia type: {old_dementia_type_name} -> {db_entry.Value}",
             table="PatientAssignedDementiaList",
             entity_id=dementia_list_id,
             original_data=original_data_dict,
             updated_data=updated_data_dict,
+            log_type= "system",
+            is_system_config=True,
         )
         return db_entry
     return None
@@ -102,6 +113,9 @@ def delete_dementia_list_entry(db: Session, dementia_list_id: int, modified_by: 
             }
         except Exception as e:
             original_data_dict = "{}"
+
+        # Capture dementia type name before deletion
+        dementia_type_name = db_entry.Value
     
         # Soft delete the entry
         db_entry.IsDeleted = "1"
@@ -114,11 +128,13 @@ def delete_dementia_list_entry(db: Session, dementia_list_id: int, modified_by: 
             action=ActionType.DELETE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Deleted patient assigned dementia",
+            message=f"Deleted dementia type: {dementia_type_name}",
             table="PatientAssignedDementiaList",
             entity_id=dementia_list_id,
             original_data=original_data_dict,
             updated_data=None,
+            log_type= "system",
+            is_system_config=True
         )
         return db_entry
     return None

@@ -28,9 +28,18 @@ def log_crud_action(
         entity_id: Optional[int] = None,
         original_data: Optional[dict] = None,
         updated_data: Optional[dict] = None,
+        patient_id: Optional[int] = None,
+        patient_full_name: Optional[str] = None,
+        log_type: Optional[str] = None,
+        is_system_config: bool = False,
 ):
     """
     Log CRUD actions in format compatible with Elasticsearch log service
+
+    Enriched fields for frontend display:
+    - patient_id / patient_full_name: Patient associated with this record (if applicable)
+    - log_type: category for filtering (allergy, prescription, medicine, etc.)
+    - prescription_name/ allergy_name/ medicine_name/ problem_name/ preference_name: Human-readable names
     """
     if action == ActionType.CREATE:
         original_data = None
@@ -51,6 +60,10 @@ def log_crud_action(
         "action": action.value,  # This maps to "method" in log service
         "user_full_name": user_full_name,
         "log_text": message,
+        "patient_id": patient_id,
+        "patient_full_name": patient_full_name,
+        "log_type": log_type,
+        "is_system_config": is_system_config,
     }
 
     # IMPORTANT: Pass the message object, not a JSON string

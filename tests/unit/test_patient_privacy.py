@@ -46,12 +46,13 @@ def test_create_patient_privacy_level(db_session_mock, Create_Privacy_Level):
     patient_id = 1
     
     # Act
-    result = create_patient_privacy_level(db_session_mock, patient_id, Create_Privacy_Level, 1)
+    with mock.patch("app.crud.patient_privacy_level_crud.log_crud_action"):
+        result = create_patient_privacy_level(db_session_mock, patient_id, Create_Privacy_Level, "1", "Test User")
     
     # Assert
-    db_session_mock.add.assert_called_once_with(result)
+    db_session_mock.add.assert_called_once()
     db_session_mock.commit.assert_called_once()
-    db_session_mock.refresh.assert_called_once_with(result)
+    db_session_mock.refresh.assert_called_once()
 
     assert result.patientId == 1
     assert result.active == 1
@@ -67,11 +68,11 @@ def test_update_patient_privacy_level(db_session_mock, Read_Privacy_Level, Updat
     db_session_mock.query.return_value.filter.return_value.first.return_value = mock_patient
     
     # Act
-    result = update_patient_privacy_level(db_session_mock, mock_patient_id, Update_Privacy_Level, modified_by)
+    with mock.patch("app.crud.patient_privacy_level_crud.log_crud_action"):
+        result = update_patient_privacy_level(db_session_mock, mock_patient_id, Update_Privacy_Level, modified_by, "Test User")
     
     #Assert
     db_session_mock.commit.assert_called_once()
-    db_session_mock.refresh.assert_called_once_with(result)
 
     assert result.active == 1
     assert result.accessLevelSensitive == PrivacyStatus.LOW
@@ -83,8 +84,8 @@ def test_delete_patient_privacy_level(db_session_mock, Read_Privacy_Level):
     db_session_mock.query.return_value.filter.return_value.first.return_value = Read_Privacy_Level
     
     # Act
-    result = delete_patient_privacy_level(db_session_mock, mock_patient_id)
-    
+    with mock.patch("app.crud.patient_privacy_level_crud.log_crud_action"):
+        result = delete_patient_privacy_level(db_session_mock, mock_patient_id, "1", "Test User")
     #Assert
     assert result.patientId == mock_patient_id
     

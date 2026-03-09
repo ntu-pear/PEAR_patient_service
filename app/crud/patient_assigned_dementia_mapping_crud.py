@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_assigned_dementia_list_model import PatientAssignedDementiaList
+from ..models.patient_model import Patient
 from ..models.patient_assigned_dementia_mapping_model import (
     PatientAssignedDementiaMapping,
 )
@@ -195,15 +196,25 @@ def create_assigned_dementia(
     db.commit()
     db.refresh(new_assignment)
 
+    # Fetch names for logging
+    patient = db.query(Patient).filter(Patient.PatientId == dementia_data.PatientId).first()
+    patient_name = patient.name if patient else None
+    dementia_stage_name = dementia_stage.DementiaStage if dementia_stage else None
+    dementia_type_name = dementia_type.Value if dementia_type else None
+
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
         user_full_name=user_full_name,
-        message="Created patient assigned dementia mapping",
+        message=f"Assigned dementia: {dementia_type_name} - {dementia_stage_name} to patient {patient_name}",
         table="PatientAssignedDementiaMapping",
-        entity_id=None,
+        entity_id=new_assignment.id,
         original_data=None,
         updated_data=updated_data_dict,
+        patient_id=dementia_data.PatientId,
+        patient_full_name=patient_name,
+        log_type = "dementia_assignment",
+        is_system_config=False,
     )
     return new_assignment
 
@@ -269,6 +280,16 @@ def update_assigned_dementia(
     except Exception as e:
         original_data_dict = "{}"
 
+    # Get old names before update
+    old_dementia_type = db.query(PatientAssignedDementiaList).filter(
+        PatientAssignedDementiaList.DementiaTypeListId == db_assignment.DementiaTypeListId
+    ).first()
+    old_type_name = old_dementia_type.Value if old_dementia_type else None
+    old_dementia_stage = db.query(PatientDementiaStageList).filter(
+        PatientDementiaStageList.id == db_assignment.DementiaStageId
+    ).first()
+    old_stage_name = old_dementia_stage.DementiaStage if old_dementia_stage else None
+
     # Update the assignment
     for key, value in dementia_data.model_dump(exclude_unset=True).items():
         setattr(db_assignment, key, value)
@@ -280,16 +301,41 @@ def update_assigned_dementia(
     db.commit()
     db.refresh(db_assignment)
 
+    # Fetch new names after update
+    patient = db.query(Patient).filter(Patient.id == db_assignment.PatientId).first()
+    patient_name = patient.name if patient else None
+    new_dementia_type = db.query(PatientAssignedDementiaList).filter(
+        PatientAssignedDementiaList.DementiaTypeListId == db_assignment.DementiaTypeListId
+    ).first()
+    new_type_name = new_dementia_type.Value if new_dementia_type else None
+    new_dementia_stage = db.query(PatientDementiaStageList).filter(
+        PatientDementiaStageList.id == db_assignment.DementiaStageId
+    ).first()
+    new_stage_name = new_dementia_stage.DementiaStage if new_dementia_stage else None
+
+    # Build change description
+    changes = []
+    if dementia_data.DementiaTypeListId is not None and dementia_data.DementiaTypeListId != old_dementia_type.DementiaTypeListId if old_dementia_type else False:
+        changes.append(f"Dementia type changed from {old_type_name} to {new_type_name}")
+    if dementia_data.DementiaStageId is not None and dementia_data.DementiaStageId != old_dementia_stage.id if old_dementia_stage else False:
+        changes.append(f"Dementia stage changed from {old_stage_name} to {new_stage_name}")
+
+    change_str = ", ".join(changes) if changes else "updated"
+
     updated_data_dict = serialize_data(dementia_data.model_dump())
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
         user_full_name=user_full_name,
-        message="Updated patient assigned dementia mapping",
+        message=f"Updated dementia assignment for {patient_name}: {change_str}",
         table="PatientAssignedDementiaMapping",
         entity_id=dementia_id,
         original_data=original_data_dict,
         updated_data=updated_data_dict,
+        patient_id= db_assignment.PatientId,
+        patient_full_name= patient_name,
+        log_type= "dementia_assignment",
+        is_system_config=False,
     )
     return db_assignment
 
@@ -317,6 +363,19 @@ def delete_assigned_dementia(db: Session, dementia_id: int, modified_by: str, us
     except Exception as e:
         original_data_dict = "{}"
 
+    # Get names before deletion
+    patient = db.query(Patient).filter(Patient.id == db_assignment.PatientId).first()
+    patient_name = patient.name if patient else None
+    dementia_type = db.query(PatientAssignedDementiaList).filter(
+        PatientAssignedDementiaList.DementiaTypeListId == db_assignment.DementiaTypeListId
+    ).first()
+    dementia_type_name = dementia_type.Value if dementia_type else None
+    dementia_stage = db.query(PatientDementiaStageList).filter(
+        PatientDementiaStageList.id == db_assignment.DementiaStageId
+    ).first()
+    dementia_stage_name = dementia_stage.DementiaStage if dementia_stage else None
+
+
     # Soft delete the assignment
     db_assignment.IsDeleted = "1"
     db_assignment.ModifiedDate = datetime.now()
@@ -329,10 +388,14 @@ def delete_assigned_dementia(db: Session, dementia_id: int, modified_by: str, us
         action=ActionType.DELETE,
         user=modified_by,
         user_full_name=user_full_name,
-        message="Deleted patient assigned dementia mapping",
-        table="Patient Assigned Dementia Mapping",
+        message=f"Removed dementia: {dementia_type_name} - {dementia_stage_name} from patient: {patient_name}",
+        table="PatientAssignedDementiaMapping",
         entity_id=dementia_id,
         original_data=original_data_dict,
         updated_data=None,
+        patient_id= db_assignment.PatientId,
+        patient_full_name= patient_name,
+        log_type= "dementia_assignment",
+        is_system_config= False,
     )
     return db_assignment

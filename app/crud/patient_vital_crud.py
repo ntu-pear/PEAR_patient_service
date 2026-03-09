@@ -12,6 +12,7 @@ from app.services.highlight_helper import create_highlight_if_needed
 from ..config import Config
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_vital_model import PatientVital
+from ..models.patient_model import Patient
 from ..schemas.patient_vital import (
     PatientVitalCreate,
     PatientVitalDelete,
@@ -86,6 +87,15 @@ def create_vital(
         db.add(new_vital)
         db.commit()
         db.refresh(new_vital)
+
+        # Fetch patient name for logging
+        try:
+            patient = db.query(Patient).filter(Patient.id == new_vital.PatientId).first()
+            patient_name = patient.name if patient else None
+        except Exception:
+            patient_name = None
+
+        updated_data_dict['PatientName'] = patient_name
         
         # Check if the new record needs to be inserted into Highlight table
         try:
@@ -110,11 +120,15 @@ def create_vital(
             action=ActionType.CREATE,
             user=created_by,
             user_full_name=user_full_name,
-            message="Created vital record",
+            message=f"Added vital record for patient: {patient_name or 'Unknown'}",
             table="PatientVital",
             entity_id=new_vital.Id,
             original_data=None,
             updated_data=updated_data_dict,
+            patient_id=new_vital.PatientId,
+            patient_full_name=patient_name,
+            log_type = "patient_info",
+            is_system_config = False,
         )
         return new_vital
 
@@ -169,7 +183,13 @@ def update_vital(
 
         db.commit()
         db.refresh(db_vital)
-        
+
+        # Fetch patient name
+        try:
+            patient = db.query(Patient).filter(Patient.id == db_vital.PatientId).first()
+            patient_name = patient.name if patient else None
+        except Exception:
+            patient_name = None
         
         # Check if the new record needs to be inserted into Highlight table
         try:
@@ -192,15 +212,22 @@ def update_vital(
         
 
         updated_data_dict = serialize_data(update_data)
+        updated_data_dict['PatientName'] = patient_name
+        original_data_dict['PatientName'] = patient_name
+        
         log_crud_action(
             action=ActionType.UPDATE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Updated vital record",
+            message=f"Updated vital record for patient: {patient_name or 'Unknown'}",
             table="PatientVital",
             entity_id=vital_id,
             original_data=original_data_dict,
             updated_data=updated_data_dict,
+            patient_id=db_vital.PatientId,
+            patient_full_name=patient_name,
+            log_type = "patient_info",
+            is_system_config = False,
         )
 
         return db_vital
@@ -249,6 +276,13 @@ def delete_vital(
     db_vital.ModifiedById = modified_by
 
     db.commit()
+
+    # Fetch patient name for logging
+    try:
+        patient = db.query(Patient).filter(Patient.id == db_vital.PatientId).first()
+        patient_name = patient.name if patient else None
+    except Exception:
+        patient_name = None
     
     try:
         highlights = db.query(PatientHighlight).filter(
@@ -272,15 +306,21 @@ def delete_vital(
     
     db.refresh(db_vital)
 
+    original_data_dict['PatientName'] = patient_name
+
     log_crud_action(
         action=ActionType.DELETE,
         user=modified_by,
         user_full_name=user_full_name,
-        message="Soft deleted vital record",
+        message=f"Deleted vital record for patient: {patient_name or 'Unknown'}",
         table="PatientVital",
         entity_id=vital_id,
         original_data=original_data_dict,
-        updated_data=serialize_data(db_vital),
+        updated_data={"IsDeleted": "1"},
+        patient_id=db_vital.PatientId,
+        patient_full_name=patient_name,
+        log_type = "patient_info",
+        is_system_config = False,
     )
     return db_vital
 

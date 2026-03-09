@@ -42,16 +42,22 @@ def create_reaction_type(
     db.add(db_reaction_type)
     db.commit()
     db.refresh(db_reaction_type)
+
+    # Include the allergy reaction type name in the logs
+    # This is a global config change (adding a new allergy type to the system), and is not patient focused
+    allergy_reaction_type_name = db_reaction_type.Value if db_reaction_type else None
     
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
         user_full_name=user_full_name,
-        message="Created allergy reaction type",
+        message=f"Created allergy reaction type: {allergy_reaction_type_name}",
         table="AllergyReactionType",
         entity_id=db_reaction_type.AllergyReactionTypeID,
         original_data=None,
         updated_data=updated_data_dict,
+        log_type = "system",
+        is_system_config=True,
     )
     return db_reaction_type
 
@@ -76,6 +82,9 @@ def update_reaction_type(
         except Exception as e:
             original_data_dict = "{}"
 
+        # Store the old reaction type name for message field in log
+        old_allergy_reaction_type_name = db_reaction_type.Value
+
         for key, value in reaction_type.model_dump(exclude_unset=True).items():
             setattr(db_reaction_type, key, value)
 
@@ -94,11 +103,13 @@ def update_reaction_type(
             action=ActionType.UPDATE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Updated allergy reaction type",
+            message=f"Updated allergy reaction type: {old_allergy_reaction_type_name} -> {db_reaction_type.Value}",
             table="AllergyReactionType",
             entity_id=allergy_reaction_type_id,
             original_data=original_data_dict,
             updated_data=updated_data_dict,
+            log_type = "system",
+            is_system_config=True,
         )
         return db_reaction_type
     return None
@@ -118,8 +129,9 @@ def delete_reaction_type(db: Session, allergy_reaction_type_id: int, modified_by
         except Exception as e:
             original_data_dict = "{}"
 
-        setattr(db_reaction_type, "IsDeleted", "1")
-        db_reaction_type.ModifiedById = modified_by
+        # Capture allergy reaction name before deletion
+        allergy_reaction_type_name = db_reaction_type.Value
+
         setattr(db_reaction_type, "IsDeleted", "1")
         db_reaction_type.ModifiedById = modified_by
 
@@ -129,11 +141,13 @@ def delete_reaction_type(db: Session, allergy_reaction_type_id: int, modified_by
             action=ActionType.DELETE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Deleted allergy reaction type",
-            table="Patient",
+            message=f"Deleted allergy reaction type: {allergy_reaction_type_name}",
+            table="AllergyReactionType",
             entity_id=allergy_reaction_type_id,
             original_data=original_data_dict,
             updated_data=None,
+            log_type = "system",
+            is_system_config=True,
         )
         return db_reaction_type
     return None
