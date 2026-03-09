@@ -37,6 +37,18 @@ def get_guardian_by_nric(db: Session, nric: str):
 def create_guardian(
     db: Session, guardian: PatientGuardianCreate
 ):
+    # Reject if an active patient already holds this NRIC
+    existing_patient = (
+        db.query(Patient)
+        .filter(Patient.nric == guardian.nric, Patient.isDeleted == "0", Patient.isActive == "1")
+        .first()
+    )
+    if existing_patient:
+        raise HTTPException(
+            status_code=400,
+            detail="Guardian NRIC conflicts with an existing active patient record"
+        )
+
     guardian_data = guardian.model_dump(exclude={'patientId', 'relationshipName'})
     db_guardian = PatientGuardian(**guardian_data)
     updated_data_dict = serialize_data(guardian_data)
@@ -67,7 +79,20 @@ def update_guardian(
     if not db_guardian:
         raise HTTPException(status_code=404, detail="Guardian not found")
     
-    # 2. Validate relationshipName exists in PATIENT_GUARDIAN_RELATIONSHIP_MAPPING table
+    # 2. Reject if an active patient already holds the new NRIC
+    if guardian.nric != db_guardian.nric:
+        existing_patient = (
+            db.query(Patient)
+            .filter(Patient.nric == guardian.nric, Patient.isDeleted == "0", Patient.isActive == "1")
+            .first()
+        )
+        if existing_patient:
+            raise HTTPException(
+                status_code=400,
+                detail="Guardian NRIC conflicts with an existing active patient record"
+            )
+
+    # 3. Validate relationshipName exists in PATIENT_GUARDIAN_RELATIONSHIP_MAPPING table
     relationship_mapping = patient_guardian_relationship_mapping_crud.get_relationshipId_by_relationshipName(
         db, guardian.relationshipName
     )
@@ -84,7 +109,7 @@ def update_guardian(
     except Exception as e:
         original_data_dict = "{}"
     
-    # 3. Update guardian info (excluding patientId and relationshipName)
+    # 4. Update guardian info (excluding patientId and relationshipName)
     guardian_data = guardian.model_dump(exclude={'patientId', 'relationshipName'})
     for key, value in guardian_data.items():
         setattr(db_guardian, key, value)
@@ -106,7 +131,7 @@ def update_guardian(
         log_type= "system",
     )
     
-    # 4. Update the relationship mapping in PATIENT_PATIENT_GUARDIAN table
+    # 5. Update the relationship mapping in PATIENT_PATIENT_GUARDIAN table
     db_patient_guardian_relationship = (
         db.query(PatientPatientGuardian)
         .filter(
