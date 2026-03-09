@@ -8,7 +8,7 @@ from ..crud.patient_social_history_crud import get_patient_social_history
 from ..crud.social_history_sensitive_mapping_crud import get_all_sensitive_social_history
 from ..crud.patient_allocation_crud import get_guardian_id_by_patient
 from ..database import get_db
-from ..auth.jwt_utils import extract_jwt_payload, get_user_id, get_role_name
+from ..auth.jwt_utils import extract_jwt_payload, get_user_id, get_role_name, get_full_name
 from ..models.patient_privacy_level_model import PrivacyStatus
 
 router = APIRouter()
@@ -28,29 +28,29 @@ def read_privacy_levels(skip: int = 0, limit: int = 10, db: Session = Depends(ge
 @router.post("/privacy_levels/add", response_model=PatientPrivacyLevel)
 def create_new_privacy_level_setting(request: Request, patient_id: str, privacy_level_setting: PatientPrivacyLevelCreate, db: Session = Depends(get_db), require_auth: bool = True):
     payload = extract_jwt_payload(request, require_auth)
-    user_id = get_user_id(payload)
+    user_id = get_user_id(payload) or "1"
     role_name = get_role_name(payload)
-    
+    user_full_name = get_full_name(payload) or "Anonymous User"
     is_supervisor = role_name == "SUPERVISOR"
     valid_primary_guardian = role_name == "GUARDIAN" and user_id == get_guardian_id_by_patient(db, patient_id)
 
     if not is_supervisor and not valid_primary_guardian:
         raise HTTPException(status_code=404, detail="User is not authorised")
-    
-    return create_patient_privacy_level(db=db, patient_id=patient_id, patient_privacy_level=privacy_level_setting, created_by=1)
+
+    return create_patient_privacy_level(db=db, patient_id=patient_id, patient_privacy_level=privacy_level_setting, created_by=user_id, user_full_name=user_full_name)
 
 @router.put("/privacy_levels/update/{patient_id}", response_model=PatientPrivacyLevel)
 def update_existing_privacy_level_setting(request: Request, patient_id: str, privacy_level_setting: PatientPrivacyLevelUpdate, db: Session = Depends(get_db), require_auth: bool = True):
     payload = extract_jwt_payload(request, require_auth)
-    user_id = get_user_id(payload)
+    user_id = get_user_id(payload) or "1"
     role_name = get_role_name(payload)
-    
+    user_full_name = get_full_name(payload) or "Anonymous User"
     is_supervisor = role_name == "SUPERVISOR"
     valid_primary_guardian = role_name == "GUARDIAN" and user_id == get_guardian_id_by_patient(db, patient_id)
     if not is_supervisor and not valid_primary_guardian:
         raise HTTPException(status_code=404, detail="User is not authorised")
-    
-    db_privacy_setting = update_patient_privacy_level(db=db, patient_id=patient_id, patient_privacy_level=privacy_level_setting, modified_by=1)
+
+    db_privacy_setting = update_patient_privacy_level(db=db, patient_id=patient_id, patient_privacy_level=privacy_level_setting, modified_by=user_id, user_full_name=user_full_name)
     if db_privacy_setting is None:
         raise HTTPException(status_code=404, detail="Privacy setting not found")
     
@@ -59,15 +59,15 @@ def update_existing_privacy_level_setting(request: Request, patient_id: str, pri
 @router.delete("/privacy_levels/delete/{patient_id}", response_model=PatientPrivacyLevel)
 def delete_existing_privacy_level_setting(request: Request, patient_id: str, db: Session = Depends(get_db), require_auth: bool = True):
     payload = extract_jwt_payload(request, require_auth)
-    user_id = get_user_id(payload)
+    user_id = get_user_id(payload) or "1"
     role_name = get_role_name(payload)
-    
+    user_full_name = get_full_name(payload) or "Anonymous User"
     is_supervisor = role_name == "SUPERVISOR"
     valid_primary_guardian = role_name == "GUARDIAN" and user_id == get_guardian_id_by_patient(db, patient_id)
     if not is_supervisor and not valid_primary_guardian:
         raise HTTPException(status_code=404, detail="User is not authorised")
-    
-    db_privacy_setting = delete_patient_privacy_level(db=db, patient_id=patient_id)
+
+    db_privacy_setting = delete_patient_privacy_level(db=db, patient_id=patient_id, modified_by=user_id, user_full_name=user_full_name)
     if db_privacy_setting is None:
         raise HTTPException(status_code=404, detail="Privacy setting not found")
     return db_privacy_setting
