@@ -71,7 +71,7 @@ def update_all_sensitive_mapping(db: Session, social_history_list: List[SocialHi
             user_full_name=user_full_name,
             message = f"Updated social history sensitive mapping: {record.socialHistoryItem} (Sensitive: {record.isSensitive})",
             table="SocialHistorySensitiveMapping",
-            entity_id = record.socialHistoryItem.id,
+            entity_id = record.id,
             original_data = original_data,
             updated_data = updated_data,
             log_type = "system",
