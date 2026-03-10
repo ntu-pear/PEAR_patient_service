@@ -22,7 +22,6 @@ def get_all_patient_guardian_by_patientId(db: Session, patientId: int):
         .filter(
             PatientPatientGuardian.patientId == patientId,
             PatientPatientGuardian.isDeleted == '0',       
-            PatientPatientGuardian.active == 'Y',          
             PatientGuardian.isDeleted == '0',              
             PatientGuardian.active == 'Y',                 
             PatientGuardianRelationshipMapping.isDeleted == '0' 
@@ -60,7 +59,6 @@ def get_all_patient_patient_guardian_by_guardianId(db: Session, UserId: str):
         .filter(
             PatientGuardian.guardianApplicationUserId == UserId,
             PatientPatientGuardian.isDeleted == '0',       
-            PatientPatientGuardian.active == 'Y',          
             PatientGuardian.isDeleted == '0',              
             PatientGuardian.active == 'Y',                 
             PatientGuardianRelationshipMapping.isDeleted == '0'
@@ -104,7 +102,6 @@ def get_all_patient_patient_guardian_by_guardianNRIC(db: Session, nric: str):
         .filter(
             PatientGuardian.nric == nric,
             PatientPatientGuardian.isDeleted == '0',       
-            PatientPatientGuardian.active == 'Y',          
             PatientGuardian.isDeleted == '0',              
             PatientGuardian.active == 'Y',                 
             PatientGuardianRelationshipMapping.isDeleted == '0' 
@@ -146,7 +143,6 @@ def get_patient_patient_guardian_by_guardianId_and_patientId(db: Session, guardi
             PatientPatientGuardian.guardianId == guardianId,
             PatientPatientGuardian.patientId == patientId,
             PatientPatientGuardian.isDeleted == '0', 
-            PatientPatientGuardian.active == 'Y'     
         )
         .first()
     )
@@ -193,7 +189,7 @@ def update_patient_patient_guardian(db: Session, id: int, patientPatientGuradian
             original_data_dict = {
                 k: serialize_data(v) for k, v in db_relationship.__dict__.items() if not k.startswith("_")
             }
-        except Exception as e:
+        except Exception:
             original_data_dict = "{}"
 
         for key, value in patientPatientGuradian.model_dump().items():
@@ -244,7 +240,7 @@ def delete_patient_patient_guardian_by_guardianId(db: Session, guardianId: int):
             original_data_dict = {
                 k: serialize_data(v) for k, v in db_relationship.__dict__.items() if not k.startswith("_")
             }
-        except Exception as e:
+        except Exception:
             original_data_dict = "{}"
 
         setattr(db_relationship, "isDeleted", "1")
@@ -291,7 +287,7 @@ def delete_relationship(db: Session, id: int):
             original_data_dict = {
                 k: serialize_data(v) for k, v in db_relationship.__dict__.items() if not k.startswith("_")
             }
-        except Exception as e:
+        except Exception:
             original_data_dict = "{}"
 
         setattr(db_relationship, "isDeleted", "1")
