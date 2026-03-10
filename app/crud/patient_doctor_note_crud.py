@@ -100,7 +100,7 @@ def delete_doctor_note(db: Session, note_id: int, user_id: str, user_full_name: 
         except Exception as e:
             original_data_dict = "{}"
 
-        patient = db.query(Patient).filter(Patient.PatientId == db_doctor_note.patientId).first()
+        patient = db.query(Patient).filter(Patient.id == db_doctor_note.patientId).first()
         patient_name = patient.name if patient else None
 
         setattr(db_doctor_note, 'isDeleted', '1')
