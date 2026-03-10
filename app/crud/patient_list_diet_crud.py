@@ -18,7 +18,7 @@ def get_diet_type_by_id(db: Session, diet_type_id: int):
         .first()
     )
 
-def create_diet_type(db: Session, diet_type: PatientDietListTypeCreate, created_by: int):
+def create_diet_type(db: Session, diet_type: PatientDietListTypeCreate, created_by: str):
     db_diet_type = PatientDietList(
         **diet_type.model_dump(), CreatedById=created_by, ModifiedById=created_by
     )
