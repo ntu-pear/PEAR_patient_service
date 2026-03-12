@@ -9,12 +9,9 @@ class PatientMedicalDiagnosisListBase(BaseModel):
     IsDeleted: Optional[str] = Field(default="0", json_schema_extra={"example": "0"})
 
 class PatientMedicalDiagnosisListCreate(PatientMedicalDiagnosisListBase):
-    # CreatedByID: str = Field(json_schema_extra={"example": "1"})
-    # ModifiedByID: str = Field(json_schema_extra={"example": "1"})
     pass
 
 class PatientMedicalDiagnosisListUpdate(PatientMedicalDiagnosisListBase):
-    # ModifiedByID: str = Field(json_schema_extra={"example": "1"})
     pass
 
 class PatientMedicalDiagnosisList(PatientMedicalDiagnosisListBase):

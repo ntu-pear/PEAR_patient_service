@@ -24,7 +24,7 @@ class PatientPhoto(Base):
     # Relationship with Patient
     patient = relationship("Patient", back_populates="photos")
 
-    # Fix: Ensure album_category refers to PatientPhotoListAlbum
+    # Ensure album_category refers to PatientPhotoListAlbum
     album_category = relationship(
         "PatientPhotoListAlbum",
         back_populates="photos",
