@@ -20,10 +20,6 @@ from ..schemas.patient_personal_preference import (
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 def _validate_is_like_for_type(is_like: Optional[str], preference_type: str):
     """
     Enforce IsLike rules based on preference type:

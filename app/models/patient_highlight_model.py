@@ -19,8 +19,8 @@ class PatientHighlight(Base):
     HighlightText = Column(String(500), nullable=False)  # Display text (e.g., "High BP: 180/110 mmHg")
     
     # Source Tracking - Links back to original record
-    SourceTable = Column(String(50), nullable=False)      # Table name (e.g., "PATIENT_VITAL")
-    SourceRecordId = Column(Integer, nullable=False)      # ID in source table
+    SourceTable = Column(String(50), nullable=False) # Table name (e.g., "PATIENT_VITAL")
+    SourceRecordId = Column(Integer, nullable=False) # ID in source table
     
     # Audit Fields
     CreatedDate = Column(DateTime, nullable=False, default=datetime.now)
@@ -31,9 +31,7 @@ class PatientHighlight(Base):
     
     # Relationships
     patient = relationship("Patient", back_populates="highlights")
-    # highlight_type = relationship("PatientHighlightType", back_populates="highlights")
 
-    # _highlight_type = relationship("PatientHighlightType", back_populates="highlights")
     _highlight_type = relationship(
         "PatientHighlightType",
         foreign_keys=[HighlightTypeId],
