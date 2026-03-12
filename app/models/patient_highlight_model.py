@@ -10,31 +10,6 @@ from app.database import Base
 class PatientHighlight(Base):
     __tablename__ = "PATIENT_HIGHLIGHT"
 
-    # Id = Column(Integer, primary_key=True, index=True)
-    # IsDeleted = Column(String(1), default="0", nullable=False)
-    # PatientId = Column(Integer, ForeignKey("PATIENT.id"), nullable=False)
-    # Type = Column(String(255), nullable=False)
-    # HighlightJSON = Column(String(255), nullable=False)
-    # StartDate = Column(DateTime, nullable=False)
-    # EndDate = Column(DateTime, nullable=False)
-    # CreatedDate = Column(DateTime, nullable=False, default=datetime.now)
-    # ModifiedDate = Column(DateTime, nullable=False, default=datetime.now)
-    # CreatedById = Column(String, nullable=False)  # Changed to String
-    # ModifiedById = Column(String, nullable=False)  # Changed to String
-    
-    # patient = relationship("Patient", back_populates="highlights")
-    
-    """
-    Patient Highlight Model - V3 Ultra-Simplified
-    
-    Stores highlight records for patients with links to source data.
-    Each highlight links to:
-    - A patient (PatientId)
-    - A highlight type (HighlightTypeId)
-    - The source record that triggered it (SourceTable + SourceRecordId)
-    """
-    __tablename__ = "PATIENT_HIGHLIGHT"
-
     # Primary Key
     Id = Column(Integer, primary_key=True, index=True)
     
@@ -77,4 +52,5 @@ class PatientHighlight(Base):
         """Return type code (e.g., 'VITAL')"""
         if self._highlight_type:
             return self._highlight_type.TypeCode
+
         return None    
