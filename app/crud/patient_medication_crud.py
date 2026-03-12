@@ -12,6 +12,7 @@ from app.services.highlight_helper import create_highlight_if_needed
 
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_medication_model import PatientMedication
+from ..models.patient_model import Patient
 from ..models.patient_prescription_list_model import PatientPrescriptionList
 from ..schemas.patient_medication import (
     PatientMedicationCreate,
@@ -302,7 +303,8 @@ def create_medication(
         # Log the action - Fetch the relevant names to enrich the logs
         medication_dict = _medication_to_dict_with_prescription_name(medication_for_event, db)
         prescription_name = medication_dict.get('PrescriptionName')
-        patient_name = medication_dict.get('PatientName')
+        patient = db.query(Patient).filter(Patient.id == new_medication.PatientId).first()
+        patient_name = patient.name if patient else None
 
         updated_data_dict = serialize_data(medication_data.model_dump())
 
@@ -505,7 +507,8 @@ def update_medication(
         updated_medication_dict = _medication_to_dict_with_explicit_prescription_name(
             db, db_medication, target_prescription_id)
         prescription_name = updated_medication_dict.get('PrescriptionName')
-        patient_name = updated_medication_dict.get('PatientName')
+        patient = db.query(Patient).filter(Patient.id == db_medication.PatientId).first()
+        patient_name = patient.name if patient else None
 
         original_medication_dict = _medication_to_dict_with_explicit_prescription_name(
             db, db_medication, original_prescription_list_id
@@ -642,7 +645,8 @@ def delete_medication(
 
         # Log the action
         prescription_name = medication_dict.get("PrescriptionName")
-        patient_name = medication_dict.get("PatientName")
+        patient = db.query(Patient).filter(Patient.id == db_medication.PatientId).first()
+        patient_name = patient.name if patient else None
 
         original_data_dict['PrescriptionName'] = prescription_name
         original_data_dict['PatientName'] = patient_name
