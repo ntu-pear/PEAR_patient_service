@@ -197,7 +197,7 @@ def create_assigned_dementia(
     db.refresh(new_assignment)
 
     # Fetch names for logging
-    patient = db.query(Patient).filter(Patient.PatientId == dementia_data.PatientId).first()
+    patient = db.query(Patient).filter(Patient.id == dementia_data.PatientId).first()
     patient_name = patient.name if patient else None
     dementia_stage_name = dementia_stage.DementiaStage if dementia_stage else None
     dementia_type_name = dementia_type.Value if dementia_type else None
