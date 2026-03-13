@@ -42,22 +42,11 @@ def create_ref_userconfig(
 
             logger.info(f"Creating new user config {userconfig.UserConfigId}")
 
-            query = text("""
-                INSERT INTO [REF_USERCONFIG] (
-                    UserConfigID, configBlob, modifiedDate, modifiedById
-                ) VALUES (
-                    :UserConfigID, :configBlob, :modifiedDate, :modifiedById
-                )
-            """)
-
-            params = {
-                "UserConfigID": userconfig.UserConfigId,
-                "configBlob": json.dumps(userconfig.configBlob),
-                "modifiedDate": userconfig.modifiedDate,
-                "modifiedById": created_by,
-            }
-
-            db.execute(query, params)
+            new_userconfig = RefUserConfig(UserConfigID=userconfig.UserConfigId,
+                                            configBlob=json.dumps(userconfig.configBlob),
+                                            modifiedDate=userconfig.modifiedDate,
+                                            modifiedById=created_by)
+            db.add(new_userconfig)
             db.flush()
 
             # Return the created user config
