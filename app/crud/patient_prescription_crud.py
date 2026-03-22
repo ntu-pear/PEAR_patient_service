@@ -10,8 +10,8 @@ from app.models.patient_highlight_model import PatientHighlight
 from app.services.highlight_helper import create_highlight_if_needed
 
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
-from ..models.patient_prescription_model import PatientPrescription
 from ..models.patient_model import Patient
+from ..models.patient_prescription_model import PatientPrescription
 from ..schemas.patient_prescription import (
     PatientPrescriptionCreate,
     PatientPrescriptionUpdate,
@@ -80,7 +80,6 @@ def create_prescription(
         raise HTTPException(status_code=400, detail="Duplicate prescription for the same patient and prescription list.")
     
     try:
-        
         
         # Exclude any fields you set manually (like CreatedDateTime, etc.)
         data_dict = prescription_data.model_dump(
