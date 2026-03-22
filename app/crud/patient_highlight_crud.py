@@ -65,9 +65,9 @@ def get_enabled_highlights(db: Session):
         .join(PatientHighlightType, PatientHighlight.HighlightTypeId == PatientHighlightType.Id)
         .options(joinedload(PatientHighlight._highlight_type))
         .filter(
-            PatientHighlight.IsDeleted == "0",           # Highlight not deleted
-            PatientHighlightType.IsDeleted == "0",   # Type not deleted
-            PatientHighlightType.IsEnabled == "1"     # Type is enabled
+            PatientHighlight.IsDeleted == "0", # Highlight not deleted
+            PatientHighlightType.IsDeleted == "0", # Type not deleted
+            PatientHighlightType.IsEnabled == "1" # Type is enabled
         )
         .order_by(PatientHighlight.PatientId, PatientHighlight.CreatedDate.desc())
         .all()
@@ -80,10 +80,10 @@ def get_enabled_highlights_by_patient(db: Session, patient_id: int):
         .join(PatientHighlightType, PatientHighlight.HighlightTypeId == PatientHighlightType.Id)
         .options(joinedload(PatientHighlight._highlight_type))
         .filter(
-            PatientHighlight.PatientId == patient_id,  # Specific patient
-            PatientHighlight.IsDeleted == "0",           # Highlight not deleted
-            PatientHighlightType.IsDeleted == "0",   # Type not deleted
-            PatientHighlightType.IsEnabled == "1"     # Type is enabled
+            PatientHighlight.PatientId == patient_id, # Specific patient
+            PatientHighlight.IsDeleted == "0", # Highlight not deleted
+            PatientHighlightType.IsDeleted == "0", # Type not deleted
+            PatientHighlightType.IsEnabled == "1" # Type is enabled
         )
         .order_by(PatientHighlight.CreatedDate.desc())
         .all()
@@ -287,7 +287,7 @@ def cleanup_old_highlights(db: Session):
             # HARD DELETE each highlight (permanently remove from database)
             for highlight in old_highlights:
                 deleted_ids.append(highlight.Id)
-                db.delete(highlight)  # Hard Delete instead of setting IsDeleted=1
+                db.delete(highlight) # Hard Delete instead of setting IsDeleted=1
             
             if deleted_count > 0:
                 details.append({
