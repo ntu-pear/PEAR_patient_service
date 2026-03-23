@@ -1,0 +1,306 @@
+from typing import Dict, Any, Optional, List, Callable
+from datetime import datetime, date
+import logging
+
+logger = logging.getLogger(__name__)
+
+class MapperUtil:
+    """
+    Universal mapper that handles all source-to-target transformations
+    Easy to configure and maintain for up to 10 source-destination pairs
+    """
+    
+    def __init__(self):
+        # Mapping configurations - easily add new ones here
+        self.mapping_configs = {
+            # User Service → Patient Service
+            'user_service_to_patient': {
+                'source_service': 'user-service',
+                'target_service': 'patient-service',
+                'entity_type': 'userconfig',
+                'required_fields': ['id', 'configBlob'],
+                'field_mappings': {
+                    # Direct mappings (source_field: target_field)
+                    'id': 'UserConfigId',
+                    'configBlob': 'configBlob',
+                    'modifiedDate': 'modifiedDate',
+                    'modifiedById': 'modifiedById',
+                },
+                'field_transforms': {
+                    # Special transformations (target_field: transform_function)
+                    'modifiedDate': lambda x: self._parse_datetime(x) or datetime.now(),
+                },
+                'defaults': {
+                    'modifiedDate': datetime.now(),
+                    'modifiedById': 'user_service',
+                },
+            }
+        }
+    def map_data(self, source_data: Dict[str, Any], mapping_key: str, 
+                 operation: str = 'create') -> Optional[Dict[str, Any]]:
+        """
+        Universal mapping function
+        
+        Args:
+            source_data: Source data dictionary
+            mapping_key: Key for mapping config (e.g., 'patient_service_to_scheduler')
+            operation: 'create' or 'update'
+            
+        Returns:
+            Mapped data dictionary or None if mapping fails
+        """
+        try:
+            config = self.mapping_configs.get(mapping_key)
+            if not config:
+                logger.error(f"Mapping configuration not found: {mapping_key}")
+                return None
+            
+            # Validate required fields for create operations
+            if operation == 'create':
+                if not self._validate_required_fields(source_data, config['required_fields']):
+                    return None
+            
+            mapped_data = {}
+            
+            # Apply field mappings
+            for source_field, target_field in config['field_mappings'].items():
+                if source_field in source_data:
+                    value = source_data[source_field]
+                    
+                    # Debug logging for timestamp fields
+                    if target_field == 'UpdatedDateTime':
+                        logger.debug(f"Processing timestamp: {source_field}={value} (type: {type(value)})")
+                    
+                    # Apply transformation if defined
+                    if target_field in config.get('field_transforms', {}):
+                        transform_func = config['field_transforms'][target_field]
+                        try:
+                            transformed_value = transform_func(value)
+                            if target_field == 'UpdatedDateTime':
+                                logger.debug(f"Transformed to: {transformed_value} (type: {type(transformed_value)})")
+                            value = transformed_value
+                        except Exception as e:
+                            logger.warning(f"Transform failed for {target_field}: {e}")
+                            continue
+                    
+                    # Only add non-None values for updates
+                    if operation == 'update' and value is None:
+                        if target_field == 'UpdatedDateTime':
+                            logger.error(f"UpdatedDateTime is None after transform! Source: {source_field}={source_data.get(source_field)}")
+                        continue
+                        
+                    mapped_data[target_field] = value
+            
+            # Apply defaults for create operations or when required fields are missing
+            if operation == 'create':
+                for target_field, default_value in config.get('defaults', {}).items():
+                    if target_field not in mapped_data:
+                        mapped_data[target_field] = default_value
+            elif operation == 'update':
+                # For updates, ONLY default ModifiedById if missing
+                # UpdatedDateTime should ALWAYS come from source data
+                critical_defaults = {'ModifiedById'}  # Removed UpdatedDateTime
+                for target_field, default_value in config.get('defaults', {}).items():
+                    if target_field in critical_defaults and target_field not in mapped_data:
+                        mapped_data[target_field] = default_value
+            
+            if not mapped_data:
+                logger.warning(f"No mappable fields found for {mapping_key}")
+                return None
+            
+            self._log_mapping_success(config, source_data.get('id'), operation)
+            return mapped_data
+            
+        except Exception as e:
+            logger.error(f"Mapping failed for {mapping_key}: {str(e)}")
+            logger.error(f"Source data: {source_data}")
+            return None
+    
+    def get_mapping_info(self, mapping_key: str) -> Optional[Dict[str, Any]]:
+        """Get information about a specific mapping configuration"""
+        config = self.mapping_configs.get(mapping_key)
+        if not config:
+            return None
+            
+        return {
+            'source_service': config['source_service'],
+            'target_service': config['target_service'],
+            'entity_type': config['entity_type'],
+            'mapped_fields': len(config['field_mappings']),
+            'ignored_fields': len(config['ignored_fields']),
+            'field_mappings': config['field_mappings'],
+            'has_transforms': len(config.get('field_transforms', {})) > 0,
+            'defaults': config.get('defaults', {})
+        }
+    
+    def list_all_mappings(self) -> List[str]:
+        """List all available mapping keys"""
+        return [key for key in self.mapping_configs.keys() if key != 'template_mapping']
+    
+    def add_mapping_config(self, mapping_key: str, config: Dict[str, Any]):
+        """Add a new mapping configuration"""
+        self.mapping_configs[mapping_key] = config
+        logger.info(f"Added new mapping configuration: {mapping_key}")
+    
+    def update_field_mapping(self, mapping_key: str, source_field: str, target_field: str):
+        """Update a single field mapping - useful for column changes"""
+        if mapping_key in self.mapping_configs:
+            self.mapping_configs[mapping_key]['field_mappings'][source_field] = target_field
+            logger.info(f"Updated {mapping_key}: {source_field} → {target_field}")
+        else:
+            logger.error(f"Mapping configuration not found: {mapping_key}")
+    
+    def remove_field_mapping(self, mapping_key: str, source_field: str):
+        """Remove a field mapping"""
+        if mapping_key in self.mapping_configs:
+            config = self.mapping_configs[mapping_key]
+            if source_field in config['field_mappings']:
+                del config['field_mappings'][source_field]
+                logger.info(f"Removed field mapping {mapping_key}: {source_field}")
+    
+    def add_ignored_field(self, mapping_key: str, field_name: str):
+        """Add a field to ignore list"""
+        if mapping_key in self.mapping_configs:
+            ignored_fields = self.mapping_configs[mapping_key].get('ignored_fields', [])
+            if field_name not in ignored_fields:
+                ignored_fields.append(field_name)
+                logger.info(f"Added ignored field {mapping_key}: {field_name}")
+    
+    # Helper methods
+    def _validate_required_fields(self, data: Dict[str, Any], required_fields: List[str]) -> bool:
+        """Validate required fields are present"""
+        missing = [field for field in required_fields if field not in data or data[field] is None]
+        if missing:
+            logger.error(f"Missing required fields: {missing}")
+            return False
+        return True
+    
+    def _parse_datetime(self, datetime_str: Any) -> Optional[datetime]:
+        """Parse datetime string consistently WITHOUT timezone conversion"""
+        if not datetime_str:
+            return None
+        
+        try:
+            if isinstance(datetime_str, str):
+                if 'T' in datetime_str:
+                    # DON'T add timezone info - keep it as naive datetime
+                    # Remove any existing timezone markers
+                    clean_str = datetime_str.replace('Z', '').replace('+00:00', '')
+                    return datetime.fromisoformat(clean_str)
+                else:
+                    # Try datetime format first
+                    try:
+                        return datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
+                    except ValueError:
+                        # If that fails, try date-only format and add default time
+                        try:
+                            date_part = datetime.strptime(datetime_str, '%Y-%m-%d')
+                            return date_part.replace(hour=0, minute=0, second=0)
+                        except ValueError:
+                            # Try ISO date format
+                            clean_str = datetime_str.replace('Z', '').replace('+00:00', '')
+                            return datetime.fromisoformat(clean_str)
+            elif isinstance(datetime_str, datetime):
+                return datetime_str
+            return None
+        except Exception as e:
+            logger.warning(f"Failed to parse datetime: {datetime_str}, error: {str(e)}")
+            return None
+    
+    def _parse_date(self, date_str: Any) -> Optional[date]:
+        """Parse date string consistently"""
+        if not date_str:
+            return None
+        
+        try:
+            from datetime import date
+            if isinstance(date_str, str):
+                # Handle ISO format dates
+                if 'T' in date_str:
+                    return datetime.fromisoformat(date_str.replace('Z', '+00:00')).date()
+                else:
+                    return datetime.strptime(date_str, '%Y-%m-%d').date()
+            elif isinstance(date_str, datetime):
+                return date_str.date()
+            elif isinstance(date_str, date):
+                return date_str
+            return None
+        except Exception as e:
+            logger.warning(f"Failed to parse date: {date_str}, error: {str(e)}")
+            return None
+    
+    def _convert_boolean(self, value: Any, default: str = "0") -> str:
+        """Convert boolean values to string representation for database"""
+        if value is None:
+            return default
+        if isinstance(value, bool):
+            return "1" if value else "0"
+        if isinstance(value, str):
+            # Handle string boolean representations
+            if value.lower() in ('true', '1', 'yes'):
+                return "1"
+            elif value.lower() in ('false', '0', 'no'):
+                return "0"
+        # For numeric values
+        try:
+            return "1" if int(value) else "0"
+        except (ValueError, TypeError):
+            return default
+    
+    def _convert_preference_value(self, value: Any, default: str = "0") -> str:
+        """Convert preference values to string representation (-1, 0, 1)"""
+        if value is None:
+            return default
+        
+        # Handle numeric values directly
+        if isinstance(value, (int, float)):
+            if value < 0:
+                return "-1"
+            elif value > 0:
+                return "1"
+            else:
+                return "0"
+        
+        # Handle string representations
+        if isinstance(value, str):
+            value_lower = value.lower().strip()
+            if value_lower in ('dislike', 'negative', 'no', 'false', '-1'):
+                return "-1"
+            elif value_lower in ('like', 'positive', 'yes', 'true', '1'):
+                return "1"
+            elif value_lower in ('neutral', 'none', '0'):
+                return "0"
+            # Try to convert to int
+            try:
+                int_val = int(float(value))
+                if int_val < 0:
+                    return "-1"
+                elif int_val > 0:
+                    return "1"
+                else:
+                    return "0"
+            except (ValueError, TypeError):
+                pass
+        
+        # Handle boolean (True = 1, False = 0, no -1 from boolean)
+        if isinstance(value, bool):
+            return "1" if value else "0"
+        
+        return default
+    
+    def _log_mapping_success(self, config: Dict[str, Any], source_id: Any, operation: str):
+        """Log successful mapping"""
+        logger.info(f"{operation.upper()} mapping: {config['source_service']} → "
+                   f"{config['target_service']} ({config['entity_type']} ID: {source_id})")
+
+
+# Global instance for easy import
+mapper = MapperUtil()
+
+def map_userconfig_create(source_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Map user config data for create operation"""
+    return mapper.map_data(source_data, 'user_service_to_patient', 'create')
+
+def map_userconfig_update(source_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Map user config data for update operation"""
+    return mapper.map_data(source_data, 'user_service_to_patient', 'update')
