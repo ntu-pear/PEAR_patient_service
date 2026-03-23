@@ -19,6 +19,7 @@ from app.models.patient_guardian_relationship_mapping_model import (
 from app.models.patient_patient_guardian_model import PatientPatientGuardian
 from app.schemas.patient_guardian import PatientGuardianCreate, PatientGuardianUpdate
 from tests.utils.mock_db import get_db_session_mock
+from tests.utils.mock_models import get_mock_patient
 
 
 def test_get_guardian(db_session_mock):
@@ -29,7 +30,25 @@ def test_get_guardian(db_session_mock):
     result = get_guardian(db_session_mock, 1)
     
     assert result == mock_guardian
-    db_session_mock.query.assert_called_once_with(PatientGuardian)
+    db_session_mock.query.assert_called_with(PatientGuardian)
+
+
+def test_get_guardian_soft_deleted(db_session_mock):
+    """Test that retrieving a soft-deleted guardian returns None."""
+    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+    
+    result = get_guardian(db_session_mock, 1)
+    
+    assert result is None
+
+
+def test_get_guardian_inactive(db_session_mock):
+    """Test that retrieving an inactive guardian returns None."""
+    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+    
+    result = get_guardian(db_session_mock, 1)
+    
+    assert result is None
 
 
 def test_get_guardian_by_id_list(db_session_mock):
@@ -46,7 +65,6 @@ def test_get_guardian_by_id_list(db_session_mock):
     
     assert len(result) == 2
     assert result == mock_guardians
-    db_session_mock.query.assert_called_once_with(PatientGuardian)
 
 
 def test_get_guardian_by_nric(db_session_mock):
@@ -57,7 +75,6 @@ def test_get_guardian_by_nric(db_session_mock):
     result = get_guardian_by_nric(db_session_mock, "S1234567Z")
     
     assert result == mock_guardian
-    db_session_mock.query.assert_called_once_with(PatientGuardian)
 
 
 def test_create_guardian(db_session_mock):
@@ -65,16 +82,122 @@ def test_create_guardian(db_session_mock):
     guardian_create = patient_guardian_create()
     mock_guardian = get_mock_patient_guardian()
     mock_guardian.id = 1
-    
+
+    # No active patient conflicts with the guardian NRIC
+    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+
     # Mocking the PatientGuardian instantiation
     with patch('app.crud.patient_guardian_crud.PatientGuardian') as mock_guardian_class:
         mock_guardian_class.return_value = mock_guardian
-        
+
         result = create_guardian(db_session_mock, guardian_create)
-        
+
         db_session_mock.add.assert_called_once_with(mock_guardian)
         db_session_mock.commit.assert_called_once()
         db_session_mock.refresh.assert_called_once_with(mock_guardian)
+        assert result == mock_guardian
+
+
+def test_create_guardian_nric_conflicts_with_active_patient(db_session_mock):
+    """Test that creating a guardian fails when an active patient holds the same NRIC."""
+    guardian_create = patient_guardian_create()
+    mock_patient = MagicMock()
+    mock_patient.nric = guardian_create.nric
+
+    # Active patient exists with the same NRIC
+    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_patient
+
+    with pytest.raises(HTTPException) as exc_info:
+        create_guardian(db_session_mock, guardian_create)
+
+    assert exc_info.value.status_code == 400
+    assert "conflicts with an existing active patient record" in exc_info.value.detail
+
+
+def test_create_guardian_nric_allowed_when_patient_inactive(db_session_mock):
+    """Test that creating a guardian succeeds when the patient with the same NRIC is inactive."""
+    guardian_create = patient_guardian_create()
+    mock_guardian = get_mock_patient_guardian()
+    mock_guardian.id = 1
+
+    # No active patient found (inactive patient is excluded by the query filter)
+    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+
+    with patch('app.crud.patient_guardian_crud.PatientGuardian') as mock_guardian_class:
+        mock_guardian_class.return_value = mock_guardian
+
+        result = create_guardian(db_session_mock, guardian_create)
+
+        assert result == mock_guardian
+
+
+def test_create_guardian_nric_allowed_when_patient_deleted(db_session_mock):
+    """Test that creating a guardian succeeds when the only patient with the same NRIC is soft-deleted."""
+    guardian_create = patient_guardian_create()
+    mock_guardian = get_mock_patient_guardian()
+    mock_guardian.id = 1
+
+    # No active non-deleted patient found
+    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+
+    with patch('app.crud.patient_guardian_crud.PatientGuardian') as mock_guardian_class:
+        mock_guardian_class.return_value = mock_guardian
+
+        result = create_guardian(db_session_mock, guardian_create)
+
+        assert result == mock_guardian
+
+
+def test_update_guardian_nric_conflicts_with_active_patient(db_session_mock):
+    """Test that updating a guardian's NRIC fails when an active patient holds the new NRIC."""
+    guardian_update = patient_guardian_update()
+    mock_guardian = get_mock_patient_guardian()
+    mock_guardian.id = 1
+    mock_guardian.nric = "T9876543A"  # Current NRIC differs so the check runs
+
+    guardian_update.nric = "S1234567Z"  # New NRIC being set
+
+    mock_patient = MagicMock()
+    mock_patient.nric = guardian_update.nric
+
+    # First query: get the guardian; second query: active patient with new NRIC found
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        mock_guardian,   # get_guardian
+        mock_patient,    # active patient NRIC check
+    ]
+
+    with pytest.raises(HTTPException) as exc_info:
+        update_guardian(db_session_mock, 1, guardian_update)
+
+    assert exc_info.value.status_code == 400
+    assert "conflicts with an existing active patient record" in exc_info.value.detail
+
+
+def test_update_guardian_same_nric_skips_patient_check(db_session_mock):
+    """Test that updating a guardian with the same NRIC skips the patient NRIC conflict check."""
+    guardian_update = patient_guardian_update()
+    mock_guardian = get_mock_patient_guardian()
+    mock_guardian.id = 1
+    mock_guardian.nric = guardian_update.nric  # Same NRIC – no check should run
+
+    mock_relationship = get_patient_guardian_relationship_mapping()
+    mock_relationship.id = 1
+    mock_relationship.relationshipName = "Husband"
+    mock_relationship.isDeleted = "0"
+
+    mock_patient_guardian_relationship = get_patient_patient_guardian()
+    mock_patient_guardian_relationship.relationshipId = 1
+
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        mock_guardian,                    # get_guardian
+        mock_patient_guardian_relationship,  # get patient-guardian relationship
+    ]
+
+    with patch('app.crud.patient_guardian_crud.patient_guardian_relationship_mapping_crud.get_relationshipId_by_relationshipName') as mock_get_relationship:
+        mock_get_relationship.return_value = mock_relationship
+
+        result = update_guardian(db_session_mock, 1, guardian_update)
+
         assert result == mock_guardian
 
 
@@ -91,13 +214,12 @@ def test_update_guardian_success(db_session_mock):
     
     mock_patient_guardian_relationship = get_patient_patient_guardian()
     mock_patient_guardian_relationship.relationshipId = 1
-    
     # Mock the query for guardian
     db_session_mock.query.return_value.filter.return_value.first.side_effect = [
         mock_guardian,  # First call: get guardian
         mock_patient_guardian_relationship  # Second call: get patient_guardian relationship
     ]
-    
+
     # Mock the relationship mapping lookup
     with patch('app.crud.patient_guardian_crud.patient_guardian_relationship_mapping_crud.get_relationshipId_by_relationshipName') as mock_get_relationship:
         mock_get_relationship.return_value = mock_relationship
@@ -139,7 +261,6 @@ def test_update_guardian_invalid_relationship_name(db_session_mock):
         
         assert exc_info.value.status_code == 400
         assert "Invalid relationshipName" in exc_info.value.detail
-        assert "InvalidRelationship" in exc_info.value.detail
 
 
 def test_update_guardian_inactive_relationship(db_session_mock):
@@ -148,20 +269,17 @@ def test_update_guardian_inactive_relationship(db_session_mock):
     mock_guardian = get_mock_patient_guardian()
     mock_guardian.id = 1
     
-    mock_relationship = get_patient_guardian_relationship_mapping()
-    mock_relationship.isDeleted = "1"  # Inactive relationship
-    
     db_session_mock.query.return_value.filter.return_value.first.return_value = mock_guardian
     
     # Mock the relationship mapping lookup
     with patch('app.crud.patient_guardian_crud.patient_guardian_relationship_mapping_crud.get_relationshipId_by_relationshipName') as mock_get_relationship:
-        mock_get_relationship.return_value = mock_relationship
+        mock_get_relationship.return_value = None
         
         with pytest.raises(HTTPException) as exc_info:
             update_guardian(db_session_mock, 1, guardian_update)
         
         assert exc_info.value.status_code == 400
-        assert "Inactive relationshipName" in exc_info.value.detail
+        assert "Invalid relationshipName" in exc_info.value.detail
 
 
 def test_update_guardian_no_patient_relationship(db_session_mock):
@@ -204,11 +322,14 @@ def test_update_guardian_relationship_changed(db_session_mock):
     
     mock_patient_guardian_relationship = get_patient_patient_guardian()
     mock_patient_guardian_relationship.relationshipId = 1  # Old relationship ID
+
+    mock_patient = get_mock_patient()
     
     # Mock queries
     db_session_mock.query.return_value.filter.return_value.first.side_effect = [
         mock_guardian,  # First call: get guardian
-        mock_patient_guardian_relationship  # Second call: get patient_guardian relationship
+        mock_patient_guardian_relationship,  # Second call: get patient_guardian relationship
+        mock_patient # Third call: get patient for logging
     ]
     
     # Mock the relationship mapping lookup

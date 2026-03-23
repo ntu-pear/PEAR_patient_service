@@ -10,6 +10,7 @@ from app.utils.highlight_date_utils import calculate_business_days_ago
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_highlight_model import PatientHighlight
 from ..models.patient_highlight_type_model import PatientHighlightType
+from ..models.patient_model import Patient
 from ..schemas.patient_highlight import PatientHighlightCreate, PatientHighlightUpdate
 
 logger = logging.getLogger(__name__)
@@ -64,9 +65,9 @@ def get_enabled_highlights(db: Session):
         .join(PatientHighlightType, PatientHighlight.HighlightTypeId == PatientHighlightType.Id)
         .options(joinedload(PatientHighlight._highlight_type))
         .filter(
-            PatientHighlight.IsDeleted == "0",           # Highlight not deleted
-            PatientHighlightType.IsDeleted == "0",   # Type not deleted
-            PatientHighlightType.IsEnabled == "1"     # Type is enabled
+            PatientHighlight.IsDeleted == "0", # Highlight not deleted
+            PatientHighlightType.IsDeleted == "0", # Type not deleted
+            PatientHighlightType.IsEnabled == "1" # Type is enabled
         )
         .order_by(PatientHighlight.PatientId, PatientHighlight.CreatedDate.desc())
         .all()
@@ -79,10 +80,10 @@ def get_enabled_highlights_by_patient(db: Session, patient_id: int):
         .join(PatientHighlightType, PatientHighlight.HighlightTypeId == PatientHighlightType.Id)
         .options(joinedload(PatientHighlight._highlight_type))
         .filter(
-            PatientHighlight.PatientId == patient_id,  # Specific patient
-            PatientHighlight.IsDeleted == "0",           # Highlight not deleted
-            PatientHighlightType.IsDeleted == "0",   # Type not deleted
-            PatientHighlightType.IsEnabled == "1"     # Type is enabled
+            PatientHighlight.PatientId == patient_id, # Specific patient
+            PatientHighlight.IsDeleted == "0", # Highlight not deleted
+            PatientHighlightType.IsDeleted == "0", # Type not deleted
+            PatientHighlightType.IsEnabled == "1" # Type is enabled
         )
         .order_by(PatientHighlight.CreatedDate.desc())
         .all()
@@ -98,15 +99,24 @@ def create_highlight(db: Session, highlight_data: PatientHighlightCreate, create
     db.commit()
     db.refresh(db_highlight)
 
+    # Get patient name
+    patient = db.query(Patient).filter(Patient.id == db_highlight.PatientId).first()
+    patient_name = patient.Name if patient else None
+
+    # Only log if the highlight is manually created (not from highlight_helper.py)
+    # Auto-generated highlights come from highlight_helper.py, so this function can be logged
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
         user_full_name= user_full_name,
-        message= "Created Patient Highlight",
+        message= f"Created Patient Highlight for {patient_name}: {db_highlight.HighlightText}",
         table="PatientHighlight",
         entity_id=db_highlight.Id,
         original_data=None,
         updated_data=updated_data_dict,
+        patient_id=db_highlight.PatientId,
+        patient_full_name=patient_name,
+        log_type= "highlight"
     )
     return db_highlight
 
@@ -123,6 +133,10 @@ def update_highlight(db: Session, highlight_id: int, highlight_data: PatientHigh
     except Exception as e:
         original_data_dict = "{}"
 
+    # Capture old values for message in log
+    old_text = db_highlight.HighlightText
+    old_type_id = db_highlight.HighlightTypeId
+
     for key, value in highlight_data.model_dump(exclude_unset=True).items():
         setattr(db_highlight, key, value)
 
@@ -131,16 +145,37 @@ def update_highlight(db: Session, highlight_id: int, highlight_data: PatientHigh
     db.commit()
     db.refresh(db_highlight)
 
+    # Fetch patient name and highlight type
+    patient = db.query(Patient).filter(Patient.id == db_highlight.PatientId).first()
+    patient_name = patient.name if patient else None
+
+    highlight_type = db.query(PatientHighlightType).filter(
+        PatientHighlightType.Id == db_highlight.HighlightTypeId
+    ).first()
+    type_name = highlight_type.TypeName if highlight_type else None
+
     updated_data_dict = serialize_data(highlight_data.model_dump())
+
+    # Build change description
+    changes = []
+    if hasattr(highlight_data, "HighlightText") and highlight_data.HighlightText != old_text:
+        changes.append(f"text from {old_text} to {highlight_data.HighlightText}")
+    if hasattr(highlight_data, "HighlightTypeId") and highlight_data.HighlightTypeId != old_type_id:
+        changes.append(f"type to {type_name}")
+
+    change_str = ", ".join(changes) if changes else "updated"
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
         user_full_name= user_full_name,
-        message= "Updated Patient Highlight",
+        message= f"Updated highlight for {patient_name}: {change_str}",
         table="PatientHighlight",
         entity_id=highlight_id,
         original_data=original_data_dict,
         updated_data=updated_data_dict,
+        patient_id=db_highlight.PatientId,
+        patient_full_name=patient_name,
+        log_type= "highlight"
     )
     return db_highlight
 
@@ -157,6 +192,11 @@ def delete_highlight(db: Session, highlight_id: int, modified_by: str,  user_ful
     except Exception as e:
         original_data_dict = "{}"
 
+    # Capture data before deletion
+    patient = db.query(Patient).filter(Patient.id == db_highlight.PatientId).first()
+    patient_name = patient.name if patient else None
+    highlight_text = db_highlight.HighlightText
+
     db_highlight.IsDeleted = 1
     db_highlight.ModifiedDate = datetime.now()
     db_highlight.ModifiedById = modified_by
@@ -166,11 +206,14 @@ def delete_highlight(db: Session, highlight_id: int, modified_by: str,  user_ful
         action=ActionType.DELETE,
         user=modified_by,
         user_full_name= user_full_name,
-        message= "Deleted Patient Highlight",
+        message= f"Deleted Highlight for {patient_name}: {highlight_text}",
         table="PatientHighlight",
         entity_id=highlight_id,
         original_data=original_data_dict,
         updated_data=None,
+        patient_id=db_highlight.PatientId,
+        patient_full_name=patient_name,
+        log_type= "highlight"
     )
     return db_highlight
 
@@ -244,7 +287,7 @@ def cleanup_old_highlights(db: Session):
             # HARD DELETE each highlight (permanently remove from database)
             for highlight in old_highlights:
                 deleted_ids.append(highlight.Id)
-                db.delete(highlight)  # Hard Delete instead of setting IsDeleted=1
+                db.delete(highlight) # Hard Delete instead of setting IsDeleted=1
             
             if deleted_count > 0:
                 details.append({
@@ -270,16 +313,6 @@ def cleanup_old_highlights(db: Session):
         
     except Exception as e:
         db.rollback()
-        log_crud_action(
-            action=ActionType.DELETE,
-            user="system_cronjob",
-            user_full_name="System CronJob",
-            message=f"Failed to cleanup highlights: {str(e)}",
-            table="PatientHighlight",
-            entity_id=None,
-            original_data={"error": str(e)},
-            updated_data=None,
-        )
         raise HTTPException(
             status_code=500,
             detail=f"Cleanup failed: {str(e)}"

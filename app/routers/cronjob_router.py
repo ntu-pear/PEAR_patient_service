@@ -9,15 +9,6 @@ router = APIRouter(prefix="/cronjobs", tags=["Cronjobs"])
 
 @router.post("/highlight-cleanup/run")
 def trigger_highlight_cleanup(db: Session = Depends(get_db)):
-    """
-    Trigger highlight cleanup job.
-    
-    Called by Kubernetes CronJob daily at midnight.
-    Deletes highlights older than 3 days
-    
-    Returns:
-        dict: Cleanup results including number deleted
-    """
     result = cleanup_old_highlights(db)
     return {
         "status": "success",

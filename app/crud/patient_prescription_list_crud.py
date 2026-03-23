@@ -1,6 +1,7 @@
+from datetime import datetime
+
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from datetime import datetime
 
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_prescription_list_model import PatientPrescriptionList
@@ -72,11 +73,13 @@ def create_prescription_list(
             action=ActionType.CREATE,
             user=created_by,
             user_full_name=user_full_name,
-            message="Created prescription list record",
+            message=f"Created prescription list item: {db_prescription_list.Value}",
             table="PatientPrescriptionList",
             entity_id=db_prescription_list.Id,
             original_data=None,
             updated_data=updated_data_dict,
+            log_type= "system",
+            is_system_config = True
         )
 
         return db_prescription_list
@@ -131,15 +134,20 @@ def update_prescription_list(
     db.refresh(db_prescription_list)
 
     updated_data_dict = serialize_data(update_data)
+    updated_data_dict['Value'] = db_prescription_list.Value
+    original_data_dict['Value'] = db_prescription_list.Value
+
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
         user_full_name=user_full_name,
-        message="Updated prescription list record",
+        message=f"Updated prescription list item: {db_prescription_list.Value}",
         table="PatientPrescriptionList",
         entity_id=db_prescription_list.Id,
         original_data=original_data_dict,
-        updated_data=updated_data_dict
+        updated_data=updated_data_dict,
+        log_type= "system",
+        is_system_config = True
     )
 
     return db_prescription_list
@@ -167,14 +175,18 @@ def delete_prescription_list(
         db.commit()
         db.refresh(db_prescription_list)
 
+        original_data_dict['Value'] = db_prescription_list.Value
+
         log_crud_action(
             action=ActionType.DELETE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Soft deleted prescription list record",
+            message=f"Deleted prescription list item: {db_prescription_list.Value}",
             table="PatientPrescriptionList",
             entity_id=prescription_list_id,
             original_data=original_data_dict,
-            updated_data={"IsDeleted": True}
+            updated_data={"IsDeleted": True},
+            log_type= "system",
+            is_system_config = True
         )
     return db_prescription_list

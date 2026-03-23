@@ -20,10 +20,6 @@ from ..schemas.patient_personal_preference import (
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 def _validate_is_like_for_type(is_like: Optional[str], preference_type: str):
     """
     Enforce IsLike rules based on preference type:
@@ -213,15 +209,28 @@ def create_preference(
         db.add(new_pref)
         db.flush()
 
+        # Fetch patient name and preference name for logging
+        patient = db.query(Patient).filter(Patient.id == preference_data.PatientID).first()
+        patient_name = patient.name if patient else None
+        preference_name = pref_list.PreferenceName if pref_list else None
+
+        updated_data_dict = serialize_data(preference_data.model_dump())
+        updated_data_dict['PatientName'] = patient_name
+        updated_data_dict['PreferenceName'] = preference_name
+
         log_crud_action(
             action=ActionType.CREATE,
             user=created_by,
             user_full_name=user_full_name,
-            message="Created patient personal preference record",
+            message=f"Created personal preference: {preference_name or 'Unknown'} for {patient_name or 'Unknown'}",
             table="PatientPersonalPreference",
             entity_id=new_pref.Id,
             original_data=None,
-            updated_data=serialize_data(preference_data.model_dump()),
+            updated_data=updated_data_dict,
+            patient_id = new_pref.PatientID,
+            patient_full_name = patient_name,
+            log_type = 'personal_preference',
+            is_system_config = False,
         )
 
         db.commit()
@@ -336,15 +345,34 @@ def update_preference(
 
         db.flush()
 
+        # Fetch patient name and preference name for logging
+        patient = db.query(Patient).filter(Patient.id == db_pref.PatientID).first()
+        patient_name = patient.name if patient else None
+        pref_list_for_name = db.query(PatientPersonalPreferenceList).filter(
+            PatientPersonalPreferenceList.Id == db_pref.PersonalPreferenceListID
+        ).first()
+        preference_name = pref_list_for_name.PreferenceName if pref_list_for_name else None
+
+        original_data['PatientName']= patient_name
+        original_data['PreferenceName'] = preference_name
+
+        updated_data_with_names = serialize_data(update_data)
+        updated_data_with_names["PatientName"] = patient_name
+        updated_data_with_names["PreferenceName"] = preference_name
+
         log_crud_action(
             action=ActionType.UPDATE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Updated patient personal preference record",
+            message=f"Updated personal preference: {preference_name or 'Unknown'} for {patient_name or 'Unknown'}",
             table="PatientPersonalPreference",
             entity_id=db_pref.Id,
             original_data=original_data,
-            updated_data=serialize_data(update_data),
+            updated_data=updated_data_with_names,
+            patient_id = db_pref.PatientID,
+            patient_full_name = patient_name,
+            log_type = 'personal_preference',
+            is_system_config = False,
         )
 
         db.commit()
@@ -403,15 +431,30 @@ def delete_preference(
 
         db.flush()
 
+        # Fetch patient name and preference name for logging
+        patient = db.query(Patient).filter(Patient.id == db_pref.PatientID).first()
+        patient_name = patient.name if patient else None
+        pref_list_for_name = db.query(PatientPersonalPreferenceList).filter(
+            PatientPersonalPreferenceList.Id == db_pref.PersonalPreferenceListID
+        ).first()
+        preference_name = pref_list_for_name.PreferenceName if pref_list_for_name else None
+
+        original_data['PatientName'] = patient_name
+        original_data['PreferenceName'] = preference_name
+
         log_crud_action(
             action=ActionType.DELETE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Soft deleted patient personal preference record",
+            message=f"Deleted personal preference: {preference_name or 'Unknown'} for {patient_name or 'Unknown'}",
             table="PatientPersonalPreference",
             entity_id=preference_id,
             original_data=original_data,
             updated_data={"IsDeleted": "1"},
+            patient_id = db_pref.PatientID,
+            patient_full_name = patient_name,
+            log_type = 'personal_preference',
+            is_system_config = False,
         )
 
         db.commit()

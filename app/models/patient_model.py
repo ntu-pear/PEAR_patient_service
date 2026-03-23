@@ -11,7 +11,7 @@ from app.models.patient_list_language_model import PatientListLanguage
 class Patient(Base):
     __tablename__ = "PATIENT"
 
-    id = Column(Integer, primary_key=True, index=True)  # Changed to Integer
+    id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
     nric = Column(
         String(9), nullable=False
@@ -40,17 +40,15 @@ class Patient(Base):
     profilePicture = Column(String(255))
     createdDate = Column(DateTime, nullable=False)
     modifiedDate = Column(DateTime, nullable=False, default=datetime.datetime.now)
-    CreatedById = Column(String, nullable=False)  # Changed to String
-    ModifiedById = Column(String, nullable=False)  # Changed to String
+    CreatedById = Column(String, nullable=False)
+    ModifiedById = Column(String, nullable=False)
     isDeleted = Column(Integer, default="0", nullable=False)
 
     allocations = relationship("PatientAllocation", back_populates="patient")
-    # guardian = relationship("PatientGuardian", back_populates="patient")
     patient_patient_guardian = relationship(
         "PatientPatientGuardian", back_populates="patient"
     )
 
-    # allergies = relationship("PatientAllergy", back_populates="allergy_list", foreign_keys="[PatientAllergy.allergyListId]")
     allergies = relationship("PatientAllergyMapping", back_populates="patient")
     doctor_notes = relationship("PatientDoctorNote", back_populates="patient")
     photos = relationship("PatientPhoto", back_populates="patient")

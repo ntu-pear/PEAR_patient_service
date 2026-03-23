@@ -10,6 +10,7 @@ from app.models.patient_highlight_model import PatientHighlight
 from app.services.highlight_helper import create_highlight_if_needed
 
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
+from ..models.patient_model import Patient
 from ..models.patient_prescription_model import PatientPrescription
 from ..schemas.patient_prescription import (
     PatientPrescriptionCreate,
@@ -80,7 +81,6 @@ def create_prescription(
     
     try:
         
-        
         # Exclude any fields you set manually (like CreatedDateTime, etc.)
         data_dict = prescription_data.model_dump(
             exclude={"CreatedDateTime", "UpdatedDateTime", "CreatedById", "ModifiedById"}
@@ -120,15 +120,36 @@ def create_prescription(
             except Exception as e:
                 logger.error(f"Failed to create highlight for prescription {new_prescription.Id}: {e}")
 
+        # Fetch patient name for logging
+        try:
+            patient = db.query(Patient).filter(
+                Patient.id == new_prescription.PatientId
+            ).first()
+            patient_name = patient.name if patient else None
+        except Exception as e:
+            patient_name = None
+
+        try:
+            prescription_name = prescription_with_details.prescription_list.Value if prescription_with_details and prescription_with_details.prescription_list else None
+        except Exception as e:
+            prescription_name = None
+
+        updated_data_dict['PatientName'] = patient_name
+        updated_data_dict['PrescriptionName'] = prescription_name
+
         log_crud_action(
             action=ActionType.CREATE,
             user=created_by,
             user_full_name=user_full_name,
-            message="Created prescription record",
+            message=f"Created prescription: {prescription_name or 'Unknown'} for {patient_name or 'Unknown'}",
             table="PatientPrescription",
             entity_id=new_prescription.Id,
             original_data=None,
             updated_data=updated_data_dict,
+            patient_id = new_prescription.PatientId,
+            patient_full_name = patient_name,
+            log_type = 'prescription',
+            is_system_config = False
         )
         return new_prescription
 
@@ -215,16 +236,36 @@ def update_prescription(
             except Exception as e:
                 logger.error(f"Failed to create/update highlight for prescription {prescription_id}: {e}")
 
+        try:
+            patient = db.query(Patient).filter(Patient.id == db_prescription.PatientId).first()
+            patient_name = patient.name if patient else None
+        except Exception as e:
+            patient_name = None
+
+        try:
+            prescription_name = prescription_with_details.prescription_list.Value if prescription_with_details and prescription_with_details.prescription_list else None
+        except Exception as e:
+            prescription_name = None
+
         updated_data_dict = serialize_data(update_fields)
+        updated_data_dict['PatientName'] = patient_name
+        updated_data_dict['PrescriptionName'] = prescription_name
+        original_data_dict['PrescriptionName'] = prescription_name
+        original_data_dict['PatientName'] = patient_name
+
         log_crud_action(
             action=ActionType.UPDATE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Updated prescription record",
+            message=f"Updated prescription: {prescription_name or 'Unknown'} for {patient_name or 'Unknown'}",
             table="PatientPrescription",
             entity_id=db_prescription.Id,
             original_data=original_data_dict,
             updated_data=updated_data_dict,
+            patient_id = db_prescription.PatientId,
+            patient_full_name = patient_name,
+            log_type = 'prescription',
+            is_system_config = False
         )
         return db_prescription
     except Exception as e:
@@ -257,6 +298,12 @@ def delete_prescription(
     except Exception:
         original_data_dict = "{}"
 
+    try:
+        patient = db.query(Patient).filter(Patient.id == db_prescription.PatientId).first()
+        patient_name = patient.name if patient else None
+    except Exception as e:
+        patient_name = None
+
     db_prescription.IsDeleted = "1"
     db_prescription.ModifiedDateTime = datetime.now()
     db_prescription.ModifiedById = modified_by
@@ -286,15 +333,20 @@ def delete_prescription(
         
         db.refresh(db_prescription)
 
+        original_data_dict['PatientName'] = patient_name
         log_crud_action(
             action=ActionType.DELETE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Soft deleted prescription record",
+            message=f"Deleted prescription for patient: {patient_name or 'Unknown'}",
             table="PatientPrescription",
             entity_id=db_prescription.Id,
             original_data=original_data_dict,
-            updated_data=serialize_data(db_prescription),
+            updated_data={"IsDeleted": "1"},
+            patient_id= db_prescription.PatientId,
+            patient_full_name = patient_name,
+            log_type = 'prescription',
+            is_system_config = False
         )
         return db_prescription
     except Exception as e:

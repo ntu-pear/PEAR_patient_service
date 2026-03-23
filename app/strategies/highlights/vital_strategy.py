@@ -303,9 +303,9 @@ class VitalStrategy(HighlightStrategy):
             threshold_low = baseline_bsl - self.BLOOD_SUGAR_TOLERANCE
             
             if bsl > threshold_high:
-                parts.append(f"Hyperglycemia: {bsl} mg/dL ({baseline_source}: {baseline_bsl:.1f})")
+                parts.append(f"Hyperglycemia: {bsl} mmol/L ({baseline_source}: {baseline_bsl:.1f})")
             elif bsl < threshold_low:
-                parts.append(f"Hypoglycemia: {bsl} mg/dL ({baseline_source}: {baseline_bsl:.1f})")
+                parts.append(f"Hypoglycemia: {bsl} mmol/L ({baseline_source}: {baseline_bsl:.1f})")
         
         # SpO2 with specific message (only low is abnormal)
         if hasattr(vital_record, 'SpO2') and vital_record.SpO2 is not None and 'spo2' in baselines:

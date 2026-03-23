@@ -17,9 +17,6 @@ CREATE TABLE PATIENT_PERSONAL_PREFERENCE (
     CreatedByID                NVARCHAR(450) NOT NULL,
     ModifiedByID               NVARCHAR(450) NOT NULL,
 
-    -- A patient may only have one entry per preference list item
-    CONSTRAINT UQ_PatientPersonalPreference_PatientPref
-        UNIQUE (PatientID, PersonalPreferenceListID),
 
     CONSTRAINT FK_PatientPersonalPreference_Patient
         FOREIGN KEY (PatientID)

@@ -12,6 +12,7 @@ from app.services.highlight_helper import create_highlight_if_needed
 
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_medication_model import PatientMedication
+from ..models.patient_model import Patient
 from ..models.patient_prescription_list_model import PatientPrescriptionList
 from ..schemas.patient_medication import (
     PatientMedicationCreate,
@@ -299,18 +300,31 @@ def create_medication(
             created_by=created_by
         )
 
-        # Log the action
+        # Log the action - Fetch the relevant names to enrich the logs
+        medication_dict = _medication_to_dict_with_prescription_name(medication_for_event, db)
+        prescription_name = medication_dict.get('PrescriptionName')
+        patient = db.query(Patient).filter(Patient.id == new_medication.PatientId).first()
+        patient_name = patient.name if patient else None
+
         updated_data_dict = serialize_data(medication_data.model_dump())
+
+        # Add new fields iin updated_data_dict
+        updated_data_dict['PrescriptionName'] = prescription_name
+        updated_data_dict['PatientName'] = patient_name
         
         log_crud_action(
             action=ActionType.CREATE,
             user=created_by,
             user_full_name=user_full_name,
-            message="Created medication record",
+            message=f"Created medication {prescription_name or 'Unknown'} for patient {patient_name or 'Unknown'}",
             table="PatientMedication",
             entity_id=new_medication.Id,
             original_data=None,
             updated_data=updated_data_dict,
+            patient_id = new_medication.PatientId,
+            patient_full_name= patient_name,
+            log_type= 'medication',
+            is_system_config= False
         )
         db.commit()
         db.refresh(new_medication)
@@ -489,18 +503,44 @@ def update_medication(
             created_by=modified_by
         )
 
-        # Log the action
+        # Log the action - Fetch names for enrichment
+        updated_medication_dict = _medication_to_dict_with_explicit_prescription_name(
+            db, db_medication, target_prescription_id)
+        prescription_name = updated_medication_dict.get('PrescriptionName')
+        patient = db.query(Patient).filter(Patient.id == db_medication.PatientId).first()
+        patient_name = patient.name if patient else None
+
+        original_medication_dict = _medication_to_dict_with_explicit_prescription_name(
+            db, db_medication, original_prescription_list_id
+        )
+        original_prescription_name = original_medication_dict.get('PrescriptionName')
+
+        # Build change description
+        if original_prescription_list_id != target_prescription_id:
+            change_desc = f"changed prescription from {original_prescription_name} to {prescription_name or 'Unknown'}"
+        else:
+            change_desc = "updated details"
         updated_data_dict = serialize_data({k: v for k, v in update_fields.items() if k not in audit_fields})
-        
+
+        updated_data_dict['PrescriptionName'] = prescription_name
+        updated_data_dict['PatientName'] = patient_name
+
+        original_data_dict['PrescriptionName'] = original_prescription_name
+        original_data_dict['PatientName'] = patient_name
+
         log_crud_action(
             action=ActionType.UPDATE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Updated medication record",
+            message=f"Updated medication: {prescription_name or 'Unknown'} ({change_desc})",
             table="PatientMedication",
             entity_id=db_medication.Id,
             original_data=original_data_dict,
             updated_data=updated_data_dict,
+            patient_id=db_medication.PatientId,
+            patient_full_name= patient_name,
+            log_type= 'medication',
+            is_system_config= False,
         )
         db.commit()
         db.refresh(db_medication)
@@ -604,15 +644,26 @@ def delete_medication(
         )
 
         # Log the action
+        prescription_name = medication_dict.get("PrescriptionName")
+        patient = db.query(Patient).filter(Patient.id == db_medication.PatientId).first()
+        patient_name = patient.name if patient else None
+
+        original_data_dict['PrescriptionName'] = prescription_name
+        original_data_dict['PatientName'] = patient_name
+
         log_crud_action(
             action=ActionType.DELETE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Soft deleted medication record",
+            message=f"Soft deleted medication: {prescription_name or 'Unknown'} for {patient_name or 'Unknown'}",
             table="PatientMedication",
             entity_id=db_medication.Id,
             original_data=original_data_dict,
-            updated_data=serialize_data(db_medication),
+            updated_data=None,
+            patient_id = db_medication.PatientId,
+            patient_full_name=patient_name,
+            log_type = 'medication',
+            is_system_config= False
         )
 
         # FIX: Commit the main delete FIRST

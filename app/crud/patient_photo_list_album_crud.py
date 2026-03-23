@@ -61,11 +61,13 @@ def create_photo_list_album(db: Session, album: PatientPhotoListAlbumCreate, cre
         action=ActionType.CREATE,
         user=created_by,
         user_full_name=user_full_name,
-        message="Created photo list album",
+        message=f"Created photo album category: {db_album.Value}",
         table="PatientPhotoListAlbum",
         entity_id=db_album.AlbumCategoryListID,
         original_data=None,
         updated_data=updated_data_dict,
+        log_type = 'system',
+        is_system_config = True,
     )
     
     return db_album
@@ -128,15 +130,20 @@ def update_photo_list_album(
     db.refresh(db_album)
     
     updated_data_dict = serialize_data(update_data)
+    updated_data_dict["Value"] = db_album.Value
+    original_data_dict["Value"] = db_album.Value
+
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
         user_full_name=user_full_name,
-        message="Updated photo list album",
+        message=f"Updated photo list category: {db_album.Value}",
         table="PatientPhotoListAlbum",
         entity_id=album_id,
         original_data=original_data_dict,
         updated_data=updated_data_dict,
+        log_type = 'system',
+        is_system_config = True,
     )
     
     return db_album
@@ -166,16 +173,20 @@ def delete_photo_list_album(db: Session, album_id: int, modified_by: str, user_f
     db_album.UpdatedDateTime = datetime.now()
     db_album.ModifiedById = modified_by
     db.commit()
+
+    original_data_dict['Value'] = db_album.Value
     
     log_crud_action(
         action=ActionType.DELETE,
         user=modified_by,
         user_full_name=user_full_name,
-        message="Deleted photo list album",
+        message=f"Deleted photo album category: {db_album.Value}",
         table="PatientPhotoListAlbum",
         entity_id=album_id,
         original_data=original_data_dict,
         updated_data=None,
+        log_type = 'system',
+        is_system_config = True,
     )
     
     return db_album

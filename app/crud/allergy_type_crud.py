@@ -35,15 +35,19 @@ def create_allergy_type(db: Session, allergy_type: AllergyTypeCreate, created_by
     db.commit()
     db.refresh(db_allergy_type)
 
+    allergy_type_name = db_allergy_type.Value
+
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
         user_full_name=user_full_name,
-        message="Created allergy type",
+        message=f"Created allergy type: {allergy_type_name}",
         table="AllergyType",
         entity_id=db_allergy_type.AllergyTypeID,
         original_data=None,
         updated_data=updated_data_dict,
+        log_type= "system",
+        is_system_config=True,
     )
     return db_allergy_type
 
@@ -64,6 +68,9 @@ def update_allergy_type(
             }
         except Exception as e:
             original_data_dict = "{}"
+
+        # Store the old allergy type name for message field in log
+        old_allergy_type_name = db_allergy_type.Value
         for key, value in allergy_type.model_dump(exclude_unset=True).items():
             setattr(db_allergy_type, key, value)
 
@@ -80,11 +87,13 @@ def update_allergy_type(
             action=ActionType.UPDATE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Updated allergy type",
+            message=f"Updated allergy type: {old_allergy_type_name} -> {db_allergy_type.Value}",
             table="AllergyType",
             entity_id=allergy_type_id,
             original_data=original_data_dict,
             updated_data=updated_data_dict,
+            log_type= "system",
+            is_system_config=True,
         )
         return db_allergy_type
     return None
@@ -104,6 +113,10 @@ def delete_allergy_type(db: Session, allergy_type_id: int, modified_by: str, use
             }
         except Exception as e:
             original_data_dict = "{}"
+
+        # Capture allergy type name before deletion
+        allergy_type_name = db_allergy_type.Value
+
         # Soft delete by marking the record as inactive
         db_allergy_type.IsDeleted = "1"
         db_allergy_type.UpdatedDateTime = datetime.now()
@@ -114,11 +127,13 @@ def delete_allergy_type(db: Session, allergy_type_id: int, modified_by: str, use
             action=ActionType.DELETE,
             user=modified_by,
             user_full_name=user_full_name,
-            message="Deleted allergy type",
+            message=f"Deleted allergy type: {allergy_type_name}",
             table="AllergyType",
             entity_id=allergy_type_id,
             original_data=original_data_dict,
             updated_data=None,
+            log_type= "system",
+            is_system_config=True,
         )
         return db_allergy_type
     return None

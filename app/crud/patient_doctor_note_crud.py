@@ -2,6 +2,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from ..models.patient_doctor_note_model import PatientDoctorNote
+from ..models.patient_model import Patient
 from ..schemas.patient_doctor_note import PatientDoctorNoteCreate, PatientDoctorNoteUpdate
 from ..logger.logger_utils import log_crud_action, ActionType, serialize_data
 import json
@@ -26,17 +27,25 @@ def create_doctor_note(db: Session, doctor_note: PatientDoctorNoteCreate, user_i
         db.commit()
         db.refresh(db_doctor_note)
 
+        # Fetch names for logging
+        patient = db.query(Patient).filter(Patient.id == db_doctor_note.patientId).first()
+        patient_name = patient.name if patient else None
+
         updated_data_dict = serialize_data(doctor_note.model_dump())
 
         log_crud_action(
             action=ActionType.CREATE,
             user=user_id,
             user_full_name=user_full_name,
-            message="Created doctor note",
-            table="Doctor Note",
-            entity_id=None,
+            message=f"Created doctor note for patient {patient_name}",
+            table="PatientDoctorNote",
+            entity_id=db_doctor_note.id,
             original_data=None,
-            updated_data=updated_data_dict
+            updated_data=updated_data_dict,
+            patient_id=db_doctor_note.patientId,
+            patient_full_name=patient_name,
+            log_type="doctor_note",
+            is_system_config=False,
         )
     return db_doctor_note
 
@@ -54,6 +63,10 @@ def update_doctor_note(db: Session, note_id: int, doctor_note: PatientDoctorNote
         for key, value in doctor_note.model_dump().items():
             setattr(db_doctor_note, key, value)
 
+        # Fetch patient name
+        patient = db.query(Patient).filter(Patient.id == db_doctor_note.patientId).first()
+        patient_name = patient.name if patient else None
+
         db_doctor_note.modifiedDate = datetime.now()
         db.commit()
         db.refresh(db_doctor_note)
@@ -64,11 +77,15 @@ def update_doctor_note(db: Session, note_id: int, doctor_note: PatientDoctorNote
             action=ActionType.UPDATE,
             user=user_id,
             user_full_name=user_full_name,
-            message="Updated doctor note",
-            table="Doctor Note",
+            message=f"Updated doctor note for patient {patient_name}",
+            table="PatientDoctorNote",
             entity_id=note_id,
             original_data=original_data_dict,
-            updated_data=updated_data_dict
+            updated_data=updated_data_dict,
+            patient_id=db_doctor_note.patientId,
+            patient_full_name=patient_name,
+            log_type="doctor_note",
+            is_system_config=False,
         )
 
     return db_doctor_note
@@ -83,6 +100,9 @@ def delete_doctor_note(db: Session, note_id: int, user_id: str, user_full_name: 
         except Exception as e:
             original_data_dict = "{}"
 
+        patient = db.query(Patient).filter(Patient.id == db_doctor_note.patientId).first()
+        patient_name = patient.name if patient else None
+
         setattr(db_doctor_note, 'isDeleted', '1')
         db.commit()
         db.refresh(db_doctor_note)
@@ -91,10 +111,14 @@ def delete_doctor_note(db: Session, note_id: int, user_id: str, user_full_name: 
             action=ActionType.DELETE,
             user=user_id,
             user_full_name=user_full_name,
-            message="Deleted doctor note",
-            table="Doctor Note",
+            message=f"Deleted doctor note for patient {patient_name}",
+            table="PatientDoctorNote",
             entity_id=note_id,
             original_data=original_data_dict,
-            updated_data=None
+            updated_data=None,
+            patient_id=db_doctor_note.patientId,
+            patient_full_name=patient_name,
+            log_type="doctor_note",
+            is_system_config=False,
         )
     return db_doctor_note

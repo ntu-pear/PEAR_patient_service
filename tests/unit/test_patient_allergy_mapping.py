@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from app.crud.patient_allergy_mapping_crud import (
     get_all_allergies,
     get_patient_allergies,
@@ -143,11 +143,40 @@ def test_create_patient_allergy(db_session_mock, patient_allergy_create):
     mock_reaction_type = AllergyReactionType(
         AllergyReactionTypeID=1, Value="Rashes", IsDeleted="0"
     )
-    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
-        mock_allergy_type,
-        mock_reaction_type,
-        None,
-    ]
+    mock_allergy_with_rel = MagicMock()  # For highlight integration query
+    mock_patient = Patient(id=1, name="Test Patient", nric="S9876543Z", isDeleted="0")
+
+    # The highlight query uses: db.query(PatientAllergyMapping).options(joinedload(...)).filter(...).first()
+    # This is a separate chain from simple queries.
+    # We need to mock the ENTIRE chain including options()
+
+    # First, save reference to original query mock builder
+    original_query = db_session_mock.query
+
+    # Create a custom query mock that handles both chains
+    def custom_query(model):
+        query_result = MagicMock()
+
+        # Check if this is PatientAllergyMapping query (for highlight)
+        if 'PatientAllergyMapping' in str(model):
+            # Return mock that supports .options().filter().first()
+            options_result = MagicMock()
+            filter_result = MagicMock()
+            filter_result.first.return_value = mock_allergy_with_rel
+            options_result.filter.return_value = filter_result
+            query_result.options.return_value = options_result
+            # Also support direct .filter().first() for duplicate check
+            query_result.filter.return_value.first.return_value = None
+        elif 'AllergyType' in str(model):
+            query_result.filter.return_value.first.return_value = mock_allergy_type
+        elif 'AllergyReactionType' in str(model):
+            query_result.filter.return_value.first.return_value = mock_reaction_type
+        elif 'Patient' in str(model):
+            query_result.filter.return_value.first.return_value = mock_patient
+
+        return query_result
+
+    db_session_mock.query.side_effect = custom_query
 
     # Act
     result = create_patient_allergy(db_session_mock, patient_allergy_create, created_by, USER_FULL_NAME)
@@ -179,11 +208,13 @@ def test_update_patient_allergy(db_session_mock, patient_allergy_update):
         CreatedById="1",
         ModifiedById="1",
     )
+    mock_patient = Patient(id=1, name="Test Patient", nric="S9876543Z", isDeleted="0")
     db_session_mock.query.return_value.filter.return_value.first.side_effect = [
-        mock_allergy_type,
-        mock_reaction_type,
-        mock_patient_allergy,
-        None
+        mock_allergy_type,      # 1. allergy_type query
+        mock_reaction_type,     # 2. allergy_reaction_type query
+        mock_patient_allergy,   # 3. db_allergy query
+        None,                   # 4. allergy_combo query (no duplicate)
+        mock_patient,           # 5. patient query for logging
     ]
 
     # Act
@@ -215,9 +246,17 @@ def test_delete_patient_allergy(db_session_mock):
         CreatedById="1",
         ModifiedById="1",
     )
-    db_session_mock.query.return_value.filter.return_value.first.return_value = (
-        mock_patient_allergy
-    )
+    mock_patient = Patient(id=1, name="Test Patient", nric="S9876543Z", isDeleted="0")
+    mock_allergy_type = AllergyType(AllergyTypeID=3, Value="Corn", IsDeleted="0")
+    mock_reaction_type = AllergyReactionType(AllergyReactionTypeID=1, Value="Rashes", IsDeleted="0")
+
+    # Use side_effect to return different objects for different queries
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        mock_patient_allergy,  # 1. db_allergy query
+        mock_patient,          # 2. patient query for logging
+        mock_allergy_type,     # 3. allergy_type query for logging
+        mock_reaction_type,    # 4. allergy_reaction_type query for logging
+    ]
 
     # Act
     result = delete_patient_allergy(
