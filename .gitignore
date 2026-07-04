@@ -71,3 +71,6 @@ logs/*.log
 
 # IntelliJ
 .idea/
+
+# Git worktrees
+.worktrees/
