@@ -49,3 +49,8 @@ class Patient(PatientBase):
     ModifiedById: str = Field(json_schema_extra={"example": "1"})
     preferred_language: Optional[str] = None
     model_config = {"from_attributes": True}
+
+class PatientCreateWithAllocation(PatientCreate):
+    guardianId: int
+    doctor2Id: Optional[str] = None
+    supervisor2Id: Optional[str] = None
