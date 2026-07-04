@@ -46,6 +46,8 @@ from app.models import (
     patient_prescription_model,
     patient_social_history_model,
     patient_vital_model,
+    processed_events_model,
+    ref_userconfig_model,
 )
 from app.routers import (
     allergy_reaction_type_router,
