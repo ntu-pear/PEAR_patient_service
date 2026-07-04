@@ -52,5 +52,8 @@ class Patient(PatientBase):
 
 class PatientCreateWithAllocation(PatientCreate):
     guardianId: int
+    doctorId: Optional[str] = None
+    gameTherapistId: Optional[str] = None
+    caregiverId: Optional[str] = None
     doctor2Id: Optional[str] = None
     supervisor2Id: Optional[str] = None

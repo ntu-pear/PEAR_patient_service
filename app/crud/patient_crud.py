@@ -12,7 +12,8 @@ from app.models.patient_allocation_model import PatientAllocation
 
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_model import Patient
-from ..schemas.patient import PatientCreate, PatientUpdate
+from ..schemas.patient import PatientCreate, PatientCreateWithAllocation, PatientUpdate
+from ..services.user_service import get_least_loaded_staff
 from ..services.outbox_service import generate_correlation_id, get_outbox_service
 
 logger = logging.getLogger(__name__)
@@ -277,7 +278,7 @@ def _patient_to_dict(patient) -> Dict[str, Any]:
         logger.error(f"Error converting patient to dict: {str(e)}")
         return {}
 
-def create_patient(db: Session, patient: PatientCreate, user: str, user_full_name: str, correlation_id: str = None):
+def create_patient(db: Session, patient: PatientCreateWithAllocation, user: str, user_full_name: str, correlation_id: str = None, api_key: str = None, supervisor_id: str = None):
     """ Create a new patient with message queue publishing """
 
     # Check NRIC uniqueness
@@ -305,6 +306,28 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
             status_code=400,
             detail="Patient NRIC conflicts with an existing active guardian record"
         )
+
+    # Validate guardianId exists (only when provided via PatientCreateWithAllocation)
+    guardian_id = getattr(patient, "guardianId", None)
+    if guardian_id is not None:
+        guardian = (
+            db.query(PatientGuardianModel)
+            .filter(PatientGuardianModel.id == guardian_id, PatientGuardianModel.isDeleted == "0")
+            .first()
+        )
+        if not guardian:
+            raise HTTPException(status_code=400, detail="Guardian not found")
+
+    # Validate doctor2Id != doctorId
+    doctor_id = getattr(patient, "doctorId", None)
+    doctor2_id = getattr(patient, "doctor2Id", None)
+    if doctor2_id and doctor_id and doctor2_id == doctor_id:
+        raise HTTPException(status_code=400, detail="doctor2Id must differ from doctorId")
+
+    # Validate supervisor2Id != supervisorId
+    supervisor2_id = getattr(patient, "supervisor2Id", None)
+    if supervisor2_id and supervisor_id and supervisor2_id == supervisor_id:
+        raise HTTPException(status_code=400, detail="supervisor2Id must differ from supervisorId")
 
     # Generate correlation ID if not provided
     if not correlation_id:
@@ -411,12 +434,42 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
             log_type= "patient_info",
         )
 
-        # 6. Commit both patient and outbox event atomically
+        # 6. Resolve care staff IDs and create allocation (only when guardianId is provided)
+        if guardian_id is not None:
+            resolved_doctor_id = getattr(patient, "doctorId", None) or get_least_loaded_staff("DOCTOR", db, api_key)
+            resolved_game_therapist_id = getattr(patient, "gameTherapistId", None) or get_least_loaded_staff("GAME THERAPIST", db, api_key)
+            resolved_caregiver_id = getattr(patient, "caregiverId", None) or get_least_loaded_staff("CAREGIVER", db, api_key)
+
+        # 7. Create allocation atomically (only when guardianId is provided)
+        if guardian_id is not None:
+            db_allocation = PatientAllocation(
+                active="Y",
+                patientId=new_patient.id,
+                guardianId=guardian_id,
+                guardian2Id=None,
+                doctorId=resolved_doctor_id,
+                gameTherapistId=resolved_game_therapist_id,
+                supervisorId=supervisor_id,
+                caregiverId=resolved_caregiver_id,
+                doctor2Id=getattr(patient, "doctor2Id", None),
+                supervisor2Id=getattr(patient, "supervisor2Id", None),
+                createdDate=timestamp,
+                modifiedDate=timestamp,
+                CreatedById=user,
+                ModifiedById=user,
+            )
+            db.add(db_allocation)
+            db.flush()
+
+        # 8. Commit patient, outbox event, and allocation atomically
         db.commit()
-        
+
         logger.info(f"Created patient {new_patient.id} with outbox event {outbox_event.id} (correlation: {correlation_id})")
         return new_patient
 
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to create patient: {str(e)}")
