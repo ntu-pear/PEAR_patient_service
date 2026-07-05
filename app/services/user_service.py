@@ -29,7 +29,7 @@ def get_active_staff_by_role(role: str, api_key: Optional[str]) -> list[str]:
             headers={"X-Api-Key": api_key},
             timeout=10.0,
         )
-    except httpx.ConnectError:
+    except httpx.HTTPError:
         raise HTTPException(status_code=503, detail="User service is unreachable.")
 
     if response.status_code == 403:
@@ -44,7 +44,7 @@ def get_active_staff_by_role(role: str, api_key: Optional[str]) -> list[str]:
     except (ValueError, AttributeError):
         raise HTTPException(status_code=503, detail="User service returned a malformed response.")
 
-    filtered = [u["id"] for u in users if u.get("role") == role]
+    filtered = [u.get("id") for u in users if u.get("role") == role and u.get("id")]
 
     if not filtered:
         raise HTTPException(
@@ -77,8 +77,8 @@ def get_least_loaded_staff(role: str, db: Session, api_key: Optional[str]) -> st
 
     def _sort_key(sid):
         try:
-            return (counts[sid], int(sid))
+            return (counts[sid], 0, int(sid), "")
         except (ValueError, TypeError):
-            return (counts[sid], sid)
+            return (counts[sid], 1, 0, str(sid))
 
     return min(counts, key=_sort_key)

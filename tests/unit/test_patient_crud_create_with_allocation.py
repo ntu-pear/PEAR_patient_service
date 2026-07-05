@@ -225,3 +225,29 @@ def test_allocation_insert_fail_rolls_back(mock_least, mock_outbox, mock_log, db
             api_key="key", supervisor_id="SUP1"
         )
     db.rollback.assert_called()
+
+
+@patch("app.crud.patient_crud.log_crud_action")
+@patch("app.crud.patient_crud.get_outbox_service")
+@patch("app.crud.patient_crud.get_least_loaded_staff")
+def test_doctor2_same_as_auto_assigned_doctor(mock_least, mock_outbox, mock_log, db, patient_data):
+    patient_data.doctor2Id = "D001"
+    mock_least.side_effect = lambda role, db_, api_key: {
+        "DOCTOR": "D001", "GAME THERAPIST": "GT001", "CAREGIVER": "CG001"
+    }[role]
+
+    guardian_mock = MagicMock()
+    new_patient_mock = MagicMock(id=42, nric="S1234567A")
+    db.query.return_value.filter.return_value.first.side_effect = [
+        None, None, guardian_mock, new_patient_mock
+    ]
+    mock_outbox.return_value.create_event.return_value = MagicMock(id=99)
+
+    from app.crud.patient_crud import create_patient
+    with pytest.raises(HTTPException) as exc:
+        create_patient(
+            db, patient_data, user="SUP1", user_full_name="Supervisor",
+            api_key="key", supervisor_id="SUP1"
+        )
+    assert exc.value.status_code == 400
+    db.rollback.assert_called()

@@ -145,3 +145,53 @@ def test_get_least_loaded_staff_tiebreak_lowest_id(db_session_mock, api_key):
         result = user_service.get_least_loaded_staff("DOCTOR", db_session_mock, api_key=api_key)
 
     assert result == "2"  # int("2") < int("10")
+
+
+def test_get_active_staff_by_role_timeout(api_key):
+    import httpx
+    with patch("httpx.get", side_effect=httpx.TimeoutException("timed out")), \
+         patch.dict(os.environ, {"USER_SERVICE_URL": "http://user-service"}):
+        from app.services import user_service
+        import importlib; importlib.reload(user_service)
+        with pytest.raises(HTTPException) as exc:
+            user_service.get_active_staff_by_role("DOCTOR", api_key=api_key)
+        assert exc.value.status_code == 503
+
+
+def test_get_active_staff_by_role_skips_entries_missing_id(api_key):
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "users": [
+            {"role": "DOCTOR"},
+            {"id": "U003", "role": "DOCTOR"},
+        ]
+    }
+    with patch("httpx.get", return_value=mock_response), \
+         patch.dict(os.environ, {"USER_SERVICE_URL": "http://user-service"}):
+        from app.services import user_service
+        import importlib; importlib.reload(user_service)
+        result = user_service.get_active_staff_by_role("DOCTOR", api_key=api_key)
+    assert result == ["U003"]
+
+
+def test_get_least_loaded_staff_mixed_id_formats(db_session_mock, api_key):
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "users": [
+            {"id": "abc-uuid", "role": "DOCTOR"},
+            {"id": "2", "role": "DOCTOR"},
+        ]
+    }
+    mock_q = MagicMock()
+    mock_q.filter.return_value.filter.return_value.filter.return_value.count.return_value = 0
+    db_session_mock.query.return_value = mock_q
+
+    with patch("httpx.get", return_value=mock_response), \
+         patch.dict(os.environ, {"USER_SERVICE_URL": "http://user-service"}):
+        from app.services import user_service
+        import importlib; importlib.reload(user_service)
+        result = user_service.get_least_loaded_staff("DOCTOR", db_session_mock, api_key=api_key)
+
+    assert result == "2"  # numeric IDs win over non-numeric on tie

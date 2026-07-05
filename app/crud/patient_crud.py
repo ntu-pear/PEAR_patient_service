@@ -440,6 +440,10 @@ def create_patient(db: Session, patient: PatientCreateWithAllocation, user: str,
             resolved_game_therapist_id = getattr(patient, "gameTherapistId", None) or get_least_loaded_staff("GAME THERAPIST", db, api_key)
             resolved_caregiver_id = getattr(patient, "caregiverId", None) or get_least_loaded_staff("CAREGIVER", db, api_key)
 
+            doctor2_id = getattr(patient, "doctor2Id", None)
+            if doctor2_id and doctor2_id == resolved_doctor_id:
+                raise HTTPException(status_code=400, detail="doctor2Id must differ from doctorId")
+
         # 7. Create allocation atomically (only when guardianId is provided)
         if guardian_id is not None:
             db_allocation = PatientAllocation(
