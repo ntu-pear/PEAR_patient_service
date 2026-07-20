@@ -149,6 +149,32 @@ def test_delete_patient_not_found(db_session_mock):
     assert exc_info.value.status_code == 404
 
 
+@patch("app.crud.patient_crud.get_outbox_service")
+@patch("app.crud.patient_crud.log_crud_action")
+def test_create_patient_refetch_skips_soft_deleted(mock_log, mock_outbox_fn, db_session_mock, patient_create):
+    """Refetch after INSERT must return the new active row, not a prior soft-deleted row with the same NRIC."""
+    soft_deleted = MagicMock(id=1, nric=patient_create.nric, isDeleted="1")
+    new_patient = MagicMock(id=2, name=patient_create.name, nric=patient_create.nric, isDeleted="0")
+
+    mock_nric_check = MagicMock()
+    mock_nric_check.filter.return_value.first.return_value = None  # uniqueness check passes
+
+    mock_guardian_check = MagicMock()
+    mock_guardian_check.filter.return_value.first.return_value = None  # no guardian NRIC conflict
+
+    # Refetch: filter(nric, isDeleted=="0") -> returns new active row, not soft-deleted
+    mock_fetch = MagicMock()
+    mock_fetch.filter.return_value.first.return_value = new_patient
+
+    db_session_mock.query.side_effect = [mock_nric_check, mock_guardian_check, mock_fetch]
+
+    result = create_patient(db_session_mock, patient_create, "user1", "User One")
+
+    assert result is new_patient
+    assert result.id == 2
+    assert result.isDeleted == "0"
+
+
 @pytest.fixture
 def db_session_mock():
     return get_db_session_mock()
