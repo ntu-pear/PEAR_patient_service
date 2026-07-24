@@ -25,7 +25,7 @@ def get_active_staff_by_role(role: str, api_key: Optional[str]) -> list[str]:
 
     try:
         response = httpx.get(
-            f"{user_service_url}/supervisor/get_active_staff",
+            f"{user_service_url}/api/v1/supervisor/get_active_staff",
             headers={"X-Api-Key": api_key},
             timeout=10.0,
         )
