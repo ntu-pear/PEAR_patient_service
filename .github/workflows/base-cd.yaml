@@ -59,6 +59,10 @@ on:
         required: true
       RABBITMQ_VIRTUAL_HOST:
         required: true
+      USER_SERVICE_URL:
+        required: true
+      INTERNAL_SERVICE_API_KEY:
+        required: true
 
 jobs:
   deploy:
@@ -106,6 +110,10 @@ jobs:
           echo "RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}" >> .env
           echo "RABBITMQ_PASS=${{ secrets.RABBITMQ_PASS }}" >> .env
           echo "RABBITMQ_VIRTUAL_HOST=${{ secrets.RABBITMQ_VIRTUAL_HOST }}" >> .env
+
+          # User service (staff auto-assign + NRIC check)
+          echo "USER_SERVICE_URL=${{ secrets.USER_SERVICE_URL }}" >> .env
+          echo "INTERNAL_SERVICE_API_KEY=${{ secrets.INTERNAL_SERVICE_API_KEY }}" >> .env
 
       - name: Create Kubernetes Secret
         run: |

@@ -35,6 +35,8 @@ jobs:
       RABBITMQ_USER: ${{ secrets.RABBITMQ_USER }}
       RABBITMQ_PASS: ${{ secrets.RABBITMQ_PASS }}
       RABBITMQ_VIRTUAL_HOST: ${{ secrets.RABBITMQ_VIRTUAL_HOST }}
+      USER_SERVICE_URL: ${{ secrets.USER_SERVICE_URL }}
+      INTERNAL_SERVICE_API_KEY: ${{ secrets.INTERNAL_SERVICE_API_KEY }}
 
   deploy-prod:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
