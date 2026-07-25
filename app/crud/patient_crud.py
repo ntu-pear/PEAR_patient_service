@@ -387,8 +387,8 @@ def create_patient(db: Session, patient: PatientCreateWithAllocation, user: str,
         db.execute(query, params)
         db.flush()
 
-        # 3. Get the newly created patient
-        new_patient = db.query(Patient).filter(Patient.nric == patient.nric).first()
+        # 3. Get the newly created patient (filter isDeleted to avoid picking up a prior soft-deleted row with same NRIC)
+        new_patient = db.query(Patient).filter(Patient.nric == patient.nric, Patient.isDeleted == "0").first()
 
         # 4. Create outbox event in the same transaction
         outbox_service = get_outbox_service()        
