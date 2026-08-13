@@ -12,12 +12,27 @@ from ..schemas.patient_guardian import (  # TODO :note that this needs to be fix
     PatientGuardianUpdate,
 )
 from ..schemas.patient_patient_guardian import (
+    PatientPatientGuardian,
+    PatientPatientGuardianAssign,
     PatientPatientGuardianByGuardian,
     PatientPatientGuardianByPatient,
     PatientPatientGuardianCreate,
 )
+from ..schemas.response import PaginatedResponse
 
 router = APIRouter()
+
+@router.get("/Guardian/GetAllGuardians", response_model=PaginatedResponse[PatientGuardian])
+def get_all_guardians(pageNo: int = 0, pageSize: int = 10, db: Session = Depends(get_db)):
+    """List all existing guardians, for picking one to assign to a patient (instead of re-creating them)."""
+    db_guardians, totalRecords, totalPages = crud_guardian.get_all_guardians(db, pageNo=pageNo, pageSize=pageSize)
+    return PaginatedResponse(
+        data=[PatientGuardian.model_validate(g) for g in db_guardians],
+        pageNo=pageNo,
+        pageSize=pageSize,
+        totalRecords=totalRecords,
+        totalPages=totalPages,
+    )
 
 @router.get("/Guardian/GetPatientGuardianByGuardianId", response_model=PatientPatientGuardianByGuardian)
 def get_patient_guardian_by_guardianId(guardian_userid: str, db: Session = Depends(get_db)):
@@ -64,6 +79,52 @@ def create_patient_guardian(guardian: PatientGuardianCreate, db: Session = Depen
     )
     )
     return db_guardian
+
+
+@router.post("/Guardian/assign", response_model=PatientPatientGuardian)
+def assign_guardian_to_patient(assignment: PatientPatientGuardianAssign, db: Session = Depends(get_db)):
+    """Link an existing guardian to a patient, without creating a new guardian record."""
+    db_patient = crud_patient.get_patient(db, assignment.patientId, mask=False)
+    if not db_patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    db_guardian = crud_guardian.get_guardian(db, assignment.guardianId)
+    if not db_guardian:
+        raise HTTPException(status_code=404, detail="Guardian not found")
+
+    existing_link = crud_patient_patient_guardian.get_patient_patient_guardian_by_guardianId_and_patientId(
+        db, assignment.guardianId, assignment.patientId
+    )
+    if existing_link:
+        raise HTTPException(status_code=400, detail="Guardian is already assigned to this patient")
+
+    db_relationship_id = crud_relationship.get_relationshipId_by_relationshipName(db, assignment.relationshipName)
+    if not db_relationship_id:
+        raise HTTPException(status_code=404, detail="Relationship not found")
+
+    return crud_patient_patient_guardian.create_patient_patient_guardian(
+        db,
+        PatientPatientGuardianCreate(
+            guardianId=assignment.guardianId,
+            patientId=assignment.patientId,
+            relationshipId=db_relationship_id.id,
+            CreatedById=assignment.CreatedById,
+            ModifiedById=assignment.ModifiedById,
+            isDeleted="0",
+        )
+    )
+
+
+@router.delete("/Guardian/unassign", response_model=PatientPatientGuardian)
+def unassign_guardian_from_patient(patient_id: int, guardian_id: int, db: Session = Depends(get_db)):
+    """Unlink a guardian from a patient, without deleting the guardian record itself."""
+    db_link = crud_patient_patient_guardian.get_patient_patient_guardian_by_guardianId_and_patientId(
+        db, guardian_id, patient_id
+    )
+    if not db_link:
+        raise HTTPException(status_code=404, detail="No active guardian assignment found for this patient")
+
+    return crud_patient_patient_guardian.delete_relationship(db, db_link.id)
 
 
 @router.put("/Guardian/update", response_model=PatientGuardian)

@@ -2,6 +2,7 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
+from fastapi import HTTPException
 
 from app.crud.patient_patient_guardian_crud import (
     create_patient_patient_guardian,
@@ -11,7 +12,12 @@ from app.crud.patient_patient_guardian_crud import (
     get_all_patient_patient_guardian_by_guardianId,
     update_patient_patient_guardian,
 )
+from app.routers.patient_guardian_router import (
+    assign_guardian_to_patient,
+    unassign_guardian_from_patient,
+)
 from app.schemas.patient_patient_guardian import (
+    PatientPatientGuardianAssign,
     PatientPatientGuardianCreate,
     PatientPatientGuardianUpdate,
 )
@@ -164,9 +170,143 @@ def test_delete_relationship_not_found(db_session_mock):
     assert result is None
 
 
+def test_assign_guardian_to_patient_success(db_session_mock, ppg_assign):
+    mock_patient = MagicMock(id=1)
+    mock_guardian = MagicMock(id=1)
+    mock_relationship = MagicMock(id=1)
+    mock_link = MagicMock(id=1, patientId=1, guardianId=1)
+
+    with patch("app.routers.patient_guardian_router.crud_patient.get_patient", return_value=mock_patient), \
+         patch("app.routers.patient_guardian_router.crud_guardian.get_guardian", return_value=mock_guardian), \
+         patch(
+             "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+             "get_patient_patient_guardian_by_guardianId_and_patientId",
+             return_value=None,
+         ), \
+         patch(
+             "app.routers.patient_guardian_router.crud_relationship.get_relationshipId_by_relationshipName",
+             return_value=mock_relationship,
+         ), \
+         patch(
+             "app.routers.patient_guardian_router.crud_patient_patient_guardian.create_patient_patient_guardian",
+             return_value=mock_link,
+         ) as mock_create:
+
+        result = assign_guardian_to_patient(ppg_assign, db_session_mock)
+
+        assert result is mock_link
+        mock_create.assert_called_once()
+
+
+def test_assign_guardian_to_patient_patient_not_found(db_session_mock, ppg_assign):
+    with patch("app.routers.patient_guardian_router.crud_patient.get_patient", return_value=None):
+        with pytest.raises(HTTPException) as exc_info:
+            assign_guardian_to_patient(ppg_assign, db_session_mock)
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail == "Patient not found"
+
+
+def test_assign_guardian_to_patient_guardian_not_found(db_session_mock, ppg_assign):
+    mock_patient = MagicMock(id=1)
+
+    with patch("app.routers.patient_guardian_router.crud_patient.get_patient", return_value=mock_patient), \
+         patch("app.routers.patient_guardian_router.crud_guardian.get_guardian", return_value=None):
+        with pytest.raises(HTTPException) as exc_info:
+            assign_guardian_to_patient(ppg_assign, db_session_mock)
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail == "Guardian not found"
+
+
+def test_assign_guardian_to_patient_already_assigned(db_session_mock, ppg_assign):
+    mock_patient = MagicMock(id=1)
+    mock_guardian = MagicMock(id=1)
+    mock_existing_link = MagicMock(id=1)
+
+    with patch("app.routers.patient_guardian_router.crud_patient.get_patient", return_value=mock_patient), \
+         patch("app.routers.patient_guardian_router.crud_guardian.get_guardian", return_value=mock_guardian), \
+         patch(
+             "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+             "get_patient_patient_guardian_by_guardianId_and_patientId",
+             return_value=mock_existing_link,
+         ):
+        with pytest.raises(HTTPException) as exc_info:
+            assign_guardian_to_patient(ppg_assign, db_session_mock)
+
+    assert exc_info.value.status_code == 400
+    assert "already assigned" in exc_info.value.detail
+
+
+def test_assign_guardian_to_patient_relationship_not_found(db_session_mock, ppg_assign):
+    mock_patient = MagicMock(id=1)
+    mock_guardian = MagicMock(id=1)
+
+    with patch("app.routers.patient_guardian_router.crud_patient.get_patient", return_value=mock_patient), \
+         patch("app.routers.patient_guardian_router.crud_guardian.get_guardian", return_value=mock_guardian), \
+         patch(
+             "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+             "get_patient_patient_guardian_by_guardianId_and_patientId",
+             return_value=None,
+         ), \
+         patch(
+             "app.routers.patient_guardian_router.crud_relationship.get_relationshipId_by_relationshipName",
+             return_value=None,
+         ):
+        with pytest.raises(HTTPException) as exc_info:
+            assign_guardian_to_patient(ppg_assign, db_session_mock)
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail == "Relationship not found"
+
+
+def test_unassign_guardian_from_patient_success(db_session_mock):
+    mock_link = MagicMock(id=1, patientId=1, guardianId=1)
+    mock_deleted = MagicMock(id=1, isDeleted="1")
+
+    with patch(
+        "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+        "get_patient_patient_guardian_by_guardianId_and_patientId",
+        return_value=mock_link,
+    ), \
+         patch(
+             "app.routers.patient_guardian_router.crud_patient_patient_guardian.delete_relationship",
+             return_value=mock_deleted,
+         ) as mock_delete:
+
+        result = unassign_guardian_from_patient(patient_id=1, guardian_id=1, db=db_session_mock)
+
+        assert result is mock_deleted
+        mock_delete.assert_called_once_with(db_session_mock, mock_link.id)
+
+
+def test_unassign_guardian_from_patient_not_found(db_session_mock):
+    with patch(
+        "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+        "get_patient_patient_guardian_by_guardianId_and_patientId",
+        return_value=None,
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            unassign_guardian_from_patient(patient_id=1, guardian_id=999, db=db_session_mock)
+
+    assert exc_info.value.status_code == 404
+    assert "No active guardian assignment found" in exc_info.value.detail
+
+
 @pytest.fixture
 def db_session_mock():
     return get_db_session_mock()
+
+
+@pytest.fixture
+def ppg_assign():
+    return PatientPatientGuardianAssign(
+        patientId=1,
+        guardianId=1,
+        relationshipName="Husband",
+        CreatedById="1",
+        ModifiedById="1",
+    )
 
 
 @pytest.fixture

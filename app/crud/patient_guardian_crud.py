@@ -34,6 +34,20 @@ def get_guardian_by_nric(db: Session, nric: str):
         PatientGuardian.active == "Y"
     ).first()
 
+def get_all_guardians(db: Session, pageNo: int = 0, pageSize: int = 10):
+    """Get all active guardians, paginated - for selecting an existing guardian to assign."""
+    query = db.query(PatientGuardian).filter(
+        PatientGuardian.isDeleted == "0",
+        PatientGuardian.active == "Y"
+    )
+    totalRecords = query.count()
+    totalPages = (totalRecords + pageSize - 1) // pageSize if pageSize > 0 else 0
+
+    offset = pageNo * pageSize
+    db_guardians = query.order_by(PatientGuardian.lastName, PatientGuardian.firstName).offset(offset).limit(pageSize).all()
+
+    return db_guardians, totalRecords, totalPages
+
 def create_guardian(
     db: Session, guardian: PatientGuardianCreate
 ):

@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from app.crud.patient_guardian_crud import (
     create_guardian,
     delete_guardian,
+    get_all_guardians,
     get_guardian,
     get_guardian_by_id_list,
     get_guardian_by_nric,
@@ -75,6 +76,48 @@ def test_get_guardian_by_nric(db_session_mock):
     result = get_guardian_by_nric(db_session_mock, "S1234567Z")
     
     assert result == mock_guardian
+
+
+def test_get_all_guardians(db_session_mock):
+    """Test case for listing all active guardians, paginated - for assign-to-patient selection."""
+    mock_guardian_1 = get_mock_patient_guardian()
+    mock_guardian_1.id = 1
+    mock_guardian_2 = get_mock_patient_guardian()
+    mock_guardian_2.id = 2
+    mock_guardians = [mock_guardian_1, mock_guardian_2]
+
+    mock_query = MagicMock()
+    mock_query.filter.return_value = mock_query
+    mock_query.count.return_value = 2
+    mock_query.order_by.return_value = mock_query
+    mock_query.offset.return_value = mock_query
+    mock_query.limit.return_value = mock_query
+    mock_query.all.return_value = mock_guardians
+    db_session_mock.query.return_value = mock_query
+
+    guardians, total_records, total_pages = get_all_guardians(db_session_mock, pageNo=0, pageSize=10)
+
+    assert guardians == mock_guardians
+    assert total_records == 2
+    assert total_pages == 1
+
+
+def test_get_all_guardians_empty(db_session_mock):
+    """Test case for listing guardians when none exist."""
+    mock_query = MagicMock()
+    mock_query.filter.return_value = mock_query
+    mock_query.count.return_value = 0
+    mock_query.order_by.return_value = mock_query
+    mock_query.offset.return_value = mock_query
+    mock_query.limit.return_value = mock_query
+    mock_query.all.return_value = []
+    db_session_mock.query.return_value = mock_query
+
+    guardians, total_records, total_pages = get_all_guardians(db_session_mock, pageNo=0, pageSize=10)
+
+    assert guardians == []
+    assert total_records == 0
+    assert total_pages == 0
 
 
 def test_create_guardian(db_session_mock):
