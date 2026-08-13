@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from ..crud import patient_crud as crud_patient
@@ -23,9 +23,14 @@ from ..schemas.response import PaginatedResponse
 router = APIRouter()
 
 @router.get("/Guardian/GetAllGuardians", response_model=PaginatedResponse[PatientGuardian])
-def get_all_guardians(pageNo: int = 0, pageSize: int = 10, db: Session = Depends(get_db)):
+def get_all_guardians(
+    pageNo: int = 0,
+    pageSize: int = 10,
+    mask: bool = Query(True, description="Mask sensitive data (NRIC)"),
+    db: Session = Depends(get_db),
+):
     """List all existing guardians, for picking one to assign to a patient (instead of re-creating them)."""
-    db_guardians, totalRecords, totalPages = crud_guardian.get_all_guardians(db, pageNo=pageNo, pageSize=pageSize)
+    db_guardians, totalRecords, totalPages = crud_guardian.get_all_guardians(db, pageNo=pageNo, pageSize=pageSize, mask=mask)
     return PaginatedResponse(
         data=[PatientGuardian.model_validate(g) for g in db_guardians],
         pageNo=pageNo,

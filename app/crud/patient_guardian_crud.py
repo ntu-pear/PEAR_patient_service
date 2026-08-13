@@ -34,8 +34,12 @@ def get_guardian_by_nric(db: Session, nric: str):
         PatientGuardian.active == "Y"
     ).first()
 
-def get_all_guardians(db: Session, pageNo: int = 0, pageSize: int = 10):
-    """Get all active guardians, paginated - for selecting an existing guardian to assign."""
+def get_all_guardians(db: Session, pageNo: int = 0, pageSize: int = 10, mask: bool = True):
+    """Get all active guardians, paginated - for selecting an existing guardian to assign.
+
+    NRIC is masked by default (matching Patient's own masking convention) since this
+    listing is meant for identifying a guardian by name, not for surfacing full PII.
+    """
     query = db.query(PatientGuardian).filter(
         PatientGuardian.isDeleted == "0",
         PatientGuardian.active == "Y"
@@ -45,6 +49,10 @@ def get_all_guardians(db: Session, pageNo: int = 0, pageSize: int = 10):
 
     offset = pageNo * pageSize
     db_guardians = query.order_by(PatientGuardian.lastName, PatientGuardian.firstName).offset(offset).limit(pageSize).all()
+
+    if db_guardians and mask:
+        for db_guardian in db_guardians:
+            db_guardian.nric = db_guardian.mask_nric
 
     return db_guardians, totalRecords, totalPages
 
@@ -61,6 +69,18 @@ def create_guardian(
         raise HTTPException(
             status_code=400,
             detail="Guardian NRIC conflicts with an existing active patient record"
+        )
+
+    # Reject if an active guardian already holds this NRIC
+    existing_guardian = (
+        db.query(PatientGuardian)
+        .filter(PatientGuardian.nric == guardian.nric, PatientGuardian.isDeleted == "0", PatientGuardian.active == "Y")
+        .first()
+    )
+    if existing_guardian:
+        raise HTTPException(
+            status_code=400,
+            detail="A guardian with this NRIC already exists"
         )
 
     guardian_data = guardian.model_dump(exclude={'patientId', 'relationshipName'})
@@ -104,6 +124,23 @@ def update_guardian(
             raise HTTPException(
                 status_code=400,
                 detail="Guardian NRIC conflicts with an existing active patient record"
+            )
+
+        # Reject if a different active guardian already holds the new NRIC
+        existing_guardian = (
+            db.query(PatientGuardian)
+            .filter(
+                PatientGuardian.nric == guardian.nric,
+                PatientGuardian.isDeleted == "0",
+                PatientGuardian.active == "Y",
+                PatientGuardian.id != guardian_id,
+            )
+            .first()
+        )
+        if existing_guardian:
+            raise HTTPException(
+                status_code=400,
+                detail="A guardian with this NRIC already exists"
             )
 
     # 3. Validate relationshipName exists in PATIENT_GUARDIAN_RELATIONSHIP_MAPPING table
