@@ -142,9 +142,19 @@ def get_patient_patient_guardian_by_guardianId_and_patientId(db: Session, guardi
         .filter(
             PatientPatientGuardian.guardianId == guardianId,
             PatientPatientGuardian.patientId == patientId,
-            PatientPatientGuardian.isDeleted == '0', 
+            PatientPatientGuardian.isDeleted == '0',
         )
         .first()
+    )
+
+def count_active_patients_for_guardian(db: Session, guardianId: int) -> int:
+    return (
+        db.query(PatientPatientGuardian)
+        .filter(
+            PatientPatientGuardian.guardianId == guardianId,
+            PatientPatientGuardian.isDeleted == '0',
+        )
+        .count()
     )
 def create_patient_patient_guardian(db: Session, patientPatientGuradian: PatientPatientGuardianCreate):
     db_patient_patient_guardian = PatientPatientGuardian(**patientPatientGuradian.model_dump())

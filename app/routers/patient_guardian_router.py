@@ -21,6 +21,8 @@ from ..schemas.patient_patient_guardian import (
 
 router = APIRouter()
 
+MAX_PATIENTS_PER_GUARDIAN = 2
+
 # NOTE: guardian lookup is by NRIC only (see GetPatientGuardianByNRIC below), not a
 # bulk "list all guardians" endpoint - a guardian provides their own NRIC in person
 # when signing up a new patient, so an exact-match lookup is both sufficient and the
@@ -90,6 +92,13 @@ def assign_guardian_to_patient(assignment: PatientPatientGuardianAssign, db: Ses
     )
     if existing_link:
         raise HTTPException(status_code=400, detail="Guardian is already assigned to this patient")
+
+    active_patient_count = crud_patient_patient_guardian.count_active_patients_for_guardian(db, assignment.guardianId)
+    if active_patient_count >= MAX_PATIENTS_PER_GUARDIAN:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Guardian already has the maximum of {MAX_PATIENTS_PER_GUARDIAN} patients assigned"
+        )
 
     db_relationship_id = crud_relationship.get_relationshipId_by_relationshipName(db, assignment.relationshipName)
     if not db_relationship_id:

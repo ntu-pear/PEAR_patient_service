@@ -10,10 +10,12 @@ from app.crud.patient_patient_guardian_crud import (
     delete_relationship,
     get_all_patient_guardian_by_patientId,
     get_all_patient_patient_guardian_by_guardianId,
+    get_all_patient_patient_guardian_by_guardianNRIC,
     update_patient_patient_guardian,
 )
 from app.routers.patient_guardian_router import (
     assign_guardian_to_patient,
+    get_patient_guardian_by_nric,
     unassign_guardian_from_patient,
 )
 from app.schemas.patient_patient_guardian import (
@@ -101,6 +103,94 @@ def test_get_by_guardian_id_returns_list(db_session_mock):
     assert result is not None
 
 
+def test_get_by_guardian_nric_not_found(db_session_mock):
+    """No guardian at all with this NRIC - the join query and the fallback lookup both come up empty."""
+    mock_join_query = MagicMock()
+    mock_join_query.join.return_value.join.return_value.join.return_value.filter.return_value.all.return_value = []
+
+    mock_fallback_query = MagicMock()
+    mock_fallback_query.filter.return_value.first.return_value = None
+
+    db_session_mock.query.side_effect = [mock_join_query, mock_fallback_query]
+
+    result = get_all_patient_patient_guardian_by_guardianNRIC(db_session_mock, "S9999999Z")
+
+    assert result is None
+
+
+def test_get_by_guardian_nric_exists_no_patients(db_session_mock):
+    """Guardian exists but isn't linked to any patient yet - should return the guardian with an empty patients list, not None."""
+    mock_join_query = MagicMock()
+    mock_join_query.join.return_value.join.return_value.join.return_value.filter.return_value.all.return_value = []
+
+    mock_guardian_raw = MagicMock(id=1, firstName="Test", nric="S1234567Z")
+
+    mock_fallback_query = MagicMock()
+    mock_fallback_query.filter.return_value.first.return_value = mock_guardian_raw
+
+    db_session_mock.query.side_effect = [mock_join_query, mock_fallback_query]
+
+    with patch("app.crud.patient_patient_guardian_crud.PatientGuardianModel") as mock_guardian_model:
+        mock_guardian_model.from_orm.return_value = MagicMock()
+
+        result = get_all_patient_patient_guardian_by_guardianNRIC(db_session_mock, "S1234567Z")
+
+    assert result is not None
+    assert result["patients"] == []
+
+
+def test_get_by_guardian_nric_with_relationships(db_session_mock):
+    """Guardian exists and already has patients linked - should return the guardian with a populated patients list."""
+    mock_relationship = MagicMock()
+    mock_relationship.relationship.relationshipName = "Mother"
+    mock_relationship.patient_guardian = MagicMock()
+    mock_relationship.patient = MagicMock()
+
+    mock_join_query = MagicMock()
+    mock_join_query.join.return_value.join.return_value.join.return_value.filter.return_value.all.return_value = [
+        mock_relationship
+    ]
+    db_session_mock.query.return_value = mock_join_query
+
+    with patch("app.crud.patient_patient_guardian_crud.PatientModel") as mock_patient_model, \
+         patch("app.crud.patient_patient_guardian_crud.PatientGuardianModel") as mock_guardian_model, \
+         patch("app.crud.patient_patient_guardian_crud.PatientWithRelationshipModel") as mock_pwr:
+        mock_patient_model.from_orm.return_value = MagicMock()
+        mock_guardian_model.from_orm.return_value = MagicMock()
+        mock_pwr.return_value = MagicMock()
+
+        result = get_all_patient_patient_guardian_by_guardianNRIC(db_session_mock, "S1234567Z")
+
+    assert result is not None
+    assert len(result["patients"]) == 1
+
+
+def test_get_patient_guardian_by_nric_not_found(db_session_mock):
+    """Router: no guardian with this NRIC - should 404 before even calling the relationship lookup."""
+    with patch("app.routers.patient_guardian_router.crud_guardian.get_guardian_by_nric", return_value=None):
+        with pytest.raises(HTTPException) as exc_info:
+            get_patient_guardian_by_nric(nric="S9999999Z", db=db_session_mock)
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail == "Guardian not found"
+
+
+def test_get_patient_guardian_by_nric_success(db_session_mock):
+    """Router: guardian exists - returns the combined guardian + patients payload."""
+    mock_guardian = MagicMock(id=1, nric="S1234567Z")
+    mock_response = {"patient_guardian": mock_guardian, "patients": []}
+
+    with patch("app.routers.patient_guardian_router.crud_guardian.get_guardian_by_nric", return_value=mock_guardian), \
+         patch(
+             "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+             "get_all_patient_patient_guardian_by_guardianNRIC",
+             return_value=mock_response,
+         ):
+        result = get_patient_guardian_by_nric(nric="S1234567Z", db=db_session_mock)
+
+    assert result is mock_response
+
+
 @patch("app.crud.patient_patient_guardian_crud.log_crud_action")
 def test_create_patient_patient_guardian(mock_log, db_session_mock, ppg_create):
     result = create_patient_patient_guardian(db_session_mock, ppg_create)
@@ -184,6 +274,11 @@ def test_assign_guardian_to_patient_success(db_session_mock, ppg_assign):
              return_value=None,
          ), \
          patch(
+             "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+             "count_active_patients_for_guardian",
+             return_value=0,
+         ), \
+         patch(
              "app.routers.patient_guardian_router.crud_relationship.get_relationshipId_by_relationshipName",
              return_value=mock_relationship,
          ), \
@@ -250,6 +345,11 @@ def test_assign_guardian_to_patient_relationship_not_found(db_session_mock, ppg_
              return_value=None,
          ), \
          patch(
+             "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+             "count_active_patients_for_guardian",
+             return_value=0,
+         ), \
+         patch(
              "app.routers.patient_guardian_router.crud_relationship.get_relationshipId_by_relationshipName",
              return_value=None,
          ):
@@ -258,6 +358,30 @@ def test_assign_guardian_to_patient_relationship_not_found(db_session_mock, ppg_
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == "Relationship not found"
+
+
+def test_assign_guardian_to_patient_at_max_capacity(db_session_mock, ppg_assign):
+    """A guardian already linked to 2 active patients cannot be assigned a 3rd."""
+    mock_patient = MagicMock(id=1)
+    mock_guardian = MagicMock(id=1)
+
+    with patch("app.routers.patient_guardian_router.crud_patient.get_patient", return_value=mock_patient), \
+         patch("app.routers.patient_guardian_router.crud_guardian.get_guardian", return_value=mock_guardian), \
+         patch(
+             "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+             "get_patient_patient_guardian_by_guardianId_and_patientId",
+             return_value=None,
+         ), \
+         patch(
+             "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+             "count_active_patients_for_guardian",
+             return_value=2,
+         ):
+        with pytest.raises(HTTPException) as exc_info:
+            assign_guardian_to_patient(ppg_assign, db_session_mock)
+
+    assert exc_info.value.status_code == 400
+    assert "maximum of 2 patients" in exc_info.value.detail
 
 
 def test_unassign_guardian_from_patient_success(db_session_mock):
