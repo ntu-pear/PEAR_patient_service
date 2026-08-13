@@ -34,28 +34,6 @@ def get_guardian_by_nric(db: Session, nric: str):
         PatientGuardian.active == "Y"
     ).first()
 
-def get_all_guardians(db: Session, pageNo: int = 0, pageSize: int = 10, mask: bool = True):
-    """Get all active guardians, paginated - for selecting an existing guardian to assign.
-
-    NRIC is masked by default (matching Patient's own masking convention) since this
-    listing is meant for identifying a guardian by name, not for surfacing full PII.
-    """
-    query = db.query(PatientGuardian).filter(
-        PatientGuardian.isDeleted == "0",
-        PatientGuardian.active == "Y"
-    )
-    totalRecords = query.count()
-    totalPages = (totalRecords + pageSize - 1) // pageSize if pageSize > 0 else 0
-
-    offset = pageNo * pageSize
-    db_guardians = query.order_by(PatientGuardian.lastName, PatientGuardian.firstName).offset(offset).limit(pageSize).all()
-
-    if db_guardians and mask:
-        for db_guardian in db_guardians:
-            db_guardian.nric = db_guardian.mask_nric
-
-    return db_guardians, totalRecords, totalPages
-
 def create_guardian(
     db: Session, guardian: PatientGuardianCreate
 ):

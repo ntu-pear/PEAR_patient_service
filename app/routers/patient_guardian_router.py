@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..crud import patient_crud as crud_patient
@@ -18,26 +18,14 @@ from ..schemas.patient_patient_guardian import (
     PatientPatientGuardianByPatient,
     PatientPatientGuardianCreate,
 )
-from ..schemas.response import PaginatedResponse
 
 router = APIRouter()
 
-@router.get("/Guardian/GetAllGuardians", response_model=PaginatedResponse[PatientGuardian])
-def get_all_guardians(
-    pageNo: int = 0,
-    pageSize: int = 10,
-    mask: bool = Query(True, description="Mask sensitive data (NRIC)"),
-    db: Session = Depends(get_db),
-):
-    """List all existing guardians, for picking one to assign to a patient (instead of re-creating them)."""
-    db_guardians, totalRecords, totalPages = crud_guardian.get_all_guardians(db, pageNo=pageNo, pageSize=pageSize, mask=mask)
-    return PaginatedResponse(
-        data=[PatientGuardian.model_validate(g) for g in db_guardians],
-        pageNo=pageNo,
-        pageSize=pageSize,
-        totalRecords=totalRecords,
-        totalPages=totalPages,
-    )
+# NOTE: guardian lookup is by NRIC only (see GetPatientGuardianByNRIC below), not a
+# bulk "list all guardians" endpoint - a guardian provides their own NRIC in person
+# when signing up a new patient, so an exact-match lookup is both sufficient and the
+# right amount of data exposure. A browsable/paginated list of every guardian's PII
+# would be unnecessary exposure for this use case.
 
 @router.get("/Guardian/GetPatientGuardianByGuardianId", response_model=PatientPatientGuardianByGuardian)
 def get_patient_guardian_by_guardianId(guardian_userid: str, db: Session = Depends(get_db)):
