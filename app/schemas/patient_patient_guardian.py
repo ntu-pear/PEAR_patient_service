@@ -25,6 +25,14 @@ class PatientPatientGuardianUpdate(PatientPatientGuardianBase):
     relationshipId: int
     modifiedDate: datetime =Field(default_factory=datetime.now)
 
+class PatientPatientGuardianAssign(BaseModel):
+    """Link an existing guardian to a patient, without creating a new guardian record."""
+    patientId: int
+    guardianId: int
+    relationshipName: str
+    CreatedById: str = Field(json_schema_extra={"example": "1"})
+    ModifiedById: str = Field(json_schema_extra={"example": "1"})
+
 class PatientPatientGuardian(PatientPatientGuardianBase):
     id: int
     createdDate: datetime

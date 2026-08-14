@@ -114,6 +114,25 @@ def test_create_guardian_nric_conflicts_with_active_patient(db_session_mock):
     assert "conflicts with an existing active patient record" in exc_info.value.detail
 
 
+def test_create_guardian_nric_conflicts_with_existing_guardian(db_session_mock):
+    """Test that creating a guardian fails when an active guardian already holds the same NRIC."""
+    guardian_create = patient_guardian_create()
+    mock_existing_guardian = get_mock_patient_guardian()
+    mock_existing_guardian.id = 99
+
+    # No active patient conflict, but an active guardian conflict exists
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        None,                     # patient NRIC check
+        mock_existing_guardian,   # guardian NRIC check
+    ]
+
+    with pytest.raises(HTTPException) as exc_info:
+        create_guardian(db_session_mock, guardian_create)
+
+    assert exc_info.value.status_code == 400
+    assert "guardian with this NRIC already exists" in exc_info.value.detail
+
+
 def test_create_guardian_nric_allowed_when_patient_inactive(db_session_mock):
     """Test that creating a guardian succeeds when the patient with the same NRIC is inactive."""
     guardian_create = patient_guardian_create()
@@ -171,6 +190,33 @@ def test_update_guardian_nric_conflicts_with_active_patient(db_session_mock):
 
     assert exc_info.value.status_code == 400
     assert "conflicts with an existing active patient record" in exc_info.value.detail
+
+
+def test_update_guardian_nric_conflicts_with_existing_guardian(db_session_mock):
+    """Test that updating a guardian's NRIC fails when a different active guardian holds the new NRIC."""
+    guardian_update = patient_guardian_update()
+    mock_guardian = get_mock_patient_guardian()
+    mock_guardian.id = 1
+    mock_guardian.nric = "T9876543A"  # Current NRIC differs so the check runs
+
+    guardian_update.nric = "S1234567Z"  # New NRIC being set
+
+    mock_other_guardian = get_mock_patient_guardian()
+    mock_other_guardian.id = 2
+    mock_other_guardian.nric = guardian_update.nric
+
+    # First query: get the guardian; second: no patient conflict; third: guardian conflict found
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        mock_guardian,         # get_guardian
+        None,                  # active patient NRIC check
+        mock_other_guardian,   # active guardian NRIC check
+    ]
+
+    with pytest.raises(HTTPException) as exc_info:
+        update_guardian(db_session_mock, 1, guardian_update)
+
+    assert exc_info.value.status_code == 400
+    assert "guardian with this NRIC already exists" in exc_info.value.detail
 
 
 def test_update_guardian_same_nric_skips_patient_check(db_session_mock):
