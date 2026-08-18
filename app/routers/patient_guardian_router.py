@@ -154,6 +154,15 @@ def update_patient_guardian(guardian_id: int, guardian: PatientGuardianUpdate, d
 
 @router.delete("/Guardian/delete", response_model=PatientGuardianUpdate)
 def delete_patient_guardian(guardian_id: int, db: Session = Depends(get_db)):
+    linked_patient_ids = crud_patient_patient_guardian.get_active_patient_ids_for_guardian(db, guardian_id)
+    for patient_id in linked_patient_ids:
+        active_guardian_count = crud_patient_patient_guardian.count_active_guardians_for_patient(db, patient_id)
+        if active_guardian_count <= MIN_GUARDIANS_PER_PATIENT:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot delete guardian: patient {patient_id} must have at least {MIN_GUARDIANS_PER_PATIENT} guardian assigned"
+            )
+
     db_guardian = crud_guardian.delete_guardian(db, guardian_id)
     if not db_guardian:
         raise HTTPException(status_code=404, detail="Guardian not found")

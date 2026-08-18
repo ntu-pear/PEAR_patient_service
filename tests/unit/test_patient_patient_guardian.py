@@ -15,6 +15,7 @@ from app.crud.patient_patient_guardian_crud import (
 )
 from app.routers.patient_guardian_router import (
     assign_guardian_to_patient,
+    delete_patient_guardian,
     get_patient_guardian_by_nric,
     unassign_guardian_from_patient,
 )
@@ -479,6 +480,27 @@ def test_unassign_guardian_from_patient_not_found(db_session_mock):
 
     assert exc_info.value.status_code == 404
     assert "No active guardian assignment found" in exc_info.value.detail
+
+
+def test_delete_patient_guardian_blocked_when_patients_last_guardian(db_session_mock):
+    """Deleting a guardian who is a patient's only guardian is rejected before the guardian is soft-deleted."""
+    with patch(
+        "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+        "get_active_patient_ids_for_guardian",
+        return_value=[1],
+    ), \
+         patch(
+             "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+             "count_active_guardians_for_patient",
+             return_value=1,
+         ), \
+         patch("app.routers.patient_guardian_router.crud_guardian.delete_guardian") as mock_delete_guardian:
+        with pytest.raises(HTTPException) as exc_info:
+            delete_patient_guardian(guardian_id=1, db=db_session_mock)
+
+    assert exc_info.value.status_code == 400
+    assert "must have at least" in exc_info.value.detail
+    mock_delete_guardian.assert_not_called()
 
 
 @pytest.fixture
