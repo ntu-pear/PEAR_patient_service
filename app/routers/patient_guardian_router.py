@@ -22,6 +22,8 @@ from ..schemas.patient_patient_guardian import (
 router = APIRouter()
 
 MAX_PATIENTS_PER_GUARDIAN = 2
+MAX_GUARDIANS_PER_PATIENT = 2
+MIN_GUARDIANS_PER_PATIENT = 1
 
 # NOTE: guardian lookup is by NRIC only (see GetPatientGuardianByNRIC below), not a
 # bulk "list all guardians" endpoint - a guardian provides their own NRIC in person
@@ -100,6 +102,13 @@ def assign_guardian_to_patient(assignment: PatientPatientGuardianAssign, db: Ses
             detail=f"Guardian already has the maximum of {MAX_PATIENTS_PER_GUARDIAN} patients assigned"
         )
 
+    active_guardian_count = crud_patient_patient_guardian.count_active_guardians_for_patient(db, assignment.patientId)
+    if active_guardian_count >= MAX_GUARDIANS_PER_PATIENT:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Patient already has the maximum of {MAX_GUARDIANS_PER_PATIENT} guardians assigned"
+        )
+
     db_relationship_id = crud_relationship.get_relationshipId_by_relationshipName(db, assignment.relationshipName)
     if not db_relationship_id:
         raise HTTPException(status_code=404, detail="Relationship not found")
@@ -125,6 +134,13 @@ def unassign_guardian_from_patient(patient_id: int, guardian_id: int, db: Sessio
     )
     if not db_link:
         raise HTTPException(status_code=404, detail="No active guardian assignment found for this patient")
+
+    active_guardian_count = crud_patient_patient_guardian.count_active_guardians_for_patient(db, patient_id)
+    if active_guardian_count <= MIN_GUARDIANS_PER_PATIENT:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Patient must have at least {MIN_GUARDIANS_PER_PATIENT} guardian assigned"
+        )
 
     return crud_patient_patient_guardian.delete_relationship(db, db_link.id)
 

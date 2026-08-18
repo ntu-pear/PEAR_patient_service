@@ -279,6 +279,11 @@ def test_assign_guardian_to_patient_success(db_session_mock, ppg_assign):
              return_value=0,
          ), \
          patch(
+             "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+             "count_active_guardians_for_patient",
+             return_value=0,
+         ), \
+         patch(
              "app.routers.patient_guardian_router.crud_relationship.get_relationshipId_by_relationshipName",
              return_value=mock_relationship,
          ), \
@@ -350,6 +355,11 @@ def test_assign_guardian_to_patient_relationship_not_found(db_session_mock, ppg_
              return_value=0,
          ), \
          patch(
+             "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+             "count_active_guardians_for_patient",
+             return_value=0,
+         ), \
+         patch(
              "app.routers.patient_guardian_router.crud_relationship.get_relationshipId_by_relationshipName",
              return_value=None,
          ):
@@ -384,6 +394,35 @@ def test_assign_guardian_to_patient_at_max_capacity(db_session_mock, ppg_assign)
     assert "maximum of 2 patients" in exc_info.value.detail
 
 
+def test_assign_guardian_to_patient_at_max_guardians(db_session_mock, ppg_assign):
+    """A patient already linked to 2 active guardians cannot be assigned a 3rd."""
+    mock_patient = MagicMock(id=1)
+    mock_guardian = MagicMock(id=1)
+
+    with patch("app.routers.patient_guardian_router.crud_patient.get_patient", return_value=mock_patient), \
+         patch("app.routers.patient_guardian_router.crud_guardian.get_guardian", return_value=mock_guardian), \
+         patch(
+             "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+             "get_patient_patient_guardian_by_guardianId_and_patientId",
+             return_value=None,
+         ), \
+         patch(
+             "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+             "count_active_patients_for_guardian",
+             return_value=0,
+         ), \
+         patch(
+             "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+             "count_active_guardians_for_patient",
+             return_value=2,
+         ):
+        with pytest.raises(HTTPException) as exc_info:
+            assign_guardian_to_patient(ppg_assign, db_session_mock)
+
+    assert exc_info.value.status_code == 400
+    assert "maximum of 2 guardians" in exc_info.value.detail
+
+
 def test_unassign_guardian_from_patient_success(db_session_mock):
     mock_link = MagicMock(id=1, patientId=1, guardianId=1)
     mock_deleted = MagicMock(id=1, isDeleted="1")
@@ -394,6 +433,11 @@ def test_unassign_guardian_from_patient_success(db_session_mock):
         return_value=mock_link,
     ), \
          patch(
+             "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+             "count_active_guardians_for_patient",
+             return_value=2,
+         ), \
+         patch(
              "app.routers.patient_guardian_router.crud_patient_patient_guardian.delete_relationship",
              return_value=mock_deleted,
          ) as mock_delete:
@@ -402,6 +446,26 @@ def test_unassign_guardian_from_patient_success(db_session_mock):
 
         assert result is mock_deleted
         mock_delete.assert_called_once_with(db_session_mock, mock_link.id)
+
+
+def test_unassign_guardian_from_patient_at_min_guardians(db_session_mock):
+    mock_link = MagicMock(id=1, patientId=1, guardianId=1)
+
+    with patch(
+        "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+        "get_patient_patient_guardian_by_guardianId_and_patientId",
+        return_value=mock_link,
+    ), \
+         patch(
+             "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+             "count_active_guardians_for_patient",
+             return_value=1,
+         ):
+        with pytest.raises(HTTPException) as exc_info:
+            unassign_guardian_from_patient(patient_id=1, guardian_id=1, db=db_session_mock)
+
+    assert exc_info.value.status_code == 400
+    assert "at least" in exc_info.value.detail
 
 
 def test_unassign_guardian_from_patient_not_found(db_session_mock):

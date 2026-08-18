@@ -156,6 +156,16 @@ def count_active_patients_for_guardian(db: Session, guardianId: int) -> int:
         )
         .count()
     )
+
+def count_active_guardians_for_patient(db: Session, patientId: int) -> int:
+    return (
+        db.query(PatientPatientGuardian)
+        .filter(
+            PatientPatientGuardian.patientId == patientId,
+            PatientPatientGuardian.isDeleted == '0',
+        )
+        .count()
+    )
 def create_patient_patient_guardian(db: Session, patientPatientGuradian: PatientPatientGuardianCreate):
     db_patient_patient_guardian = PatientPatientGuardian(**patientPatientGuradian.model_dump())
     updated_data_dict = serialize_data(patientPatientGuradian.model_dump())
