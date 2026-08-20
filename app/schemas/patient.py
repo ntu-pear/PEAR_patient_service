@@ -51,7 +51,7 @@ class Patient(PatientBase):
     model_config = {"from_attributes": True}
 
 class PatientCreateWithAllocation(PatientCreate):
-    guardianId: int
+    guardianId: Optional[int] = None
     doctorId: Optional[str] = None
     gameTherapistId: Optional[str] = None
     caregiverId: Optional[str] = None

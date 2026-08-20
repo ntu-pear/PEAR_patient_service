@@ -183,6 +183,39 @@ def test_guardian_not_found(db, patient_data):
 @patch("app.crud.patient_crud.log_crud_action")
 @patch("app.crud.patient_crud.get_outbox_service")
 @patch("app.crud.patient_crud.get_least_loaded_staff")
+def test_create_patient_without_guardian_skips_allocation(mock_least, mock_outbox, mock_log, db, patient_data):
+    """Staff still auto-assigns with no guardian, but no PatientAllocation row is created
+    (PATIENT_ALLOCATION.guardianId is NOT NULL) - guardian can be attached later via /Guardian/assign."""
+    patient_data.guardianId = None
+
+    mock_least.side_effect = lambda role, db_, api_key: {
+        "DOCTOR": "D001", "GAME THERAPIST": "GT001", "CAREGIVER": "CG001"
+    }[role]
+
+    new_patient_mock = MagicMock(id=42, nric="S1234567A")
+    db.query.return_value.filter.return_value.first.side_effect = [
+        None,              # NRIC check (patient)
+        None,              # NRIC check (guardian conflict)
+        new_patient_mock,  # get new_patient after insert
+    ]
+
+    mock_outbox.return_value.create_event.return_value = MagicMock(id=99)
+
+    from app.crud.patient_crud import create_patient
+    result = create_patient(
+        db, patient_data, user="SUP1", user_full_name="Supervisor",
+        api_key="key", supervisor_id="SUP1"
+    )
+
+    mock_least.assert_called()
+    db.commit.assert_called_once()
+    for add_call in db.add.call_args_list:
+        assert add_call.args[0].__class__.__name__ != "PatientAllocation"
+
+
+@patch("app.crud.patient_crud.log_crud_action")
+@patch("app.crud.patient_crud.get_outbox_service")
+@patch("app.crud.patient_crud.get_least_loaded_staff")
 def test_user_service_unreachable_raises_503(mock_least, mock_outbox, mock_log, db, patient_data):
     mock_least.side_effect = HTTPException(status_code=503, detail="unreachable")
 

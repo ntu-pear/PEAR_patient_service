@@ -447,8 +447,9 @@ def create_patient(db: Session, patient: PatientCreateWithAllocation, user: str,
             if doctor2_id and doctor2_id == resolved_doctor_id:
                 raise HTTPException(status_code=400, detail="doctor2Id must differ from doctorId")
 
-        # 7. Create allocation atomically (guardianId is still required by PATIENT_ALLOCATION's schema)
-        if has_allocation:
+        # 7. Create allocation atomically (only when a guardian was given - PATIENT_ALLOCATION.guardianId is NOT NULL;
+        # a patient created without one can have a guardian attached later via /Guardian/assign)
+        if has_allocation and guardian_id is not None:
             db_allocation = PatientAllocation(
                 active="Y",
                 patientId=new_patient.id,
