@@ -307,6 +307,9 @@ def create_patient(db: Session, patient: PatientCreateWithAllocation, user: str,
             detail="Patient NRIC conflicts with an existing active guardian record"
         )
 
+    # Auto-assign (staff resolution + allocation) only applies to the allocation-aware schema
+    has_allocation = isinstance(patient, PatientCreateWithAllocation)
+
     # Validate guardianId exists (only when provided via PatientCreateWithAllocation)
     guardian_id = getattr(patient, "guardianId", None)
     if guardian_id is not None:
@@ -434,8 +437,8 @@ def create_patient(db: Session, patient: PatientCreateWithAllocation, user: str,
             log_type= "patient_info",
         )
 
-        # 6. Resolve care staff IDs and create allocation (only when guardianId is provided)
-        if guardian_id is not None:
+        # 6. Resolve care staff IDs (auto-assign does not depend on a guardian being set)
+        if has_allocation:
             resolved_doctor_id = getattr(patient, "doctorId", None) or get_least_loaded_staff("DOCTOR", db, api_key)
             resolved_game_therapist_id = getattr(patient, "gameTherapistId", None) or get_least_loaded_staff("GAME THERAPIST", db, api_key)
             resolved_caregiver_id = getattr(patient, "caregiverId", None) or get_least_loaded_staff("CAREGIVER", db, api_key)
@@ -444,8 +447,8 @@ def create_patient(db: Session, patient: PatientCreateWithAllocation, user: str,
             if doctor2_id and doctor2_id == resolved_doctor_id:
                 raise HTTPException(status_code=400, detail="doctor2Id must differ from doctorId")
 
-        # 7. Create allocation atomically (only when guardianId is provided)
-        if guardian_id is not None:
+        # 7. Create allocation atomically (guardianId is still required by PATIENT_ALLOCATION's schema)
+        if has_allocation:
             db_allocation = PatientAllocation(
                 active="Y",
                 patientId=new_patient.id,
