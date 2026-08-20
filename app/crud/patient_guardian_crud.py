@@ -35,7 +35,7 @@ def get_guardian_by_nric(db: Session, nric: str):
     ).first()
 
 def create_guardian(
-    db: Session, guardian: PatientGuardianCreate
+    db: Session, guardian: PatientGuardianCreate, commit: bool = True
 ):
     # Reject if an active patient already holds this NRIC
     existing_patient = (
@@ -65,7 +65,10 @@ def create_guardian(
     db_guardian = PatientGuardian(**guardian_data)
     updated_data_dict = serialize_data(guardian_data)
     db.add(db_guardian)
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     db.refresh(db_guardian)
 
     log_crud_action(

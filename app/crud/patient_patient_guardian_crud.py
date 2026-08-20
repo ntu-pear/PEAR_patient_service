@@ -178,11 +178,14 @@ def get_active_patient_ids_for_guardian(db: Session, guardianId: int) -> list:
     )
     return [row[0] for row in rows]
 
-def create_patient_patient_guardian(db: Session, patientPatientGuradian: PatientPatientGuardianCreate):
+def create_patient_patient_guardian(db: Session, patientPatientGuradian: PatientPatientGuardianCreate, commit: bool = True):
     db_patient_patient_guardian = PatientPatientGuardian(**patientPatientGuradian.model_dump())
     updated_data_dict = serialize_data(patientPatientGuradian.model_dump())
     db.add(db_patient_patient_guardian)
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     db.refresh(db_patient_patient_guardian)
 
     # Fetch names for logging

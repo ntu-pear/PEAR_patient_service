@@ -10,13 +10,20 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.patient_allocation_model import PatientAllocation
 
+from ..crud import patient_guardian_crud as crud_guardian
+from ..crud import patient_guardian_relationship_mapping_crud as crud_relationship
+from ..crud import patient_patient_guardian_crud as crud_patient_patient_guardian
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_model import Patient
 from ..schemas.patient import PatientCreate, PatientCreateWithAllocation, PatientUpdate
+from ..schemas.patient_guardian import PatientGuardianCreate
+from ..schemas.patient_patient_guardian import PatientPatientGuardianCreate
 from ..services.user_service import get_least_loaded_staff
 from ..services.outbox_service import generate_correlation_id, get_outbox_service
 
 logger = logging.getLogger(__name__)
+
+MAX_PATIENTS_PER_GUARDIAN = 2
 
 def upload_photo_to_cloudinary(file: UploadFile):
     """ Upload photo to Cloudinary and return the URL """
@@ -310,8 +317,23 @@ def create_patient(db: Session, patient: PatientCreateWithAllocation, user: str,
     # Auto-assign (staff resolution + allocation) only applies to the allocation-aware schema
     has_allocation = isinstance(patient, PatientCreateWithAllocation)
 
-    # Validate guardianId exists (only when provided via PatientCreateWithAllocation)
+    # Guardian for this patient can be an existing guardian (guardianId) or a brand-new one
+    # created inline (newGuardian) - not both, and either requires a relationship name.
     guardian_id = getattr(patient, "guardianId", None)
+    new_guardian_data = getattr(patient, "newGuardian", None)
+    guardian_relationship_name = getattr(patient, "guardianRelationshipName", None)
+
+    if guardian_id is not None and new_guardian_data is not None:
+        raise HTTPException(status_code=400, detail="Provide either guardianId or newGuardian, not both")
+
+    db_relationship_id = None
+    if guardian_id is not None or new_guardian_data is not None:
+        if not guardian_relationship_name:
+            raise HTTPException(status_code=400, detail="guardianRelationshipName is required when linking a guardian")
+        db_relationship_id = crud_relationship.get_relationshipId_by_relationshipName(db, guardian_relationship_name)
+        if not db_relationship_id:
+            raise HTTPException(status_code=404, detail="Relationship not found")
+
     if guardian_id is not None:
         guardian = (
             db.query(PatientGuardianModel)
@@ -320,6 +342,13 @@ def create_patient(db: Session, patient: PatientCreateWithAllocation, user: str,
         )
         if not guardian:
             raise HTTPException(status_code=400, detail="Guardian not found")
+
+        active_patient_count = crud_patient_patient_guardian.count_active_patients_for_guardian(db, guardian_id)
+        if active_patient_count >= MAX_PATIENTS_PER_GUARDIAN:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Guardian already has the maximum of {MAX_PATIENTS_PER_GUARDIAN} patients assigned"
+            )
 
     # Validate doctor2Id != doctorId
     doctor_id = getattr(patient, "doctorId", None)
@@ -446,6 +475,36 @@ def create_patient(db: Session, patient: PatientCreateWithAllocation, user: str,
             doctor2_id = getattr(patient, "doctor2Id", None)
             if doctor2_id and doctor2_id == resolved_doctor_id:
                 raise HTTPException(status_code=400, detail="doctor2Id must differ from doctorId")
+
+        # 6a. Create a new guardian inline if requested, then link the guardian to this patient via
+        # PATIENT_PATIENT_GUARDIAN (the source of truth for guardian assign/unassign/lookup)
+        if has_allocation and new_guardian_data is not None:
+            db_guardian = crud_guardian.create_guardian(
+                db,
+                PatientGuardianCreate(
+                    **new_guardian_data.model_dump(),
+                    patientId=new_patient.id,
+                    relationshipName=guardian_relationship_name,
+                    CreatedById=user,
+                    ModifiedById=user,
+                ),
+                commit=False,
+            )
+            guardian_id = db_guardian.id
+
+        if has_allocation and guardian_id is not None:
+            crud_patient_patient_guardian.create_patient_patient_guardian(
+                db,
+                PatientPatientGuardianCreate(
+                    guardianId=guardian_id,
+                    patientId=new_patient.id,
+                    relationshipId=db_relationship_id.id,
+                    CreatedById=user,
+                    ModifiedById=user,
+                    isDeleted="0",
+                ),
+                commit=False,
+            )
 
         # 7. Create allocation atomically (only when a guardian was given - PATIENT_ALLOCATION.guardianId is NOT NULL;
         # a patient created without one can have a guardian attached later via /Guardian/assign)
