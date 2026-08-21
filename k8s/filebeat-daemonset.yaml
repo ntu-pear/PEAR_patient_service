@@ -46,10 +46,14 @@ data:
   filebeat.yml: |-
     filebeat.inputs:
       - type: filestream
+        id: patient-staging-logs
         enabled: true
         paths:
           - /home/VMadmin/FYP_microservices/PEAR_patient_service/logs/*.log
-        ignore_older: 24h 
+        ignore_older: 24h
+        fields:
+          environment: staging
+          service: patient
 
     logging.level: warning
     
