@@ -983,6 +983,9 @@ def test_delete_medication_logs_cascaded_highlight_delete(db_session_mock):
     mock_medication.EndDate = datetime(2023, 12, 31)
     mock_medication.PrescriptionRemarks = "TAKE NOTES/REMARKS"
 
+    mock_patient = mock.MagicMock()
+    mock_patient.name = "Jane Doe"
+
     mock_highlight = mock.MagicMock(
         Id=902, PatientId=7, HighlightTypeId=2, HighlightText="Medication: Aspirin",
         SourceTable="PATIENT_MEDICATION", SourceRecordId=1034, IsDeleted=0,
@@ -991,7 +994,7 @@ def test_delete_medication_logs_cascaded_highlight_delete(db_session_mock):
 
     mock_query = mock.MagicMock()
     mock_query.filter.return_value = mock_query
-    mock_query.first.side_effect = [mock_medication, None]  # medication lookup, then patient-name lookup
+    mock_query.first.side_effect = [mock_medication, mock_patient]  # medication lookup, then patient-name lookup
     mock_query.all.return_value = [mock_highlight]
     db_session_mock.query.return_value = mock_query
 
@@ -1011,3 +1014,76 @@ def test_delete_medication_logs_cascaded_highlight_delete(db_session_mock):
     assert highlight_calls[0].kwargs["user"] == "test_user"
     assert highlight_calls[0].kwargs["user_full_name"] == "Test User"
     assert highlight_calls[0].kwargs["patient_id"] == 7
+    assert highlight_calls[0].kwargs["patient_full_name"] == "Jane Doe"
+
+
+def test_delete_medication_logs_cascaded_highlight_delete_multiple_highlights(db_session_mock):
+    """Each PatientHighlight soft-deleted as a cascade of the medication delete must get
+    its own log_crud_action(DELETE) call, with distinct entity_ids, not a batched call."""
+    mock_medication = mock.MagicMock()
+    mock_columns = [
+        SimpleNamespace(name="Id"),
+        SimpleNamespace(name="PatientId"),
+        SimpleNamespace(name="IsDeleted"),
+        SimpleNamespace(name="PrescriptionListId"),
+        SimpleNamespace(name="AdministerTime"),
+        SimpleNamespace(name="Dosage"),
+        SimpleNamespace(name="Instruction"),
+        SimpleNamespace(name="StartDate"),
+        SimpleNamespace(name="EndDate"),
+        SimpleNamespace(name="PrescriptionRemarks"),
+    ]
+    mock_medication.__table__ = SimpleNamespace(columns=mock_columns)
+    mock_medication.Id = 1034
+    mock_medication.PatientId = 7
+    mock_medication.IsDeleted = "0"
+    mock_medication.PrescriptionListId = 15
+    mock_medication.AdministerTime = "1910"
+    mock_medication.Dosage = "2 times"
+    mock_medication.Instruction = "TAKE CARE OF INSTRUCTIONS"
+    mock_medication.StartDate = datetime(2023, 6, 1)
+    mock_medication.EndDate = datetime(2023, 12, 31)
+    mock_medication.PrescriptionRemarks = "TAKE NOTES/REMARKS"
+
+    mock_patient = mock.MagicMock()
+    mock_patient.name = "Jane Doe"
+
+    mock_highlight_1 = mock.MagicMock(
+        Id=901, PatientId=7, HighlightTypeId=2, HighlightText="Medication: Aspirin",
+        SourceTable="PATIENT_MEDICATION", SourceRecordId=1034, IsDeleted=0,
+        CreatedById="1", ModifiedById="1",
+    )
+    mock_highlight_2 = mock.MagicMock(
+        Id=902, PatientId=7, HighlightTypeId=2, HighlightText="Medication: Panadol",
+        SourceTable="PATIENT_MEDICATION", SourceRecordId=1034, IsDeleted=0,
+        CreatedById="1", ModifiedById="1",
+    )
+
+    mock_query = mock.MagicMock()
+    mock_query.filter.return_value = mock_query
+    mock_query.first.side_effect = [mock_medication, mock_patient]  # medication lookup, then patient-name lookup
+    mock_query.all.return_value = [mock_highlight_1, mock_highlight_2]
+    db_session_mock.query.return_value = mock_query
+
+    with mock.patch("app.crud.patient_medication_crud.log_crud_action") as mock_log:
+        delete_medication(
+            db_session_mock,
+            1034,
+            modified_by="test_user",
+            user_full_name="Test User",
+        )
+
+    highlight_calls = [
+        c for c in mock_log.call_args_list if c.kwargs["table"] == "PatientHighlight"
+    ]
+    assert len(highlight_calls) == 2
+
+    entity_ids = [c.kwargs["entity_id"] for c in highlight_calls]
+    assert 901 in entity_ids
+    assert 902 in entity_ids
+
+    for call in highlight_calls:
+        assert call.kwargs["patient_full_name"] == "Jane Doe"
+        assert call.kwargs["user"] == "test_user"
+        assert call.kwargs["user_full_name"] == "Test User"
+        assert call.kwargs["patient_id"] == 7
