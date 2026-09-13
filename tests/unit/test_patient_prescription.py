@@ -324,3 +324,37 @@ def test_delete_prescription(db_session_mock):
     # Highlight integration causes 2 comits (prescription + highlight)
     assert db_session_mock.commit.call_count == 2
     assert result.IsDeleted == "1"
+
+
+def test_create_prescription_forwards_user_full_name_to_highlight_helper(db_session_mock):
+    mock_prescription = mock.MagicMock(Id=1, PatientId=1)
+    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+    db_session_mock.query.return_value.options.return_value.filter.return_value.first.return_value = mock_prescription
+    db_session_mock.refresh.side_effect = lambda obj: None
+
+    with mock.patch("app.crud.patient_prescription_crud.create_highlight_if_needed") as mock_highlight, \
+         mock.patch("app.crud.patient_prescription_crud.log_crud_action"):
+        create_prescription(
+            db_session_mock,
+            PatientPrescriptionCreate(
+                PatientId=1,
+                PrescriptionListId=1,
+                Dosage="500mg",
+                FrequencyPerDay=3,
+                Instruction="Take after meal",
+                StartDate=datetime(2023, 1, 1),
+                EndDate=datetime(2023, 1, 10),
+                IsAfterMeal="Yes",
+                PrescriptionRemarks="No remarks",
+                Status="Active",
+                CreatedDateTime=datetime(2023, 1, 1, 10, 0),
+                UpdatedDateTime=datetime(2023, 1, 1, 10, 0),
+                CreatedById="user123",
+                ModifiedById="user123",
+            ),
+            created_by="user123",
+            user_full_name="Test User",
+        )
+
+    mock_highlight.assert_called_once()
+    assert mock_highlight.call_args.kwargs["user_full_name"] == "Test User"

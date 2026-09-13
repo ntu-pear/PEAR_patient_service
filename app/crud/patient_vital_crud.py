@@ -108,7 +108,8 @@ def create_vital(
                 patient_id=new_vital.PatientId,
                 source_table="PATIENT_VITAL",
                 source_record_id=new_vital.Id,
-                created_by=created_by
+                created_by=created_by,
+                user_full_name=user_full_name
             )
             
             logger.info(f"Highlight check completed for vital: VitalId={new_vital.Id}")
@@ -202,7 +203,8 @@ def update_vital(
                 patient_id=db_vital.PatientId,
                 source_table="PATIENT_VITAL",
                 source_record_id=db_vital.Id,
-                created_by=db_vital.CreatedById
+                created_by=db_vital.CreatedById,
+                user_full_name=user_full_name
             )
             
             logger.info(f"Highlight check completed for vital: VitalId={db_vital.Id}")

@@ -115,7 +115,8 @@ def create_prescription(
                 patient_id=new_prescription.PatientId,
                 source_table="PATIENT_PRESCRIPTION",
                 source_record_id=new_prescription.Id,
-                created_by=created_by
+                created_by=created_by,
+                user_full_name=user_full_name
                 )
             except Exception as e:
                 logger.error(f"Failed to create highlight for prescription {new_prescription.Id}: {e}")
@@ -231,7 +232,8 @@ def update_prescription(
                     patient_id=db_prescription.PatientId,
                     source_table="PATIENT_PRESCRIPTION",
                     source_record_id=prescription_id,
-                    created_by=modified_by
+                    created_by=modified_by,
+                    user_full_name=user_full_name
                 )
             except Exception as e:
                 logger.error(f"Failed to create/update highlight for prescription {prescription_id}: {e}")

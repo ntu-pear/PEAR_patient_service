@@ -298,3 +298,42 @@ def patient_allergy_update():
         AllergyReactionTypeID=1,
         AllergyRemarks="Updated allergy remarks",
     )
+
+
+def test_create_patient_allergy_forwards_user_full_name_to_highlight_helper(db_session_mock, patient_allergy_create):
+    mock_allergy_type = AllergyType(AllergyTypeID=3, Value="Corn", IsDeleted="0")
+    mock_reaction_type = AllergyReactionType(AllergyReactionTypeID=1, Value="Rashes", IsDeleted="0")
+    mock_allergy_with_rel = MagicMock()
+    mock_patient = Patient(id=1, name="Test Patient", nric="S9876543Z", isDeleted="0")
+
+    # Mirrors the dispatch used in test_create_patient_allergy above: the real function
+    # issues several distinct db.query(...) chains (AllergyType, AllergyReactionType,
+    # duplicate-combo check, highlight's options().filter().first(), and the patient
+    # name lookup), so a flat side_effect list on a single mock chain isn't enough.
+    def custom_query(model):
+        query_result = MagicMock()
+        if 'PatientAllergyMapping' in str(model):
+            options_result = MagicMock()
+            filter_result = MagicMock()
+            filter_result.first.return_value = mock_allergy_with_rel
+            options_result.filter.return_value = filter_result
+            query_result.options.return_value = options_result
+            query_result.filter.return_value.first.return_value = None
+        elif 'AllergyType' in str(model):
+            query_result.filter.return_value.first.return_value = mock_allergy_type
+        elif 'AllergyReactionType' in str(model):
+            query_result.filter.return_value.first.return_value = mock_reaction_type
+        elif 'Patient' in str(model):
+            query_result.filter.return_value.first.return_value = mock_patient
+        return query_result
+
+    db_session_mock.query.side_effect = custom_query
+
+    with patch("app.crud.patient_allergy_mapping_crud.create_highlight_if_needed") as mock_highlight, \
+         patch("app.crud.patient_allergy_mapping_crud.log_crud_action"):
+        create_patient_allergy(
+            db_session_mock, patient_allergy_create, created_by="test_user", user_full_name=USER_FULL_NAME
+        )
+
+    mock_highlight.assert_called_once()
+    assert mock_highlight.call_args.kwargs["user_full_name"] == USER_FULL_NAME

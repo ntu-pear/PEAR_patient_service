@@ -915,7 +915,43 @@ def test_update_medication_fails_duplicate_exists(db_session_mock):
             modified_by="user123",
             user_full_name="Test User"
         )
-    
+
     # Verify error
     assert exc_info.value.status_code == 400
     assert "Another active medication" in exc_info.value.detail
+
+
+def test_create_medication_forwards_user_full_name_to_highlight_helper(db_session_mock):
+    with mock.patch("app.crud.patient_medication_crud.get_outbox_service") as mock_get_outbox, \
+         mock.patch("app.crud.patient_medication_crud.log_crud_action"), \
+         mock.patch("app.crud.patient_medication_crud.create_highlight_if_needed") as mock_highlight:
+        mock_outbox = mock.MagicMock()
+        mock_event = mock.MagicMock()
+        mock_event.id = "test-id"
+        mock_outbox.create_event.return_value = mock_event
+        mock_get_outbox.return_value = mock_outbox
+
+        db_session_mock.query.return_value.filter.return_value.first.return_value = None
+
+        create_medication(
+            db_session_mock,
+            PatientMedicationCreate(
+                PatientId=1,
+                PrescriptionListId=1,
+                AdministerTime="0900",
+                Dosage="1 tab",
+                Instruction="Take with food",
+                StartDate=datetime(2023, 1, 1),
+                EndDate=datetime(2023, 12, 31),
+                PrescriptionRemarks="",
+                CreatedDateTime=datetime(2023, 1, 1, 9, 0, 0),
+                UpdatedDateTime=datetime(2023, 1, 1, 9, 0, 0),
+                CreatedById="user123",
+                ModifiedById="user123",
+            ),
+            created_by="user123",
+            user_full_name="Test User",
+        )
+
+    mock_highlight.assert_called_once()
+    assert mock_highlight.call_args.kwargs["user_full_name"] == "Test User"

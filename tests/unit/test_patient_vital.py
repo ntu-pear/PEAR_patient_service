@@ -303,6 +303,22 @@ def vital_update():
     )
 
 
+def test_create_vital_forwards_user_full_name_to_highlight_helper(db_session_mock, vital_create):
+    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+
+    with mock.patch("app.crud.patient_vital_crud.create_highlight_if_needed") as mock_highlight, \
+         mock.patch("app.crud.patient_vital_crud.log_crud_action"):
+        create_vital(
+            db_session_mock,
+            vital_create,
+            created_by="test_user",
+            user_full_name="Test User",
+        )
+
+    mock_highlight.assert_called_once()
+    assert mock_highlight.call_args.kwargs["user_full_name"] == "Test User"
+
+
 @pytest.fixture
 def vital_delete():
     return PatientVitalDelete(IsDeleted="0")

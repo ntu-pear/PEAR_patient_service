@@ -340,7 +340,8 @@ def create_medication(
                     patient_id=new_medication.PatientId,
                     source_table="PATIENT_MEDICATION",
                     source_record_id=new_medication.Id,
-                    created_by=created_by
+                    created_by=created_by,
+                    user_full_name=user_full_name
                 )
                 # Commit the highlight separately
                 db.commit()
@@ -558,7 +559,8 @@ def update_medication(
                     patient_id=db_medication.PatientId,
                     source_table="PATIENT_MEDICATION",
                     source_record_id=medication_id,
-                    created_by=modified_by
+                    created_by=modified_by,
+                    user_full_name=user_full_name
                 )
                 db.commit()
                 logger.info(f"Successfully updated highlight for medication {medication_id}")

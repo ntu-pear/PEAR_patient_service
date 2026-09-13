@@ -213,7 +213,8 @@ def create_patient_allergy(
             patient_id=new_allergy.PatientID,
             source_table="PATIENT_ALLERGY_MAPPING",
             source_record_id=new_allergy.Patient_AllergyID,
-            created_by=created_by
+            created_by=created_by,
+            user_full_name=user_full_name
         )
     except Exception as e:
         # Log error but don't fail the allergy creation
@@ -338,7 +339,8 @@ def update_patient_allergy(
             patient_id=db_allergy.PatientID,
             source_table="PATIENT_ALLERGY_MAPPING",
             source_record_id=db_allergy.Patient_AllergyID,
-            created_by=modified_by
+            created_by=modified_by,
+            user_full_name=user_full_name
         )
     except Exception as e:
         logger.error(f"Failed to create/update highlight for allergy {db_allergy.Patient_AllergyID}: {e}")
