@@ -362,6 +362,8 @@ def test_create_prescription_forwards_user_full_name_to_highlight_helper(db_sess
 
 def test_delete_prescription_logs_cascaded_highlight_delete(db_session_mock):
     mock_data = mock.MagicMock(Id=1, PatientId=1, IsDeleted="0")
+    mock_patient = mock.MagicMock()
+    mock_patient.name = "Jane Doe"
     mock_highlight = mock.MagicMock(
         Id=903, PatientId=1, HighlightTypeId=3, HighlightText="Prescription: Panadol",
         SourceTable="PATIENT_PRESCRIPTION", SourceRecordId=1, IsDeleted=0,
@@ -370,7 +372,7 @@ def test_delete_prescription_logs_cascaded_highlight_delete(db_session_mock):
 
     mock_query = mock.MagicMock()
     mock_query.filter.return_value = mock_query
-    mock_query.first.side_effect = [mock_data, None]  # prescription lookup, then patient lookup
+    mock_query.first.side_effect = [mock_data, mock_patient]  # prescription lookup, then patient lookup
     mock_query.all.return_value = [mock_highlight]
     db_session_mock.query.return_value = mock_query
 
@@ -390,3 +392,51 @@ def test_delete_prescription_logs_cascaded_highlight_delete(db_session_mock):
     assert highlight_calls[0].kwargs["user"] == "test_user"
     assert highlight_calls[0].kwargs["user_full_name"] == "Test User"
     assert highlight_calls[0].kwargs["patient_id"] == 1
+    assert highlight_calls[0].kwargs["patient_full_name"] == "Jane Doe"
+
+
+def test_delete_prescription_logs_cascaded_highlight_delete_multiple_highlights(db_session_mock):
+    mock_data = mock.MagicMock(Id=1, PatientId=1, IsDeleted="0")
+    mock_patient = mock.MagicMock()
+    mock_patient.name = "John Smith"
+    mock_highlight_1 = mock.MagicMock(
+        Id=901, PatientId=1, HighlightTypeId=3, HighlightText="Prescription: Aspirin",
+        SourceTable="PATIENT_PRESCRIPTION", SourceRecordId=1, IsDeleted=0,
+        CreatedById="1", ModifiedById="1",
+    )
+    mock_highlight_2 = mock.MagicMock(
+        Id=902, PatientId=1, HighlightTypeId=3, HighlightText="Prescription: Panadol",
+        SourceTable="PATIENT_PRESCRIPTION", SourceRecordId=1, IsDeleted=0,
+        CreatedById="1", ModifiedById="1",
+    )
+
+    mock_query = mock.MagicMock()
+    mock_query.filter.return_value = mock_query
+    mock_query.first.side_effect = [mock_data, mock_patient]  # prescription lookup, then patient lookup
+    mock_query.all.return_value = [mock_highlight_1, mock_highlight_2]
+    db_session_mock.query.return_value = mock_query
+
+    with mock.patch("app.crud.patient_prescription_crud.log_crud_action") as mock_log:
+        delete_prescription(
+            db_session_mock,
+            1,
+            modified_by="test_user",
+            user_full_name="Test User",
+        )
+
+    highlight_calls = [
+        c for c in mock_log.call_args_list if c.kwargs["table"] == "PatientHighlight"
+    ]
+    assert len(highlight_calls) == 2
+
+    # Verify both highlights are logged separately with their own entity_ids
+    entity_ids = [c.kwargs["entity_id"] for c in highlight_calls]
+    assert 901 in entity_ids
+    assert 902 in entity_ids
+
+    # Verify all calls have the correct patient name
+    for call in highlight_calls:
+        assert call.kwargs["patient_full_name"] == "John Smith"
+        assert call.kwargs["user"] == "test_user"
+        assert call.kwargs["user_full_name"] == "Test User"
+        assert call.kwargs["patient_id"] == 1
