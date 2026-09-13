@@ -682,6 +682,8 @@ def delete_medication(
                 PatientHighlight.IsDeleted == 0
             ).all()
 
+            pending_highlight_logs = []
+
             for highlight in highlights:
                 highlight_original_data = {
                     "Id": highlight.Id,
@@ -699,23 +701,31 @@ def delete_medication(
                 highlight.ModifiedDate = datetime.now()
                 highlight.ModifiedById = modified_by
 
-                log_crud_action(
-                    action=ActionType.DELETE,
-                    user=modified_by,
-                    user_full_name=user_full_name,
-                    message=f"Deleted highlight {highlight.Id} cascaded from medication {medication_id} deletion",
-                    table="PatientHighlight",
-                    entity_id=highlight.Id,
-                    original_data=highlight_original_data,
-                    updated_data=None,
-                    patient_id=db_medication.PatientId,
-                    patient_full_name=patient_name,
-                    log_type="highlight",
-                )
+                pending_highlight_logs.append({
+                    "entity_id": highlight.Id,
+                    "original_data": highlight_original_data,
+                })
 
             if highlights:
                 db.commit()
                 logger.info(f"Deleted {len(highlights)} highlights for medication {medication_id}")
+
+                # Only log the cascaded deletes after the commit succeeds, so a failed
+                # commit never leaves behind audit log entries for changes that didn't persist.
+                for pending_log in pending_highlight_logs:
+                    log_crud_action(
+                        action=ActionType.DELETE,
+                        user=modified_by,
+                        user_full_name=user_full_name,
+                        message=f"Deleted highlight {pending_log['entity_id']} cascaded from medication {medication_id} deletion",
+                        table="PatientHighlight",
+                        entity_id=pending_log["entity_id"],
+                        original_data=pending_log["original_data"],
+                        updated_data=None,
+                        patient_id=db_medication.PatientId,
+                        patient_full_name=patient_name,
+                        log_type="highlight",
+                    )
 
         except Exception as e:
             logger.error(f"Failed to delete highlights for medication {medication_id}: {e}")

@@ -397,6 +397,8 @@ def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: st
             PatientHighlight.IsDeleted == 0
         ).all()
 
+        pending_highlight_logs = []
+
         for highlight in highlights:
             highlight_original_data = {
                 "Id": highlight.Id,
@@ -414,24 +416,32 @@ def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: st
             highlight.ModifiedDate = datetime.now()
             highlight.ModifiedById = modified_by
 
-            log_crud_action(
-                action=ActionType.DELETE,
-                user=modified_by,
-                user_full_name=user_full_name,
-                message=f"Deleted highlight {highlight.Id} cascaded from allergy {patient_allergy_id} deletion",
-                table="PatientHighlight",
-                entity_id=highlight.Id,
-                original_data=highlight_original_data,
-                updated_data=None,
-                patient_id=db_allergy.PatientID,
-                patient_full_name=None,
-                log_type="highlight",
-            )
+            pending_highlight_logs.append({
+                "entity_id": highlight.Id,
+                "original_data": highlight_original_data,
+            })
 
         if highlights:
             logger.info(f"Deleted {len(highlights)} highlights for allergy {patient_allergy_id}")
 
         db.commit()
+
+        # Only log the cascaded deletes after the commit succeeds, so a failed
+        # commit never leaves behind audit log entries for changes that didn't persist.
+        for pending_log in pending_highlight_logs:
+            log_crud_action(
+                action=ActionType.DELETE,
+                user=modified_by,
+                user_full_name=user_full_name,
+                message=f"Deleted highlight {pending_log['entity_id']} cascaded from allergy {patient_allergy_id} deletion",
+                table="PatientHighlight",
+                entity_id=pending_log["entity_id"],
+                original_data=pending_log["original_data"],
+                updated_data=None,
+                patient_id=db_allergy.PatientID,
+                patient_full_name=None,
+                log_type="highlight",
+            )
 
     except Exception as e:
         logger.error(f"Failed to delete highlights for allergy {patient_allergy_id}: {e}")

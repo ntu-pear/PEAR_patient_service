@@ -256,7 +256,8 @@ def cleanup_old_highlights(db: Session):
         
         total_deleted = 0
         details = []
-        
+        pending_highlight_logs = []
+
         for highlight_type in highlight_types:
             # Get retention period for this type
             retention_days = 3
@@ -302,19 +303,12 @@ def cleanup_old_highlights(db: Session):
                     "ModifiedById": highlight.ModifiedById,
                 }
 
-                log_crud_action(
-                    action=ActionType.DELETE,
-                    user="SYSTEM",
-                    user_full_name="SYSTEM",
-                    message=f"Hard-deleted expired highlight {highlight.Id} ({highlight_type.TypeName}) past retention",
-                    table="PatientHighlight",
-                    entity_id=highlight.Id,
-                    original_data=highlight_original_data,
-                    updated_data=None,
-                    patient_id=highlight.PatientId,
-                    patient_full_name=None,
-                    log_type="highlight",
-                )
+                pending_highlight_logs.append({
+                    "entity_id": highlight.Id,
+                    "original_data": highlight_original_data,
+                    "patient_id": highlight.PatientId,
+                    "type_name": highlight_type.TypeName,
+                })
 
                 db.delete(highlight) # Hard Delete instead of setting IsDeleted=1
             
@@ -331,7 +325,25 @@ def cleanup_old_highlights(db: Session):
             total_deleted += deleted_count
         
         db.commit()
-        
+
+        # Only log the hard deletes after the commit succeeds, so a failed commit
+        # never leaves behind audit log entries for records that never actually
+        # persisted as deleted (batch cleanup, potentially mid-batch failure).
+        for pending_log in pending_highlight_logs:
+            log_crud_action(
+                action=ActionType.DELETE,
+                user="SYSTEM",
+                user_full_name="SYSTEM",
+                message=f"Hard-deleted expired highlight {pending_log['entity_id']} ({pending_log['type_name']}) past retention",
+                table="PatientHighlight",
+                entity_id=pending_log["entity_id"],
+                original_data=pending_log["original_data"],
+                updated_data=None,
+                patient_id=pending_log["patient_id"],
+                patient_full_name=None,
+                log_type="highlight",
+            )
+
         return {
             "status": "success",
             "deletion_type": "Hard",
