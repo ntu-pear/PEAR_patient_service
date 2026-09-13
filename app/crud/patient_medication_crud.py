@@ -681,16 +681,42 @@ def delete_medication(
                 PatientHighlight.SourceRecordId == medication_id,
                 PatientHighlight.IsDeleted == 0
             ).all()
-            
+
             for highlight in highlights:
+                highlight_original_data = {
+                    "Id": highlight.Id,
+                    "PatientId": highlight.PatientId,
+                    "HighlightTypeId": highlight.HighlightTypeId,
+                    "HighlightText": highlight.HighlightText,
+                    "SourceTable": highlight.SourceTable,
+                    "SourceRecordId": highlight.SourceRecordId,
+                    "IsDeleted": highlight.IsDeleted,
+                    "CreatedById": highlight.CreatedById,
+                    "ModifiedById": highlight.ModifiedById,
+                }
+
                 highlight.IsDeleted = 1
                 highlight.ModifiedDate = datetime.now()
                 highlight.ModifiedById = modified_by
-            
+
+                log_crud_action(
+                    action=ActionType.DELETE,
+                    user=modified_by,
+                    user_full_name=user_full_name,
+                    message=f"Deleted highlight {highlight.Id} cascaded from medication {medication_id} deletion",
+                    table="PatientHighlight",
+                    entity_id=highlight.Id,
+                    original_data=highlight_original_data,
+                    updated_data=None,
+                    patient_id=db_medication.PatientId,
+                    patient_full_name=patient_name,
+                    log_type="highlight",
+                )
+
             if highlights:
                 db.commit()
                 logger.info(f"Deleted {len(highlights)} highlights for medication {medication_id}")
-            
+
         except Exception as e:
             logger.error(f"Failed to delete highlights for medication {medication_id}: {e}")
             db.rollback()

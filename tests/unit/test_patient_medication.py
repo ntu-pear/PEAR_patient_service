@@ -955,3 +955,59 @@ def test_create_medication_forwards_user_full_name_to_highlight_helper(db_sessio
 
     mock_highlight.assert_called_once()
     assert mock_highlight.call_args.kwargs["user_full_name"] == "Test User"
+
+
+def test_delete_medication_logs_cascaded_highlight_delete(db_session_mock):
+    mock_medication = mock.MagicMock()
+    mock_columns = [
+        SimpleNamespace(name="Id"),
+        SimpleNamespace(name="PatientId"),
+        SimpleNamespace(name="IsDeleted"),
+        SimpleNamespace(name="PrescriptionListId"),
+        SimpleNamespace(name="AdministerTime"),
+        SimpleNamespace(name="Dosage"),
+        SimpleNamespace(name="Instruction"),
+        SimpleNamespace(name="StartDate"),
+        SimpleNamespace(name="EndDate"),
+        SimpleNamespace(name="PrescriptionRemarks"),
+    ]
+    mock_medication.__table__ = SimpleNamespace(columns=mock_columns)
+    mock_medication.Id = 1034
+    mock_medication.PatientId = 7
+    mock_medication.IsDeleted = "0"
+    mock_medication.PrescriptionListId = 15
+    mock_medication.AdministerTime = "1910"
+    mock_medication.Dosage = "2 times"
+    mock_medication.Instruction = "TAKE CARE OF INSTRUCTIONS"
+    mock_medication.StartDate = datetime(2023, 6, 1)
+    mock_medication.EndDate = datetime(2023, 12, 31)
+    mock_medication.PrescriptionRemarks = "TAKE NOTES/REMARKS"
+
+    mock_highlight = mock.MagicMock(
+        Id=902, PatientId=7, HighlightTypeId=2, HighlightText="Medication: Aspirin",
+        SourceTable="PATIENT_MEDICATION", SourceRecordId=1034, IsDeleted=0,
+        CreatedById="1", ModifiedById="1",
+    )
+
+    mock_query = mock.MagicMock()
+    mock_query.filter.return_value = mock_query
+    mock_query.first.side_effect = [mock_medication, None]  # medication lookup, then patient-name lookup
+    mock_query.all.return_value = [mock_highlight]
+    db_session_mock.query.return_value = mock_query
+
+    with mock.patch("app.crud.patient_medication_crud.log_crud_action") as mock_log:
+        delete_medication(
+            db_session_mock,
+            1034,
+            modified_by="test_user",
+            user_full_name="Test User",
+        )
+
+    highlight_calls = [
+        c for c in mock_log.call_args_list if c.kwargs["table"] == "PatientHighlight"
+    ]
+    assert len(highlight_calls) == 1
+    assert highlight_calls[0].kwargs["entity_id"] == 902
+    assert highlight_calls[0].kwargs["user"] == "test_user"
+    assert highlight_calls[0].kwargs["user_full_name"] == "Test User"
+    assert highlight_calls[0].kwargs["patient_id"] == 7
