@@ -303,6 +303,108 @@ def vital_update():
     )
 
 
+def test_create_vital_forwards_user_full_name_to_highlight_helper(db_session_mock, vital_create):
+    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+
+    with mock.patch("app.crud.patient_vital_crud.create_highlight_if_needed") as mock_highlight, \
+         mock.patch("app.crud.patient_vital_crud.log_crud_action"):
+        create_vital(
+            db_session_mock,
+            vital_create,
+            created_by="test_user",
+            user_full_name="Test User",
+        )
+
+    mock_highlight.assert_called_once()
+    assert mock_highlight.call_args.kwargs["user_full_name"] == "Test User"
+
+
 @pytest.fixture
 def vital_delete():
     return PatientVitalDelete(IsDeleted="0")
+
+
+def test_delete_patient_vital_logs_cascaded_highlight_delete(db_session_mock):
+    """Test case for cascaded PatientHighlight deletion logging when a vital is deleted."""
+    patient_vital_id = 1
+    mock_vital = get_mock_patient_vitals()[0]
+    mock_patient = mock.MagicMock()
+    mock_patient.name = "Jane Doe"
+    mock_highlight = mock.MagicMock(
+        Id=904, PatientId=mock_vital.PatientId, HighlightTypeId=4, HighlightText="High BP",
+        SourceTable="PATIENT_VITAL", SourceRecordId=patient_vital_id, IsDeleted=0,
+        CreatedById="1", ModifiedById="1",
+    )
+
+    mock_query = mock.MagicMock()
+    mock_query.filter.return_value = mock_query
+    mock_query.first.side_effect = [mock_vital, mock_patient]  # vital lookup, then patient-name lookup
+    mock_query.all.return_value = [mock_highlight]
+    db_session_mock.query.return_value = mock_query
+
+    with mock.patch("app.crud.patient_vital_crud.log_crud_action") as mock_log:
+        delete_vital(
+            db_session_mock,
+            patient_vital_id,
+            modified_by="test_user",
+            user_full_name="Test User",
+        )
+
+    highlight_calls = [
+        c for c in mock_log.call_args_list if c.kwargs["table"] == "PatientHighlight"
+    ]
+    assert len(highlight_calls) == 1
+    assert highlight_calls[0].kwargs["entity_id"] == 904
+    assert highlight_calls[0].kwargs["user"] == "test_user"
+    assert highlight_calls[0].kwargs["user_full_name"] == "Test User"
+    assert highlight_calls[0].kwargs["patient_id"] == 1
+    assert highlight_calls[0].kwargs["patient_full_name"] == "Jane Doe"
+
+
+def test_delete_patient_vital_logs_cascaded_highlight_delete_multiple_highlights(db_session_mock):
+    """Test case for cascaded PatientHighlight deletion logging with multiple highlights."""
+    patient_vital_id = 1
+    mock_vital = get_mock_patient_vitals()[0]
+    mock_patient = mock.MagicMock()
+    mock_patient.name = "John Smith"
+    mock_highlight_1 = mock.MagicMock(
+        Id=905, PatientId=mock_vital.PatientId, HighlightTypeId=4, HighlightText="High BP",
+        SourceTable="PATIENT_VITAL", SourceRecordId=patient_vital_id, IsDeleted=0,
+        CreatedById="1", ModifiedById="1",
+    )
+    mock_highlight_2 = mock.MagicMock(
+        Id=906, PatientId=mock_vital.PatientId, HighlightTypeId=4, HighlightText="High Temperature",
+        SourceTable="PATIENT_VITAL", SourceRecordId=patient_vital_id, IsDeleted=0,
+        CreatedById="1", ModifiedById="1",
+    )
+
+    mock_query = mock.MagicMock()
+    mock_query.filter.return_value = mock_query
+    mock_query.first.side_effect = [mock_vital, mock_patient]  # vital lookup, then patient lookup
+    mock_query.all.return_value = [mock_highlight_1, mock_highlight_2]
+    db_session_mock.query.return_value = mock_query
+
+    with mock.patch("app.crud.patient_vital_crud.log_crud_action") as mock_log:
+        delete_vital(
+            db_session_mock,
+            patient_vital_id,
+            modified_by="test_user",
+            user_full_name="Test User",
+        )
+
+    highlight_calls = [
+        c for c in mock_log.call_args_list if c.kwargs["table"] == "PatientHighlight"
+    ]
+    assert len(highlight_calls) == 2
+
+    # Verify both highlights are logged separately with their own entity_ids
+    entity_ids = [c.kwargs["entity_id"] for c in highlight_calls]
+    assert 905 in entity_ids
+    assert 906 in entity_ids
+
+    # Verify all calls have the correct patient name
+    for call in highlight_calls:
+        assert call.kwargs["patient_full_name"] == "John Smith"
+        assert call.kwargs["user"] == "test_user"
+        assert call.kwargs["user_full_name"] == "Test User"
+        assert call.kwargs["patient_id"] == 1

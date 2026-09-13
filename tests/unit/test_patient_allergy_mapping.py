@@ -271,6 +271,118 @@ def test_delete_patient_allergy(db_session_mock):
     assert result.ModifiedById == modified_by
 
 
+def test_delete_patient_allergy_logs_cascaded_highlight_delete(db_session_mock):
+    """Each PatientHighlight soft-deleted as a cascade of the allergy delete must get its own
+    log_crud_action(DELETE) call, using the same modified_by/user_full_name as the main delete."""
+    modified_by = "2"
+    mock_patient_allergy = PatientAllergyMapping(
+        Patient_AllergyID=1,
+        PatientID=1,
+        AllergyTypeID=3,
+        AllergyReactionTypeID=1,
+        AllergyRemarks="Severe reactions to corn",
+        IsDeleted="0",
+        CreatedDateTime=datetime.now(),
+        UpdatedDateTime=datetime.now(),
+        CreatedById="1",
+        ModifiedById="1",
+    )
+    mock_patient = Patient(id=1, name="Test Patient", nric="S9876543Z", isDeleted="0")
+    mock_allergy_type = AllergyType(AllergyTypeID=3, Value="Corn", IsDeleted="0")
+    mock_reaction_type = AllergyReactionType(AllergyReactionTypeID=1, Value="Rashes", IsDeleted="0")
+
+    mock_highlight = MagicMock(
+        Id=901, PatientId=1, HighlightTypeId=5, HighlightText="Allergy: Corn",
+        SourceTable="PATIENT_ALLERGY_MAPPING", SourceRecordId=1, IsDeleted=0,
+        CreatedById="1", ModifiedById="1",
+    )
+
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        mock_patient_allergy,  # 1. db_allergy query
+        mock_patient,          # 2. patient query for logging
+        mock_allergy_type,     # 3. allergy_type query for logging
+        mock_reaction_type,    # 4. allergy_reaction_type query for logging
+    ]
+    db_session_mock.query.return_value.filter.return_value.all.return_value = [mock_highlight]
+
+    with patch("app.crud.patient_allergy_mapping_crud.log_crud_action") as mock_log:
+        delete_patient_allergy(
+            db_session_mock, mock_patient_allergy.Patient_AllergyID, modified_by, USER_FULL_NAME
+        )
+
+    # 2 calls: 1 cascaded highlight delete + 1 main allergy delete
+    assert mock_log.call_count == 2
+    highlight_call_kwargs = mock_log.call_args_list[0].kwargs
+    assert highlight_call_kwargs["table"] == "PatientHighlight"
+    assert highlight_call_kwargs["entity_id"] == 901
+    assert highlight_call_kwargs["user"] == modified_by
+    assert highlight_call_kwargs["user_full_name"] == USER_FULL_NAME
+    assert highlight_call_kwargs["patient_id"] == 1
+
+
+def test_delete_patient_allergy_logs_cascaded_highlight_delete_multiple_highlights(db_session_mock):
+    """Multiple cascaded highlights should each get their own log_crud_action(DELETE) call,
+    with distinct entity_ids, and patient_full_name=None since the patient name isn't
+    fetched yet at this point in delete_patient_allergy (by design)."""
+    modified_by = "2"
+    mock_patient_allergy = PatientAllergyMapping(
+        Patient_AllergyID=1,
+        PatientID=1,
+        AllergyTypeID=3,
+        AllergyReactionTypeID=1,
+        AllergyRemarks="Severe reactions to corn",
+        IsDeleted="0",
+        CreatedDateTime=datetime.now(),
+        UpdatedDateTime=datetime.now(),
+        CreatedById="1",
+        ModifiedById="1",
+    )
+    mock_patient = Patient(id=1, name="Test Patient", nric="S9876543Z", isDeleted="0")
+    mock_allergy_type = AllergyType(AllergyTypeID=3, Value="Corn", IsDeleted="0")
+    mock_reaction_type = AllergyReactionType(AllergyReactionTypeID=1, Value="Rashes", IsDeleted="0")
+
+    mock_highlight_1 = MagicMock(
+        Id=901, PatientId=1, HighlightTypeId=5, HighlightText="Allergy: Corn",
+        SourceTable="PATIENT_ALLERGY_MAPPING", SourceRecordId=1, IsDeleted=0,
+        CreatedById="1", ModifiedById="1",
+    )
+    mock_highlight_2 = MagicMock(
+        Id=902, PatientId=1, HighlightTypeId=5, HighlightText="Allergy: Peanuts",
+        SourceTable="PATIENT_ALLERGY_MAPPING", SourceRecordId=1, IsDeleted=0,
+        CreatedById="1", ModifiedById="1",
+    )
+
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        mock_patient_allergy,  # 1. db_allergy query
+        mock_patient,          # 2. patient query for logging
+        mock_allergy_type,     # 3. allergy_type query for logging
+        mock_reaction_type,    # 4. allergy_reaction_type query for logging
+    ]
+    db_session_mock.query.return_value.filter.return_value.all.return_value = [
+        mock_highlight_1, mock_highlight_2
+    ]
+
+    with patch("app.crud.patient_allergy_mapping_crud.log_crud_action") as mock_log:
+        delete_patient_allergy(
+            db_session_mock, mock_patient_allergy.Patient_AllergyID, modified_by, USER_FULL_NAME
+        )
+
+    highlight_calls = [
+        c for c in mock_log.call_args_list if c.kwargs["table"] == "PatientHighlight"
+    ]
+    assert len(highlight_calls) == 2
+
+    entity_ids = [c.kwargs["entity_id"] for c in highlight_calls]
+    assert 901 in entity_ids
+    assert 902 in entity_ids
+
+    for call in highlight_calls:
+        assert call.kwargs["patient_full_name"] is None
+        assert call.kwargs["user"] == modified_by
+        assert call.kwargs["user_full_name"] == USER_FULL_NAME
+        assert call.kwargs["patient_id"] == 1
+
+
 @pytest.fixture
 def db_session_mock():
     """Fixture to mock the database session."""
@@ -298,3 +410,42 @@ def patient_allergy_update():
         AllergyReactionTypeID=1,
         AllergyRemarks="Updated allergy remarks",
     )
+
+
+def test_create_patient_allergy_forwards_user_full_name_to_highlight_helper(db_session_mock, patient_allergy_create):
+    mock_allergy_type = AllergyType(AllergyTypeID=3, Value="Corn", IsDeleted="0")
+    mock_reaction_type = AllergyReactionType(AllergyReactionTypeID=1, Value="Rashes", IsDeleted="0")
+    mock_allergy_with_rel = MagicMock()
+    mock_patient = Patient(id=1, name="Test Patient", nric="S9876543Z", isDeleted="0")
+
+    # Mirrors the dispatch used in test_create_patient_allergy above: the real function
+    # issues several distinct db.query(...) chains (AllergyType, AllergyReactionType,
+    # duplicate-combo check, highlight's options().filter().first(), and the patient
+    # name lookup), so a flat side_effect list on a single mock chain isn't enough.
+    def custom_query(model):
+        query_result = MagicMock()
+        if 'PatientAllergyMapping' in str(model):
+            options_result = MagicMock()
+            filter_result = MagicMock()
+            filter_result.first.return_value = mock_allergy_with_rel
+            options_result.filter.return_value = filter_result
+            query_result.options.return_value = options_result
+            query_result.filter.return_value.first.return_value = None
+        elif 'AllergyType' in str(model):
+            query_result.filter.return_value.first.return_value = mock_allergy_type
+        elif 'AllergyReactionType' in str(model):
+            query_result.filter.return_value.first.return_value = mock_reaction_type
+        elif 'Patient' in str(model):
+            query_result.filter.return_value.first.return_value = mock_patient
+        return query_result
+
+    db_session_mock.query.side_effect = custom_query
+
+    with patch("app.crud.patient_allergy_mapping_crud.create_highlight_if_needed") as mock_highlight, \
+         patch("app.crud.patient_allergy_mapping_crud.log_crud_action"):
+        create_patient_allergy(
+            db_session_mock, patient_allergy_create, created_by="test_user", user_full_name=USER_FULL_NAME
+        )
+
+    mock_highlight.assert_called_once()
+    assert mock_highlight.call_args.kwargs["user_full_name"] == USER_FULL_NAME

@@ -9,6 +9,7 @@ from ..models.ref_userconfig_model import RefUserConfig
 from ..models.processed_events_model import ProcessedEvent
 from ..schemas.ref_userconfig import refUserConfigCreate, refUserConfigUpdate
 from ..services.idempotency_service import IdempotencyService
+from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +76,24 @@ def create_ref_userconfig(
 
         db.commit()
         logger.info(f"Successfully created user config {userconfig.UserConfigId}")
+
+        log_crud_action(
+            action=ActionType.CREATE,
+            user=created_by,
+            user_full_name="None",
+            message=f"Created user config {result.UserConfigID}",
+            table="RefUserConfig",
+            entity_id=result.UserConfigID,
+            original_data=None,
+            updated_data={
+                "configBlob": result.configBlob,
+                "modifiedDate": serialize_data(result.modifiedDate),
+                "modifiedById": result.modifiedById,
+            },
+            is_system_config=True,
+            log_type="system",
+        )
+
         return result, False
 
     except Exception as e:
@@ -107,6 +126,8 @@ def update_ref_userconfig(
     Raises:
         Exception: For database or other errors
     """
+    captured_original_data = {}
+
     def update_operation():
         # Find the user config to update
         db_userconfig = db.query(RefUserConfig).filter(
@@ -119,6 +140,14 @@ def update_ref_userconfig(
 
         logger.debug(f"Updating user config {userconfig_id}")
 
+        # Capture pre-update state for audit logging before we mutate in place
+        captured_original_data['data'] = {
+            "UserConfigID": db_userconfig.UserConfigID,
+            "configBlob": db_userconfig.configBlob,
+            "modifiedDate": serialize_data(db_userconfig.modifiedDate),
+            "modifiedById": db_userconfig.modifiedById,
+        }
+
         # Update only the fields that were provided
         update_data = userconfig_update.model_dump(exclude_unset=True)
         for field, value in update_data.items():
@@ -126,7 +155,7 @@ def update_ref_userconfig(
                 if field == 'configBlob' and isinstance(value, dict):
                     value = json.dumps(value)
                 setattr(db_userconfig, field, value)
-            
+
 
         db.flush()
         return db_userconfig
@@ -175,6 +204,24 @@ def update_ref_userconfig(
 
         db.commit()
         logger.debug(f"Successfully updated userconfig {userconfig_id}")
+
+        log_crud_action(
+            action=ActionType.UPDATE,
+            user=userconfig_update.modifiedById or "user_service",
+            user_full_name="None",
+            message=f"Updated user config {result.UserConfigID}",
+            table="RefUserConfig",
+            entity_id=result.UserConfigID,
+            original_data=captured_original_data.get('data'),
+            updated_data={
+                "configBlob": result.configBlob,
+                "modifiedDate": serialize_data(result.modifiedDate),
+                "modifiedById": result.modifiedById,
+            },
+            is_system_config=True,
+            log_type="system",
+        )
+
         return result, False
 
     except Exception as e:

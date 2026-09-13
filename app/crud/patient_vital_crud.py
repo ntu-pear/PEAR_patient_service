@@ -108,7 +108,8 @@ def create_vital(
                 patient_id=new_vital.PatientId,
                 source_table="PATIENT_VITAL",
                 source_record_id=new_vital.Id,
-                created_by=created_by
+                created_by=created_by,
+                user_full_name=user_full_name
             )
             
             logger.info(f"Highlight check completed for vital: VitalId={new_vital.Id}")
@@ -202,7 +203,8 @@ def update_vital(
                 patient_id=db_vital.PatientId,
                 source_table="PATIENT_VITAL",
                 source_record_id=db_vital.Id,
-                created_by=db_vital.CreatedById
+                created_by=db_vital.CreatedById,
+                user_full_name=user_full_name
             )
             
             logger.info(f"Highlight check completed for vital: VitalId={db_vital.Id}")
@@ -290,17 +292,53 @@ def delete_vital(
             PatientHighlight.SourceRecordId == vital_id,
             PatientHighlight.IsDeleted == 0
         ).all()
-        
+
+        pending_highlight_logs = []
+
         for highlight in highlights:
+            highlight_original_data = {
+                "Id": highlight.Id,
+                "PatientId": highlight.PatientId,
+                "HighlightTypeId": highlight.HighlightTypeId,
+                "HighlightText": highlight.HighlightText,
+                "SourceTable": highlight.SourceTable,
+                "SourceRecordId": highlight.SourceRecordId,
+                "IsDeleted": highlight.IsDeleted,
+                "CreatedById": highlight.CreatedById,
+                "ModifiedById": highlight.ModifiedById,
+            }
+
             highlight.IsDeleted = 1
             highlight.ModifiedDate = datetime.now()
             highlight.ModifiedById = modified_by
-        
+
+            pending_highlight_logs.append({
+                "entity_id": highlight.Id,
+                "original_data": highlight_original_data,
+            })
+
         if highlights:
             logger.info(f"Deleted {len(highlights)} highlights for vital {vital_id}")
-        
+
         db.commit()
-        
+
+        # Only log the cascaded deletes after the commit succeeds, so a failed
+        # commit never leaves behind audit log entries for changes that didn't persist.
+        for pending_log in pending_highlight_logs:
+            log_crud_action(
+                action=ActionType.DELETE,
+                user=modified_by,
+                user_full_name=user_full_name,
+                message=f"Deleted highlight {pending_log['entity_id']} cascaded from vital {vital_id} deletion",
+                table="PatientHighlight",
+                entity_id=pending_log["entity_id"],
+                original_data=pending_log["original_data"],
+                updated_data=None,
+                patient_id=db_vital.PatientId,
+                patient_full_name=patient_name,
+                log_type="highlight",
+            )
+
     except Exception as e:
         logger.error(f"Failed to delete highlights for vital {vital_id}: {e}")
     
