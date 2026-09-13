@@ -287,6 +287,35 @@ def cleanup_old_highlights(db: Session):
             # HARD DELETE each highlight (permanently remove from database)
             for highlight in old_highlights:
                 deleted_ids.append(highlight.Id)
+
+                highlight_original_data = {
+                    "Id": highlight.Id,
+                    "PatientId": highlight.PatientId,
+                    "HighlightTypeId": highlight.HighlightTypeId,
+                    "HighlightText": highlight.HighlightText,
+                    "SourceTable": highlight.SourceTable,
+                    "SourceRecordId": highlight.SourceRecordId,
+                    "CreatedDate": serialize_data(highlight.CreatedDate),
+                    "ModifiedDate": serialize_data(highlight.ModifiedDate),
+                    "IsDeleted": highlight.IsDeleted,
+                    "CreatedById": highlight.CreatedById,
+                    "ModifiedById": highlight.ModifiedById,
+                }
+
+                log_crud_action(
+                    action=ActionType.DELETE,
+                    user="SYSTEM",
+                    user_full_name="SYSTEM",
+                    message=f"Hard-deleted expired highlight {highlight.Id} ({highlight_type.TypeName}) past retention",
+                    table="PatientHighlight",
+                    entity_id=highlight.Id,
+                    original_data=highlight_original_data,
+                    updated_data=None,
+                    patient_id=highlight.PatientId,
+                    patient_full_name=None,
+                    log_type="highlight",
+                )
+
                 db.delete(highlight) # Hard Delete instead of setting IsDeleted=1
             
             if deleted_count > 0:
