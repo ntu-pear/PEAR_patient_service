@@ -132,9 +132,9 @@ def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, cre
     except HTTPException:
         db.rollback()
         raise
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to create mobility entry: {str(e)}")
+        raise
 
 # Update an existing mobility entry
 def update_mobility_entry(db: Session, mobility_id: int, mobility_data: PatientMobilityUpdate, modified_by: str, user_full_name: str):

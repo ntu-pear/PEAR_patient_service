@@ -253,9 +253,7 @@ def create_preference(
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to create personal preference: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to create personal preference: {str(e)}"
-        )
+        raise
 
 
 def update_preference(
@@ -395,9 +393,7 @@ def update_preference(
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to update personal preference {preference_id}: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to update personal preference: {str(e)}"
-        )
+        raise
 
 
 def delete_preference(
@@ -474,6 +470,4 @@ def delete_preference(
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to delete personal preference {preference_id}: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to delete personal preference: {str(e)}"
-        )
+        raise

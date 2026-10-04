@@ -182,7 +182,7 @@ def create_problem(
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to create problem: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to create problem: {str(e)}")
+        raise
 
 
 def update_problem(
@@ -317,7 +317,7 @@ def update_problem(
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to update problem: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to update problem: {str(e)}")
+        raise
 
 
 def delete_problem(
@@ -400,4 +400,4 @@ def delete_problem(
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to delete problem: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to delete problem: {str(e)}")
+        raise

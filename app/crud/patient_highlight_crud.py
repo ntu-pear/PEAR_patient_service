@@ -352,9 +352,6 @@ def cleanup_old_highlights(db: Session):
             "details": details
         }
         
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(
-            status_code=500,
-            detail=f"Cleanup failed: {str(e)}"
-        )
+        raise

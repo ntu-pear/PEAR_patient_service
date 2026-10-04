@@ -87,9 +87,9 @@ def create_problem_list(
         
         return db_problem_list
         
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise
 
 
 def update_problem_list(
@@ -161,9 +161,9 @@ def update_problem_list(
 
         return db_problem_list
 
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise
 
 
 def delete_problem_list(
@@ -210,6 +210,6 @@ def delete_problem_list(
         
         return db_problem_list
         
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise

@@ -269,3 +269,13 @@ def test_delete_dementia_stage_not_found_raises_404(db_session_mock):
         )
     
     assert exc_info.value.status_code == 404
+
+
+def test_empty_dementia_stage_list_returns_404(db_session_mock):
+    from fastapi import HTTPException
+    from app.crud.patient_dementia_stage_list_crud import get_all_dementia_stage_list_entries
+
+    db_session_mock.query.return_value.filter.return_value.order_by.return_value.all.return_value = []
+    with pytest.raises(HTTPException) as exc_info:
+        get_all_dementia_stage_list_entries(db_session_mock)
+    assert exc_info.value.status_code == 404

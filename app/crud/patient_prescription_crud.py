@@ -154,9 +154,9 @@ def create_prescription(
         )
         return new_prescription
 
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise
 
 # Update an existing prescription
 def update_prescription(
@@ -270,9 +270,9 @@ def update_prescription(
             is_system_config = False
         )
         return db_prescription
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise
 
 # Soft delete a prescription
 def delete_prescription(
@@ -387,6 +387,6 @@ def delete_prescription(
             is_system_config = False
         )
         return db_prescription
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise

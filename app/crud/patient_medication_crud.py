@@ -359,7 +359,7 @@ def create_medication(
         logger.error(f"Failed to create medication: {str(e)}")
         import traceback
         logger.error(f"Full traceback: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=f"Failed to create medication: {str(e)}")
+        raise
 
 # Updated update_medication function
 def update_medication(
@@ -576,7 +576,7 @@ def update_medication(
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to update medication: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to update medication: {str(e)}")
+        raise
 
 # Soft delete a medication
 def delete_medication(
@@ -737,4 +737,4 @@ def delete_medication(
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to delete medication: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to delete medication: {str(e)}")
+        raise

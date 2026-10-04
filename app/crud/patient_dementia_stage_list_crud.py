@@ -16,8 +16,8 @@ def get_all_dementia_stage_list_entries(db: Session):
         if not entries:
             raise HTTPException(status_code=404, detail="No dementia stage list entries found.")
         return entries
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error querying dementia stage list: {str(e)}")
+    except Exception:
+        raise
 
 def get_dementia_stage_list_entry_by_id(db: Session, stage_id: int):
     entry = db.query(PatientDementiaStageList).filter(

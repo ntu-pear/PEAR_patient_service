@@ -84,9 +84,9 @@ def create_prescription_list(
 
         return db_prescription_list
 
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise
 
 def update_prescription_list(
     db: Session,

@@ -138,7 +138,7 @@ def create_preference_list(
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to create preference list: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise
 
 def update_preference_list(
     db: Session,
@@ -235,7 +235,7 @@ def update_preference_list(
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to update preference list {preference_list_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise
 
 def delete_preference_list(
     db: Session,
@@ -289,4 +289,4 @@ def delete_preference_list(
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to delete preference list {preference_list_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise
