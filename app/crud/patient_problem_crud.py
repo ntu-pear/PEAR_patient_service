@@ -5,6 +5,7 @@ from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_problem_list_model import PatientProblemList
 from ..models.patient_problem_model import PatientProblem
@@ -109,10 +110,7 @@ def create_problem(
         ).first()
         
         if existing_problem:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Patient already has this problem recorded"
-            )
+            raise ConflictError(f"Patient already has this problem recorded")
         
         # Create problem record
         new_problem = PatientProblem(
@@ -226,10 +224,7 @@ def update_problem(
     ).first()
     
     if duplicate_check:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Another problem record with this condition already exists for this patient"
-        )
+        raise ConflictError(f"Another problem record with this condition already exists for this patient")
 
     try:
         # Verify problem list if being updated

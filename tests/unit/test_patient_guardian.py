@@ -110,7 +110,7 @@ def test_create_guardian_nric_conflicts_with_active_patient(db_session_mock):
     with pytest.raises(HTTPException) as exc_info:
         create_guardian(db_session_mock, guardian_create)
 
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == 409
     assert "conflicts with an existing active patient record" in exc_info.value.detail
 
 
@@ -129,7 +129,7 @@ def test_create_guardian_nric_conflicts_with_existing_guardian(db_session_mock):
     with pytest.raises(HTTPException) as exc_info:
         create_guardian(db_session_mock, guardian_create)
 
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == 409
     assert "guardian with this NRIC already exists" in exc_info.value.detail
 
 
@@ -188,7 +188,7 @@ def test_update_guardian_nric_conflicts_with_active_patient(db_session_mock):
     with pytest.raises(HTTPException) as exc_info:
         update_guardian(db_session_mock, 1, guardian_update)
 
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == 409
     assert "conflicts with an existing active patient record" in exc_info.value.detail
 
 
@@ -215,7 +215,7 @@ def test_update_guardian_nric_conflicts_with_existing_guardian(db_session_mock):
     with pytest.raises(HTTPException) as exc_info:
         update_guardian(db_session_mock, 1, guardian_update)
 
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == 409
     assert "guardian with this NRIC already exists" in exc_info.value.detail
 
 

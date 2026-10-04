@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.models.patient_mobility_list_model import PatientMobilityList
 from app.models.patient_model import Patient
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_mobility_mapping_model import PatientMobility
 from ..schemas.patient_mobility_mapping import (
@@ -81,7 +82,7 @@ def create_mobility_entry(db: Session, mobility_data: PatientMobilityCreate, cre
         existing_mobility = patient_not_recovered.MobilityListId != 0
         
         if existing_mobility:
-            raise HTTPException(status_code=400, detail="Patient already has an existing mobility aid.")    
+            raise ConflictError("Patient already has an existing mobility aid.")
 
     entry_data = mobility_data.model_dump()
     # Checks if IsRecovered is True but RecoveryDate is not provided

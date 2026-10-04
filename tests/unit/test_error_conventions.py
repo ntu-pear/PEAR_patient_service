@@ -105,3 +105,33 @@ def test_catch_all_handlers_do_not_swallow_http_errors():
                         offenders.append(f"{rel}:{node.lineno}")
                     break
     assert offenders == [], "Catch-all converts HTTP errors:\n" + "\n".join(offenders)
+
+
+CONFLICT_PHRASES = (
+    "already exist", "duplicate", "conflicts with", "must be unique",
+    "already has this", "already has an ", "already has a ",
+    "already assigned", "already been", "record exists",
+)
+
+
+def _status(call):
+    name = _call_name(call)
+    if name == "BadRequestError":
+        return 400
+    node = next((kw.value for kw in call.keywords if kw.arg == "status_code"), None)
+    if node is None and name in {"HTTPException", "AppError"} and call.args:
+        node = call.args[0]
+    text = ast.unparse(node) if node is not None else ""
+    return 400 if text in {"400", "status.HTTP_400_BAD_REQUEST"} else None
+
+
+def test_conflicts_are_not_reported_as_400():
+    offenders = []
+    for rel, tree in _sources():
+        for _, node, call in _error_raises(tree):
+            if _status(call) != 400:
+                continue
+            text = " ".join(ast.unparse(p) for p in _detail_parts(call)).lower()
+            if any(phrase in text for phrase in CONFLICT_PHRASES):
+                offenders.append(f"{rel}:{node.lineno}")
+    assert offenders == [], "Use ConflictError (409) for:\n" + "\n".join(offenders)

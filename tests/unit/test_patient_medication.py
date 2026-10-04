@@ -643,7 +643,7 @@ def test_create_medication_fails_duplicate_exists(db_session_mock):
         )
     
     # Verify error (NO ID in message since you removed it)
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == 409
     assert "already has an active medication" in exc_info.value.detail
     
     # Verify no database write
@@ -917,7 +917,7 @@ def test_update_medication_fails_duplicate_exists(db_session_mock):
         )
 
     # Verify error
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == 409
     assert "Another active medication" in exc_info.value.detail
 
 

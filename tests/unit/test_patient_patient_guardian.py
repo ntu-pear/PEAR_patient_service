@@ -335,7 +335,7 @@ def test_assign_guardian_to_patient_already_assigned(db_session_mock, ppg_assign
         with pytest.raises(HTTPException) as exc_info:
             assign_guardian_to_patient(ppg_assign, db_session_mock)
 
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == 409
     assert "already assigned" in exc_info.value.detail
 
 

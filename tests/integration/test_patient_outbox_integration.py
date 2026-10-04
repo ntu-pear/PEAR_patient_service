@@ -283,7 +283,7 @@ class TestPatientCreateOutbox:
                 user_full_name=mock_user['fullname'],
                 correlation_id=str(uuid.uuid4())
             )
-        assert exc_info.value.status_code == 400
+        assert exc_info.value.status_code == 409
         print(f"DONE: Duplicate creation properly rejected")
         # Verify no additional outbox events created
         final_outbox_count = integration_db.query(OutboxEvent).filter(

@@ -6,6 +6,7 @@ from typing import Optional
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_personal_preference_list_model import PatientPersonalPreferenceList
 from ..schemas.patient_personal_preference_list import (
@@ -94,11 +95,7 @@ def create_preference_list(
         .first()
     )
     if existing:
-        raise HTTPException(
-            status_code=400,
-            detail=f"A preference list entry with type '{preference_list.PreferenceType}' "
-                   f"and name '{uppercase_preference_name}' already exists",
-        )
+        raise ConflictError(f"A preference list entry with type '{preference_list.PreferenceType}' " f"and name '{uppercase_preference_name}' already exists")
 
     try:
         now = datetime.now()
@@ -188,11 +185,7 @@ def update_preference_list(
         .first()
     )
     if duplicate:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Another preference list entry with type '{new_type}' "
-                   f"and name '{new_name}' already exists",
-        )
+        raise ConflictError(f"Another preference list entry with type '{new_type}' " f"and name '{new_name}' already exists")
 
     try:
         original_data = {

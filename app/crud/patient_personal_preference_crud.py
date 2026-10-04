@@ -6,6 +6,7 @@ from typing import Optional
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_model import Patient
 from ..models.patient_personal_preference_list_model import (
@@ -190,10 +191,7 @@ def create_preference(
         .first()
     )
     if existing:
-        raise HTTPException(
-            status_code=400,
-            detail="Patient already has this personal preference recorded",
-        )
+        raise ConflictError("Patient already has this personal preference recorded")
 
     # 6. DB write
     try:
@@ -322,10 +320,7 @@ def update_preference(
         .first()
     )
     if duplicate:
-        raise HTTPException(
-            status_code=400,
-            detail="Another personal preference record with this preference already exists for this patient",
-        )
+        raise ConflictError("Another personal preference record with this preference already exists for this patient")
 
     # 8. DB write
     try:

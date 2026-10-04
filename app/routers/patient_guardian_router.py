@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from ..errors import ConflictError
 from ..crud import patient_crud as crud_patient
 from ..crud import patient_guardian_crud as crud_guardian
 from ..crud import patient_guardian_relationship_mapping_crud as crud_relationship
@@ -93,7 +94,7 @@ def assign_guardian_to_patient(assignment: PatientPatientGuardianAssign, db: Ses
         db, assignment.guardianId, assignment.patientId
     )
     if existing_link:
-        raise HTTPException(status_code=400, detail="Guardian is already assigned to this patient")
+        raise ConflictError("Guardian is already assigned to this patient")
 
     active_patient_count = crud_patient_patient_guardian.count_active_patients_for_guardian(db, assignment.guardianId)
     if active_patient_count >= MAX_PATIENTS_PER_GUARDIAN:

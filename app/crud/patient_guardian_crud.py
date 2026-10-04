@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.models.patient_patient_guardian_model import PatientPatientGuardian
 
+from ..errors import ConflictError
 from ..crud import patient_guardian_relationship_mapping_crud
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_guardian_model import PatientGuardian
@@ -44,10 +45,7 @@ def create_guardian(
         .first()
     )
     if existing_patient:
-        raise HTTPException(
-            status_code=400,
-            detail="Guardian NRIC conflicts with an existing active patient record"
-        )
+        raise ConflictError("Guardian NRIC conflicts with an existing active patient record")
 
     # Reject if an active guardian already holds this NRIC
     existing_guardian = (
@@ -56,10 +54,7 @@ def create_guardian(
         .first()
     )
     if existing_guardian:
-        raise HTTPException(
-            status_code=400,
-            detail="A guardian with this NRIC already exists"
-        )
+        raise ConflictError("A guardian with this NRIC already exists")
 
     guardian_data = guardian.model_dump(exclude={'patientId', 'relationshipName'})
     db_guardian = PatientGuardian(**guardian_data)
@@ -102,10 +97,7 @@ def update_guardian(
             .first()
         )
         if existing_patient:
-            raise HTTPException(
-                status_code=400,
-                detail="Guardian NRIC conflicts with an existing active patient record"
-            )
+            raise ConflictError("Guardian NRIC conflicts with an existing active patient record")
 
         # Reject if a different active guardian already holds the new NRIC
         existing_guardian = (
@@ -119,10 +111,7 @@ def update_guardian(
             .first()
         )
         if existing_guardian:
-            raise HTTPException(
-                status_code=400,
-                detail="A guardian with this NRIC already exists"
-            )
+            raise ConflictError("A guardian with this NRIC already exists")
 
     # 3. Validate relationshipName exists in PATIENT_GUARDIAN_RELATIONSHIP_MAPPING table
     relationship_mapping = patient_guardian_relationship_mapping_crud.get_relationshipId_by_relationshipName(
