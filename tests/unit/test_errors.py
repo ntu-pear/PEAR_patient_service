@@ -145,7 +145,7 @@ def test_validation_error_is_422_with_fields_and_no_input_echo(client, caplog):
         response = client.post("/items", json={"nric": "S1234567A"})
     assert response.status_code == 422
     body = response.json()
-    assert body["detail"] == "Request validation failed"
+    assert body["detail"] == "Request validation failed: name: Field required"
     assert body["code"] == "VALIDATION_ERROR"
     assert body["errors"] == [{"field": "body.name", "message": "Field required"}]
     assert "S1234567A" not in response.text
@@ -170,3 +170,27 @@ def test_unknown_route_and_wrong_method(client):
 
 def test_non_string_detail_is_coerced(client):
     assert client.get("/non-string").json()["detail"] == "{'field': 'x'}"
+
+
+def test_validation_detail_summarises_every_field_for_the_webfe(client):
+    # The WebFE's mapBackendErrorToField / extractErrorMessage read a string
+    # detail and match field keywords in it, so the summary must name fields.
+    response = client.post("/items", json={})
+    assert response.json()["detail"] == (
+        "Request validation failed: name: Field required; nric: Field required"
+    )
+
+
+def test_validation_error_without_location_still_returns_422():
+    from fastapi.exceptions import RequestValidationError
+
+    app = FastAPI()
+    register_error_handlers(app)
+
+    @app.get("/no-loc")
+    def no_loc():
+        raise RequestValidationError([{"loc": (), "msg": "Invalid payload", "type": "value_error"}])
+
+    response = TestClient(app, raise_server_exceptions=False).get("/no-loc")
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Request validation failed: Invalid payload"

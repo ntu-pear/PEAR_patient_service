@@ -118,7 +118,16 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         for error in exc.errors()
     ]
     logger.warning("Validation failed at %s: %s", _where(request), errors)
-    return JSONResponse(status_code=422, content=error_body(422, VALIDATION_FAILED, errors=errors))
+    # A readable string detail: the WebFE's mapBackendErrorToField and
+    # extractErrorMessage match field names inside a string detail.
+    parts = []
+    for error in exc.errors():
+        loc = error.get("loc") or ()
+        message = error.get("msg", "Invalid value")
+        parts.append(f"{loc[-1]}: {message}" if loc else message)
+    summary = "; ".join(parts)
+    detail = f"{VALIDATION_FAILED}: {summary}" if summary else VALIDATION_FAILED
+    return JSONResponse(status_code=422, content=error_body(422, detail, errors=errors))
 
 
 async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError) -> JSONResponse:

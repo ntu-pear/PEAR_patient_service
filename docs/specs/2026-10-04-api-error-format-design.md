@@ -35,7 +35,7 @@ Consumers of error responses:
 
 | Consumer | Reads | Impact |
 |---|---|---|
-| WebFE | `error.response.data.detail` as a string (42 reads); Patient screens branch only on `404` (allergy, dementia, guardian, mobility) | None — `detail` stays a string; `404` behaviour unchanged. Validation-list parsing exists only in User/Activity modals. |
+| WebFE | `error.response.data.detail` as a string (42 reads); Patient screens branch only on `404` (allergy, dementia, guardian, mobility). On `origin/main`, `src/utils/mapBackendErrorToForm.ts` and `src/utils/errorMessage.ts` read a validation **list** `detail` (`loc`/`msg`) or a **string** `detail` (keyword match) — used by AddPatient, Add/EditGuardianModal and 9 Patient screens | None — `detail` stays a string; for validation it is a summary naming each field (`"Request validation failed: email: …"`), which the string path of both utils maps to the field / displays. `404` behaviour unchanged. |
 | `PEAR_reconciliation_service` → `/integrity/*` | `raise_for_status()` + logs text | None |
 | k8s CronJob → `/cronjobs/highlight-cleanup/run` | curl exit code | None |
 | Activity Service `services/patient_service.py:24,40` → `GET /patients/{id}`, `GET /allocation/patient/{id}` | Re-raises with `detail=response.json()` (nests our whole body) | Not broken (nesting already exists); notify Activity owner |
@@ -50,7 +50,7 @@ Consumers of error responses:
 Validation errors add `errors`:
 
 ```json
-{ "detail": "Request validation failed", "code": "VALIDATION_ERROR", "status": 422,
+{ "detail": "Request validation failed: Dosage: Field required", "code": "VALIDATION_ERROR", "status": 422,
   "errors": [ { "field": "body.Dosage", "message": "Field required" } ] }
 ```
 
