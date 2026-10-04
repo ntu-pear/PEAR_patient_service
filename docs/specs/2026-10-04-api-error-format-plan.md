@@ -466,7 +466,7 @@ register_error_handlers(app)
 from app.errors import register_error_handlers
 ```
 
-4. Remove imports that become unused: `from fastapi.exceptions import RequestValidationError` and `from sqlalchemy.exc import SQLAlchemyError` (line 12). Before removing `JSONResponse` and `Request` (lines 8, 11), check with `grep -n "JSONResponse\|Request\b" app/main.py` — keep any still referenced.
+4. Remove the imports used only by the deleted handlers: line 9 `from fastapi.exceptions import RequestValidationError`, line 11 `from fastapi.responses import JSONResponse`, line 12 `from sqlalchemy.exc import SQLAlchemyError`, and change line 8 to `from fastapi import FastAPI`. Confirm with `grep -n "JSONResponse\|Request\b\|SQLAlchemyError" app/main.py` → no output.
 
 - [ ] **Step 4: Run the new test and the full suite**
 
