@@ -119,3 +119,29 @@ def test_record_auth_bypass(caplog):
     with caplog.at_level(logging.WARNING, logger="pear.auth"):
         record_auth_bypass("/api/v1/allocation/patient/1")
     assert caplog.records[-1].auth_reason == "require_auth_false"
+
+
+def _raise_boom(token, now=None):
+    raise RuntimeError("boom")
+
+
+def test_shadow_verifier_exception_returns_none_and_logs(monkeypatch, caplog):
+    monkeypatch.setattr(token_verifier, "verify_token", _raise_boom)
+    with caplog.at_level(logging.WARNING, logger="pear.auth"):
+        assert apply_verification("tok", "U1", "DOCTOR", "/x") is None
+    assert caplog.records[-1].auth_reason == "verifier_error"
+
+
+def test_enforce_verifier_exception_is_503(monkeypatch):
+    monkeypatch.setenv("AUTH_VERIFY_MODE", "enforce")
+    monkeypatch.setattr(token_verifier, "verify_token", _raise_boom)
+    with pytest.raises(HTTPException) as exc:
+        apply_verification("tok", "U1", "DOCTOR", "/x")
+    assert exc.value.status_code == 503
+
+
+def test_log_message_contains_claimed_identity(monkeypatch, caplog):
+    _respond(monkeypatch, 200, USER)
+    with caplog.at_level(logging.WARNING, logger="pear.auth"):
+        apply_verification("tok", "U1", "ADMIN", "/x")
+    assert "claimed user U1, role ADMIN" in caplog.records[-1].getMessage()
