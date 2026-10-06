@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.patient_allocation_model import PatientAllocation
 
+from ..errors import ConflictError
 from ..crud import patient_guardian_crud as crud_guardian
 from ..crud import patient_guardian_relationship_mapping_crud as crud_relationship
 from ..crud import patient_patient_guardian_crud as crud_patient_patient_guardian
@@ -30,8 +31,8 @@ def upload_photo_to_cloudinary(file: UploadFile):
     try:
         upload_result = cloudinary.uploader.upload(file.file)
         return upload_result["secure_url"]
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Cloudinary upload failed: {str(e)}")
+    except Exception:
+        raise
 
 def get_patients_by_doctor(
     db: Session, 
@@ -295,7 +296,7 @@ def create_patient(db: Session, patient: PatientCreateWithAllocation, user: str,
         .first()
     )
     if existing_patient:
-        raise HTTPException(status_code=400, detail="NRIC must be unique for active records")
+        raise ConflictError("NRIC must be unique for active records")
 
     # Reject if an active guardian already holds this NRIC
     from ..models.patient_guardian_model import PatientGuardian as PatientGuardianModel
@@ -309,10 +310,7 @@ def create_patient(db: Session, patient: PatientCreateWithAllocation, user: str,
         .first()
     )
     if existing_guardian:
-        raise HTTPException(
-            status_code=400,
-            detail="Patient NRIC conflicts with an existing active guardian record"
-        )
+        raise ConflictError("Patient NRIC conflicts with an existing active guardian record")
 
     # Auto-assign (staff resolution + allocation) only applies to the allocation-aware schema
     has_allocation = isinstance(patient, PatientCreateWithAllocation)
@@ -540,7 +538,7 @@ def create_patient(db: Session, patient: PatientCreateWithAllocation, user: str,
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to create patient: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to create patient: {str(e)}")
+        raise
 
 
 def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: str, user_full_name: str, correlation_id: str = None):
@@ -574,7 +572,7 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
             .first()
         )
         if existing_patient:
-            raise HTTPException(status_code=400, detail="NRIC must be unique for active records")
+            raise ConflictError("NRIC must be unique for active records")
 
         # Check NRIC doesn't conflict with an active guardian
         from ..models.patient_guardian_model import PatientGuardian as PatientGuardianModel
@@ -588,10 +586,7 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
             .first()
         )
         if existing_guardian:
-            raise HTTPException(
-                status_code=400,
-                detail="Patient NRIC conflicts with an existing active guardian record"
-            )
+            raise ConflictError("Patient NRIC conflicts with an existing active guardian record")
 
         # 3. Track BUSINESS LOGIC changes only (exclude audit fields)
         changes = {}
@@ -684,7 +679,7 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to update patient: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to update patient: {str(e)}")
+        raise
 
 
 def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFile, user_id: str, user_full_name: str):
@@ -810,7 +805,7 @@ def delete_patient(db: Session, patient_id: int, user_id: str, user_full_name: s
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to delete patient: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to delete patient: {str(e)}")
+        raise
 
 def delete_patient_profile_picture(db: Session, patient_id: int, user_id: str, user_full_name: str):
     """ Remove the patient's profile picture by setting it to an empty string """

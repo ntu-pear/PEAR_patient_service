@@ -282,7 +282,7 @@ def test_update_prescription_duplicate_error(db_session_mock):
             user_full_name="Test User"
         )
     
-    assert excinfo.value.status_code == 400
+    assert excinfo.value.status_code == 409
     assert "Another prescription with this name already exists" in excinfo.value.detail
     db_session_mock.commit.assert_not_called()
 

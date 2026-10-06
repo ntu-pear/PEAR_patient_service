@@ -11,6 +11,10 @@ from app.models.patient_medication_model import PatientMedication
 from app.models.patient_model import Patient
 from app.models.ref_userconfig_model import RefUserConfig
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 @router.get("/patient")
@@ -59,8 +63,9 @@ async def get_patient_integrity(
             "generated_at": datetime.now().isoformat()
         }
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Patient integrity check failed: {str(e)}")
+    except Exception:
+        logger.exception("Patient integrity check failed")
+        raise HTTPException(status_code=500, detail="Patient integrity check failed")
 
 @router.get("/patient-medication")
 async def get_patient_medication_integrity(
@@ -112,8 +117,9 @@ async def get_patient_medication_integrity(
             "generated_at": datetime.now().isoformat()
         }
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Patient medication integrity check failed: {str(e)}")
+    except Exception:
+        logger.exception("Patient medication integrity check failed")
+        raise HTTPException(status_code=500, detail="Patient medication integrity check failed")
 
 @router.get("/patient-allocation")
 async def get_patient_allocation_integrity(
@@ -162,8 +168,9 @@ async def get_patient_allocation_integrity(
             "generated_at": datetime.now().isoformat()
         }
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Patient allocation integrity check failed: {str(e)}")
+    except Exception:
+        logger.exception("Patient allocation integrity check failed")
+        raise HTTPException(status_code=500, detail="Patient allocation integrity check failed")
 
 @router.get("/ref-userconfig")
 async def get_userconfig_patient_integrity(
@@ -211,8 +218,9 @@ async def get_userconfig_patient_integrity(
             "generated_at": datetime.now().isoformat()
         }
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Ref userconfig integrity check failed: {str(e)}")
+    except Exception:
+        logger.exception("Ref userconfig integrity check failed")
+        raise HTTPException(status_code=500, detail="Ref userconfig integrity check failed")
 
 
 
@@ -260,8 +268,9 @@ async def get_integrity_summary(
             "generated_at": datetime.now().isoformat()
         }
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Integrity summary failed: {str(e)}")
+    except Exception:
+        logger.exception("Integrity summary failed")
+        raise HTTPException(status_code=500, detail="Integrity summary failed")
 
 # Health check endpoint for the integrity system
 @router.get("/health")
@@ -286,5 +295,6 @@ async def integrity_health_check(db: Session = Depends(get_db)):
             "timestamp": datetime.now().isoformat()
         }
         
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Integrity health check failed: {str(e)}")
+    except Exception:
+        logger.exception("Integrity health check failed")
+        raise HTTPException(status_code=503, detail="Integrity health check failed")

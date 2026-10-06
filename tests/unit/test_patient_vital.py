@@ -408,3 +408,16 @@ def test_delete_patient_vital_logs_cascaded_highlight_delete_multiple_highlights
         assert call.kwargs["user"] == "test_user"
         assert call.kwargs["user_full_name"] == "Test User"
         assert call.kwargs["patient_id"] == 1
+
+
+def test_vital_range_error_is_bad_request(db_session_mock, vital_create):
+    from fastapi import HTTPException
+
+    from app.errors import BadRequestError
+
+    out_of_range = vital_create.model_copy(update={"Temperature": 99.0})
+    with pytest.raises(HTTPException) as exc_info:
+        create_vital(db_session_mock, out_of_range, created_by="test_user", user_full_name="Test User")
+    assert exc_info.value.status_code == 400
+    assert "Temperature must be between" in exc_info.value.detail
+    assert isinstance(exc_info.value, BadRequestError)

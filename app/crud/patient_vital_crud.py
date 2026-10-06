@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.services.highlight_helper import create_highlight_if_needed
 
+from ..errors import BadRequestError
 from ..config import Config
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_vital_model import PatientVital
@@ -135,10 +136,10 @@ def create_vital(
 
     except ValueError as e:
         # If validation fails
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+        raise BadRequestError(str(e))
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise
 
 # Update an existing vital record
 def update_vital(
@@ -236,13 +237,13 @@ def update_vital(
 
     except ValueError as e:
         # If threshold validation fails
-        raise HTTPException(status_code=400, detail=str(e))
+        raise BadRequestError(str(e))
     except HTTPException:
         # Reraise HTTP exceptions to preserve them
         raise
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise
 
 # Soft delete a vital record (set IsDeleted to '1')
 def delete_vital(

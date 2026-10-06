@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.models.patient_highlight_model import PatientHighlight
 from app.services.highlight_helper import create_highlight_if_needed
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_medication_model import PatientMedication
 from ..models.patient_model import Patient
@@ -233,10 +234,7 @@ def create_medication(
     ).first()
     
     if existing_medication:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Patient already has an active medication for this prescription"
-        )
+        raise ConflictError(f"Patient already has an active medication for this prescription")
     
     # Generate correlation ID if not provided
     if not correlation_id:
@@ -359,7 +357,7 @@ def create_medication(
         logger.error(f"Failed to create medication: {str(e)}")
         import traceback
         logger.error(f"Full traceback: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=f"Failed to create medication: {str(e)}")
+        raise
 
 # Updated update_medication function
 def update_medication(
@@ -404,10 +402,7 @@ def update_medication(
     ).first()
     
     if duplicate_check:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Another active medication with this prescription already exists for this patient"
-        )
+        raise ConflictError(f"Another active medication with this prescription already exists for this patient")
 
     # Generate correlation ID if not provided
     if not correlation_id:
@@ -576,7 +571,7 @@ def update_medication(
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to update medication: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to update medication: {str(e)}")
+        raise
 
 # Soft delete a medication
 def delete_medication(
@@ -737,4 +732,4 @@ def delete_medication(
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to delete medication: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to delete medication: {str(e)}")
+        raise

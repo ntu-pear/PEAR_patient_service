@@ -118,7 +118,7 @@ def test_create_prescription_list_duplicate_check(mock_model, db_session_mock):
             user_full_name="Test User"
         )
     
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == 409
     assert "already exists" in exc_info.value.detail
     db_session_mock.add.assert_not_called()
 
@@ -150,7 +150,7 @@ def test_create_prescription_list_duplicate_case_insensitive(mock_model, db_sess
                 user_full_name="Test User"
             )
         
-        assert exc_info.value.status_code == 400
+        assert exc_info.value.status_code == 409
 
 
 def test_update_prescription_list_converts_to_uppercase(db_session_mock):

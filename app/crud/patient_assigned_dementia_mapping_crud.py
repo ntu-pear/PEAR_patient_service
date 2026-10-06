@@ -4,6 +4,7 @@ from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_assigned_dementia_list_model import PatientAssignedDementiaList
 from ..models.patient_model import Patient
@@ -176,9 +177,7 @@ def create_assigned_dementia(
     )
 
     if existing_assignment:
-        raise HTTPException(
-            status_code=400, detail="Patient already assigned this dementia type"
-        )
+        raise ConflictError("Patient already assigned this dementia type")
 
     # Create the new assignment
     new_assignment = PatientAssignedDementiaMapping(

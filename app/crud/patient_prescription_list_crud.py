@@ -3,6 +3,7 @@ from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_prescription_list_model import PatientPrescriptionList
 from ..schemas.patient_prescription_list import (
@@ -46,10 +47,7 @@ def create_prescription_list(
     ).first()
     
     if existing_prescription_list:
-        raise HTTPException(
-            status_code=400, 
-            detail="A prescription list record with this name already exists"
-        )
+        raise ConflictError("A prescription list record with this name already exists")
     
     try:
         # Ensure timestamps exist even if frontend didn't send them
@@ -84,9 +82,9 @@ def create_prescription_list(
 
         return db_prescription_list
 
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise
 
 def update_prescription_list(
     db: Session,
@@ -122,10 +120,7 @@ def update_prescription_list(
             ).first()
 
             if existing:
-                raise HTTPException(
-                    status_code=400,
-                    detail="A prescription list record with this name already exists"
-                )
+                raise ConflictError("A prescription list record with this name already exists")
 
     for key, value in update_data.items():
         setattr(db_prescription_list, key, value)

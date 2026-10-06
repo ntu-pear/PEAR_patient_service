@@ -38,12 +38,7 @@ def create_dementia_list_entry(
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "anonymous"
     user_full_name = get_full_name(payload) or "Anonymous User"
-    try:
-        return crud_dementia_list.create_dementia_list_entry(db, dementia_list_data, user_id, user_full_name)
-    except Exception as e:
-        print(dementia_list_data)
-
-        raise HTTPException(status_code=400, detail=f"Error creating dementia list entry: {e}")
+    return crud_dementia_list.create_dementia_list_entry(db, dementia_list_data, user_id, user_full_name)
 
 # Update a dementia list entry
 @router.put("/PatientAssignedDementiaList/{dementia_list_id}", response_model=PatientAssignedDementiaListRead)

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.models.patient_highlight_model import PatientHighlight
 from app.services.highlight_helper import create_highlight_if_needed
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_model import Patient
 from ..models.patient_prescription_model import PatientPrescription
@@ -77,7 +78,7 @@ def create_prescription(
         PatientPrescription.IsDeleted == '0').first()
     
     if existing_prescription:
-        raise HTTPException(status_code=400, detail="Duplicate prescription for the same patient and prescription list.")
+        raise ConflictError("Duplicate prescription for the same patient and prescription list.")
     
     try:
         
@@ -154,9 +155,9 @@ def create_prescription(
         )
         return new_prescription
 
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise
 
 # Update an existing prescription
 def update_prescription(
@@ -192,10 +193,7 @@ def update_prescription(
     ).first()
 
     if duplicate_check:
-        raise HTTPException(
-            status_code=400, 
-            detail="Another prescription with this name already exists for this patient."
-        )
+        raise ConflictError("Another prescription with this name already exists for this patient.")
 
     try:
         original_data_dict = {
@@ -270,9 +268,9 @@ def update_prescription(
             is_system_config = False
         )
         return db_prescription
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise
 
 # Soft delete a prescription
 def delete_prescription(
@@ -387,6 +385,6 @@ def delete_prescription(
             is_system_config = False
         )
         return db_prescription
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise

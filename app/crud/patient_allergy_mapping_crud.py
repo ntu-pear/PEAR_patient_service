@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.services.highlight_helper import create_highlight_if_needed
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.allergy_reaction_type_model import AllergyReactionType
 from ..models.allergy_type_model import AllergyType
@@ -175,10 +176,7 @@ def create_patient_allergy(
     )
 
     if existing_allergy:
-        raise HTTPException(
-            status_code=400,
-            detail="Patient already has this allergy and reaction combination",
-        )
+        raise ConflictError("Patient already has this allergy and reaction combination")
 
     # Create the patient allergy mapping
     new_allergy = PatientAllergyMapping(
@@ -301,7 +299,7 @@ def update_patient_allergy(
             .first()
         )
         if allergy_combo:
-            raise HTTPException(status_code=400, detail="Patient allergy record exists for the specified allergy type and reaction")
+            raise ConflictError("Patient allergy record exists for the specified allergy type and reaction")
         
     try:
         original_data_dict = {

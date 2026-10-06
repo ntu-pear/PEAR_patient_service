@@ -3,6 +3,7 @@ from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_highlight_type_model import PatientHighlightType
 from ..schemas.patient_highlight_type import HighlightTypeCreate, HighlightTypeUpdate
@@ -96,10 +97,7 @@ def create_highlight_type(
     ).first()
     
     if existing:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Highlight type with code '{uppercase_type_code}' already exists"
-        )
+        raise ConflictError(f"Highlight type with code '{uppercase_type_code}' already exists")
     
     # Create highlight type with UPPERCASE TypeCode
     data = highlight_type.model_dump()
@@ -161,10 +159,7 @@ def update_highlight_type(
                 ).first()
 
                 if existing:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"Highlight type with code '{update_data['TypeCode']}' already exists"
-                    )
+                    raise ConflictError(f"Highlight type with code '{update_data['TypeCode']}' already exists")
 
         for key, value in update_data.items():
             setattr(db_highlight_type, key, value)
