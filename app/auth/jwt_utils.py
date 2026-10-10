@@ -7,6 +7,7 @@ import binascii
 from typing import Optional
 from pydantic import BaseModel, ValidationError
 from ..logger.logger_utils import logger
+from .token_verifier import apply_verification, record_auth_bypass
 
 # DTO for the expected JWT payload structure
 class JWTPayload(BaseModel):
@@ -22,6 +23,9 @@ def extract_jwt_payload(request: Request, require_auth: bool = True) -> Optional
     If require_auth is True, raises exception on failure.
     If require_auth is False, returns None on failure.
     """
+    if not require_auth and "require_auth" in request.query_params:
+        record_auth_bypass(endpoint=request.url.path)
+
     auth_header = request.headers.get("Authorization")
     
     if not auth_header:
@@ -85,7 +89,27 @@ def extract_jwt_payload(request: Request, require_auth: bool = True) -> Optional
         # Parse the nested JSON in sub and convert to JWTPayload
         user_data = json.loads(sub)
         jwt_payload = JWTPayload(**user_data)
-        
+
+        try:
+            verified = apply_verification(
+                token=token,
+                claimed_user_id=jwt_payload.userId,
+                claimed_role=jwt_payload.roleName,
+                endpoint=request.url.path,
+            )
+        except HTTPException:
+            if require_auth:
+                raise
+            return None
+        if verified is not None:
+            jwt_payload = JWTPayload(
+                userId=verified.userId,
+                fullName=verified.fullName,
+                email=verified.email,
+                roleName=verified.roleName,
+                sessionId=jwt_payload.sessionId,
+            )
+
         # Log the payload for debugging
         logger.info(
             "JWT payload extracted and converted",
