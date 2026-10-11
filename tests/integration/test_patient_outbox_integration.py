@@ -4,6 +4,7 @@ Tests for flow: Patient CRUD -> OUTBOX_EVENTS table creation
 """
 import uuid
 from datetime import datetime
+from unittest.mock import patch
 
 import pytest
 from app.crud.patient_crud import (
@@ -162,6 +163,14 @@ def sample_created_patient_data(unique_nric):
             CreatedById="test-user-1",
             ModifiedById="test-user-1",
         )
+
+
+@pytest.fixture(autouse=True)
+def _nric_not_held_by_user():
+    """The user-service NRIC check passes unless a test says otherwise."""
+    with patch("app.crud.patient_crud.check_nric_exists", return_value=False) as mock_check:
+        yield mock_check
+
 
 # Uncomment this when you are testing to ensure clean state.
 # NOTE (IMPORTANT): This will delete ALL records in the tables after each test function, so make sure you point to the testing DB, and not PROD!

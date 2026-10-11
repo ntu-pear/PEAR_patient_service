@@ -9,6 +9,13 @@ from app.schemas.patient import PatientCreateWithAllocation
 from tests.utils.mock_db import get_db_session_mock
 
 
+@pytest.fixture(autouse=True)
+def _nric_not_held_by_user():
+    """The user-service NRIC check passes unless a test says otherwise."""
+    with patch("app.crud.patient_crud.check_nric_exists", return_value=False) as mock_check:
+        yield mock_check
+
+
 @pytest.fixture
 def db():
     return get_db_session_mock()

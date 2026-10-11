@@ -19,7 +19,7 @@ from ..models.patient_model import Patient
 from ..schemas.patient import PatientCreate, PatientCreateWithAllocation, PatientUpdate
 from ..schemas.patient_guardian import PatientGuardianCreate
 from ..schemas.patient_patient_guardian import PatientPatientGuardianCreate
-from ..services.user_service import get_least_loaded_staff
+from ..services.user_service import check_nric_exists, get_least_loaded_staff
 from ..services.outbox_service import generate_correlation_id, get_outbox_service
 
 logger = logging.getLogger(__name__)
@@ -358,6 +358,11 @@ def create_patient(db: Session, patient: PatientCreateWithAllocation, user: str,
     supervisor2_id = getattr(patient, "supervisor2Id", None)
     if supervisor2_id and supervisor_id and supervisor2_id == supervisor_id:
         raise HTTPException(status_code=400, detail="supervisor2Id must differ from supervisorId")
+
+    # Reject if the NRIC belongs to an active staff user. Runs after the local checks
+    # so invalid requests never cost a call to the user service.
+    if check_nric_exists(patient.nric, api_key):
+        raise ConflictError("Patient NRIC conflicts with an existing active user record")
 
     # Generate correlation ID if not provided
     if not correlation_id:

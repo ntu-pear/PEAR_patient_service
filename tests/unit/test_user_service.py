@@ -195,3 +195,62 @@ def test_get_least_loaded_staff_mixed_id_formats(db_session_mock, api_key):
         result = user_service.get_least_loaded_staff("DOCTOR", db_session_mock, api_key=api_key)
 
     assert result == "2"  # numeric IDs win over non-numeric on tie
+
+
+# --- check_nric_exists tests ---
+
+def _check_nric(api_key, response=None, error=None, env={"USER_SERVICE_URL": "http://user-service"}):
+    with patch("httpx.get", return_value=response, side_effect=error) as mock_get, \
+         patch.dict(os.environ, env, clear=False):
+        from app.services import user_service
+        import importlib; importlib.reload(user_service)
+        return user_service.check_nric_exists("S1234567A", api_key=api_key), mock_get
+
+
+def test_check_nric_exists_found(api_key):
+    result, mock_get = _check_nric(api_key, response=MagicMock(status_code=200))
+    assert result is True
+    mock_get.assert_called_once_with(
+        "http://user-service/api/v1/internal/user/check-nric/S1234567A",
+        headers={"X-Api-Key": api_key},
+        timeout=10.0,
+    )
+
+
+def test_check_nric_exists_not_found(api_key):
+    result, _ = _check_nric(api_key, response=MagicMock(status_code=404))
+    assert result is False
+
+
+def test_check_nric_exists_missing_key():
+    from app.services.user_service import check_nric_exists
+    with pytest.raises(HTTPException) as exc:
+        check_nric_exists("S1234567A", api_key=None)
+    assert exc.value.status_code == 500
+
+
+def test_check_nric_exists_missing_url(api_key):
+    with patch.dict(os.environ, {"USER_SERVICE_URL": ""}):
+        from app.services.user_service import check_nric_exists
+        with pytest.raises(HTTPException) as exc:
+            check_nric_exists("S1234567A", api_key=api_key)
+    assert exc.value.status_code == 500
+
+
+def test_check_nric_exists_wrong_key(api_key):
+    with pytest.raises(HTTPException) as exc:
+        _check_nric(api_key, response=MagicMock(status_code=403))
+    assert exc.value.status_code == 403
+
+
+def test_check_nric_exists_unexpected_status(api_key):
+    with pytest.raises(HTTPException) as exc:
+        _check_nric(api_key, response=MagicMock(status_code=500))
+    assert exc.value.status_code == 503
+
+
+def test_check_nric_exists_unreachable(api_key):
+    import httpx
+    with pytest.raises(HTTPException) as exc:
+        _check_nric(api_key, error=httpx.ConnectTimeout("timed out"))
+    assert exc.value.status_code == 503

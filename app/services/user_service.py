@@ -1,10 +1,12 @@
 import os
 from typing import Optional
+from urllib.parse import quote
 
 import httpx
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from ..errors import ServiceUnavailableError
 from ..models.patient_allocation_model import PatientAllocation
 
 ROLE_COLUMN_MAP = {
@@ -53,6 +55,37 @@ def get_active_staff_by_role(role: str, api_key: Optional[str]) -> list[str]:
         )
 
     return filtered
+
+
+def check_nric_exists(nric: str, api_key: Optional[str]) -> bool:
+    """Return True if an active user in the user service holds this NRIC.
+
+    Fails closed: any problem reaching the user service raises, so a patient
+    is never created without the check having run.
+    """
+    if not api_key:
+        raise HTTPException(status_code=500, detail="INTERNAL_SERVICE_API_KEY is not configured.")
+
+    user_service_url = os.environ.get("USER_SERVICE_URL", "")
+    if not user_service_url:
+        raise HTTPException(status_code=500, detail="USER_SERVICE_URL is not configured.")
+
+    try:
+        response = httpx.get(
+            f"{user_service_url}/api/v1/internal/user/check-nric/{quote(nric, safe='')}",
+            headers={"X-Api-Key": api_key},
+            timeout=10.0,
+        )
+    except httpx.HTTPError:
+        raise ServiceUnavailableError("User service is unreachable.")
+
+    if response.status_code == 200:
+        return True
+    if response.status_code == 404:
+        return False
+    if response.status_code == 403:
+        raise HTTPException(status_code=403, detail="Invalid service API key for user service.")
+    raise ServiceUnavailableError("User service returned an unexpected response.")
 
 
 def get_least_loaded_staff(role: str, db: Session, api_key: Optional[str]) -> str:
