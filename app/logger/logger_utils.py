@@ -3,6 +3,7 @@ from .config import logger
 import json
 from enum import Enum
 from typing import Optional
+from .reference_names import add_reference_names
 
 
 class ActionType(Enum):
@@ -49,8 +50,8 @@ def log_crud_action(
     # Create the message object that the log service expects
     log_message = {
         "entity_id": entity_id,
-        "original_data": filter_data(original_data),
-        "updated_data": filter_data(updated_data),
+        "original_data": filter_data(add_reference_names(original_data)),
+        "updated_data": filter_data(add_reference_names(updated_data)),
     }
 
     # Create extra fields for the conditional formatter
