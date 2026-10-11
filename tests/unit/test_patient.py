@@ -16,6 +16,13 @@ from app.schemas.patient import PatientCreate, PatientUpdate
 from tests.utils.mock_db import get_db_session_mock
 
 
+@pytest.fixture(autouse=True)
+def _nric_not_held_by_user():
+    """The user-service NRIC check passes unless a test says otherwise."""
+    with patch("app.crud.patient_crud.check_nric_exists", return_value=False) as mock_check:
+        yield mock_check
+
+
 def test_get_patient_found(db_session_mock):
     mock_patient = MagicMock(id=1, name="John Doe", nric="S1234567A", isDeleted=0)
     mock_patient.mask_nric = "SXXXXX67A"
