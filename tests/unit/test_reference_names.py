@@ -170,3 +170,13 @@ def test_lock_timeout_error_leaves_data_unchanged():
     with patch("app.database.SessionLocal", return_value=db):
         assert add_reference_names(data, "PATIENT") == {"guardianId": 1}
     db.close.assert_called_once()
+
+
+def test_lock_timeout_reset_before_connection_returns_to_pool():
+    db = _session()
+    db.query.return_value.filter.return_value.all.side_effect = Exception("boom")
+    with patch("app.database.SessionLocal", return_value=db):
+        add_reference_names({"guardianId": 1}, "PATIENT")
+    statements = [str(c[0][0]) for c in db.execute.call_args_list]
+    assert statements[-1] == "SET LOCK_TIMEOUT -1"
+    db.close.assert_called_once()

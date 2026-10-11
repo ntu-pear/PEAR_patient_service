@@ -137,6 +137,11 @@ def _load_table(table: str, ids) -> dict:
         )
         return {r[0]: r[1] for r in rows}
     finally:
+        # The setting outlives the session on a pooled connection; restore the default.
+        try:
+            db.execute(text("SET LOCK_TIMEOUT -1"))
+        except Exception:
+            pass
         db.close()
 
 
