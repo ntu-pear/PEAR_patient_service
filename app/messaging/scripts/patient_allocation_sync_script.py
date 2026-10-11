@@ -112,7 +112,7 @@ class PatientAllocationSyncScript(BaseScript):
                 # Debug: Log guardian information loading
                 for allocation in allocations:
                     if hasattr(allocation, 'guardian') and allocation.guardian:
-                        self.logger.debug(f"Allocation {allocation.id}: Guardian loaded = '{allocation.guardian.firstName} {allocation.guardian.lastName}'")
+                        self.logger.debug(f"Allocation {allocation.id}: Guardian loaded = {allocation.guardian.id}")
                     else:
                         self.logger.warning(f"Allocation {allocation.id}: No guardian loaded")
                 

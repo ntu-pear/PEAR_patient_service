@@ -110,24 +110,14 @@ def extract_jwt_payload(request: Request, require_auth: bool = True) -> Optional
                 sessionId=jwt_payload.sessionId,
             )
 
-        # Log the payload for debugging
-        logger.info(
-            "JWT payload extracted and converted",
-            extra={
-                "user": jwt_payload.userId,
-                "table": "auth",
-                "action": "decode",
-                "payload": jwt_payload.model_dump()
-            }
-        )
-        
         return jwt_payload
     
     except ValidationError as e:
         error_msg = f"Invalid token payload structure: {str(e)}"
+        # str(e) embeds the token's field values (email etc.), so log only the count.
         logger.error(
-            error_msg,
-            extra={"table": "auth", "action": "decode", "payload": user_data if 'user_data' in locals() else None}
+            f"Invalid token payload structure ({e.error_count()} errors)",
+            extra={"table": "auth", "action": "decode"}
         )
         if require_auth:
             raise HTTPException(
