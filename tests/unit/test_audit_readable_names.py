@@ -172,3 +172,24 @@ def test_dementia_delete_logs_names_in_original_data():
     original = log.call_args.kwargs["original_data"]
     assert original["DementiaTypeName"] == "Alzheimer's"
     assert original["DementiaStageName"] == "Mild"
+
+
+def test_dementia_create_without_stage_does_not_raise():
+    db = make_db(
+        {
+            dementia_crud.PatientAssignedDementiaList: [
+                SimpleNamespace(Value="Alzheimer's")
+            ],
+            dementia_crud.Patient: [SimpleNamespace(name="Tan")],
+        }
+    )
+    # The schema requires a stage, so bypass validation to reach the CRUD guard.
+    data = PatientAssignedDementiaCreate.model_construct(
+        PatientId=1, DementiaTypeListId=1, DementiaStageId=None,
+        CreatedById="1", ModifiedById="1",
+    )
+    with patch.object(dementia_crud, "log_crud_action") as log:
+        dementia_crud.create_assigned_dementia(db, data, "1", "Admin")
+    updated = log.call_args.kwargs["updated_data"]
+    assert updated["DementiaTypeName"] == "Alzheimer's"
+    assert updated["DementiaStageName"] is None

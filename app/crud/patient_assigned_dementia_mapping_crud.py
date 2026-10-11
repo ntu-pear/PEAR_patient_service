@@ -152,6 +152,7 @@ def create_assigned_dementia(
         raise HTTPException(status_code=400, detail="Invalid or deleted dementia type")
 
     # Validate DementiaStageId if provided
+    dementia_stage = None
     if dementia_data.DementiaStageId is not None:
         dementia_stage = (
             db.query(PatientDementiaStageList)
