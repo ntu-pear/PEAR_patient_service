@@ -225,16 +225,18 @@ def create_patient_allergy(
     allergy_reaction_type_name = allergy_reaction_type.Value if allergy_reaction_type else None
 
     updated_data_dict = serialize_data(allergy_data.model_dump())
+    updated_data_dict["AllergyTypeName"] = allergy_type_name
+    updated_data_dict["AllergyReactionTypeName"] = allergy_reaction_type_name
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
         user_full_name=user_full_name,
         table="PatientAllergyMapping",
         message = f"Created patient allergy: {allergy_type_name} ({allergy_reaction_type_name}) for patient: {patient_name}",
-        entity_id=new_allergy.AllergyTypeID,
+        entity_id=new_allergy.Patient_AllergyID,
         original_data=None,
         updated_data=updated_data_dict,
-        patient_id=allergy_data.AllergyTypeID,
+        patient_id=allergy_data.PatientID,
         patient_full_name=patient_name,
         log_type="allergy",
     )
@@ -351,6 +353,8 @@ def update_patient_allergy(
     allergy_reaction_type_name = allergy_reaction_type.Value if allergy_reaction_type else None
 
     updated_data_dict = serialize_data(allergy_data.model_dump())
+    updated_data_dict["AllergyTypeName"] = allergy_type_name
+    updated_data_dict["AllergyReactionTypeName"] = allergy_reaction_type_name
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
@@ -460,6 +464,10 @@ def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: st
     allergy_type_name = allergy_type.Value if allergy_type else None
     allergy_reaction_type = db.query(AllergyReactionType).filter(AllergyReactionType.AllergyReactionTypeID == db_allergy.AllergyReactionTypeID).first()
     allergy_reaction_type_name = allergy_reaction_type.Value if allergy_reaction_type else None
+
+    if isinstance(original_data_dict, dict):
+        original_data_dict["AllergyTypeName"] = allergy_type_name
+        original_data_dict["AllergyReactionTypeName"] = allergy_reaction_type_name
 
     log_crud_action(
         action=ActionType.DELETE,
