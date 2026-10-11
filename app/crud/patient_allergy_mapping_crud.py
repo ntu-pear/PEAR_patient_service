@@ -225,6 +225,8 @@ def create_patient_allergy(
     allergy_reaction_type_name = allergy_reaction_type.Value if allergy_reaction_type else None
 
     updated_data_dict = serialize_data(allergy_data.model_dump())
+    updated_data_dict["AllergyTypeName"] = allergy_type_name
+    updated_data_dict["AllergyReactionTypeName"] = allergy_reaction_type_name
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
@@ -351,6 +353,8 @@ def update_patient_allergy(
     allergy_reaction_type_name = allergy_reaction_type.Value if allergy_reaction_type else None
 
     updated_data_dict = serialize_data(allergy_data.model_dump())
+    updated_data_dict["AllergyTypeName"] = allergy_type_name
+    updated_data_dict["AllergyReactionTypeName"] = allergy_reaction_type_name
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
@@ -460,6 +464,10 @@ def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: st
     allergy_type_name = allergy_type.Value if allergy_type else None
     allergy_reaction_type = db.query(AllergyReactionType).filter(AllergyReactionType.AllergyReactionTypeID == db_allergy.AllergyReactionTypeID).first()
     allergy_reaction_type_name = allergy_reaction_type.Value if allergy_reaction_type else None
+
+    if isinstance(original_data_dict, dict):
+        original_data_dict["AllergyTypeName"] = allergy_type_name
+        original_data_dict["AllergyReactionTypeName"] = allergy_reaction_type_name
 
     log_crud_action(
         action=ActionType.DELETE,
