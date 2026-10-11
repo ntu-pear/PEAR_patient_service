@@ -42,7 +42,9 @@ def test_allergy_create_logs_names():
             allergy_crud.Patient: [SimpleNamespace(name="Tan")],
         }
     )
-    data = PatientAllergyCreate(PatientID=1, AllergyTypeID=3, AllergyReactionTypeID=2)
+    # Simulate the DB assigning the PK on insert (distinct from the other IDs)
+    db.add.side_effect = lambda row: setattr(row, "Patient_AllergyID", 777)
+    data = PatientAllergyCreate(PatientID=11, AllergyTypeID=3, AllergyReactionTypeID=2)
     with patch.object(allergy_crud, "log_crud_action") as log, patch.object(
         allergy_crud, "create_highlight_if_needed"
     ):
@@ -50,6 +52,8 @@ def test_allergy_create_logs_names():
     updated = log.call_args.kwargs["updated_data"]
     assert updated["AllergyTypeName"] == "Peanut"
     assert updated["AllergyReactionTypeName"] == "Rash"
+    assert log.call_args.kwargs["patient_id"] == 11
+    assert log.call_args.kwargs["entity_id"] == 777
 
 
 def test_allergy_update_logs_new_names():
