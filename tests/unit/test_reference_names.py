@@ -87,3 +87,25 @@ def test_input_not_mutated():
     with patch.object(reference_names, "_load_table", return_value={1: "A"}):
         add_reference_names(data)
     assert data == {"guardianId": 1}
+
+
+def test_created_by_ids_kept():
+    out = filter_data(
+        {"CreatedById": "u1", "ModifiedById": "u2", "CreatedDate": "d", "IsDeleted": 0}
+    )
+    assert out == {"CreatedById": "u1", "ModifiedById": "u2"}
+
+
+def test_log_crud_action_enriches_and_keeps_ids():
+    with patch.object(reference_names, "_load_table", return_value={1: "Mum"}), patch.object(
+        logger_utils, "logger"
+    ) as lg:
+        log_crud_action(
+            ActionType.UPDATE, "u", "U", "m", "T", 5,
+            original_data={"guardianId": 1, "CreatedById": "a"},
+            updated_data={"guardianId": 1, "ModifiedById": "b"},
+        )
+    msg = lg.info.call_args[0][0]
+    assert msg["original_data"] == {"guardianId": 1, "guardianName": "Mum", "CreatedById": "a"}
+    assert msg["updated_data"]["guardianName"] == "Mum"
+    assert msg["updated_data"]["ModifiedById"] == "b"

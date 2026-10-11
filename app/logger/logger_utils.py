@@ -12,7 +12,7 @@ class ActionType(Enum):
     DELETE = "delete"
 
 
-EXCLUDED_KEYS = {"CreatedById", "ModifiedById", "ModifiedDate", "CreatedDate", "IsDeleted", "isDeleted"}
+EXCLUDED_KEYS = {"ModifiedDate", "CreatedDate", "IsDeleted", "isDeleted"}
 
 
 def filter_data(data: dict) -> dict:
