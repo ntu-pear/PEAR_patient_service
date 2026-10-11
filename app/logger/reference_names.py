@@ -7,6 +7,8 @@ import logging
 import time
 from typing import Dict, Optional
 
+from sqlalchemy import text
+
 _log = logging.getLogger(__name__)
 
 _TTL_SECONDS = 300
@@ -32,8 +34,31 @@ ID_KEY_TABLES = {
     "guardian2id": "guardian",
 }
 
-# table key -> (monotonic timestamp, {id: name})
-_cache: Dict[str, tuple] = {}
+# table key -> database table name (to skip a lookup table's own rows)
+TABLE_NAMES = {
+    "language": "PATIENT_LIST_LANGUAGE",
+    "religion": "PATIENT_LIST_RELIGION",
+    "diet": "PATIENT_LIST_DIET",
+    "education": "PATIENT_LIST_EDUCATION",
+    "livewith": "PATIENT_LIST_LIVEWITH",
+    "occupation": "PATIENT_LIST_OCCUPATION",
+    "pet": "PATIENT_LIST_PET",
+    "prescription": "PATIENT_PRESCRIPTION_LIST",
+    "mobility": "PATIENT_MOBILITY_LIST",
+    "album": "PATIENT_PHOTO_LIST_ALBUM",
+    "preference": "PATIENT_PERSONAL_PREFERENCE_LIST",
+    "problem": "PATIENT_PROBLEM_LIST",
+    "diagnosis": "PATIENT_MEDICAL_DIAGNOSIS_LIST",
+    "highlight_type": "PATIENT_HIGHLIGHT_TYPE",
+    "relationship": "PATIENT_GUARDIAN_RELATIONSHIP_MAPPING",
+    "guardian": "PATIENT_GUARDIAN",
+}
+
+_MISS_TTL_SECONDS = 60
+_LOCK_TIMEOUT_MS = 500
+
+# (table key, id) -> (monotonic timestamp, name or None)
+_cache: Dict[tuple, tuple] = {}
 
 
 def _name_key(key: str) -> Optional[str]:
@@ -44,8 +69,11 @@ def _name_key(key: str) -> Optional[str]:
     return None
 
 
-def _load_table(table: str) -> dict:
-    """Read {id: name} for one lookup table using a short-lived session."""
+def _load_table(table: str, ids) -> dict:
+    """Read {id: name} for the given ids of one lookup table.
+
+    Uses a short-lived session that fails fast on locks held by the request.
+    """
     from app.database import SessionLocal
     from app.models.patient_list_language_model import PatientListLanguage
     from app.models.patient_list_religion_model import PatientReligionList
@@ -89,53 +117,93 @@ def _load_table(table: str) -> dict:
     }
     db = SessionLocal()
     try:
+        db.execute(text(f"SET LOCK_TIMEOUT {_LOCK_TIMEOUT_MS}"))
+        ids = list(ids)
         if table == "guardian":
-            rows = db.query(
-                PatientGuardian.id, PatientGuardian.firstName, PatientGuardian.lastName
-            ).all()
+            rows = (
+                db.query(
+                    PatientGuardian.id,
+                    PatientGuardian.firstName,
+                    PatientGuardian.lastName,
+                )
+                .filter(PatientGuardian.id.in_(ids))
+                .all()
+            )
             return {r[0]: " ".join(p for p in (r[1], r[2]) if p).strip() for r in rows}
         model, id_attr, name_attr = simple[table]
-        rows = db.query(getattr(model, id_attr), getattr(model, name_attr)).all()
+        id_col = getattr(model, id_attr)
+        rows = (
+            db.query(id_col, getattr(model, name_attr)).filter(id_col.in_(ids)).all()
+        )
         return {r[0]: r[1] for r in rows}
     finally:
         db.close()
 
 
-def _get_table(table: str) -> dict:
+def _coerce_id(value):
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _get_names(table: str, ids: set) -> dict:
+    """Return {id: name} for the ids that have a name, loading only cache misses."""
     now = time.monotonic()
-    hit = _cache.get(table)
-    if hit and now - hit[0] < _TTL_SECONDS:
-        return hit[1]
-    data = _load_table(table)
-    _cache[table] = (now, data)
-    return data
+    found, missing = {}, []
+    for i in ids:
+        hit = _cache.get((table, i))
+        if hit and now < hit[0]:
+            if hit[1]:
+                found[i] = hit[1]
+        else:
+            missing.append(i)
+    if missing:
+        loaded = _load_table(table, missing)
+        now = time.monotonic()
+        for i in missing:
+            name = loaded.get(i)
+            ttl = _TTL_SECONDS if name else _MISS_TTL_SECONDS
+            _cache[(table, i)] = (now + ttl, name)
+            if name:
+                found[i] = name
+    return found
 
 
-def add_reference_names(data: Optional[dict]) -> Optional[dict]:
-    """Return a copy of data with name siblings added; data itself on any error."""
+def add_reference_names(data: Optional[dict], table: Optional[str] = None) -> Optional[dict]:
+    """Return a copy of data with name siblings added; data itself on any error.
+
+    ``table`` is the logged table; a lookup table's own ID column is skipped.
+    """
     try:
         if not data:
             return data
-        wanted = [
-            (k, ID_KEY_TABLES[k.lower()])
-            for k in data
-            if isinstance(k, str) and k.lower() in ID_KEY_TABLES
-        ]
+        own = (table or "").upper()
+        wanted = []
+        for k, v in data.items():
+            if not (isinstance(k, str) and k.lower() in ID_KEY_TABLES):
+                continue
+            tkey = ID_KEY_TABLES[k.lower()]
+            name_key = _name_key(k)
+            if TABLE_NAMES.get(tkey) == own or not name_key or name_key in data:
+                continue
+            ident = _coerce_id(v)
+            if ident is None:
+                continue
+            wanted.append((name_key, tkey, ident))
         if not wanted:
             return data
+        by_table: Dict[str, set] = {}
+        for _, tkey, ident in wanted:
+            by_table.setdefault(tkey, set()).add(ident)
+        names = {t: _get_names(t, ids) for t, ids in by_table.items()}
         out = dict(data)
-        for key, table in wanted:
-            name_key = _name_key(key)
-            value = data[key]
-            if not name_key or name_key in out or value is None:
-                continue
-            names = _get_table(table)
-            name = names.get(value)
-            if name is None:
-                try:
-                    name = names.get(int(value))
-                except (TypeError, ValueError):
-                    name = None
+        for name_key, tkey, ident in wanted:
+            name = names[tkey].get(ident)
             if name:
                 out[name_key] = name
         return out

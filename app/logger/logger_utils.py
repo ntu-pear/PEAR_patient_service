@@ -50,8 +50,8 @@ def log_crud_action(
     # Create the message object that the log service expects
     log_message = {
         "entity_id": entity_id,
-        "original_data": filter_data(add_reference_names(original_data)),
-        "updated_data": filter_data(add_reference_names(updated_data)),
+        "original_data": filter_data(add_reference_names(original_data, table)),
+        "updated_data": filter_data(add_reference_names(updated_data, table)),
     }
 
     # Create extra fields for the conditional formatter
