@@ -32,6 +32,8 @@ ID_KEY_TABLES = {
     "relationshipid": "relationship",
     "guardianid": "guardian",
     "guardian2id": "guardian",
+    "allergytypeid": "allergy_type",
+    "allergyreactiontypeid": "allergy_reaction",
 }
 
 # table key -> database table name (to skip a lookup table's own rows)
@@ -52,6 +54,8 @@ TABLE_NAMES = {
     "highlight_type": "PATIENT_HIGHLIGHT_TYPE",
     "relationship": "PATIENT_GUARDIAN_RELATIONSHIP_MAPPING",
     "guardian": "PATIENT_GUARDIAN",
+    "allergy_type": "ALLERGY_TYPE",
+    "allergy_reaction": "ALLERGY_REACTION_TYPE",
 }
 
 _MISS_TTL_SECONDS = 60
@@ -97,6 +101,8 @@ def _load_table(table: str, ids) -> dict:
         PatientGuardianRelationshipMapping,
     )
     from app.models.patient_guardian_model import PatientGuardian
+    from app.models.allergy_type_model import AllergyType
+    from app.models.allergy_reaction_type_model import AllergyReactionType
 
     simple = {
         "language": (PatientListLanguage, "id", "value"),
@@ -114,6 +120,8 @@ def _load_table(table: str, ids) -> dict:
         "diagnosis": (PatientMedicalDiagnosisList, "Id", "DiagnosisName"),
         "highlight_type": (PatientHighlightType, "Id", "TypeName"),
         "relationship": (PatientGuardianRelationshipMapping, "id", "relationshipName"),
+        "allergy_type": (AllergyType, "AllergyTypeID", "Value"),
+        "allergy_reaction": (AllergyReactionType, "AllergyReactionTypeID", "Value"),
     }
     db = SessionLocal()
     try:

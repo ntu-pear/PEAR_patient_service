@@ -26,6 +26,8 @@ CASES = [
     ("relationshipId", "relationshipName", "relationship"),
     ("guardianId", "guardianName", "guardian"),
     ("guardian2Id", "guardian2Name", "guardian"),
+    ("AllergyTypeID", "AllergyTypeName", "allergy_type"),
+    ("AllergyReactionTypeID", "AllergyReactionTypeName", "allergy_reaction"),
 ]
 
 
