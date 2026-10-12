@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_medical_history_model import PatientMedicalHistory
 from ..models.patient_model import Patient
@@ -52,10 +53,7 @@ def create_medical_history(db: Session, medical_history: PatientMedicalHistoryCr
     ).first()
 
     if existing:
-        raise HTTPException(
-            status_code=400,
-            detail="This patient already has a medical history record for this diagnosis"
-        )
+        raise ConflictError("This patient already has a medical history record for this diagnosis")
     
     
     if db_medical_history:
@@ -128,10 +126,7 @@ def update_medical_history(db: Session, history_id: int, medical_history: Patien
             ).first()
 
             if existing:
-                raise HTTPException(
-                    status_code=400,
-                    detail="This patient already has a medical history record for this diagnosis"
-                )
+                raise ConflictError("This patient already has a medical history record for this diagnosis")
 
         for key, value in medical_history.model_dump(exclude_unset=True).items():
             if value is not None:

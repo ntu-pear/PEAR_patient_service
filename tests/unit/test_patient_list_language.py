@@ -58,14 +58,14 @@ def test_create_language_happy_path(db_session_mock, language_create):
     db_session_mock.refresh.assert_called_once_with(result)
 
 
-def test_create_language_duplicate_raises_400(db_session_mock, language_create):
+def test_create_language_duplicate_raises_409(db_session_mock, language_create):
     mock_existing = MagicMock(id=1, value="English", isDeleted="0")
     db_session_mock.query.return_value.filter.return_value.first.return_value = mock_existing
 
     with pytest.raises(HTTPException) as exc_info:
         create_patient_list_language(db_session_mock, language_create)
 
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == 409
 
 
 def test_update_language_happy_path(db_session_mock, language_update):
@@ -95,7 +95,7 @@ def test_update_language_not_found_raises_404(db_session_mock, language_update):
     assert exc_info.value.status_code == 404
 
 
-def test_update_language_duplicate_raises_400(db_session_mock, language_update):
+def test_update_language_duplicate_raises_409(db_session_mock, language_update):
     mock_lang = MagicMock(id=1, value="English", isDeleted="0")
     mock_duplicate = MagicMock(id=2, value="Mandarin", isDeleted="0")
 
@@ -110,7 +110,7 @@ def test_update_language_duplicate_raises_400(db_session_mock, language_update):
     with pytest.raises(HTTPException) as exc_info:
         update_patient_list_language(db_session_mock, 1, language_update)
 
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == 409
 
 
 def test_delete_language_happy_path(db_session_mock):

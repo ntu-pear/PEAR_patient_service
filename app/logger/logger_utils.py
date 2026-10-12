@@ -3,6 +3,7 @@ from .config import logger
 import json
 from enum import Enum
 from typing import Optional
+from .reference_names import add_reference_names
 
 
 class ActionType(Enum):
@@ -11,7 +12,7 @@ class ActionType(Enum):
     DELETE = "delete"
 
 
-EXCLUDED_KEYS = {"CreatedById", "ModifiedById", "ModifiedDate", "CreatedDate", "IsDeleted", "isDeleted"}
+EXCLUDED_KEYS = {"ModifiedDate", "CreatedDate", "IsDeleted", "isDeleted"}
 
 
 def filter_data(data: dict) -> dict:
@@ -49,8 +50,8 @@ def log_crud_action(
     # Create the message object that the log service expects
     log_message = {
         "entity_id": entity_id,
-        "original_data": filter_data(original_data),
-        "updated_data": filter_data(updated_data),
+        "original_data": filter_data(add_reference_names(original_data, table)),
+        "updated_data": filter_data(add_reference_names(updated_data, table)),
     }
 
     # Create extra fields for the conditional formatter

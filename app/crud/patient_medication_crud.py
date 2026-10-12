@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.models.patient_highlight_model import PatientHighlight
 from app.services.highlight_helper import create_highlight_if_needed
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_medication_model import PatientMedication
 from ..models.patient_model import Patient
@@ -233,10 +234,7 @@ def create_medication(
     ).first()
     
     if existing_medication:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Patient already has an active medication for this prescription"
-        )
+        raise ConflictError(f"Patient already has an active medication for this prescription")
     
     # Generate correlation ID if not provided
     if not correlation_id:
@@ -340,7 +338,8 @@ def create_medication(
                     patient_id=new_medication.PatientId,
                     source_table="PATIENT_MEDICATION",
                     source_record_id=new_medication.Id,
-                    created_by=created_by
+                    created_by=created_by,
+                    user_full_name=user_full_name
                 )
                 # Commit the highlight separately
                 db.commit()
@@ -358,7 +357,7 @@ def create_medication(
         logger.error(f"Failed to create medication: {str(e)}")
         import traceback
         logger.error(f"Full traceback: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=f"Failed to create medication: {str(e)}")
+        raise
 
 # Updated update_medication function
 def update_medication(
@@ -403,10 +402,7 @@ def update_medication(
     ).first()
     
     if duplicate_check:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Another active medication with this prescription already exists for this patient"
-        )
+        raise ConflictError(f"Another active medication with this prescription already exists for this patient")
 
     # Generate correlation ID if not provided
     if not correlation_id:
@@ -558,7 +554,8 @@ def update_medication(
                     patient_id=db_medication.PatientId,
                     source_table="PATIENT_MEDICATION",
                     source_record_id=medication_id,
-                    created_by=modified_by
+                    created_by=modified_by,
+                    user_full_name=user_full_name
                 )
                 db.commit()
                 logger.info(f"Successfully updated highlight for medication {medication_id}")
@@ -574,7 +571,7 @@ def update_medication(
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to update medication: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to update medication: {str(e)}")
+        raise
 
 # Soft delete a medication
 def delete_medication(
@@ -679,16 +676,52 @@ def delete_medication(
                 PatientHighlight.SourceRecordId == medication_id,
                 PatientHighlight.IsDeleted == 0
             ).all()
-            
+
+            pending_highlight_logs = []
+
             for highlight in highlights:
+                highlight_original_data = {
+                    "Id": highlight.Id,
+                    "PatientId": highlight.PatientId,
+                    "HighlightTypeId": highlight.HighlightTypeId,
+                    "HighlightText": highlight.HighlightText,
+                    "SourceTable": highlight.SourceTable,
+                    "SourceRecordId": highlight.SourceRecordId,
+                    "IsDeleted": highlight.IsDeleted,
+                    "CreatedById": highlight.CreatedById,
+                    "ModifiedById": highlight.ModifiedById,
+                }
+
                 highlight.IsDeleted = 1
                 highlight.ModifiedDate = datetime.now()
                 highlight.ModifiedById = modified_by
-            
+
+                pending_highlight_logs.append({
+                    "entity_id": highlight.Id,
+                    "original_data": highlight_original_data,
+                })
+
             if highlights:
                 db.commit()
                 logger.info(f"Deleted {len(highlights)} highlights for medication {medication_id}")
-            
+
+                # Only log the cascaded deletes after the commit succeeds, so a failed
+                # commit never leaves behind audit log entries for changes that didn't persist.
+                for pending_log in pending_highlight_logs:
+                    log_crud_action(
+                        action=ActionType.DELETE,
+                        user=modified_by,
+                        user_full_name=user_full_name,
+                        message=f"Deleted highlight {pending_log['entity_id']} cascaded from medication {medication_id} deletion",
+                        table="PatientHighlight",
+                        entity_id=pending_log["entity_id"],
+                        original_data=pending_log["original_data"],
+                        updated_data=None,
+                        patient_id=db_medication.PatientId,
+                        patient_full_name=patient_name,
+                        log_type="highlight",
+                    )
+
         except Exception as e:
             logger.error(f"Failed to delete highlights for medication {medication_id}: {e}")
             db.rollback()
@@ -699,4 +732,4 @@ def delete_medication(
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to delete medication: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to delete medication: {str(e)}")
+        raise

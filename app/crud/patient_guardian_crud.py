@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.models.patient_patient_guardian_model import PatientPatientGuardian
 
+from ..errors import ConflictError
 from ..crud import patient_guardian_relationship_mapping_crud
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_guardian_model import PatientGuardian
@@ -35,7 +36,7 @@ def get_guardian_by_nric(db: Session, nric: str):
     ).first()
 
 def create_guardian(
-    db: Session, guardian: PatientGuardianCreate
+    db: Session, guardian: PatientGuardianCreate, commit: bool = True
 ):
     # Reject if an active patient already holds this NRIC
     existing_patient = (
@@ -44,10 +45,7 @@ def create_guardian(
         .first()
     )
     if existing_patient:
-        raise HTTPException(
-            status_code=400,
-            detail="Guardian NRIC conflicts with an existing active patient record"
-        )
+        raise ConflictError("Guardian NRIC conflicts with an existing active patient record")
 
     # Reject if an active guardian already holds this NRIC
     existing_guardian = (
@@ -56,16 +54,16 @@ def create_guardian(
         .first()
     )
     if existing_guardian:
-        raise HTTPException(
-            status_code=400,
-            detail="A guardian with this NRIC already exists"
-        )
+        raise ConflictError("A guardian with this NRIC already exists")
 
     guardian_data = guardian.model_dump(exclude={'patientId', 'relationshipName'})
     db_guardian = PatientGuardian(**guardian_data)
     updated_data_dict = serialize_data(guardian_data)
     db.add(db_guardian)
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     db.refresh(db_guardian)
 
     log_crud_action(
@@ -99,10 +97,7 @@ def update_guardian(
             .first()
         )
         if existing_patient:
-            raise HTTPException(
-                status_code=400,
-                detail="Guardian NRIC conflicts with an existing active patient record"
-            )
+            raise ConflictError("Guardian NRIC conflicts with an existing active patient record")
 
         # Reject if a different active guardian already holds the new NRIC
         existing_guardian = (
@@ -116,10 +111,7 @@ def update_guardian(
             .first()
         )
         if existing_guardian:
-            raise HTTPException(
-                status_code=400,
-                detail="A guardian with this NRIC already exists"
-            )
+            raise ConflictError("A guardian with this NRIC already exists")
 
     # 3. Validate relationshipName exists in PATIENT_GUARDIAN_RELATIONSHIP_MAPPING table
     relationship_mapping = patient_guardian_relationship_mapping_crud.get_relationshipId_by_relationshipName(

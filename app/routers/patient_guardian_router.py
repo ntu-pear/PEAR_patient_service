@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from ..errors import ConflictError
 from ..crud import patient_crud as crud_patient
 from ..crud import patient_guardian_crud as crud_guardian
 from ..crud import patient_guardian_relationship_mapping_crud as crud_relationship
@@ -22,6 +23,8 @@ from ..schemas.patient_patient_guardian import (
 router = APIRouter()
 
 MAX_PATIENTS_PER_GUARDIAN = 2
+MAX_GUARDIANS_PER_PATIENT = 2
+MIN_GUARDIANS_PER_PATIENT = 1
 
 # NOTE: guardian lookup is by NRIC only (see GetPatientGuardianByNRIC below), not a
 # bulk "list all guardians" endpoint - a guardian provides their own NRIC in person
@@ -91,13 +94,20 @@ def assign_guardian_to_patient(assignment: PatientPatientGuardianAssign, db: Ses
         db, assignment.guardianId, assignment.patientId
     )
     if existing_link:
-        raise HTTPException(status_code=400, detail="Guardian is already assigned to this patient")
+        raise ConflictError("Guardian is already assigned to this patient")
 
     active_patient_count = crud_patient_patient_guardian.count_active_patients_for_guardian(db, assignment.guardianId)
     if active_patient_count >= MAX_PATIENTS_PER_GUARDIAN:
         raise HTTPException(
             status_code=400,
             detail=f"Guardian already has the maximum of {MAX_PATIENTS_PER_GUARDIAN} patients assigned"
+        )
+
+    active_guardian_count = crud_patient_patient_guardian.count_active_guardians_for_patient(db, assignment.patientId)
+    if active_guardian_count >= MAX_GUARDIANS_PER_PATIENT:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Patient already has the maximum of {MAX_GUARDIANS_PER_PATIENT} guardians assigned"
         )
 
     db_relationship_id = crud_relationship.get_relationshipId_by_relationshipName(db, assignment.relationshipName)
@@ -126,6 +136,13 @@ def unassign_guardian_from_patient(patient_id: int, guardian_id: int, db: Sessio
     if not db_link:
         raise HTTPException(status_code=404, detail="No active guardian assignment found for this patient")
 
+    active_guardian_count = crud_patient_patient_guardian.count_active_guardians_for_patient(db, patient_id)
+    if active_guardian_count <= MIN_GUARDIANS_PER_PATIENT:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Patient must have at least {MIN_GUARDIANS_PER_PATIENT} guardian assigned"
+        )
+
     return crud_patient_patient_guardian.delete_relationship(db, db_link.id)
 
 
@@ -138,6 +155,15 @@ def update_patient_guardian(guardian_id: int, guardian: PatientGuardianUpdate, d
 
 @router.delete("/Guardian/delete", response_model=PatientGuardianUpdate)
 def delete_patient_guardian(guardian_id: int, db: Session = Depends(get_db)):
+    linked_patient_ids = crud_patient_patient_guardian.get_active_patient_ids_for_guardian(db, guardian_id)
+    for patient_id in linked_patient_ids:
+        active_guardian_count = crud_patient_patient_guardian.count_active_guardians_for_patient(db, patient_id)
+        if active_guardian_count <= MIN_GUARDIANS_PER_PATIENT:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot delete guardian: patient {patient_id} must have at least {MIN_GUARDIANS_PER_PATIENT} guardian assigned"
+            )
+
     db_guardian = crud_guardian.delete_guardian(db, guardian_id)
     if not db_guardian:
         raise HTTPException(status_code=404, detail="Guardian not found")

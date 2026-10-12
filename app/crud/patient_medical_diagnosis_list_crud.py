@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_medical_diagnosis_list_model import PatientMedicalDiagnosisList
 from ..schemas.patient_medical_diagnosis_list import (
@@ -46,10 +47,7 @@ def create_diagnosis(db: Session, diagnosis: PatientMedicalDiagnosisListCreate, 
     ).first()
     
     if existing_diagnosis:
-        raise HTTPException(
-            status_code=400,
-            detail="A medical diagnosis with this name already exists"
-        )
+        raise ConflictError("A medical diagnosis with this name already exists")
     
     # Create diagnosis with UPPERCASE DiagnosisName
     data = diagnosis.model_dump()
@@ -115,10 +113,7 @@ def update_diagnosis(db: Session, diagnosis_id: int, diagnosis: PatientMedicalDi
                 ).first()
 
                 if existing:
-                    raise HTTPException(
-                        status_code=400,
-                        detail="A medical diagnosis with this name already exists"
-                    )
+                    raise ConflictError("A medical diagnosis with this name already exists")
 
         # Store the old diagnosis for message field in log
         old_diagnosis_name = db_diagnosis.DiagnosisName if db_diagnosis else None
