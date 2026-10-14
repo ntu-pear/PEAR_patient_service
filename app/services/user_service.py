@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..errors import ServiceUnavailableError
 from ..models.patient_allocation_model import PatientAllocation
+from ..ops_logging import outbound_headers
 
 ROLE_COLUMN_MAP = {
     "DOCTOR": "doctorId",
@@ -28,7 +29,7 @@ def get_active_staff_by_role(role: str, api_key: Optional[str]) -> list[str]:
     try:
         response = httpx.get(
             f"{user_service_url}/api/v1/supervisor/get_active_staff",
-            headers={"X-Api-Key": api_key},
+            headers={"X-Api-Key": api_key, **outbound_headers()},
             timeout=10.0,
         )
     except httpx.HTTPError:
@@ -73,7 +74,7 @@ def check_nric_exists(nric: str, api_key: Optional[str]) -> bool:
     try:
         response = httpx.get(
             f"{user_service_url}/api/v1/internal/user/check-nric/{quote(nric, safe='')}",
-            headers={"X-Api-Key": api_key},
+            headers={"X-Api-Key": api_key, **outbound_headers()},
             timeout=10.0,
         )
     except httpx.HTTPError:
