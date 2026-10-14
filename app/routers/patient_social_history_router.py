@@ -13,6 +13,7 @@ from ..schemas.patient_social_history import (
 )
 from ..auth.jwt_utils import extract_jwt_payload, get_user_id, get_full_name, get_role_name
 from httpx import AsyncClient
+from ..ops_logging import outbound_headers
 
 
 router = APIRouter()
@@ -27,7 +28,7 @@ async def get_social_history(patient_id: int, request: Request, require_auth: bo
     role_name = get_role_name(payload)
     
     async with AsyncClient() as client:
-        response = await client.get(f"{url}/api/v1/roles/name/{role_name}")
+        response = await client.get(f"{url}/api/v1/roles/name/{role_name}", headers=outbound_headers())
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code, detail="Error calling external API")
     

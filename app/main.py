@@ -10,6 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import clear_mappers
 
 from app.errors import register_error_handlers
+from app.logger.config import LOG_DIR
+from app.ops_logging import setup_ops_logging
 from app.messaging.consumer_manager import create_patient_consumer_manager
 from app.models import (
     patient_photo_list_album_model,  # Import all models to ensure they are registered
@@ -441,6 +443,10 @@ app.include_router(
     prefix=f"{API_VERSION_PREFIX}",
     tags=["Personal Preference List"],
 )
+
+# Operational logs (errors, requests, auth events). Dark unless OPS_LOGGING is on.
+# Last middleware added, so it is the outermost one.
+setup_ops_logging(app, service="patient", log_dir=LOG_DIR)
 
 @app.get("/")
 def read_root():

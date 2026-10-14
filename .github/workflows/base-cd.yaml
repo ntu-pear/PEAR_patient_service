@@ -114,6 +114,8 @@ jobs:
           # User service (staff auto-assign + NRIC check)
           echo "USER_SERVICE_URL=${{ secrets.USER_SERVICE_URL }}" >> .env
           echo "INTERNAL_SERVICE_API_KEY=${{ secrets.INTERNAL_SERVICE_API_KEY }}" >> .env
+          echo "OPS_LOGGING=${{ vars.OPS_LOGGING || 'false' }}" >> .env
+          echo "OPS_DEBUG_ROUTES=${{ vars.OPS_DEBUG_ROUTES || 'false' }}" >> .env
 
       - name: Create Kubernetes Secret
         run: |
