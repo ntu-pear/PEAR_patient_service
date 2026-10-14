@@ -72,6 +72,7 @@ from app.routers import (
     patient_list_router,
     patient_medical_diagnosis_list_router,
     patient_medical_history_router,
+    patient_medication_administration_router,
     patient_medication_router,
     patient_mobility_mapping_router,
     patient_mobility_router,
@@ -354,6 +355,11 @@ app.include_router(
 
 app.include_router(
     patient_medication_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Medications"],
+)
+app.include_router(
+    patient_medication_administration_router.router,
     prefix=f"{API_VERSION_PREFIX}",
     tags=["Medications"],
 )
