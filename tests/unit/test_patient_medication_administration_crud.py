@@ -1,4 +1,4 @@
-"""Marking and undoing a dose. DB lookups and the audit log are stubbed."""
+﻿"""Marking and undoing a dose. DB lookups and the audit log are stubbed."""
 from datetime import date, datetime
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -20,11 +20,12 @@ def env(monkeypatch):
     db = MagicMock()
     db.commit.side_effect = lambda: state.events.append("commit")
 
-    def refresh(row):
-        if getattr(row, "Id", None) is None:
-            row.Id = 99  # what the identity column would give
+    def flush():
+        for row in db.add.call_args_list:
+            if getattr(row.args[0], "Id", None) is None:
+                row.args[0].Id = 99  # what the identity column would give
 
-    db.refresh.side_effect = refresh
+    db.flush.side_effect = flush
 
     def find_live(db_, medication_id, administer_date, slot):
         state.lookups.append((medication_id, administer_date, slot))
@@ -223,3 +224,61 @@ def test_undo_commit_failure_rolls_back_and_logs_nothing(env):
         _undo(env)
     env.db.rollback.assert_called_once()
     assert env.logs == []
+
+
+class _ExpiringMedication:
+    """Reads fine until the session commits or rolls back, then every read raises,
+    like an expired ORM instance whose reload fails."""
+
+    def __init__(self, values):
+        self._values = values
+        self.expired = False
+
+    def __getattr__(self, name):
+        if name in ("_values", "expired"):
+            raise AttributeError(name)
+        if self.expired:
+            raise RuntimeError("reload failed")
+        return self._values[name]
+
+
+def _expiring(env):
+    medication = _ExpiringMedication(vars(MED))
+    env.medication = medication
+    env.db.commit.side_effect = lambda: (setattr(medication, "expired", True), env.events.append("commit"))
+    env.db.refresh.side_effect = RuntimeError("reload failed")
+    return medication
+
+
+def test_failing_reload_after_commit_still_returns_the_saved_row(env):
+    _expiring(env)
+    row, created = _mark(env)
+    assert created is True
+    assert (row.MedicationId, row.PatientId) == (7, 3)
+    assert env.events == ["commit", "log"]
+    entry = env.logs[0]
+    assert (entry["entity_id"], entry["patient_id"], entry["patient_full_name"]) == (99, 3, "Tan Ah Kow")
+    assert entry["message"] == "Medication administered: Paracetamol 2 tabs (08:00 slot, 2026-10-14)"
+    assert entry["updated_data"]["Dosage"] == "2 tabs"
+
+
+def test_failing_reload_after_rollback_still_returns_the_winner(env):
+    medication = _expiring(env)
+    winner = SimpleNamespace(Id=6)
+    env.live = [None, winner]
+    env.db.commit.side_effect = IntegrityError("INSERT", {}, Exception("UX_PatientMedicationAdministration_Slot"))
+    env.db.rollback.side_effect = lambda: setattr(medication, "expired", True)
+    row, created = _mark(env)
+    assert row is winner and created is False
+    assert env.lookups[-1] == (7, date(2026, 10, 14), "0800")
+
+
+def test_undo_survives_failing_reload_after_commit(env):
+    _expiring(env)
+    row = _live_row()
+    env.live = [row]
+    assert _undo(env) is row
+    assert row.IsDeleted == "1"
+    entry = env.logs[0]
+    assert (entry["entity_id"], entry["patient_id"], entry["patient_full_name"]) == (5, 3, "Tan Ah Kow")
+    assert entry["message"] == "Medication administration undone: Paracetamol 2 tabs (08:00 slot, 2026-10-14)"

@@ -1,4 +1,4 @@
-"""Doses actually given (PATIENT_MEDICATION_ADMINISTRATION).
+﻿"""Doses actually given (PATIENT_MEDICATION_ADMINISTRATION).
 
 A dose slot is (MedicationId, AdministerDate, ScheduledTime). There is at most one live
 row per slot: marking a slot that is already given returns the existing row and logs
@@ -136,14 +136,19 @@ def mark_administered(
     given_at = to_utc_naive(data.ActualAdministerTime)
     administer_date = data.AdministerDate or sgt_date(given_at)
 
-    existing = _find_live(db, medication.Id, administer_date, slot)
+    # Read everything off the ORM instance now: commit/rollback expire it, and a failed
+    # reload afterwards must not turn a saved dose into a 500.
+    medication_id, patient_id, dosage = medication.Id, medication.PatientId, medication.Dosage
+    prescription_name, patient_name = _names(db, medication)
+
+    existing = _find_live(db, medication_id, administer_date, slot)
     if existing is not None:
         return existing, False
 
     now = datetime.utcnow()
     row = PatientMedicationAdministration(
-        MedicationId=medication.Id,
-        PatientId=medication.PatientId,
+        MedicationId=medication_id,
+        PatientId=patient_id,
         AdministerDate=administer_date,
         ScheduledTime=slot,
         ActualAdministerTime=given_at,
@@ -156,35 +161,38 @@ def mark_administered(
     )
     db.add(row)
     try:
+        db.flush()  # assigns row.Id while the instance is still loaded
+        # Everything the audit entry needs is read now: commit/rollback expire the ORM
+        # instances, and a failed reload afterwards must not turn a saved dose into a 500.
+        entity_id = row.Id
+        audit = _audit_data(row, prescription_name, dosage, user_full_name)
+        message = f"Medication administered: {_dose_label(prescription_name, dosage, slot, administer_date)}"
         db.commit()
     except IntegrityError:
         # Another request marked the same slot between our check and our insert.
         db.rollback()
-        existing = _find_live(db, medication.Id, administer_date, slot)
+        existing = _find_live(db, medication_id, administer_date, slot)
         if existing is not None:
             return existing, False
         raise
     except Exception:
         db.rollback()
         raise
-    db.refresh(row)
 
-    prescription_name, patient_name = _names(db, medication)
     _safe_log(
         action=ActionType.CREATE,
         user=user_id,
         user_full_name=user_full_name,
-        message=f"Medication administered: {_dose_label(prescription_name, medication.Dosage, slot, administer_date)}",
+        message=message,
         table=TABLE,
-        entity_id=row.Id,
-        updated_data=_audit_data(row, prescription_name, medication.Dosage, user_full_name),
-        patient_id=medication.PatientId,
+        entity_id=entity_id,
+        updated_data=audit,
+        patient_id=patient_id,
         patient_full_name=patient_name,
         log_type="medication",
         role=role,
     )
     return row, True
-
 
 def undo_administration(
     db: Session,
@@ -204,12 +212,15 @@ def undo_administration(
     # Times may have changed since; fall back to the slot as sent.
     slot = match_slot(scheduled_time, medication.AdministerTime) or _slot_key(scheduled_time)
 
-    row = _find_live(db, medication.Id, administer_date, slot)
+    medication_id_, patient_id, dosage = medication.Id, medication.PatientId, medication.Dosage
+    row = _find_live(db, medication_id_, administer_date, slot)
     if row is None:
         return None
 
     prescription_name, patient_name = _names(db, medication)
-    original = _audit_data(row, prescription_name, medication.Dosage, None)
+    original = _audit_data(row, prescription_name, dosage, None)
+    label = _dose_label(prescription_name, dosage, row.ScheduledTime, row.AdministerDate)
+    entity_id = row.Id
 
     row.IsDeleted = "1"
     row.UpdatedDateTime = datetime.utcnow()
@@ -219,17 +230,16 @@ def undo_administration(
     except Exception:
         db.rollback()
         raise
-    db.refresh(row)
 
     _safe_log(
         action=ActionType.DELETE,
         user=user_id,
         user_full_name=user_full_name,
-        message=f"Medication administration undone: {_dose_label(prescription_name, medication.Dosage, row.ScheduledTime, row.AdministerDate)}",
+        message=f"Medication administration undone: {label}",
         table=TABLE,
-        entity_id=row.Id,
+        entity_id=entity_id,
         original_data=original,
-        patient_id=medication.PatientId,
+        patient_id=patient_id,
         patient_full_name=patient_name,
         log_type="medication",
         role=role,
