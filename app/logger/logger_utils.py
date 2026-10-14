@@ -33,6 +33,7 @@ def log_crud_action(
         patient_full_name: Optional[str] = None,
         log_type: Optional[str] = None,
         is_system_config: bool = False,
+        role: Optional[str] = None,
 ):
     """
     Log CRUD actions in format compatible with Elasticsearch log service
@@ -66,6 +67,8 @@ def log_crud_action(
         "log_type": log_type,
         "is_system_config": is_system_config,
     }
+    if role is not None:
+        extra["role"] = role
 
     # IMPORTANT: Pass the message object, not a JSON string
     # The conditional formatter will handle the JSON serialization

@@ -37,6 +37,9 @@ class ConditionalFormatter(logging.Formatter):
                 "is_system_config": bool(getattr(record, "is_system_config", False)),
                 "message": record.msg,
             }
+            role = getattr(record, "role", None)
+            if role is not None:
+                log_dict["role"] = role
         else:
             log_dict = {
                 "timestamp": timestamp,
