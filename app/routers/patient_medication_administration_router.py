@@ -38,7 +38,7 @@ def mark_medication_administered(
 ):
     user_id, full_name, role = _actor(request, MARK_ROLES, "Only caregivers and supervisors can mark a dose as given")
     row, _created = crud.mark_administered(db, body, user_id, full_name, role)
-    return SingleResponse(data=PatientMedicationAdministration.model_validate(row))
+    return SingleResponse(data=row)
 
 
 @router.delete(
@@ -54,4 +54,4 @@ def undo_medication_administration(
 ):
     user_id, full_name, role = _actor(request, UNDO_ROLES, "Only supervisors can undo a given dose")
     row = crud.undo_administration(db, medication_id, administer_date, scheduled_time, user_id, full_name, role)
-    return SingleResponse(data=PatientMedicationAdministration.model_validate(row) if row else None)
+    return SingleResponse(data=row)

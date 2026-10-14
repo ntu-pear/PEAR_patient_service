@@ -14,10 +14,11 @@ from app.auth import jwt_utils
 from app.database import get_db
 from app.main import app
 from app.routers import patient_medication_administration_router as router_module
+from app.schemas.patient_medication_administration import PatientMedicationAdministration
 
 URL = "/api/v1/Medication/administration"
 WHEN = datetime(2026, 10, 14, 0, 5)
-ROW = SimpleNamespace(
+ROW = PatientMedicationAdministration(
     Id=1, MedicationId=7, PatientId=3, AdministerDate=date(2026, 10, 14), ScheduledTime="0800",
     ActualAdministerTime=WHEN, AdministeredById="U1", IsDeleted="0", CreatedDateTime=WHEN,
     UpdatedDateTime=WHEN, CreatedById="U1", ModifiedById="U1",
@@ -110,3 +111,15 @@ def test_undo_with_nothing_live_returns_null(client):
     response = http.delete(URL, params=UNDO, headers=_auth("SUPERVISOR"))
     assert response.status_code == 200
     assert response.json() == {"data": None}
+
+
+def test_responses_are_built_without_touching_an_expired_orm_row(client):
+    """The CRUD hands back values saved before commit; the router must not read an ORM row."""
+    http, calls = client
+    mark = http.put(URL, json=BODY, headers=_auth("CAREGIVER"))
+    undo = http.delete(URL, params=UNDO, headers=_auth("SUPERVISOR"))
+    for response in (mark, undo):
+        assert response.status_code == 200
+        data = response.json()["data"]
+        assert data["Id"] == 1 and data["MedicationId"] == 7 and data["ScheduledTime"] == "0800"
+        assert data["AdministerDate"] == "2026-10-14"

@@ -19,7 +19,10 @@ from ..models.patient_medication_administration_model import PatientMedicationAd
 from ..models.patient_medication_model import PatientMedication
 from ..models.patient_model import Patient
 from ..models.patient_prescription_list_model import PatientPrescriptionList
-from ..schemas.patient_medication_administration import PatientMedicationAdministrationMark
+from ..schemas.patient_medication_administration import (
+    PatientMedicationAdministration as AdministrationOut,
+    PatientMedicationAdministrationMark,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +115,11 @@ def _audit_data(row, prescription_name: Optional[str], dosage: Optional[str],
     return data
 
 
+def _snapshot(row) -> AdministrationOut:
+    """The response, copied off the ORM row while it is still loaded (before commit)."""
+    return AdministrationOut.model_validate(row)
+
+
 def _safe_log(**kwargs) -> None:
     try:
         log_crud_action(**kwargs)
@@ -125,7 +133,7 @@ def mark_administered(
     user_id: str,
     user_full_name: str,
     role: str,
-) -> Tuple[PatientMedicationAdministration, bool]:
+) -> Tuple[AdministrationOut, bool]:
     medication = _find_medication(db, data.MedicationId)
     if medication is None:
         raise BadRequestError("Medication not found or has been deleted")
@@ -143,7 +151,7 @@ def mark_administered(
 
     existing = _find_live(db, medication_id, administer_date, slot)
     if existing is not None:
-        return existing, False
+        return _snapshot(existing), False
 
     now = datetime.utcnow()
     row = PatientMedicationAdministration(
@@ -167,13 +175,14 @@ def mark_administered(
         entity_id = row.Id
         audit = _audit_data(row, prescription_name, dosage, user_full_name)
         message = f"Medication administered: {_dose_label(prescription_name, dosage, slot, administer_date)}"
+        result = _snapshot(row)
         db.commit()
     except IntegrityError:
         # Another request marked the same slot between our check and our insert.
         db.rollback()
         existing = _find_live(db, medication_id, administer_date, slot)
         if existing is not None:
-            return existing, False
+            return _snapshot(existing), False
         raise
     except Exception:
         db.rollback()
@@ -192,7 +201,7 @@ def mark_administered(
         log_type="medication",
         role=role,
     )
-    return row, True
+    return result, True
 
 def undo_administration(
     db: Session,
@@ -202,7 +211,7 @@ def undo_administration(
     user_id: str,
     user_full_name: str,
     role: str,
-) -> Optional[PatientMedicationAdministration]:
+) -> Optional[AdministrationOut]:
     """Soft-delete the live record for a slot. Returns None (and changes nothing) when no
     live record exists, so a retried undo succeeds."""
     # A course deleted since the dose was given can still have its dose undone.
@@ -225,6 +234,7 @@ def undo_administration(
     row.IsDeleted = "1"
     row.UpdatedDateTime = datetime.utcnow()
     row.ModifiedById = user_id
+    result = _snapshot(row)
     try:
         db.commit()
     except Exception:
@@ -244,4 +254,4 @@ def undo_administration(
         log_type="medication",
         role=role,
     )
-    return row
+    return result

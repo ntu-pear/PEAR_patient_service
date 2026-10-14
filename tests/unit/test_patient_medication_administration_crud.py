@@ -43,6 +43,33 @@ def env(monkeypatch):
     return state
 
 
+def _full_row(Id):
+    return SimpleNamespace(
+        Id=Id, MedicationId=7, PatientId=3, AdministerDate=date(2026, 10, 14), ScheduledTime="0800",
+        ActualAdministerTime=datetime(2026, 10, 14, 0, 5), AdministeredById="CG1", IsDeleted="0",
+        CreatedDateTime=datetime(2026, 10, 14, 0, 5), UpdatedDateTime=datetime(2026, 10, 14, 0, 5),
+        CreatedById="CG1", ModifiedById="CG1",
+    )
+
+
+class _ExpiringRow(SimpleNamespace):
+    """Like an ORM row after commit: reading any column fails (the lazy reload went wrong)."""
+
+    def __getattribute__(self, name):
+        if name.startswith("__") or not object.__getattribute__(self, "__dict__").get("_expired"):
+            return object.__getattribute__(self, name)
+        raise RuntimeError("row expired")
+
+
+def _expire_on_commit(env, *rows):
+    def commit():
+        env.events.append("commit")
+        for r in rows:
+            r.__dict__["_expired"] = True
+
+    env.db.commit.side_effect = commit
+
+
 def _mark(env, **body):
     data = PatientMedicationAdministrationMark(**{
         "MedicationId": 7,
@@ -82,10 +109,10 @@ def test_insert_creates_row_and_logs_after_commit(env):
 
 
 def test_identical_repeat_returns_existing_without_log(env):
-    existing = SimpleNamespace(Id=5)
+    existing = _full_row(5)
     env.live = [existing]
     row, created = _mark(env)
-    assert row is existing and created is False
+    assert row.Id == 5 and created is False
     env.db.add.assert_not_called()
     env.db.commit.assert_not_called()
     assert env.logs == []
@@ -114,11 +141,11 @@ def test_slot_spelling_and_spaces_match_the_course(env):
 
 
 def test_concurrent_insert_returns_the_winner(env):
-    winner = SimpleNamespace(Id=6)
+    winner = _full_row(6)
     env.live = [None, winner]
     env.db.commit.side_effect = IntegrityError("INSERT", {}, Exception("UX_PatientMedicationAdministration_Slot"))
     row, created = _mark(env)
-    assert row is winner and created is False
+    assert row.Id == 6 and created is False
     env.db.rollback.assert_called_once()
     assert env.logs == []
 
@@ -167,6 +194,7 @@ def _live_row():
     return SimpleNamespace(
         Id=5, MedicationId=7, PatientId=3, AdministerDate=date(2026, 10, 14), ScheduledTime="0800",
         ActualAdministerTime=datetime(2026, 10, 14, 0, 5), AdministeredById="CG1", IsDeleted="0",
+        CreatedDateTime=datetime(2026, 10, 14, 0, 5), CreatedById="CG1",
         UpdatedDateTime=datetime(2026, 10, 14, 0, 5), ModifiedById="CG1",
     )
 
@@ -179,7 +207,7 @@ def test_undo_soft_deletes_and_logs_after_commit(env):
     row = _live_row()
     env.live = [row]
     result = _undo(env)
-    assert result is row
+    assert result.Id == 5 and result.IsDeleted == "1" and result.ModifiedById == "S1"
     assert (row.IsDeleted, row.ModifiedById) == ("1", "S1")
     assert env.events == ["commit", "log"]
     entry = env.logs[0]
@@ -264,12 +292,12 @@ def test_failing_reload_after_commit_still_returns_the_saved_row(env):
 
 def test_failing_reload_after_rollback_still_returns_the_winner(env):
     medication = _expiring(env)
-    winner = SimpleNamespace(Id=6)
+    winner = _full_row(6)
     env.live = [None, winner]
     env.db.commit.side_effect = IntegrityError("INSERT", {}, Exception("UX_PatientMedicationAdministration_Slot"))
     env.db.rollback.side_effect = lambda: setattr(medication, "expired", True)
     row, created = _mark(env)
-    assert row is winner and created is False
+    assert row.Id == 6 and created is False
     assert env.lookups[-1] == (7, date(2026, 10, 14), "0800")
 
 
@@ -277,8 +305,35 @@ def test_undo_survives_failing_reload_after_commit(env):
     _expiring(env)
     row = _live_row()
     env.live = [row]
-    assert _undo(env) is row
+    assert _undo(env).Id == 5
     assert row.IsDeleted == "1"
     entry = env.logs[0]
     assert (entry["entity_id"], entry["patient_id"], entry["patient_full_name"]) == (5, 3, "Tan Ah Kow")
     assert entry["message"] == "Medication administration undone: Paracetamol 2 tabs (08:00 slot, 2026-10-14)"
+
+
+def test_mark_result_survives_the_row_expiring_on_commit(env, monkeypatch):
+    made = []
+
+    def make(**kw):
+        row = _ExpiringRow(**kw)
+        made.append(row)
+        return row
+
+    monkeypatch.setattr(crud, "PatientMedicationAdministration", make)
+    env.db.commit.side_effect = lambda: (env.events.append("commit"), [r.__dict__.update(_expired=True) for r in made])
+    result, created = _mark(env)
+    assert created is True and made[0].__dict__["_expired"] is True
+    assert (result.Id, result.MedicationId, result.ScheduledTime, result.IsDeleted) == (99, 7, "0800", "0")
+    assert env.events == ["commit", "log"]
+    assert env.logs[0]["entity_id"] == 99
+
+
+def test_undo_result_survives_the_row_expiring_on_commit(env):
+    row = _ExpiringRow(**vars(_full_row(5)))
+    env.live = [row]
+    _expire_on_commit(env, row)
+    result = _undo(env)
+    assert row.__dict__["_expired"] is True
+    assert (result.Id, result.IsDeleted, result.ModifiedById) == (5, "1", "S1")
+    assert env.events == ["commit", "log"]
