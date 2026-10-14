@@ -160,3 +160,66 @@ def test_display_slot():
     assert crud.display_slot("0800") == "08:00"
     assert crud.display_slot("08:00") == "08:00"
     assert crud.display_slot("8am") == "8am"
+
+
+def _live_row():
+    return SimpleNamespace(
+        Id=5, MedicationId=7, PatientId=3, AdministerDate=date(2026, 10, 14), ScheduledTime="0800",
+        ActualAdministerTime=datetime(2026, 10, 14, 0, 5), AdministeredById="CG1", IsDeleted="0",
+        UpdatedDateTime=datetime(2026, 10, 14, 0, 5), ModifiedById="CG1",
+    )
+
+
+def _undo(env, slot="0800"):
+    return crud.undo_administration(env.db, 7, date(2026, 10, 14), slot, "S1", "Sue Supervisor", "SUPERVISOR")
+
+
+def test_undo_soft_deletes_and_logs_after_commit(env):
+    row = _live_row()
+    env.live = [row]
+    result = _undo(env)
+    assert result is row
+    assert (row.IsDeleted, row.ModifiedById) == ("1", "S1")
+    assert env.events == ["commit", "log"]
+    entry = env.logs[0]
+    assert entry["action"] is ActionType.DELETE
+    assert (entry["user"], entry["user_full_name"], entry["role"]) == ("S1", "Sue Supervisor", "SUPERVISOR")
+    assert entry["table"] == "PATIENT_MEDICATION_ADMINISTRATION" and entry["entity_id"] == 5
+    assert entry["patient_id"] == 3
+    assert entry["message"] == "Medication administration undone: Paracetamol 2 tabs (08:00 slot, 2026-10-14)"
+    assert entry["original_data"]["AdministeredById"] == "CG1"
+    assert "AdministeredByName" not in entry["original_data"]
+
+
+def test_undo_with_nothing_live_is_a_no_op(env):
+    assert _undo(env) is None
+    env.db.commit.assert_not_called()
+    assert env.logs == []
+
+
+def test_undo_unknown_medication_is_400(env):
+    env.medication = None
+    with pytest.raises(BadRequestError):
+        _undo(env)
+
+
+def test_undo_accepts_colon_slot(env):
+    env.live = [_live_row()]
+    _undo(env, slot="08:00")
+    assert env.lookups == [(7, date(2026, 10, 14), "0800")]
+
+
+def test_slot_can_be_marked_again_after_undo(env):
+    env.live = [_live_row(), None]
+    _undo(env)
+    row, created = _mark(env)
+    assert created is True and row.IsDeleted == "0"
+
+
+def test_undo_commit_failure_rolls_back_and_logs_nothing(env):
+    env.live = [_live_row()]
+    env.db.commit.side_effect = RuntimeError("db down")
+    with pytest.raises(RuntimeError):
+        _undo(env)
+    env.db.rollback.assert_called_once()
+    assert env.logs == []

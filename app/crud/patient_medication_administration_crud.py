@@ -184,3 +184,54 @@ def mark_administered(
         role=role,
     )
     return row, True
+
+
+def undo_administration(
+    db: Session,
+    medication_id: int,
+    administer_date: date,
+    scheduled_time: str,
+    user_id: str,
+    user_full_name: str,
+    role: str,
+) -> Optional[PatientMedicationAdministration]:
+    """Soft-delete the live record for a slot. Returns None (and changes nothing) when no
+    live record exists, so a retried undo succeeds."""
+    # A course deleted since the dose was given can still have its dose undone.
+    medication = _find_medication(db, medication_id, include_deleted=True)
+    if medication is None:
+        raise BadRequestError("Medication not found")
+    # Times may have changed since; fall back to the slot as sent.
+    slot = match_slot(scheduled_time, medication.AdministerTime) or _slot_key(scheduled_time)
+
+    row = _find_live(db, medication.Id, administer_date, slot)
+    if row is None:
+        return None
+
+    prescription_name, patient_name = _names(db, medication)
+    original = _audit_data(row, prescription_name, medication.Dosage, None)
+
+    row.IsDeleted = "1"
+    row.UpdatedDateTime = datetime.utcnow()
+    row.ModifiedById = user_id
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    db.refresh(row)
+
+    _safe_log(
+        action=ActionType.DELETE,
+        user=user_id,
+        user_full_name=user_full_name,
+        message=f"Medication administration undone: {_dose_label(prescription_name, medication.Dosage, row.ScheduledTime, row.AdministerDate)}",
+        table=TABLE,
+        entity_id=row.Id,
+        original_data=original,
+        patient_id=medication.PatientId,
+        patient_full_name=patient_name,
+        log_type="medication",
+        role=role,
+    )
+    return row
