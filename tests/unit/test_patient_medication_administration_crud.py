@@ -1,4 +1,4 @@
-﻿"""Marking and undoing a dose. DB lookups and the audit log are stubbed."""
+"""Marking and undoing a dose. DB lookups and the audit log are stubbed."""
 from datetime import date, datetime
 from types import SimpleNamespace
 from unittest.mock import MagicMock

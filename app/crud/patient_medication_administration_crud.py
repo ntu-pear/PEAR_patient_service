@@ -1,4 +1,4 @@
-﻿"""Doses actually given (PATIENT_MEDICATION_ADMINISTRATION).
+"""Doses actually given (PATIENT_MEDICATION_ADMINISTRATION).
 
 A dose slot is (MedicationId, AdministerDate, ScheduledTime). There is at most one live
 row per slot: marking a slot that is already given returns the existing row and logs
