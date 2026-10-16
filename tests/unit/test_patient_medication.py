@@ -1087,3 +1087,11 @@ def test_delete_medication_logs_cascaded_highlight_delete_multiple_highlights(db
         assert call.kwargs["user"] == "test_user"
         assert call.kwargs["user_full_name"] == "Test User"
         assert call.kwargs["patient_id"] == 7
+
+def test_administer_time_spaces_after_commas_are_removed():
+    med = PatientMedicationUpdate(
+        PatientId=1, PrescriptionListId=1, AdministerTime="0930, 1300 ,", Dosage="1", Instruction="-",
+        StartDate=datetime(2026, 10, 16), PrescriptionRemarks="-",
+        UpdatedDateTime=datetime(2026, 10, 16), ModifiedById="1",
+    )
+    assert med.AdministerTime == "0930,1300"
