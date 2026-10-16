@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 import pytz
 from pydantic import BaseModel, ConfigDict, Field
@@ -41,6 +41,13 @@ class PatientPatientGuardian(PatientPatientGuardianBase):
     ModifiedById: str = Field(json_schema_extra={"example": "1"})
     patient_guardian: PatientGuardian
     relationship: PatientGuardianRelationshipMapping
+
+class PatientPatientGuardianUnassign(PatientPatientGuardian):
+    """Unassign result. guardianSoftDeleted is True when this was the guardian's last
+    patient and the guardian record was soft-deleted as a result; accountDeactivated
+    then says whether their login account was deactivated too (None if they have none)."""
+    guardianSoftDeleted: bool = False
+    accountDeactivated: Optional[bool] = None
 
 class PatientWithRelationship(BaseModel):
     patient: Patient

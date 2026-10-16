@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Optional
 from urllib.parse import quote
@@ -9,6 +10,8 @@ from sqlalchemy.orm import Session
 from ..errors import ServiceUnavailableError
 from ..models.patient_allocation_model import PatientAllocation
 from ..ops_logging import outbound_headers
+
+logger = logging.getLogger(__name__)
 
 ROLE_COLUMN_MAP = {
     "DOCTOR": "doctorId",
@@ -116,3 +119,31 @@ def get_least_loaded_staff(role: str, db: Session, api_key: Optional[str]) -> st
             return (counts[sid], 1, 0, str(sid))
 
     return min(counts, key=_sort_key)
+
+
+def deactivate_guardian_account(user_id: str, api_key: Optional[str]) -> bool:
+    """Ask the user service to deactivate a guardian's login account.
+
+    Best effort: by the time this runs the guardian record is already
+    soft-deleted, so failures are logged and reported as False rather than
+    raised, letting the caller tell the user the account needs manual follow-up.
+    """
+    user_service_url = os.environ.get("USER_SERVICE_URL", "")
+    if not api_key or not user_service_url:
+        logger.warning("Cannot deactivate guardian account %s: user service URL or API key not configured", user_id)
+        return False
+
+    try:
+        response = httpx.post(
+            f"{user_service_url}/api/v1/internal/user/{quote(user_id, safe='')}/deactivate-guardian",
+            headers={"X-Api-Key": api_key, **outbound_headers()},
+            timeout=10.0,
+        )
+    except httpx.HTTPError:
+        logger.warning("Cannot deactivate guardian account %s: user service is unreachable", user_id)
+        return False
+
+    if response.status_code != 200:
+        logger.warning("Cannot deactivate guardian account %s: user service returned %s", user_id, response.status_code)
+        return False
+    return True
