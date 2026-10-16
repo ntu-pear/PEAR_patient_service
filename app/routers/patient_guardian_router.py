@@ -1,3 +1,5 @@
+import os
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -18,7 +20,9 @@ from ..schemas.patient_patient_guardian import (
     PatientPatientGuardianByGuardian,
     PatientPatientGuardianByPatient,
     PatientPatientGuardianCreate,
+    PatientPatientGuardianUnassign,
 )
+from ..services.user_service import deactivate_guardian_account
 
 router = APIRouter()
 
@@ -127,9 +131,14 @@ def assign_guardian_to_patient(assignment: PatientPatientGuardianAssign, db: Ses
     )
 
 
-@router.delete("/Guardian/unassign", response_model=PatientPatientGuardian)
+@router.delete("/Guardian/unassign", response_model=PatientPatientGuardianUnassign)
 def unassign_guardian_from_patient(patient_id: int, guardian_id: int, db: Session = Depends(get_db)):
-    """Unlink a guardian from a patient, without deleting the guardian record itself."""
+    """Unlink a guardian from a patient.
+
+    Guardians are the patient's own relatives or friends, not a pool to reassign from, so
+    once a guardian has no patients left their record is soft-deleted and their login
+    account deactivated. The response flags this so the FE can tell the user.
+    """
     db_link = crud_patient_patient_guardian.get_patient_patient_guardian_by_guardianId_and_patientId(
         db, guardian_id, patient_id
     )
@@ -143,7 +152,19 @@ def unassign_guardian_from_patient(patient_id: int, guardian_id: int, db: Sessio
             detail=f"Patient must have at least {MIN_GUARDIANS_PER_PATIENT} guardian assigned"
         )
 
-    return crud_patient_patient_guardian.delete_relationship(db, db_link.id)
+    db_deleted_link = crud_patient_patient_guardian.delete_relationship(db, db_link.id)
+
+    if crud_patient_patient_guardian.count_active_patients_for_guardian(db, guardian_id) == 0:
+        db_guardian = crud_guardian.delete_guardian(db, guardian_id)
+        if db_guardian:
+            db_deleted_link.guardianSoftDeleted = True
+            if db_guardian.guardianApplicationUserId:
+                db_deleted_link.accountDeactivated = deactivate_guardian_account(
+                    db_guardian.guardianApplicationUserId,
+                    os.environ.get("INTERNAL_SERVICE_API_KEY"),
+                )
+
+    return db_deleted_link
 
 
 @router.put("/Guardian/update", response_model=PatientGuardian)
