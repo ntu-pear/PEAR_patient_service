@@ -178,7 +178,7 @@ def get_active_patient_ids_for_guardian(db: Session, guardianId: int) -> list:
     )
     return [row[0] for row in rows]
 
-def create_patient_patient_guardian(db: Session, patientPatientGuradian: PatientPatientGuardianCreate, commit: bool = True):
+def create_patient_patient_guardian(db: Session, patientPatientGuradian: PatientPatientGuardianCreate, commit: bool = True, user_id: str = SYSTEM_USER_ID, user_full_name: str = "None"):
     db_patient_patient_guardian = PatientPatientGuardian(**patientPatientGuradian.model_dump())
     updated_data_dict = serialize_data(patientPatientGuradian.model_dump())
     db.add(db_patient_patient_guardian)
@@ -196,8 +196,8 @@ def create_patient_patient_guardian(db: Session, patientPatientGuradian: Patient
 
     log_crud_action(
         action=ActionType.CREATE,
-        user=SYSTEM_USER_ID,
-        user_full_name= "None",
+        user=user_id,
+        user_full_name=user_full_name,
         table="PatientPatientGuardian",
         entity_id=db_patient_patient_guardian.id,
         original_data=None,
@@ -210,7 +210,7 @@ def create_patient_patient_guardian(db: Session, patientPatientGuradian: Patient
     )
     return db_patient_patient_guardian
 
-def update_patient_patient_guardian(db: Session, id: int, patientPatientGuradian: PatientPatientGuardianUpdate):
+def update_patient_patient_guardian(db: Session, id: int, patientPatientGuradian: PatientPatientGuardianUpdate, user_id: str = SYSTEM_USER_ID, user_full_name: str = "None"):
     db_relationship = (
         db.query(PatientPatientGuardian)
         .filter(
@@ -247,12 +247,12 @@ def update_patient_patient_guardian(db: Session, id: int, patientPatientGuradian
         updated_data_dict['GuardianName'] = guardian_name
         log_crud_action(
             action=ActionType.UPDATE,
-            user=SYSTEM_USER_ID,
+            user=user_id,
             table="PatientPatientGuardian",
             entity_id=id,
             original_data=original_data_dict,
             updated_data=updated_data_dict,
-            user_full_name="None",
+            user_full_name=user_full_name,
             message=f"Update guardian relationship: {guardian_name or 'Unknown'} to patient {patient_name or 'Unknown'}",
             patient_id = db_relationship.patientId,
             patient_full_name= patient_name,
@@ -261,7 +261,7 @@ def update_patient_patient_guardian(db: Session, id: int, patientPatientGuradian
         )
     return db_relationship
 
-def delete_patient_patient_guardian_by_guardianId(db: Session, guardianId: int):
+def delete_patient_patient_guardian_by_guardianId(db: Session, guardianId: int, user_id: str = SYSTEM_USER_ID, user_full_name: str = "None"):
     db_relationship = (
         db.query(PatientPatientGuardian)
         .filter(
@@ -294,12 +294,12 @@ def delete_patient_patient_guardian_by_guardianId(db: Session, guardianId: int):
 
         log_crud_action(
             action=ActionType.DELETE,
-            user=SYSTEM_USER_ID,
+            user=user_id,
             table="PatientPatientGuardian",
             entity_id=db_relationship.id,
             original_data=original_data_dict,
             updated_data=None,
-            user_full_name="None",
+            user_full_name=user_full_name,
             message=f"Unlinked guardian {guardian_name or 'Unknown'} from patient {patient_name or 'Unknown'}",
             patient_id = db_relationship.patientId,
             patient_full_name= patient_name,
@@ -308,7 +308,7 @@ def delete_patient_patient_guardian_by_guardianId(db: Session, guardianId: int):
         )
     return db_relationship
 
-def delete_relationship(db: Session, id: int):
+def delete_relationship(db: Session, id: int, user_id: str = SYSTEM_USER_ID, user_full_name: str = "None"):
     db_relationship = (
         db.query(PatientPatientGuardian)
         .filter(
@@ -339,12 +339,12 @@ def delete_relationship(db: Session, id: int):
 
         log_crud_action(
             action=ActionType.DELETE,
-            user=SYSTEM_USER_ID,
+            user=user_id,
             table="PatientPatientGuardian",
             entity_id=db_relationship.id,
             original_data=original_data_dict,
             updated_data=None,
-            user_full_name="None",
+            user_full_name=user_full_name,
             message= f"Unlinked guardian {guardian_name or 'Unknown'} from patient {patient_name or 'Unknown'}",
             patient_id = db_relationship.patientId,
             patient_full_name= patient_name,

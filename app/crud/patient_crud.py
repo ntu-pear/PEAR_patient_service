@@ -492,6 +492,8 @@ def create_patient(db: Session, patient: PatientCreateWithAllocation, user: str,
                     ModifiedById=user,
                 ),
                 commit=False,
+                user_id=user,
+                user_full_name=user_full_name,
             )
             guardian_id = db_guardian.id
 
@@ -507,6 +509,8 @@ def create_patient(db: Session, patient: PatientCreateWithAllocation, user: str,
                     isDeleted="0",
                 ),
                 commit=False,
+                user_id=user,
+                user_full_name=user_full_name,
             )
 
         # 7. Create allocation atomically (only when a guardian was given - PATIENT_ALLOCATION.guardianId is NOT NULL;
