@@ -1,4 +1,5 @@
 from datetime import datetime
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -447,6 +448,74 @@ def test_unassign_guardian_from_patient_success(db_session_mock):
 
         assert result is mock_deleted
         mock_delete.assert_called_once_with(db_session_mock, mock_link.id)
+
+
+def _patch_unassign(remaining_patients, guardian=None, deactivated=True):
+    """Patch the CRUD/user-service calls unassign makes after its validation passes."""
+    prefix = "app.routers.patient_guardian_router."
+    return (
+        patch(prefix + "crud_patient_patient_guardian.get_patient_patient_guardian_by_guardianId_and_patientId",
+              return_value=MagicMock(id=1, patientId=1, guardianId=1)),
+        patch(prefix + "crud_patient_patient_guardian.count_active_guardians_for_patient", return_value=2),
+        patch(prefix + "crud_patient_patient_guardian.delete_relationship", return_value=SimpleNamespace(id=1)),
+        patch(prefix + "crud_patient_patient_guardian.count_active_patients_for_guardian",
+              return_value=remaining_patients),
+        patch(prefix + "crud_guardian.delete_guardian", return_value=guardian),
+        patch(prefix + "deactivate_guardian_account", return_value=deactivated),
+    )
+
+
+def test_unassign_keeps_guardian_with_other_patients(db_session_mock):
+    p_link, p_count, p_delete_link, p_remaining, p_delete_guardian, p_deactivate = _patch_unassign(1)
+    with p_link, p_count, p_delete_link, p_remaining, p_delete_guardian as mock_delete_guardian, \
+         p_deactivate as mock_deactivate:
+        result = unassign_guardian_from_patient(patient_id=1, guardian_id=1, db=db_session_mock)
+
+    mock_delete_guardian.assert_not_called()
+    mock_deactivate.assert_not_called()
+    assert getattr(result, "guardianSoftDeleted", False) is False
+
+
+def test_unassign_soft_deletes_guardian_and_account_after_last_patient(db_session_mock):
+    guardian = SimpleNamespace(id=1, guardianApplicationUserId="U123")
+    p_link, p_count, p_delete_link, p_remaining, p_delete_guardian, p_deactivate = _patch_unassign(0, guardian)
+    with p_link, p_count, p_delete_link, p_remaining, p_delete_guardian as mock_delete_guardian, \
+         p_deactivate as mock_deactivate:
+        result = unassign_guardian_from_patient(patient_id=1, guardian_id=1, db=db_session_mock)
+
+    mock_delete_guardian.assert_called_once_with(db_session_mock, 1)
+    assert mock_deactivate.call_args[0][0] == "U123"
+    assert result.guardianSoftDeleted is True
+    assert result.accountDeactivated is True
+
+
+def test_unassign_reports_account_deactivation_failure(db_session_mock):
+    guardian = SimpleNamespace(id=1, guardianApplicationUserId="U123")
+    patches = _patch_unassign(0, guardian, deactivated=False)
+    with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5]:
+        result = unassign_guardian_from_patient(patient_id=1, guardian_id=1, db=db_session_mock)
+
+    assert result.guardianSoftDeleted is True
+    assert result.accountDeactivated is False
+
+
+def test_unassign_soft_deletes_guardian_without_account(db_session_mock):
+    guardian = SimpleNamespace(id=1, guardianApplicationUserId=None)
+    patches = _patch_unassign(0, guardian)
+    with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5] as mock_deactivate:
+        result = unassign_guardian_from_patient(patient_id=1, guardian_id=1, db=db_session_mock)
+
+    mock_deactivate.assert_not_called()
+    assert result.guardianSoftDeleted is True
+    assert getattr(result, "accountDeactivated", None) is None
+
+
+def test_unassign_response_schema_defaults():
+    from app.schemas.patient_patient_guardian import PatientPatientGuardianUnassign
+
+    fields = PatientPatientGuardianUnassign.model_fields
+    assert fields["guardianSoftDeleted"].default is False
+    assert fields["accountDeactivated"].default is None
 
 
 def test_unassign_guardian_from_patient_at_min_guardians(db_session_mock):
