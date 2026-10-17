@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 
 from app.crud import patient_medication_administration_crud as crud
-from app.errors import BadRequestError
+from app.errors import BadRequestError, ForbiddenError
 from app.logger.logger_utils import ActionType
 from app.schemas.patient_medication_administration import PatientMedicationAdministrationMark
 
@@ -39,6 +39,8 @@ def env(monkeypatch):
     monkeypatch.setattr(crud, "_find_live", find_live)
     monkeypatch.setattr(crud, "_names", lambda db_, med: ("Paracetamol", "Tan Ah Kow"))
     monkeypatch.setattr(crud, "log_crud_action", log)
+    state.allocated = True
+    monkeypatch.setattr(crud, "_is_allocated_caregiver", lambda db_, patient_id, user_id: state.allocated)
     state.db = db
     return state
 
@@ -116,6 +118,21 @@ def test_identical_repeat_returns_existing_without_log(env):
     env.db.add.assert_not_called()
     env.db.commit.assert_not_called()
     assert env.logs == []
+
+
+def test_caregiver_not_allocated_to_the_patient_is_403(env):
+    env.allocated = False
+    with pytest.raises(ForbiddenError):
+        _mark(env)
+    env.db.add.assert_not_called()
+    assert env.logs == []
+
+
+def test_supervisor_can_mark_any_patient(env):
+    env.allocated = False
+    data = PatientMedicationAdministrationMark(MedicationId=7, ScheduledTime="0800", AdministerDate="2026-10-14")
+    row, created = crud.mark_administered(env.db, data, "S1", "Sue Supervisor", "SUPERVISOR")
+    assert created is True
 
 
 def test_unknown_or_deleted_medication_is_400(env):

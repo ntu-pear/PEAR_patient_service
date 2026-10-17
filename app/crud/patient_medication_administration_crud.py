@@ -10,12 +10,14 @@ from datetime import date, datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 import pytz
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from ..errors import BadRequestError
+from ..errors import BadRequestError, ForbiddenError
 from ..logger.logger_utils import ActionType, log_crud_action
 from ..models.patient_medication_administration_model import PatientMedicationAdministration
+from ..models.patient_allocation_model import PatientAllocation
 from ..models.patient_medication_model import PatientMedication
 from ..models.patient_model import Patient
 from ..models.patient_prescription_list_model import PatientPrescriptionList
@@ -78,6 +80,16 @@ def _find_live(db: Session, medication_id: int, administer_date: date, slot: str
     ).first()
 
 
+def _is_allocated_caregiver(db: Session, patient_id: int, user_id: str) -> bool:
+    """True if the user is this patient's caregiver or temp caregiver on a live allocation."""
+    return db.query(PatientAllocation.id).filter(
+        PatientAllocation.patientId == patient_id,
+        or_(PatientAllocation.caregiverId == user_id, PatientAllocation.tempCaregiverId == user_id),
+        PatientAllocation.active == "Y",
+        PatientAllocation.isDeleted == "0",
+    ).first() is not None
+
+
 def _names(db: Session, medication) -> Tuple[Optional[str], Optional[str]]:
     """(prescription name, patient name) for the audit entry; None when unavailable."""
     try:
@@ -137,6 +149,9 @@ def mark_administered(
     medication = _find_medication(db, data.MedicationId)
     if medication is None:
         raise BadRequestError("Medication not found or has been deleted")
+    # same rule as the Scheduler: caregivers only for their own patients
+    if role == "CAREGIVER" and not _is_allocated_caregiver(db, medication.PatientId, user_id):
+        raise ForbiddenError("This patient is not allocated to you")
     slot = match_slot(data.ScheduledTime, medication.AdministerTime)
     if slot is None:
         raise BadRequestError(f"{data.ScheduledTime} is not one of this medication's administer times")
