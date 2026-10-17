@@ -242,7 +242,8 @@ def test_delete_by_guardian_id_not_found(db_session_mock):
     assert result is None
 
 
-@patch("app.crud.patient_patient_guardian_crud.log_crud_action")
+# autospec so the audit call is checked against log_crud_action's real signature
+@patch("app.crud.patient_patient_guardian_crud.log_crud_action", autospec=True)
 def test_delete_relationship_found(mock_log, db_session_mock):
     mock_rel = MagicMock(id=1, isDeleted="0")
     db_session_mock.query.return_value.filter.return_value.first.return_value = mock_rel

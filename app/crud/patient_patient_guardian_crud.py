@@ -344,6 +344,7 @@ def delete_relationship(db: Session, id: int):
             entity_id=db_relationship.id,
             original_data=original_data_dict,
             updated_data=None,
+            user_full_name="None",
             message= f"Unlinked guardian {guardian_name or 'Unknown'} from patient {patient_name or 'Unknown'}",
             patient_id = db_relationship.patientId,
             patient_full_name= patient_name,
