@@ -611,3 +611,47 @@ def ppg_update():
         CreatedById="1",
         ModifiedById="1",
     )
+
+
+# --- the audit log records who made a guardian change ---
+
+def test_actor_without_a_request_falls_back_to_system_user():
+    from app.routers.patient_guardian_router import _actor
+    assert _actor(None) == {}
+
+
+@patch("app.routers.patient_guardian_router.extract_jwt_payload")
+def test_unassign_passes_the_caller_to_the_audit_log(mock_payload, db_session_mock):
+    mock_payload.return_value = SimpleNamespace(userId="S85f3847c88b", fullName="JESS NG")
+    mock_link = MagicMock(id=7, patientId=1, guardianId=1)
+    with patch(
+        "app.routers.patient_guardian_router.crud_patient_patient_guardian."
+        "get_patient_patient_guardian_by_guardianId_and_patientId",
+        return_value=mock_link,
+    ), patch(
+        "app.routers.patient_guardian_router.crud_patient_patient_guardian.count_active_guardians_for_patient",
+        return_value=2,
+    ), patch(
+        "app.routers.patient_guardian_router.crud_patient_patient_guardian.delete_relationship",
+        return_value=MagicMock(isDeleted="1"),
+    ) as mock_delete, patch(
+        "app.routers.patient_guardian_router.crud_patient_patient_guardian.count_active_patients_for_guardian",
+        return_value=1,
+    ):
+        unassign_guardian_from_patient(patient_id=1, guardian_id=1, db=db_session_mock, request=MagicMock())
+
+    mock_delete.assert_called_once_with(
+        db_session_mock, 7, user_id="S85f3847c88b", user_full_name="JESS NG"
+    )
+
+
+@patch("app.crud.patient_patient_guardian_crud.log_crud_action", autospec=True)
+def test_delete_relationship_logs_the_given_actor(mock_log, db_session_mock):
+    mock_rel = MagicMock(id=1, isDeleted="0")
+    db_session_mock.query.return_value.filter.return_value.first.return_value = mock_rel
+
+    delete_relationship(db_session_mock, 1, user_id="S85f3847c88b", user_full_name="JESS NG")
+
+    kwargs = mock_log.call_args.kwargs
+    assert kwargs["user"] == "S85f3847c88b"
+    assert kwargs["user_full_name"] == "JESS NG"
