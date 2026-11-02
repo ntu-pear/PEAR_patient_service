@@ -171,6 +171,9 @@ jobs:
         run: |
           echo "Deploying filebeat DaemonSet..."
           kubectl apply -f '${{ inputs.filebeat-daemonset-file }}'
+          # Filebeat does not reload its config, so restart it to pick up ConfigMap changes
+          kubectl rollout restart daemonset/filebeat -n kube-system
+          kubectl rollout status daemonset/filebeat -n kube-system --timeout=120s
 
       - name: Docker maintenace cleanup
         run: |
