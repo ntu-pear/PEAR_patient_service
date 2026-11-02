@@ -45,6 +45,7 @@ jobs:
       environment: 'prod'
       runner-label: 'patient'   # 'patient' tag is used for production
       kube-deployment-file: './k8s/deployment-prod.yaml'
+      filebeat-daemonset-file: './k8s/filebeat-daemonset-prod.yaml'
       dockerfile: 'Dockerfile.dev'
       docker-image-name: 'patient_service_dev'
       docker-image-tag: 'latest'
