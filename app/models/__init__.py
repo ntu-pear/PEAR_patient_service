@@ -24,6 +24,7 @@ from .patient_list_religion_model import PatientReligionList
 from .patient_medical_diagnosis_list_model import PatientMedicalDiagnosisList
 from .patient_medical_history_model import PatientMedicalHistory
 from .patient_medication_model import PatientMedication
+from .patient_medication_administration_model import PatientMedicationAdministration
 from .patient_mobility_list_model import PatientMobilityList
 from .patient_mobility_mapping_model import PatientMobility
 from .patient_model import Patient

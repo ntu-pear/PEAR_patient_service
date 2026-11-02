@@ -11,3 +11,4 @@ data:
   DB_DATABASE_PORT: "1433"
   RABBITMQ_HOST: "192.168.188.184"
   RABBITMQ_PORT: "5672"
+  USER_SERVICE_URL: "http://user-service.default.svc.cluster.local:8000"

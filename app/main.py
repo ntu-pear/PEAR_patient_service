@@ -5,13 +5,13 @@ import threading
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
-from fastapi.exceptions import RequestValidationError
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from sqlalchemy.exc import SQLAlchemyError  # For handling database-related errors
 from sqlalchemy.orm import clear_mappers
 
+from app.errors import register_error_handlers
+from app.logger.config import LOG_DIR
+from app.ops_logging import setup_ops_logging
 from app.messaging.consumer_manager import create_patient_consumer_manager
 from app.models import (
     patient_photo_list_album_model,  # Import all models to ensure they are registered
@@ -46,6 +46,8 @@ from app.models import (
     patient_prescription_model,
     patient_social_history_model,
     patient_vital_model,
+    processed_events_model,
+    ref_userconfig_model,
 )
 from app.routers import (
     allergy_reaction_type_router,
@@ -72,6 +74,7 @@ from app.routers import (
     patient_list_router,
     patient_medical_diagnosis_list_router,
     patient_medical_history_router,
+    patient_medication_administration_router,
     patient_medication_router,
     patient_mobility_mapping_router,
     patient_mobility_router,
@@ -205,6 +208,10 @@ app = FastAPI(
     lifespan=combined_lifespan,  # Use combined lifespan manager
 )
 
+# Must run before CORSMiddleware is added so CORS wraps the catch-all
+# middleware (see app/errors.py).
+register_error_handlers(app)
+
 
 origins = [
     "http://localhost",
@@ -222,27 +229,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    logger.error(f"Validation error at {request.url}: {exc.errors()}")
-    return JSONResponse(
-        status_code=400,
-        content={"detail": exc.errors(), "body": exc.body},
-    )
-
-
-# Exception handler for database errors
-@app.exception_handler(SQLAlchemyError)
-async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
-    logger.error(f"Database error at {request.url}: {str(exc)}")
-    return JSONResponse(
-        status_code=500,
-        content={
-            "detail": "Internal server error. Please contact People in charge of servers."
-        },
-    )
 
 
 # Database setup
@@ -374,6 +360,11 @@ app.include_router(
     prefix=f"{API_VERSION_PREFIX}",
     tags=["Medications"],
 )
+app.include_router(
+    patient_medication_administration_router.router,
+    prefix=f"{API_VERSION_PREFIX}",
+    tags=["Medications"],
+)
 
 app.include_router(
     patient_privacy_level_router.router,
@@ -452,6 +443,10 @@ app.include_router(
     prefix=f"{API_VERSION_PREFIX}",
     tags=["Personal Preference List"],
 )
+
+# Operational logs (errors, requests, auth events). Dark unless OPS_LOGGING is on.
+# Last middleware added, so it is the outermost one.
+setup_ops_logging(app, service="patient", log_dir=LOG_DIR)
 
 @app.get("/")
 def read_root():

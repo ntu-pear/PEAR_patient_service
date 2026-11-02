@@ -10,20 +10,29 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.patient_allocation_model import PatientAllocation
 
+from ..errors import ConflictError
+from ..crud import patient_guardian_crud as crud_guardian
+from ..crud import patient_guardian_relationship_mapping_crud as crud_relationship
+from ..crud import patient_patient_guardian_crud as crud_patient_patient_guardian
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_model import Patient
-from ..schemas.patient import PatientCreate, PatientUpdate
+from ..schemas.patient import PatientCreate, PatientCreateWithAllocation, PatientUpdate
+from ..schemas.patient_guardian import PatientGuardianCreate
+from ..schemas.patient_patient_guardian import PatientPatientGuardianCreate
+from ..services.user_service import check_nric_exists, get_least_loaded_staff
 from ..services.outbox_service import generate_correlation_id, get_outbox_service
 
 logger = logging.getLogger(__name__)
+
+MAX_PATIENTS_PER_GUARDIAN = 2
 
 def upload_photo_to_cloudinary(file: UploadFile):
     """ Upload photo to Cloudinary and return the URL """
     try:
         upload_result = cloudinary.uploader.upload(file.file)
         return upload_result["secure_url"]
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Cloudinary upload failed: {str(e)}")
+    except Exception:
+        raise
 
 def get_patients_by_doctor(
     db: Session, 
@@ -277,7 +286,7 @@ def _patient_to_dict(patient) -> Dict[str, Any]:
         logger.error(f"Error converting patient to dict: {str(e)}")
         return {}
 
-def create_patient(db: Session, patient: PatientCreate, user: str, user_full_name: str, correlation_id: str = None):
+def create_patient(db: Session, patient: PatientCreateWithAllocation, user: str, user_full_name: str, correlation_id: str = None, api_key: str = None, supervisor_id: str = None):
     """ Create a new patient with message queue publishing """
 
     # Check NRIC uniqueness
@@ -287,7 +296,7 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
         .first()
     )
     if existing_patient:
-        raise HTTPException(status_code=400, detail="NRIC must be unique for active records")
+        raise ConflictError("NRIC must be unique for active records")
 
     # Reject if an active guardian already holds this NRIC
     from ..models.patient_guardian_model import PatientGuardian as PatientGuardianModel
@@ -301,10 +310,59 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
         .first()
     )
     if existing_guardian:
-        raise HTTPException(
-            status_code=400,
-            detail="Patient NRIC conflicts with an existing active guardian record"
+        raise ConflictError("Patient NRIC conflicts with an existing active guardian record")
+
+    # Auto-assign (staff resolution + allocation) only applies to the allocation-aware schema
+    has_allocation = isinstance(patient, PatientCreateWithAllocation)
+
+    # Guardian for this patient can be an existing guardian (guardianId) or a brand-new one
+    # created inline (newGuardian) - not both, and either requires a relationship name.
+    guardian_id = getattr(patient, "guardianId", None)
+    new_guardian_data = getattr(patient, "newGuardian", None)
+    guardian_relationship_name = getattr(patient, "guardianRelationshipName", None)
+
+    if guardian_id is not None and new_guardian_data is not None:
+        raise HTTPException(status_code=400, detail="Provide either guardianId or newGuardian, not both")
+
+    db_relationship_id = None
+    if guardian_id is not None or new_guardian_data is not None:
+        if not guardian_relationship_name:
+            raise HTTPException(status_code=400, detail="guardianRelationshipName is required when linking a guardian")
+        db_relationship_id = crud_relationship.get_relationshipId_by_relationshipName(db, guardian_relationship_name)
+        if not db_relationship_id:
+            raise HTTPException(status_code=404, detail="Relationship not found")
+
+    if guardian_id is not None:
+        guardian = (
+            db.query(PatientGuardianModel)
+            .filter(PatientGuardianModel.id == guardian_id, PatientGuardianModel.isDeleted == "0")
+            .first()
         )
+        if not guardian:
+            raise HTTPException(status_code=400, detail="Guardian not found")
+
+        active_patient_count = crud_patient_patient_guardian.count_active_patients_for_guardian(db, guardian_id)
+        if active_patient_count >= MAX_PATIENTS_PER_GUARDIAN:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Guardian already has the maximum of {MAX_PATIENTS_PER_GUARDIAN} patients assigned"
+            )
+
+    # Validate doctor2Id != doctorId
+    doctor_id = getattr(patient, "doctorId", None)
+    doctor2_id = getattr(patient, "doctor2Id", None)
+    if doctor2_id and doctor_id and doctor2_id == doctor_id:
+        raise HTTPException(status_code=400, detail="doctor2Id must differ from doctorId")
+
+    # Validate supervisor2Id != supervisorId
+    supervisor2_id = getattr(patient, "supervisor2Id", None)
+    if supervisor2_id and supervisor_id and supervisor2_id == supervisor_id:
+        raise HTTPException(status_code=400, detail="supervisor2Id must differ from supervisorId")
+
+    # Reject if the NRIC belongs to an active staff user. Runs after the local checks
+    # so invalid requests never cost a call to the user service.
+    if check_nric_exists(patient.nric, api_key):
+        raise ConflictError("Patient NRIC conflicts with an existing active user record")
 
     # Generate correlation ID if not provided
     if not correlation_id:
@@ -364,8 +422,8 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
         db.execute(query, params)
         db.flush()
 
-        # 3. Get the newly created patient
-        new_patient = db.query(Patient).filter(Patient.nric == patient.nric).first()
+        # 3. Get the newly created patient (filter isDeleted to avoid picking up a prior soft-deleted row with same NRIC)
+        new_patient = db.query(Patient).filter(Patient.nric == patient.nric, Patient.isDeleted == "0").first()
 
         # 4. Create outbox event in the same transaction
         outbox_service = get_outbox_service()        
@@ -411,16 +469,85 @@ def create_patient(db: Session, patient: PatientCreate, user: str, user_full_nam
             log_type= "patient_info",
         )
 
-        # 6. Commit both patient and outbox event atomically
+        # 6. Resolve care staff IDs (auto-assign does not depend on a guardian being set)
+        if has_allocation:
+            resolved_doctor_id = getattr(patient, "doctorId", None) or get_least_loaded_staff("DOCTOR", db, api_key)
+            resolved_game_therapist_id = getattr(patient, "gameTherapistId", None) or get_least_loaded_staff("GAME THERAPIST", db, api_key)
+            resolved_caregiver_id = getattr(patient, "caregiverId", None) or get_least_loaded_staff("CAREGIVER", db, api_key)
+
+            doctor2_id = getattr(patient, "doctor2Id", None)
+            if doctor2_id and doctor2_id == resolved_doctor_id:
+                raise HTTPException(status_code=400, detail="doctor2Id must differ from doctorId")
+
+        # 6a. Create a new guardian inline if requested, then link the guardian to this patient via
+        # PATIENT_PATIENT_GUARDIAN (the source of truth for guardian assign/unassign/lookup)
+        if has_allocation and new_guardian_data is not None:
+            db_guardian = crud_guardian.create_guardian(
+                db,
+                PatientGuardianCreate(
+                    **new_guardian_data.model_dump(),
+                    patientId=new_patient.id,
+                    relationshipName=guardian_relationship_name,
+                    CreatedById=user,
+                    ModifiedById=user,
+                ),
+                commit=False,
+                user_id=user,
+                user_full_name=user_full_name,
+            )
+            guardian_id = db_guardian.id
+
+        if has_allocation and guardian_id is not None:
+            crud_patient_patient_guardian.create_patient_patient_guardian(
+                db,
+                PatientPatientGuardianCreate(
+                    guardianId=guardian_id,
+                    patientId=new_patient.id,
+                    relationshipId=db_relationship_id.id,
+                    CreatedById=user,
+                    ModifiedById=user,
+                    isDeleted="0",
+                ),
+                commit=False,
+                user_id=user,
+                user_full_name=user_full_name,
+            )
+
+        # 7. Create allocation atomically (only when a guardian was given - PATIENT_ALLOCATION.guardianId is NOT NULL;
+        # a patient created without one can have a guardian attached later via /Guardian/assign)
+        if has_allocation and guardian_id is not None:
+            db_allocation = PatientAllocation(
+                active="Y",
+                patientId=new_patient.id,
+                guardianId=guardian_id,
+                guardian2Id=None,
+                doctorId=resolved_doctor_id,
+                gameTherapistId=resolved_game_therapist_id,
+                supervisorId=supervisor_id,
+                caregiverId=resolved_caregiver_id,
+                doctor2Id=getattr(patient, "doctor2Id", None),
+                supervisor2Id=getattr(patient, "supervisor2Id", None),
+                createdDate=timestamp,
+                modifiedDate=timestamp,
+                CreatedById=user,
+                ModifiedById=user,
+            )
+            db.add(db_allocation)
+            db.flush()
+
+        # 8. Commit patient, outbox event, and allocation atomically
         db.commit()
-        
+
         logger.info(f"Created patient {new_patient.id} with outbox event {outbox_event.id} (correlation: {correlation_id})")
         return new_patient
 
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to create patient: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to create patient: {str(e)}")
+        raise
 
 
 def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: str, user_full_name: str, correlation_id: str = None):
@@ -454,7 +581,7 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
             .first()
         )
         if existing_patient:
-            raise HTTPException(status_code=400, detail="NRIC must be unique for active records")
+            raise ConflictError("NRIC must be unique for active records")
 
         # Check NRIC doesn't conflict with an active guardian
         from ..models.patient_guardian_model import PatientGuardian as PatientGuardianModel
@@ -468,10 +595,7 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
             .first()
         )
         if existing_guardian:
-            raise HTTPException(
-                status_code=400,
-                detail="Patient NRIC conflicts with an existing active guardian record"
-            )
+            raise ConflictError("Patient NRIC conflicts with an existing active guardian record")
 
         # 3. Track BUSINESS LOGIC changes only (exclude audit fields)
         changes = {}
@@ -564,7 +688,7 @@ def update_patient(db: Session, patient_id: int, patient: PatientUpdate, user: s
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to update patient: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to update patient: {str(e)}")
+        raise
 
 
 def update_patient_profile_picture(db: Session, patient_id: int, file: UploadFile, user_id: str, user_full_name: str):
@@ -690,7 +814,7 @@ def delete_patient(db: Session, patient_id: int, user_id: str, user_full_name: s
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to delete patient: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to delete patient: {str(e)}")
+        raise
 
 def delete_patient_profile_picture(db: Session, patient_id: int, user_id: str, user_full_name: str):
     """ Remove the patient's profile picture by setting it to an empty string """

@@ -4,6 +4,7 @@ from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_assigned_dementia_list_model import PatientAssignedDementiaList
 from ..models.patient_model import Patient
@@ -151,6 +152,7 @@ def create_assigned_dementia(
         raise HTTPException(status_code=400, detail="Invalid or deleted dementia type")
 
     # Validate DementiaStageId if provided
+    dementia_stage = None
     if dementia_data.DementiaStageId is not None:
         dementia_stage = (
             db.query(PatientDementiaStageList)
@@ -176,9 +178,7 @@ def create_assigned_dementia(
     )
 
     if existing_assignment:
-        raise HTTPException(
-            status_code=400, detail="Patient already assigned this dementia type"
-        )
+        raise ConflictError("Patient already assigned this dementia type")
 
     # Create the new assignment
     new_assignment = PatientAssignedDementiaMapping(
@@ -201,6 +201,8 @@ def create_assigned_dementia(
     patient_name = patient.name if patient else None
     dementia_stage_name = dementia_stage.DementiaStage if dementia_stage else None
     dementia_type_name = dementia_type.Value if dementia_type else None
+    updated_data_dict["DementiaTypeName"] = dementia_type_name
+    updated_data_dict["DementiaStageName"] = dementia_stage_name
 
     log_crud_action(
         action=ActionType.CREATE,
@@ -323,6 +325,11 @@ def update_assigned_dementia(
     change_str = ", ".join(changes) if changes else "updated"
 
     updated_data_dict = serialize_data(dementia_data.model_dump())
+    updated_data_dict["DementiaTypeName"] = new_type_name
+    updated_data_dict["DementiaStageName"] = new_stage_name
+    if isinstance(original_data_dict, dict):
+        original_data_dict["DementiaTypeName"] = old_type_name
+        original_data_dict["DementiaStageName"] = old_stage_name
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
@@ -383,6 +390,10 @@ def delete_assigned_dementia(db: Session, dementia_id: int, modified_by: str, us
 
     db.commit()
     db.refresh(db_assignment)
+
+    if isinstance(original_data_dict, dict):
+        original_data_dict["DementiaTypeName"] = dementia_type_name
+        original_data_dict["DementiaStageName"] = dementia_stage_name
 
     log_crud_action(
         action=ActionType.DELETE,

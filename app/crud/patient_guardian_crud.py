@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.models.patient_patient_guardian_model import PatientPatientGuardian
 
+from ..errors import ConflictError
 from ..crud import patient_guardian_relationship_mapping_crud
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_guardian_model import PatientGuardian
@@ -35,7 +36,8 @@ def get_guardian_by_nric(db: Session, nric: str):
     ).first()
 
 def create_guardian(
-    db: Session, guardian: PatientGuardianCreate
+    db: Session, guardian: PatientGuardianCreate, commit: bool = True,
+    user_id: str = SYSTEM_USER_ID, user_full_name: str = "None",
 ):
     # Reject if an active patient already holds this NRIC
     existing_patient = (
@@ -44,26 +46,35 @@ def create_guardian(
         .first()
     )
     if existing_patient:
-        raise HTTPException(
-            status_code=400,
-            detail="Guardian NRIC conflicts with an existing active patient record"
-        )
+        raise ConflictError("Guardian NRIC conflicts with an existing active patient record")
+
+    # Reject if an active guardian already holds this NRIC
+    existing_guardian = (
+        db.query(PatientGuardian)
+        .filter(PatientGuardian.nric == guardian.nric, PatientGuardian.isDeleted == "0", PatientGuardian.active == "Y")
+        .first()
+    )
+    if existing_guardian:
+        raise ConflictError("A guardian with this NRIC already exists")
 
     guardian_data = guardian.model_dump(exclude={'patientId', 'relationshipName'})
     db_guardian = PatientGuardian(**guardian_data)
     updated_data_dict = serialize_data(guardian_data)
     db.add(db_guardian)
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     db.refresh(db_guardian)
 
     log_crud_action(
         action=ActionType.CREATE,
-        user=SYSTEM_USER_ID,
+        user=user_id,
         table="PatientGuardian",
         entity_id=db_guardian.id,
         original_data=None,
         updated_data=updated_data_dict,
-        user_full_name="None",
+        user_full_name=user_full_name,
         message=f"create new guardian {db_guardian.firstName} {db_guardian.lastName}",
         is_system_config= True,
         log_type= "system",
@@ -71,7 +82,8 @@ def create_guardian(
     return db_guardian
 
 def update_guardian(
-    db: Session, guardian_id: int, guardian: PatientGuardianUpdate
+    db: Session, guardian_id: int, guardian: PatientGuardianUpdate,
+    user_id: str = SYSTEM_USER_ID, user_full_name: str = "None",
 ):
     # 1. Get the guardian
     db_guardian = get_guardian(db, guardian_id) 
@@ -87,10 +99,21 @@ def update_guardian(
             .first()
         )
         if existing_patient:
-            raise HTTPException(
-                status_code=400,
-                detail="Guardian NRIC conflicts with an existing active patient record"
+            raise ConflictError("Guardian NRIC conflicts with an existing active patient record")
+
+        # Reject if a different active guardian already holds the new NRIC
+        existing_guardian = (
+            db.query(PatientGuardian)
+            .filter(
+                PatientGuardian.nric == guardian.nric,
+                PatientGuardian.isDeleted == "0",
+                PatientGuardian.active == "Y",
+                PatientGuardian.id != guardian_id,
             )
+            .first()
+        )
+        if existing_guardian:
+            raise ConflictError("A guardian with this NRIC already exists")
 
     # 3. Validate relationshipName exists in PATIENT_GUARDIAN_RELATIONSHIP_MAPPING table
     relationship_mapping = patient_guardian_relationship_mapping_crud.get_relationshipId_by_relationshipName(
@@ -120,12 +143,12 @@ def update_guardian(
     updated_data_dict = serialize_data(guardian_data)
     log_crud_action(
         action=ActionType.UPDATE,
-        user=SYSTEM_USER_ID,
+        user=user_id,
         table="PatientGuardian",
         entity_id=guardian_id,
         original_data=original_data_dict,
         updated_data=updated_data_dict,
-        user_full_name="None",
+        user_full_name=user_full_name,
         message=f"Update guardian {db_guardian.firstName} {db_guardian.lastName}",
         is_system_config= True,
         log_type= "system",
@@ -168,12 +191,12 @@ def update_guardian(
 
         log_crud_action(
             action=ActionType.UPDATE,
-            user=SYSTEM_USER_ID,
+            user=user_id,
             table="PatientPatientGuardian",
             entity_id=db_patient_guardian_relationship.id,
             original_data=original_relationship_data,
             updated_data={"relationshipId": relationship_mapping.id},
-            user_full_name="None",
+            user_full_name=user_full_name,
             message=f"Updated relationship: {db_guardian.firstName} {db_guardian.lastName} is now {guardian.relationshipName} of {patient_name}",
             patient_id = guardian.patientId,
             patient_full_name = patient_name,
@@ -182,7 +205,7 @@ def update_guardian(
     
     return db_guardian
 
-def delete_guardian(db: Session, guardian_id: int):
+def delete_guardian(db: Session, guardian_id: int, user_id: str = SYSTEM_USER_ID, user_full_name: str = "None"):
     db_guardian = get_guardian(db, guardian_id)
 
     if db_guardian:
@@ -199,12 +222,12 @@ def delete_guardian(db: Session, guardian_id: int):
 
         log_crud_action(
             action=ActionType.DELETE,
-            user=SYSTEM_USER_ID,
+            user=user_id,
             table="PatientGuardian",
             entity_id=db_guardian.id,
             original_data=original_data_dict,
             updated_data=None,
-            user_full_name="None",
+            user_full_name=user_full_name,
             message=f"Delete guardian {db_guardian.firstName} {db_guardian.lastName}",
             is_system_config= True,
             log_type= "system",

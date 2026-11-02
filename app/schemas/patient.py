@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class PatientBase(BaseModel):
@@ -49,3 +49,30 @@ class Patient(PatientBase):
     ModifiedById: str = Field(json_schema_extra={"example": "1"})
     preferred_language: Optional[str] = None
     model_config = {"from_attributes": True}
+
+class NewGuardianInline(BaseModel):
+    """Fields for creating a brand-new guardian atomically with a new patient."""
+    active: Optional[str] = 'Y'
+    firstName: str
+    lastName: str
+    preferredName: Optional[str] = None
+    gender: str = 'M'
+    contactNo: str
+    nric: str
+    email: Optional[EmailStr] = None
+    dateOfBirth: datetime
+    address: str = "Testing Address"
+    tempAddress: Optional[str] = None
+    status: Optional[str] = None
+    guardianApplicationUserId: Optional[str] = None
+
+
+class PatientCreateWithAllocation(PatientCreate):
+    guardianId: Optional[int] = None
+    newGuardian: Optional[NewGuardianInline] = None
+    guardianRelationshipName: Optional[str] = None
+    doctorId: Optional[str] = None
+    gameTherapistId: Optional[str] = None
+    caregiverId: Optional[str] = None
+    doctor2Id: Optional[str] = None
+    supervisor2Id: Optional[str] = None

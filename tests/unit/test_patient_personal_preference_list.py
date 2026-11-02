@@ -176,7 +176,7 @@ def test_create_preference_list_duplicate_case_insensitive(db_session_mock):
         with pytest.raises(HTTPException) as exc:
             create_preference_list(db_session_mock, payload, USER_ID, USER_FULL_NAME)
 
-        assert exc.value.status_code == 400
+        assert exc.value.status_code == 409
         assert "already exists" in exc.value.detail
 
 
@@ -285,7 +285,7 @@ def test_update_preference_list_duplicate_check(db_session_mock):
     with pytest.raises(HTTPException) as exc:
         update_preference_list(db_session_mock, 1, payload, USER_ID, USER_FULL_NAME)
 
-    assert exc.value.status_code == 400
+    assert exc.value.status_code == 409
     assert "already exists" in exc.value.detail
 
 

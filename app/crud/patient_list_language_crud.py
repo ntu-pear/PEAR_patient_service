@@ -3,6 +3,7 @@ from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_list_language_model import PatientListLanguage
 from ..schemas.patient_list_language import (
@@ -30,7 +31,7 @@ def create_patient_list_language(
         .first()
     )
     if existing_language:
-        raise HTTPException(status_code=400, detail="Language value already exists")
+        raise ConflictError("Language value already exists")
     
     db_language_item = PatientListLanguage(**patient_language.model_dump(), 
                                            createdDate = datetime.now(),
@@ -75,7 +76,7 @@ def update_patient_list_language(
         .first()
     )
     if existing_language:
-        raise HTTPException(status_code=400, detail="Language value already exists")
+        raise ConflictError("Language value already exists")
     
     try: 
         original_data_dict = {

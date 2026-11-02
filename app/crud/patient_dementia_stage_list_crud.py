@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from datetime import datetime
 from fastapi import HTTPException
+from ..errors import ConflictError
 from ..models.patient_dementia_stage_list_model import PatientDementiaStageList
 from ..schemas.patient_dementia_stage_list import (
     PatientDementiaStageListCreate,
@@ -16,8 +17,8 @@ def get_all_dementia_stage_list_entries(db: Session):
         if not entries:
             raise HTTPException(status_code=404, detail="No dementia stage list entries found.")
         return entries
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error querying dementia stage list: {str(e)}")
+    except Exception:
+        raise
 
 def get_dementia_stage_list_entry_by_id(db: Session, stage_id: int):
     entry = db.query(PatientDementiaStageList).filter(
@@ -48,10 +49,7 @@ def create_dementia_stage_list_entry(
     ).first()
     
     if existing_stage:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Dementia stage '{uppercase_stage}' already exists."
-        )
+        raise ConflictError(f"Dementia stage '{uppercase_stage}' already exists.")
     
     new_entry = PatientDementiaStageList(
         DementiaStage=uppercase_stage,
@@ -113,10 +111,7 @@ def update_dementia_stage_list_entry(
         ).first()
         
         if existing_stage:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Dementia stage '{uppercase_stage}' already exists."
-            )
+            raise ConflictError(f"Dementia stage '{uppercase_stage}' already exists.")
     else:
         uppercase_stage = None
 

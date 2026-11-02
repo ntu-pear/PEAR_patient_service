@@ -3,6 +3,7 @@ from .config import logger
 import json
 from enum import Enum
 from typing import Optional
+from .reference_names import add_reference_names
 
 
 class ActionType(Enum):
@@ -11,7 +12,7 @@ class ActionType(Enum):
     DELETE = "delete"
 
 
-EXCLUDED_KEYS = {"CreatedById", "ModifiedById", "ModifiedDate", "CreatedDate", "IsDeleted", "isDeleted"}
+EXCLUDED_KEYS = {"ModifiedDate", "CreatedDate", "IsDeleted", "isDeleted"}
 
 
 def filter_data(data: dict) -> dict:
@@ -32,6 +33,7 @@ def log_crud_action(
         patient_full_name: Optional[str] = None,
         log_type: Optional[str] = None,
         is_system_config: bool = False,
+        role: Optional[str] = None,
 ):
     """
     Log CRUD actions in format compatible with Elasticsearch log service
@@ -49,8 +51,8 @@ def log_crud_action(
     # Create the message object that the log service expects
     log_message = {
         "entity_id": entity_id,
-        "original_data": filter_data(original_data),
-        "updated_data": filter_data(updated_data),
+        "original_data": filter_data(add_reference_names(original_data, table)),
+        "updated_data": filter_data(add_reference_names(updated_data, table)),
     }
 
     # Create extra fields for the conditional formatter
@@ -65,6 +67,8 @@ def log_crud_action(
         "log_type": log_type,
         "is_system_config": is_system_config,
     }
+    if role is not None:
+        extra["role"] = role
 
     # IMPORTANT: Pass the message object, not a JSON string
     # The conditional formatter will handle the JSON serialization

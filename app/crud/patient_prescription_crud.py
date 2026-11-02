@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.models.patient_highlight_model import PatientHighlight
 from app.services.highlight_helper import create_highlight_if_needed
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_model import Patient
 from ..models.patient_prescription_model import PatientPrescription
@@ -77,7 +78,7 @@ def create_prescription(
         PatientPrescription.IsDeleted == '0').first()
     
     if existing_prescription:
-        raise HTTPException(status_code=400, detail="Duplicate prescription for the same patient and prescription list.")
+        raise ConflictError("Duplicate prescription for the same patient and prescription list.")
     
     try:
         
@@ -115,7 +116,8 @@ def create_prescription(
                 patient_id=new_prescription.PatientId,
                 source_table="PATIENT_PRESCRIPTION",
                 source_record_id=new_prescription.Id,
-                created_by=created_by
+                created_by=created_by,
+                user_full_name=user_full_name
                 )
             except Exception as e:
                 logger.error(f"Failed to create highlight for prescription {new_prescription.Id}: {e}")
@@ -153,9 +155,9 @@ def create_prescription(
         )
         return new_prescription
 
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise
 
 # Update an existing prescription
 def update_prescription(
@@ -191,10 +193,7 @@ def update_prescription(
     ).first()
 
     if duplicate_check:
-        raise HTTPException(
-            status_code=400, 
-            detail="Another prescription with this name already exists for this patient."
-        )
+        raise ConflictError("Another prescription with this name already exists for this patient.")
 
     try:
         original_data_dict = {
@@ -231,7 +230,8 @@ def update_prescription(
                     patient_id=db_prescription.PatientId,
                     source_table="PATIENT_PRESCRIPTION",
                     source_record_id=prescription_id,
-                    created_by=modified_by
+                    created_by=modified_by,
+                    user_full_name=user_full_name
                 )
             except Exception as e:
                 logger.error(f"Failed to create/update highlight for prescription {prescription_id}: {e}")
@@ -268,9 +268,9 @@ def update_prescription(
             is_system_config = False
         )
         return db_prescription
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise
 
 # Soft delete a prescription
 def delete_prescription(
@@ -310,23 +310,59 @@ def delete_prescription(
 
     try:
         db.commit()
-        
+
         try:
             highlights = db.query(PatientHighlight).filter(
                 PatientHighlight.SourceTable == "PATIENT_PRESCRIPTION",
                 PatientHighlight.SourceRecordId == prescription_id,
                 PatientHighlight.IsDeleted == 0
             ).all()
-            
+
+            pending_highlight_logs = []
+
             for highlight in highlights:
+                highlight_original_data = {
+                    "Id": highlight.Id,
+                    "PatientId": highlight.PatientId,
+                    "HighlightTypeId": highlight.HighlightTypeId,
+                    "HighlightText": highlight.HighlightText,
+                    "SourceTable": highlight.SourceTable,
+                    "SourceRecordId": highlight.SourceRecordId,
+                    "IsDeleted": highlight.IsDeleted,
+                    "CreatedById": highlight.CreatedById,
+                    "ModifiedById": highlight.ModifiedById,
+                }
+
                 highlight.IsDeleted = 1
                 highlight.ModifiedDate = datetime.now()
                 highlight.ModifiedById = modified_by
-            
+
+                pending_highlight_logs.append({
+                    "entity_id": highlight.Id,
+                    "original_data": highlight_original_data,
+                })
+
             if highlights:
                 logger.info(f"Deleted {len(highlights)} highlights for prescription {prescription_id}")
-            
+
             db.commit()
+
+            # Only log the cascaded deletes after the commit succeeds, so a failed
+            # commit never leaves behind audit log entries for changes that didn't persist.
+            for pending_log in pending_highlight_logs:
+                log_crud_action(
+                    action=ActionType.DELETE,
+                    user=modified_by,
+                    user_full_name=user_full_name,
+                    message=f"Deleted highlight {pending_log['entity_id']} cascaded from prescription {prescription_id} deletion",
+                    table="PatientHighlight",
+                    entity_id=pending_log["entity_id"],
+                    original_data=pending_log["original_data"],
+                    updated_data=None,
+                    patient_id=db_prescription.PatientId,
+                    patient_full_name=patient_name,
+                    log_type="highlight",
+                )
         except Exception as e:
             logger.error(f"Failed to delete highlights for prescription {prescription_id}: {e}")
         
@@ -349,6 +385,6 @@ def delete_prescription(
             is_system_config = False
         )
         return db_prescription
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise

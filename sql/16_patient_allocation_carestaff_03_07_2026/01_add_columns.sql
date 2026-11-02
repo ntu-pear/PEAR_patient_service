@@ -1,0 +1,3 @@
+ALTER TABLE [dbo].[PATIENT_ALLOCATION]
+    ADD doctor2Id NVARCHAR(255) NULL,
+        supervisor2Id NVARCHAR(255) NULL;

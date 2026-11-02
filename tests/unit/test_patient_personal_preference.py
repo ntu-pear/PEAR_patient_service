@@ -493,7 +493,7 @@ def test_create_preference_list_item_not_found_raises_404(
     db_session_mock.add.assert_not_called()
 
 
-def test_create_preference_duplicate_raises_400(
+def test_create_preference_duplicate_raises_409(
     db_session_mock, mock_patient, mock_pref_list_likes
 ):
     """Same patient + same list item raises 400."""
@@ -512,7 +512,7 @@ def test_create_preference_duplicate_raises_400(
     with pytest.raises(HTTPException) as exc:
         create_preference(db_session_mock, payload, USER_ID, USER_FULL_NAME)
 
-    assert exc.value.status_code == 400
+    assert exc.value.status_code == 409
     assert "already has this personal preference recorded" in exc.value.detail
     db_session_mock.add.assert_not_called()
 
@@ -676,7 +676,7 @@ def test_update_preference_list_item_not_found_raises_404(db_session_mock):
     assert "Personal preference list item with ID 9999" in exc.value.detail
 
 
-def test_update_preference_duplicate_raises_400(db_session_mock, mock_pref_list_likes):
+def test_update_preference_duplicate_raises_409(db_session_mock, mock_pref_list_likes):
     """Updating to match an existing record for the same patient raises 400."""
     existing = _make_preference(1, patient_id=1, list_id=10)
     duplicate = _make_preference(2, patient_id=1, list_id=20)
@@ -692,7 +692,7 @@ def test_update_preference_duplicate_raises_400(db_session_mock, mock_pref_list_
     with pytest.raises(HTTPException) as exc:
         update_preference(db_session_mock, 1, payload, USER_ID, USER_FULL_NAME)
 
-    assert exc.value.status_code == 400
+    assert exc.value.status_code == 409
     assert "Another personal preference record" in exc.value.detail
 
 

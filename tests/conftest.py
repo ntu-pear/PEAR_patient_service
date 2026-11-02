@@ -1,7 +1,19 @@
 import threading
 import sys
 import traceback
+from unittest.mock import patch
+
 import pytest
+
+from app.messaging.producer_manager import ProducerManager
+
+
+@pytest.fixture(autouse=True)
+def _no_producer_threads():
+    """Auto-mock ProducerManager.start_producer so tests never spawn real producer/watchdog threads or hit the broker."""
+    with patch.object(ProducerManager, "start_producer", lambda self: None):
+        yield
+
 
 # This is a helper function to dump stack trace of threads.
 # Incase pytest hangs indefinitely during the CI process, check this stack trace for non-daemon threads.

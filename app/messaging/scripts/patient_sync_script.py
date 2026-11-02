@@ -120,7 +120,7 @@ class PatientSyncScript(BaseScript):
             patient_data = self._patient_to_dict(patient)
             
             if self.dry_run:
-                self.logger.info(f"[DRY RUN] Would emit PATIENT_CREATED for patient {patient_id} ({patient.name})")
+                self.logger.info(f"[DRY RUN] Would emit PATIENT_CREATED for patient {patient_id}")
                 self.logger.debug(f"Patient data: {patient_data}")
                 return True
             
@@ -132,7 +132,7 @@ class PatientSyncScript(BaseScript):
             )
             
             if success:
-                self.logger.info(f"Emitted PATIENT_CREATED event for patient {patient_id} ({patient.name})")
+                self.logger.info(f"Emitted PATIENT_CREATED event for patient {patient_id}")
                 return True
             else:
                 self.logger.error(f"Failed to emit PATIENT_CREATED event for patient {patient_id}")

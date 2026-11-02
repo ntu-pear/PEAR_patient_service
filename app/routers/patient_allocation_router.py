@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from ..errors import ConflictError
 from ..database import get_db
 from ..crud import patient_allocation_crud as crud
 from ..schemas.patient_allocation import (
@@ -80,7 +81,7 @@ def create_allocation(
     # Check if patient already has an allocation
     existing_allocation = crud.get_allocation_by_patient(db, allocation.patientId)
     if existing_allocation:
-        raise HTTPException(status_code=400, detail="Patient already has an allocation")
+        raise ConflictError("Patient already has an allocation")
     return crud.create_allocation(db, allocation, user_id, user_full_name)
 
 

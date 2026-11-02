@@ -7,6 +7,7 @@ import binascii
 from typing import Optional
 from pydantic import BaseModel, ValidationError
 from ..logger.logger_utils import logger
+from .token_verifier import apply_verification, record_auth_bypass
 
 # DTO for the expected JWT payload structure
 class JWTPayload(BaseModel):
@@ -22,6 +23,9 @@ def extract_jwt_payload(request: Request, require_auth: bool = True) -> Optional
     If require_auth is True, raises exception on failure.
     If require_auth is False, returns None on failure.
     """
+    if not require_auth and "require_auth" in request.query_params:
+        record_auth_bypass(endpoint=request.url.path)
+
     auth_header = request.headers.get("Authorization")
     
     if not auth_header:
@@ -85,25 +89,35 @@ def extract_jwt_payload(request: Request, require_auth: bool = True) -> Optional
         # Parse the nested JSON in sub and convert to JWTPayload
         user_data = json.loads(sub)
         jwt_payload = JWTPayload(**user_data)
-        
-        # Log the payload for debugging
-        logger.info(
-            "JWT payload extracted and converted",
-            extra={
-                "user": jwt_payload.userId,
-                "table": "auth",
-                "action": "decode",
-                "payload": jwt_payload.model_dump()
-            }
-        )
-        
+
+        try:
+            verified = apply_verification(
+                token=token,
+                claimed_user_id=jwt_payload.userId,
+                claimed_role=jwt_payload.roleName,
+                endpoint=request.url.path,
+            )
+        except HTTPException:
+            if require_auth:
+                raise
+            return None
+        if verified is not None:
+            jwt_payload = JWTPayload(
+                userId=verified.userId,
+                fullName=verified.fullName,
+                email=verified.email,
+                roleName=verified.roleName,
+                sessionId=jwt_payload.sessionId,
+            )
+
         return jwt_payload
     
     except ValidationError as e:
         error_msg = f"Invalid token payload structure: {str(e)}"
+        # str(e) embeds the token's field values (email etc.), so log only the count.
         logger.error(
-            error_msg,
-            extra={"table": "auth", "action": "decode", "payload": user_data if 'user_data' in locals() else None}
+            f"Invalid token payload structure ({e.error_count()} errors)",
+            extra={"table": "auth", "action": "decode"}
         )
         if require_auth:
             raise HTTPException(

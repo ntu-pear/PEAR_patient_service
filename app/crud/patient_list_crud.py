@@ -9,7 +9,7 @@ def get_all_list_types(db: Session):
     return db.query(PatientList).all()
 
 def get_list(db: Session, list_type: str, item_id: int = None):
-    query = db.query(PatientList).filter(PatientList.list_type == list_type)
+    query = db.query(PatientList).filter(PatientList.type == list_type)
     if item_id:
         query = query.filter(PatientList.id == item_id)
     return query.all()

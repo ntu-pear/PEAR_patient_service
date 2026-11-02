@@ -1,15 +1,18 @@
 from datetime import datetime
+from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
 
 from app.crud.patient_highlight_crud import (
+    cleanup_old_highlights,
     create_highlight,
     delete_highlight,
     get_all_highlights,
     get_highlights_by_patient,
     update_highlight,
 )
+from app.logger.logger_utils import ActionType
 from app.models.allergy_reaction_type_model import AllergyReactionType
 from app.models.allergy_type_model import AllergyType
 from app.models.patient_allergy_mapping_model import PatientAllergyMapping
@@ -192,6 +195,55 @@ def test_delete_highlight(db_session_mock):
     db_session_mock.commit.assert_called_once()
     assert result.IsDeleted == 1
     assert result.ModifiedById == modified_by
+
+
+def test_cleanup_old_highlights_logs_one_delete_call_per_row(db_session_mock):
+    """cleanup_old_highlights must call log_crud_action once PER hard-deleted row,
+    using the SYSTEM sentinel — never a single batched summary call."""
+    highlight_type = MagicMock(Id=1, TypeName="Vital Signs Alert", TypeCode="VITAL", IsEnabled="1", IsDeleted="0")
+
+    old_highlight_1 = MagicMock(
+        Id=101, PatientId=5, HighlightTypeId=1, HighlightText="High BP",
+        SourceTable="PATIENT_VITAL", SourceRecordId=55,
+        CreatedDate=datetime(2024, 1, 1), ModifiedDate=datetime(2024, 1, 1),
+        IsDeleted="0", CreatedById="1", ModifiedById="1",
+    )
+    old_highlight_2 = MagicMock(
+        Id=102, PatientId=6, HighlightTypeId=1, HighlightText="Low SpO2",
+        SourceTable="PATIENT_VITAL", SourceRecordId=56,
+        CreatedDate=datetime(2024, 1, 1), ModifiedDate=datetime(2024, 1, 1),
+        IsDeleted="0", CreatedById="1", ModifiedById="1",
+    )
+
+    type_query = MagicMock()
+    type_query.filter.return_value.all.return_value = [highlight_type]
+
+    highlight_query = MagicMock()
+    highlight_query.filter.return_value.all.return_value = [old_highlight_1, old_highlight_2]
+
+    db_session_mock.query.side_effect = [type_query, highlight_query]
+
+    with mock.patch("app.crud.patient_highlight_crud.calculate_business_days_ago") as mock_cutoff, \
+         mock.patch("app.crud.patient_highlight_crud.log_crud_action") as mock_log:
+        mock_cutoff.return_value = datetime(2024, 1, 5)
+
+        result = cleanup_old_highlights(db_session_mock)
+
+    assert result["total_deleted"] == 2
+    assert mock_log.call_count == 2  # one per row, NOT a single batched call
+    assert db_session_mock.delete.call_count == 2
+
+    first_kwargs = mock_log.call_args_list[0].kwargs
+    assert first_kwargs["action"] == ActionType.DELETE
+    assert first_kwargs["user"] == "SYSTEM"
+    assert first_kwargs["user_full_name"] == "SYSTEM"
+    assert first_kwargs["table"] == "PatientHighlight"
+    assert first_kwargs["entity_id"] == 101
+    assert first_kwargs["patient_id"] == 5
+    assert first_kwargs["updated_data"] is None
+
+    second_kwargs = mock_log.call_args_list[1].kwargs
+    assert second_kwargs["entity_id"] == 102
 
 
 @pytest.fixture

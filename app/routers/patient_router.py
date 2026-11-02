@@ -1,12 +1,13 @@
+import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
 from sqlalchemy.orm import Session
 
-from ..auth.jwt_utils import extract_jwt_payload, get_full_name, get_user_id
+from ..auth.jwt_utils import extract_jwt_payload, get_full_name, get_role_name, get_user_id
 from ..crud import patient_crud as crud_patient
 from ..database import get_db
-from ..schemas.patient import Patient, PatientCreate, PatientUpdate
+from ..schemas.patient import Patient, PatientCreate, PatientCreateWithAllocation, PatientUpdate
 from ..schemas.response import PaginatedResponse, SingleResponse
 
 router = APIRouter()
@@ -173,13 +174,23 @@ def get_patients_by_guardian_application_user_id(
     )
 
 @router.post("/patients/add", response_model=SingleResponse[Patient])
-def create_patient(patient: PatientCreate, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
+def create_patient(patient: PatientCreateWithAllocation, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):
     payload = extract_jwt_payload(request, require_auth)
     user_id = get_user_id(payload) or "1"
     user_full_name = get_full_name(payload) or "Anonymous User"
-    db_patient = crud_patient.create_patient(db, patient, user_id, user_full_name)
-    patient = Patient.model_validate(db_patient)
-    return SingleResponse(data=patient)
+    role_name = get_role_name(payload)
+
+    if role_name != "SUPERVISOR":
+        raise HTTPException(status_code=403, detail="Only supervisors can create patients")
+
+    api_key = os.environ.get("INTERNAL_SERVICE_API_KEY")
+
+    db_patient = crud_patient.create_patient(
+        db, patient, user_id, user_full_name,
+        api_key=api_key, supervisor_id=user_id
+    )
+    patient_out = Patient.model_validate(db_patient)
+    return SingleResponse(data=patient_out)
 
 @router.put("/patients/update/{patient_id}", response_model=SingleResponse[Patient])
 def update_patient(patient_id: int, patient: PatientUpdate, request: Request, require_auth: bool = True, db: Session = Depends(get_db)):

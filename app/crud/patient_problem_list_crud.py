@@ -3,6 +3,7 @@ from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_problem_list_model import PatientProblemList
 from ..schemas.patient_problem_list import (
@@ -49,10 +50,7 @@ def create_problem_list(
     ).first()
     
     if existing_problem:
-        raise HTTPException(
-            status_code=400, 
-            detail="A problem list entry with this name already exists"
-        )
+        raise ConflictError("A problem list entry with this name already exists")
     
     try:
         data = problem_list.model_dump()
@@ -87,9 +85,9 @@ def create_problem_list(
         
         return db_problem_list
         
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise
 
 
 def update_problem_list(
@@ -122,10 +120,7 @@ def update_problem_list(
             ).first()
 
             if existing:
-                raise HTTPException(
-                    status_code=400,
-                    detail="A problem list entry with this name already exists"
-                )
+                raise ConflictError("A problem list entry with this name already exists")
 
     try:
         original_data_dict = {
@@ -161,9 +156,9 @@ def update_problem_list(
 
         return db_problem_list
 
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise
 
 
 def delete_problem_list(
@@ -210,6 +205,6 @@ def delete_problem_list(
         
         return db_problem_list
         
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise

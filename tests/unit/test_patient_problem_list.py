@@ -116,7 +116,7 @@ def test_create_problem_list_duplicate_check_case_insensitive(db_session_mock):
                 user_full_name="Test User"
             )
         
-        assert exc_info.value.status_code == 400
+        assert exc_info.value.status_code == 409
         assert "already exists" in exc_info.value.detail
 
 
@@ -331,7 +331,7 @@ def test_update_problem_list_duplicate_check(db_session_mock):
             user_full_name="Test User"
         )
 
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == 409
     assert "already exists" in exc_info.value.detail
 
 

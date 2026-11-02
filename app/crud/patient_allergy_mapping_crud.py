@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.services.highlight_helper import create_highlight_if_needed
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.allergy_reaction_type_model import AllergyReactionType
 from ..models.allergy_type_model import AllergyType
@@ -175,10 +176,7 @@ def create_patient_allergy(
     )
 
     if existing_allergy:
-        raise HTTPException(
-            status_code=400,
-            detail="Patient already has this allergy and reaction combination",
-        )
+        raise ConflictError("Patient already has this allergy and reaction combination")
 
     # Create the patient allergy mapping
     new_allergy = PatientAllergyMapping(
@@ -213,7 +211,8 @@ def create_patient_allergy(
             patient_id=new_allergy.PatientID,
             source_table="PATIENT_ALLERGY_MAPPING",
             source_record_id=new_allergy.Patient_AllergyID,
-            created_by=created_by
+            created_by=created_by,
+            user_full_name=user_full_name
         )
     except Exception as e:
         # Log error but don't fail the allergy creation
@@ -226,16 +225,18 @@ def create_patient_allergy(
     allergy_reaction_type_name = allergy_reaction_type.Value if allergy_reaction_type else None
 
     updated_data_dict = serialize_data(allergy_data.model_dump())
+    updated_data_dict["AllergyTypeName"] = allergy_type_name
+    updated_data_dict["AllergyReactionTypeName"] = allergy_reaction_type_name
     log_crud_action(
         action=ActionType.CREATE,
         user=created_by,
         user_full_name=user_full_name,
         table="PatientAllergyMapping",
         message = f"Created patient allergy: {allergy_type_name} ({allergy_reaction_type_name}) for patient: {patient_name}",
-        entity_id=new_allergy.AllergyTypeID,
+        entity_id=new_allergy.Patient_AllergyID,
         original_data=None,
         updated_data=updated_data_dict,
-        patient_id=allergy_data.AllergyTypeID,
+        patient_id=allergy_data.PatientID,
         patient_full_name=patient_name,
         log_type="allergy",
     )
@@ -300,7 +301,7 @@ def update_patient_allergy(
             .first()
         )
         if allergy_combo:
-            raise HTTPException(status_code=400, detail="Patient allergy record exists for the specified allergy type and reaction")
+            raise ConflictError("Patient allergy record exists for the specified allergy type and reaction")
         
     try:
         original_data_dict = {
@@ -338,7 +339,8 @@ def update_patient_allergy(
             patient_id=db_allergy.PatientID,
             source_table="PATIENT_ALLERGY_MAPPING",
             source_record_id=db_allergy.Patient_AllergyID,
-            created_by=modified_by
+            created_by=modified_by,
+            user_full_name=user_full_name
         )
     except Exception as e:
         logger.error(f"Failed to create/update highlight for allergy {db_allergy.Patient_AllergyID}: {e}")
@@ -351,6 +353,8 @@ def update_patient_allergy(
     allergy_reaction_type_name = allergy_reaction_type.Value if allergy_reaction_type else None
 
     updated_data_dict = serialize_data(allergy_data.model_dump())
+    updated_data_dict["AllergyTypeName"] = allergy_type_name
+    updated_data_dict["AllergyReactionTypeName"] = allergy_reaction_type_name
     log_crud_action(
         action=ActionType.UPDATE,
         user=modified_by,
@@ -394,17 +398,53 @@ def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: st
             PatientHighlight.SourceRecordId == patient_allergy_id,
             PatientHighlight.IsDeleted == 0
         ).all()
-        
+
+        pending_highlight_logs = []
+
         for highlight in highlights:
+            highlight_original_data = {
+                "Id": highlight.Id,
+                "PatientId": highlight.PatientId,
+                "HighlightTypeId": highlight.HighlightTypeId,
+                "HighlightText": highlight.HighlightText,
+                "SourceTable": highlight.SourceTable,
+                "SourceRecordId": highlight.SourceRecordId,
+                "IsDeleted": highlight.IsDeleted,
+                "CreatedById": highlight.CreatedById,
+                "ModifiedById": highlight.ModifiedById,
+            }
+
             highlight.IsDeleted = 1
             highlight.ModifiedDate = datetime.now()
             highlight.ModifiedById = modified_by
-        
+
+            pending_highlight_logs.append({
+                "entity_id": highlight.Id,
+                "original_data": highlight_original_data,
+            })
+
         if highlights:
             logger.info(f"Deleted {len(highlights)} highlights for allergy {patient_allergy_id}")
-        
+
         db.commit()
-        
+
+        # Only log the cascaded deletes after the commit succeeds, so a failed
+        # commit never leaves behind audit log entries for changes that didn't persist.
+        for pending_log in pending_highlight_logs:
+            log_crud_action(
+                action=ActionType.DELETE,
+                user=modified_by,
+                user_full_name=user_full_name,
+                message=f"Deleted highlight {pending_log['entity_id']} cascaded from allergy {patient_allergy_id} deletion",
+                table="PatientHighlight",
+                entity_id=pending_log["entity_id"],
+                original_data=pending_log["original_data"],
+                updated_data=None,
+                patient_id=db_allergy.PatientID,
+                patient_full_name=None,
+                log_type="highlight",
+            )
+
     except Exception as e:
         logger.error(f"Failed to delete highlights for allergy {patient_allergy_id}: {e}")
     
@@ -424,6 +464,10 @@ def delete_patient_allergy(db: Session, patient_allergy_id: int, modified_by: st
     allergy_type_name = allergy_type.Value if allergy_type else None
     allergy_reaction_type = db.query(AllergyReactionType).filter(AllergyReactionType.AllergyReactionTypeID == db_allergy.AllergyReactionTypeID).first()
     allergy_reaction_type_name = allergy_reaction_type.Value if allergy_reaction_type else None
+
+    if isinstance(original_data_dict, dict):
+        original_data_dict["AllergyTypeName"] = allergy_type_name
+        original_data_dict["AllergyReactionTypeName"] = allergy_reaction_type_name
 
     log_crud_action(
         action=ActionType.DELETE,

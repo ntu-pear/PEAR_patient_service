@@ -22,8 +22,8 @@ def get_all_mobility_list_entries(db: Session):
         if not entries:
             raise HTTPException(status_code=404, detail="No mobility list entries found.")
         return entries
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error querying mobility list: {str(e)}")
+    except Exception:
+        raise
 
 
 # Get a single mobility list entry by ID

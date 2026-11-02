@@ -1,4 +1,4 @@
-from pydantic import BaseModel,Field
+from pydantic import BaseModel,Field,field_validator
 from datetime import datetime
 from typing import Optional
 
@@ -12,6 +12,12 @@ class PatientMedicationBase(BaseModel):
     StartDate: datetime
     EndDate: Optional[datetime] = None
     PrescriptionRemarks: str
+
+    @field_validator("AdministerTime")
+    @classmethod
+    def tidy_administer_time(cls, value: str) -> str:
+        # "0930, 1300" -> "0930,1300", the scheduler and its SQL split on the bare comma
+        return ",".join(t.strip() for t in value.split(",") if t.strip())
 
 class PatientMedicationCreate(PatientMedicationBase):
     CreatedDateTime: datetime

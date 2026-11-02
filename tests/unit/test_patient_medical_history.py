@@ -238,7 +238,7 @@ def test_create_medical_history_with_all_optional_fields(db_session_mock):
     assert result.DateOfDiagnosis == date(2024, 1, 15)
 
 
-def test_create_medical_history_duplicate_raises_400(db_session_mock):
+def test_create_medical_history_duplicate_raises_409(db_session_mock):
     """Test that creating a record for the same patient+diagnosis raises 400."""
     mock_existing = mock.MagicMock(Id=1, PatientID=1, MedicalDiagnosisID=1, IsDeleted='0')
     db_session_mock.query.return_value.filter.return_value.first.return_value = mock_existing
@@ -256,7 +256,7 @@ def test_create_medical_history_duplicate_raises_400(db_session_mock):
         with pytest.raises(HTTPException) as exc_info:
             create_medical_history(db_session_mock, data, "test_user", "Test User")
 
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == 409
     assert "already has a medical history record" in exc_info.value.detail
 
 
@@ -373,7 +373,7 @@ def test_update_medical_history_date_update(db_session_mock):
     assert result.DateOfDiagnosis == date(2024, 6, 15)
 
 
-def test_update_medical_history_duplicate_raises_400_when_diagnosis_changes(db_session_mock):
+def test_update_medical_history_duplicate_raises_409_when_diagnosis_changes(db_session_mock):
     """Test that changing MedicalDiagnosisID to one already used triggers 400."""
     mock_existing = mock.MagicMock()
     mock_existing.Id = 1
@@ -402,7 +402,7 @@ def test_update_medical_history_duplicate_raises_400_when_diagnosis_changes(db_s
     with pytest.raises(HTTPException) as exc_info:
         update_medical_history(db_session_mock, 1, update_data, "test_user", "Test User")
 
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == 409
     assert "already has a medical history record" in exc_info.value.detail
 
 

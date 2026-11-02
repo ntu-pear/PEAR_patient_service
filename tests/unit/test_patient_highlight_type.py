@@ -117,7 +117,7 @@ def test_create_highlight_type_converts_typecode_to_uppercase(db_session_mock):
 
 
 # Test: Create Highlight Type - Duplicate TypeCode check
-def test_create_highlight_type_duplicate_typecode_raises_400(db_session_mock):
+def test_create_highlight_type_duplicate_typecode_raises_409(db_session_mock):
     """Test creating a highlight type with duplicate TypeCode (case-insensitive) raises HTTPException"""
     # Arrange
     created_by = "1"
@@ -141,7 +141,7 @@ def test_create_highlight_type_duplicate_typecode_raises_400(db_session_mock):
         with pytest.raises(HTTPException) as exc_info:
             create_highlight_type(db_session_mock, highlight_type_create, created_by, "USER")
 
-        assert exc_info.value.status_code == 400
+        assert exc_info.value.status_code == 409
         assert "already exists" in exc_info.value.detail
         
     db_session_mock.add.assert_not_called()

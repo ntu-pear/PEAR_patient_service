@@ -3,6 +3,7 @@ from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from ..errors import ConflictError
 from ..logger.logger_utils import ActionType, log_crud_action, serialize_data
 from ..models.patient_photo_list_album_model import PatientPhotoListAlbum
 from ..schemas.patient_photo_list_album import (
@@ -38,10 +39,7 @@ def create_photo_list_album(db: Session, album: PatientPhotoListAlbumCreate, cre
     ).first()
     
     if existing:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Photo list album with name '{uppercase_value}' already exists"
-        )
+        raise ConflictError(f"Photo list album with name '{uppercase_value}' already exists")
     
     db_album = PatientPhotoListAlbum(
         Value=uppercase_value,
@@ -103,10 +101,7 @@ def update_photo_list_album(
             ).first()
             
             if existing:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Photo list album with name '{uppercase_value}' already exists"
-                )
+                raise ConflictError(f"Photo list album with name '{uppercase_value}' already exists")
         
         update_data["Value"] = uppercase_value
     

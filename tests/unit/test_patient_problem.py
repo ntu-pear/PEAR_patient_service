@@ -270,7 +270,7 @@ def test_create_problem_fails_duplicate_exists(db_session_mock, mock_problem_lis
             user_full_name=USER_FULL_NAME
         )
     
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == 409
     assert "already has this problem recorded" in exc_info.value.detail
 
 
@@ -440,7 +440,7 @@ def test_update_problem_fails_duplicate_exists(db_session_mock):
             user_full_name=USER_FULL_NAME
         )
     
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == 409
     assert "Another problem record" in exc_info.value.detail
 
 
