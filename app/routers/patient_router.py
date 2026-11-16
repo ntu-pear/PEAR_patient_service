@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from ..auth.jwt_utils import extract_jwt_payload, get_full_name, get_role_name, get_user_id
 from ..crud import patient_crud as crud_patient
 from ..database import get_db
-from ..schemas.patient import Patient, PatientCreate, PatientCreateWithAllocation, PatientUpdate
+from ..schemas.patient import Patient, PatientCreate, to_patient_response, PatientCreateWithAllocation, PatientUpdate
 from ..schemas.response import PaginatedResponse, SingleResponse
 
 router = APIRouter()
@@ -15,10 +15,10 @@ router = APIRouter()
 @router.get("/patients/{patient_id}", response_model=SingleResponse[Patient])
 def read_patient(patient_id: int, request: Request, require_auth: bool = True, db: Session = Depends(get_db), mask: bool = True):
     _ = extract_jwt_payload(request, require_auth)
-    db_patient = crud_patient.get_patient(db=db, patient_id=patient_id, mask=mask)
+    db_patient = crud_patient.get_patient(db=db, patient_id=patient_id)
     if db_patient is None:
         raise HTTPException(status_code=404, detail="Patient not found")
-    patient = Patient.model_validate(db_patient)
+    patient = to_patient_response(db_patient, mask=mask)
     return SingleResponse(data = patient)
 
 @router.get("/patients/", response_model=PaginatedResponse[Patient])
@@ -33,8 +33,8 @@ def read_patients(
     db: Session = Depends(get_db),
 ):
     _ = extract_jwt_payload(request, require_auth)
-    db_patients, totalRecords, totalPages = crud_patient.get_patients(db=db, pageNo=pageNo, pageSize=pageSize, mask=mask, name=name, isActive = isActive)
-    patients = [Patient.model_validate(patient) for patient in db_patients]
+    db_patients, totalRecords, totalPages = crud_patient.get_patients(db=db, pageNo=pageNo, pageSize=pageSize, name=name, isActive = isActive)
+    patients = [to_patient_response(patient, mask=mask) for patient in db_patients]
     return PaginatedResponse(data=patients, pageNo=pageNo, pageSize=pageSize, totalRecords= totalRecords, totalPages=totalPages)
 
 @router.get("/patients/by-doctor/{doctor_id}", response_model=PaginatedResponse[Patient])
@@ -55,14 +55,13 @@ def get_patients_by_doctor_id(
     db_patients, totalRecords, totalPages = crud_patient.get_patients_by_doctor(
         db=db, 
         doctor_id=doctor_id, 
-        mask=mask, 
         pageNo=pageNo, 
         pageSize=pageSize,
         name=name,
         isActive=isActive
     )
     
-    patients = [Patient.model_validate(patient) for patient in db_patients]
+    patients = [to_patient_response(patient, mask=mask) for patient in db_patients]
     return PaginatedResponse(
         data=patients, 
         pageNo=pageNo, 
@@ -89,14 +88,13 @@ def get_patients_by_supervisor_id(
     db_patients, totalRecords, totalPages = crud_patient.get_patients_by_supervisor(
         db=db, 
         supervisor_id=supervisor_id, 
-        mask=mask, 
         pageNo=pageNo, 
         pageSize=pageSize,
         name=name,
         isActive=isActive
     )
     
-    patients = [Patient.model_validate(patient) for patient in db_patients]
+    patients = [to_patient_response(patient, mask=mask) for patient in db_patients]
     return PaginatedResponse(
         data=patients, 
         pageNo=pageNo, 
@@ -123,14 +121,13 @@ def get_patients_by_caregiver_id(
     db_patients, totalRecords, totalPages = crud_patient.get_patients_by_caregiver(
         db=db, 
         caregiver_id=caregiver_id, 
-        mask=mask, 
         pageNo=pageNo, 
         pageSize=pageSize,
         name=name,
         isActive=isActive
     )
     
-    patients = [Patient.model_validate(patient) for patient in db_patients]
+    patients = [to_patient_response(patient, mask=mask) for patient in db_patients]
     return PaginatedResponse(
         data=patients, 
         pageNo=pageNo, 
@@ -157,14 +154,13 @@ def get_patients_by_guardian_application_user_id(
     db_patients, totalRecords, totalPages = crud_patient.get_patients_by_guardian(
         db=db, 
         guardian_application_user_id=guardian_application_user_id, 
-        mask=mask, 
         pageNo=pageNo, 
         pageSize=pageSize,
         name=name,
         isActive=isActive
     )
     
-    patients = [Patient.model_validate(patient) for patient in db_patients]
+    patients = [to_patient_response(patient, mask=mask) for patient in db_patients]
     return PaginatedResponse(
         data=patients, 
         pageNo=pageNo, 

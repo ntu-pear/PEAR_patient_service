@@ -37,7 +37,6 @@ def upload_photo_to_cloudinary(file: UploadFile):
 def get_patients_by_doctor(
     db: Session, 
     doctor_id: str, 
-    mask: bool = True, 
     pageNo: int = 0, 
     pageSize: int = 10,
     name: Optional[str] = None,
@@ -71,9 +70,6 @@ def get_patients_by_doctor(
     
     db_patients = query.order_by(Patient.name.asc()).offset(offset).limit(pageSize).all()
     
-    if db_patients and mask:
-        for db_patient in db_patients:
-            db_patient.nric = db_patient.mask_nric
     
     return db_patients, totalRecords, totalPages
 
@@ -81,7 +77,6 @@ def get_patients_by_doctor(
 def get_patients_by_supervisor(
     db: Session, 
     supervisor_id: str, 
-    mask: bool = True, 
     pageNo: int = 0, 
     pageSize: int = 10,
     name: Optional[str] = None,
@@ -115,9 +110,6 @@ def get_patients_by_supervisor(
     
     db_patients = query.order_by(Patient.name.asc()).offset(offset).limit(pageSize).all()
     
-    if db_patients and mask:
-        for db_patient in db_patients:
-            db_patient.nric = db_patient.mask_nric
     
     return db_patients, totalRecords, totalPages
 
@@ -125,7 +117,6 @@ def get_patients_by_supervisor(
 def get_patients_by_caregiver(
     db: Session, 
     caregiver_id: str, 
-    mask: bool = True, 
     pageNo: int = 0, 
     pageSize: int = 10,
     name: Optional[str] = None,
@@ -159,9 +150,6 @@ def get_patients_by_caregiver(
     
     db_patients = query.order_by(Patient.name.asc()).offset(offset).limit(pageSize).all()
     
-    if db_patients and mask:
-        for db_patient in db_patients:
-            db_patient.nric = db_patient.mask_nric
     
     return db_patients, totalRecords, totalPages
 
@@ -169,7 +157,6 @@ def get_patients_by_caregiver(
 def get_patients_by_guardian(
     db: Session, 
     guardian_application_user_id: str, 
-    mask: bool = True, 
     pageNo: int = 0, 
     pageSize: int = 10,
     name: Optional[str] = None,
@@ -209,35 +196,35 @@ def get_patients_by_guardian(
     
     db_patients = query.order_by(Patient.name.asc()).offset(offset).limit(pageSize).all()
     
-    if db_patients and mask:
-        for db_patient in db_patients:
-            db_patient.nric = db_patient.mask_nric
     
     return db_patients, totalRecords, totalPages
 
-def get_patient(db: Session, patient_id: int, mask: bool = True):
+def get_patient(db: Session, patient_id: int):
+    """Return the patient row with its real NRIC.
+
+    Never mask the NRIC on the returned object: it is attached to the session,
+    so a later commit in the same request (e.g. adding a doctor note) would save
+    the masked value as the patient's NRIC. Mask the API response instead, with
+    app.schemas.patient.to_patient_response.
+    """
     db_patient = (
         db.query(Patient)
         .options(joinedload(Patient._preferred_language))
         .filter(Patient.id == patient_id, Patient.isDeleted == "0")
         .first()
     )
-    if db_patient and mask:
-        db_patient.nric = db_patient.mask_nric
     return db_patient
 
-def get_patient_include_deleted(db: Session, patient_id: int, include_deleted: str, mask: bool = True):
+def get_patient_include_deleted(db: Session, patient_id: int, include_deleted: str):
     db_patient = (
         db.query(Patient)
         .filter(Patient.id == patient_id, Patient.isDeleted == include_deleted)
         .first()
     )
-    if db_patient and mask:
-        db_patient.nric = db_patient.mask_nric
     return db_patient
 
 
-def get_patients(db: Session, mask: bool = True, pageNo: int = 0, pageSize: int = 10,name: Optional[str] = None,isActive: Optional[str] = None):
+def get_patients(db: Session, pageNo: int = 0, pageSize: int = 10,name: Optional[str] = None,isActive: Optional[str] = None):
     offset = pageNo * pageSize
     query = db.query(Patient).options(joinedload(Patient._preferred_language)).filter(Patient.isDeleted == "0")
 
@@ -259,9 +246,6 @@ def get_patients(db: Session, mask: bool = True, pageNo: int = 0, pageSize: int 
 
     db_patients = query.order_by(Patient.name.asc()).offset(offset).limit(pageSize).all()
 
-    if db_patients and mask:
-        for db_patient in db_patients:
-            db_patient.nric = db_patient.mask_nric
     return db_patients, totalRecords, totalPages
 
 def _patient_to_dict(patient) -> Dict[str, Any]:

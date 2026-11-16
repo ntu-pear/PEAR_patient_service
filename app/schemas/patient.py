@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class PatientBase(BaseModel):
@@ -30,15 +30,36 @@ class PatientBase(BaseModel):
     profilePicture: Optional[str] = None
     isDeleted: Optional[int] = Field(default=0, json_schema_extra={"example": "0"})
 
+MASK_CHAR = "*"
+
+
+def mask_nric_value(nric: Optional[str]) -> Optional[str]:
+    """Masked form shown to users: five '*' then the last four characters."""
+    if not nric:
+        return nric
+    return (MASK_CHAR * 5) + nric[-4:]
+
+
+def _reject_masked_nric(nric: str) -> str:
+    # A masked NRIC (e.g. *****567D) must never be saved as the real value.
+    if MASK_CHAR in nric:
+        raise ValueError("NRIC looks masked; send the full NRIC")
+    return nric
+
+
 class PatientCreate(PatientBase):
     createdDate: datetime  # DATETIME -> datetime
     modifiedDate: datetime
     CreatedById: str = Field(json_schema_extra={"example": "1"})
     ModifiedById: str = Field(json_schema_extra={"example": "1"})
 
+    _no_masked_nric = field_validator("nric")(_reject_masked_nric)
+
 class PatientUpdate(PatientBase):
     modifiedDate: datetime
     ModifiedById: str = Field(json_schema_extra={"example": "1"})
+
+    _no_masked_nric = field_validator("nric")(_reject_masked_nric)
 
 
 class Patient(PatientBase):
@@ -49,6 +70,19 @@ class Patient(PatientBase):
     ModifiedById: str = Field(json_schema_extra={"example": "1"})
     preferred_language: Optional[str] = None
     model_config = {"from_attributes": True}
+
+
+def to_patient_response(db_patient, mask: bool = True) -> Patient:
+    """Build the API response for a patient row.
+
+    The NRIC is masked on the response copy only. The ORM row is left alone,
+    because it is still attached to the request's session and any later commit
+    in that session would otherwise save the masked NRIC.
+    """
+    patient = Patient.model_validate(db_patient)
+    if mask:
+        patient = patient.model_copy(update={"nric": mask_nric_value(patient.nric)})
+    return patient
 
 class NewGuardianInline(BaseModel):
     """Fields for creating a brand-new guardian atomically with a new patient."""

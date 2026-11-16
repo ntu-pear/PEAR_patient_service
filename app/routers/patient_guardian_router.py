@@ -79,7 +79,7 @@ def create_patient_guardian(guardian: PatientGuardianCreate, db: Session = Depen
     db_guardian =  crud_guardian.create_guardian(db, guardian, **actor)
     if not db_guardian:
         raise HTTPException(status_code=404, detail="Error when creating patient guardian")
-    db_patient = crud_patient.get_patient(db, guardian.patientId, mask=False)
+    db_patient = crud_patient.get_patient(db, guardian.patientId)
     if not db_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     db_patient_patient_guardian = crud_patient_patient_guardian.create_patient_patient_guardian(
@@ -100,7 +100,7 @@ def create_patient_guardian(guardian: PatientGuardianCreate, db: Session = Depen
 @router.post("/Guardian/assign", response_model=PatientPatientGuardian)
 def assign_guardian_to_patient(assignment: PatientPatientGuardianAssign, db: Session = Depends(get_db), request: Request = None):
     """Link an existing guardian to a patient, without creating a new guardian record."""
-    db_patient = crud_patient.get_patient(db, assignment.patientId, mask=False)
+    db_patient = crud_patient.get_patient(db, assignment.patientId)
     if not db_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 

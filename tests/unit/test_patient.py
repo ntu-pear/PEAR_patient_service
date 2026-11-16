@@ -31,7 +31,8 @@ def test_get_patient_found(db_session_mock):
     result = get_patient(db_session_mock, 1)
 
     assert result is mock_patient
-    assert result.nric == "SXXXXX67A"
+    # get_patient must hand back the real NRIC; masking happens on the response only.
+    assert result.nric == "S1234567A"
 
 
 def test_get_patient_not_found(db_session_mock):

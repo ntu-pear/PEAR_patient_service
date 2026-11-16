@@ -2,7 +2,7 @@ import datetime
 from typing import Optional
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, String
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, validates
 
 from app.database import Base
 from app.models.patient_list_language_model import PatientListLanguage
@@ -78,6 +78,14 @@ class Patient(Base):
         if self._preferred_language:
             return self._preferred_language.value
         return None
+
+    @validates("nric")
+    def _validate_nric(self, key, value):
+        # Guard against saving a masked NRIC (e.g. *****567D) as the real one.
+        # Masking belongs on the API response, never on this row.
+        if value and "*" in value:
+            raise ValueError("Refusing to set a masked NRIC on a Patient row")
+        return value
 
     # Ensure other models follow similar changes for consistency
     @property
